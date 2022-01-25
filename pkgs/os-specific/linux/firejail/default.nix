@@ -1,4 +1,13 @@
-{ lib, stdenv, fetchFromGitHub, fetchpatch, which, xdg-dbus-proxy, nixosTests }:
+{ lib
+, stdenv
+, fetchFromGitHub
+, fetchpatch
+, pkg-config
+, libapparmor
+, which
+, xdg-dbus-proxy
+, nixosTests
+}:
 
 stdenv.mkDerivation rec {
   pname = "firejail";
@@ -11,7 +20,18 @@ stdenv.mkDerivation rec {
     sha256 = "sha256-oKstTiGt0r4wePaZ9u1o78GZ1XWJ27aS0BdLxmfYk9Q=";
   };
 
-  buildInputs = [ which ];
+  nativeBuildInputs = [
+    pkg-config
+  ];
+
+  buildInputs = [
+    libapparmor
+    which
+  ];
+
+  configureFlags = [
+    "--enable-apparmor"
+  ];
 
   patches = [
     # Adds the /nix directory when using an overlay.
@@ -20,14 +40,12 @@ stdenv.mkDerivation rec {
     # By default fbuilder hardcodes the firejail binary to the install path.
     # On NixOS the firejail binary is a setuid wrapper available in $PATH.
     ./fbuilder-call-firejail-on-path.patch
+    # Disable symlink check on /etc/hosts, see
+    # https://github.com/netblue30/firejail/issues/2758#issuecomment-805174951
+    ./remove-link-check.patch
   ];
 
   prePatch = ''
-    # Allow whitelisting ~/.nix-profile
-    substituteInPlace etc/firejail.config --replace \
-      '# follow-symlink-as-user yes' \
-      'follow-symlink-as-user no'
-
     # Fix the path to 'xdg-dbus-proxy' hardcoded in the 'common.h' file
     substituteInPlace src/include/common.h \
       --replace '/usr/bin/xdg-dbus-proxy' '${xdg-dbus-proxy}/bin/xdg-dbus-proxy'
@@ -59,7 +77,7 @@ stdenv.mkDerivation rec {
   # See https://github.com/netblue30/firejail/blob/e4cb6b42743ad18bd11d07fd32b51e8576239318/src/firejail/profile.c#L68-L83
   # for the profile file lookup implementation.
   postInstall = ''
-    for local in $(grep -Eh '^include.*local$' $out/etc/firejail/*.profile | awk '{print $2}' | sort | uniq)
+    for local in $(grep -Eh '^include.*local$' $out/etc/firejail/*{.inc,.profile} | awk '{print $2}' | sort | uniq)
     do
       echo "include /etc/firejail/$local" >$out/etc/firejail/$local
     done

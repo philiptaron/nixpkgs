@@ -2,29 +2,25 @@
 
 buildGoModule rec {
   pname = "velero";
-  # When updating, change the commit underneath
-  version = "1.6.3";
-  commit = "8c9cdb9603446760452979dc77f93b17054ea1cc";
+  version = "1.7.1";
 
 
   src = fetchFromGitHub {
-    rev = "v${version}";
     owner = "vmware-tanzu";
     repo = "velero";
-    sha256 = "sha256-oFDTjpcwlvSiAROG/EKYRCD+qKyZXu1gKotBcD0dfvk=";
+    rev = "v${version}";
+    sha256 = "sha256-Jz3Tp5FqpmPuBscRB0KleQxtCvB43qmeLZNtGPnjuL0=";
   };
 
-  buildFlagsArray = ''
-    -ldflags=
-      -s -w
-      -X github.com/vmware-tanzu/velero/pkg/buildinfo.Version=${version}
-      -X github.com/vmware-tanzu/velero/pkg/buildinfo.GitSHA=${commit}
-      -X github.com/vmware-tanzu/velero/pkg/buildinfo.GitTreeState=clean
-  '';
+  ldflags = [
+    "-s" "-w"
+    "-X github.com/vmware-tanzu/velero/pkg/buildinfo.Version=${version}"
+    "-X github.com/vmware-tanzu/velero/pkg/buildinfo.GitTreeState=clean"
+  ];
 
-  vendorSha256 = "sha256-ypgrdv6nVW+AAwyVsiROXs6jGgDTodGrGqiT2s5elOU=";
+  vendorSha256 = "sha256-fX9FeoIkxxSi3dl5W2MZLz5vN1VHkPNpTBGRxGP5Qx8=";
 
-  excludedPackages = [ "issue-template-gen" "crd-gen" "release-tools" "velero-restic-restore-helper" ];
+  excludedPackages = [ "issue-template-gen" "crd-gen" "release-tools" "velero-restic-restore-helper" "v1" "v1beta1" ];
 
   doCheck = false; # Tests expect a running cluster see https://github.com/vmware-tanzu/velero/tree/main/test/e2e
   doInstallCheck = true;

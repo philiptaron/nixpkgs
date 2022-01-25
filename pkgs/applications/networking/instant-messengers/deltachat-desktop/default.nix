@@ -3,29 +3,54 @@
 , electron
 , esbuild
 , fetchFromGitHub
+, fetchpatch
 , libdeltachat
 , makeDesktopItem
 , makeWrapper
 , nodePackages
 , pkg-config
+, rustPlatform
 , stdenv
 , CoreServices
 }:
 
 let
+  libdeltachat' = libdeltachat.overrideAttrs (old: rec {
+    version = "1.70.0";
+    src = fetchFromGitHub {
+      owner = "deltachat";
+      repo = "deltachat-core-rust";
+      rev = version;
+      hash = "sha256-702XhFWvFG+g++3X97sy6C5DMNWogv1Xbr8QPR8QyLo=";
+    };
+    cargoDeps = rustPlatform.fetchCargoTarball {
+      inherit src;
+      name = "${old.pname}-${version}";
+      hash = "sha256-MiSGJMXe8vouv4XEHXq274FHEvBMtd7IX6DyNJIWYeU=";
+    };
+  });
   electronExec = if stdenv.isDarwin then
     "${electron}/Applications/Electron.app/Contents/MacOS/Electron"
   else
     "${electron}/bin/electron";
+  esbuild' = esbuild.overrideAttrs (old: rec {
+    version = "0.12.29";
+    src = fetchFromGitHub {
+      owner = "evanw";
+      repo = "esbuild";
+      rev = "v${version}";
+      hash = "sha256-oU++9E3StUoyrMVRMZz8/1ntgPI62M1NoNz9sH/N5Bg=";
+    };
+  });
 in nodePackages.deltachat-desktop.override rec {
   pname = "deltachat-desktop";
-  version = "unstable-2021-08-04";
+  version = "1.26.0";
 
   src = fetchFromGitHub {
     owner = "deltachat";
     repo = "deltachat-desktop";
-    rev = "2c47d6b7e46f4f68c7eb45508ab9e145af489ea1";
-    sha256 = "03b6j3cj2yanvsargh6q57bf1llg17yrqgmd14lp0wkam767kkfa";
+    rev = "v${version}";
+    hash = "sha256-IDyGV2+/+wHp5N4G10y5OHvw2yoyVxWx394xszIYoj4=";
   };
 
   nativeBuildInputs = [
@@ -37,12 +62,13 @@ in nodePackages.deltachat-desktop.override rec {
   ];
 
   buildInputs = [
-    libdeltachat
+    libdeltachat'
   ] ++ lib.optionals stdenv.isDarwin [
     CoreServices
   ];
 
   ELECTRON_SKIP_BINARY_DOWNLOAD = "1";
+  ESBUILD_BINARY_PATH = "${esbuild'}/bin/esbuild";
   USE_SYSTEM_LIBDELTACHAT = "true";
   VERSION_INFO_GIT_REF = src.rev;
 

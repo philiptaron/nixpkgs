@@ -1,5 +1,6 @@
 { stdenv, lib, python3
 , fetchFromGitHub
+, fetchPypi
 , git
 , spdx-license-list-data
 , version, src
@@ -9,28 +10,53 @@ let
   python = python3.override {
     packageOverrides = self: super: {
       aiofiles = super.aiofiles.overridePythonAttrs (oldAttrs: rec {
-        version = "0.6.0";
-        src = oldAttrs.src.override {
-          inherit version;
-          sha256 = "e0281b157d3d5d59d803e3f4557dcc9a3dff28a4dd4829a9ff478adae50ca092";
+        version = "0.8.0";
+        src = fetchFromGitHub {
+          owner = "Tinche";
+          repo = "aiofiles";
+          rev = "v${version}";
+          sha256 = "0mr9pzji4vqyf2yzh8yxz5q7fm8mgmkimx1xh49wh625m72pxcap";
+        };
+      });
+
+      asgiref = super.asgiref.overridePythonAttrs (oldAttrs: rec {
+        version = "3.4.1";
+        src = fetchFromGitHub {
+          owner = "django";
+          repo = "asgiref";
+          rev = version;
+          sha256 = "0440321alpqb1cdsmfzmiiy8rpq0ic0wvraalzk39cgrl7mghw39";
         };
       });
 
       click = super.click.overridePythonAttrs (oldAttrs: rec {
-        version = "7.1.2";
-        src = oldAttrs.src.override {
-          inherit version;
-          sha256 = "06kbzd6sjfkqan3miwj9wqyddfxc2b6hi7p5s4dvqjb3gif2bdfj";
+        version = "8.0.3";
+        src = fetchFromGitHub {
+          owner = "pallets";
+          repo = "click";
+          rev = version;
+          sha256 = "0pxvxgfhqjgsjbgfnilqjki1l24r0rdfd98cl77i71yqdd2f497g";
         };
       });
 
+      starlette = super.starlette.overridePythonAttrs (oldAttrs: rec {
+        version = "0.17.0";
+        src = fetchFromGitHub {
+          owner = "encode";
+          repo = "starlette";
+          rev = version;
+          sha256 = "1g76qpvqzivmwll5ir4bf45jx5kilnkadvy6b7qjisvr402i3qmw";
+        };
+        disabledTestPaths = [];
+      });
+
       uvicorn = super.uvicorn.overridePythonAttrs (oldAttrs: rec {
-        version = "0.13.2";
+        version = "0.16.0";
         src = fetchFromGitHub {
           owner = "encode";
           repo = "uvicorn";
           rev = version;
-          sha256 = "04zgmp9z46k72ay6cz7plga6d3w3a6x41anabm7ramp7jdqf6na9";
+          sha256 = "14jih6j4q2qp5c9rgl798i5p51b4y6zkkj434q2l1naw0csphk4s";
         };
       });
     };
@@ -41,6 +67,7 @@ with python.pkgs; buildPythonApplication rec {
   inherit version src;
 
   propagatedBuildInputs = [
+    aiofiles
     ajsonrpc
     bottle
     click
@@ -147,7 +174,7 @@ with python.pkgs; buildPythonApplication rec {
       --subst-var-by SPDX_LICENSE_LIST_DATA '${spdx-license-list-data}'
 
     substituteInPlace setup.py \
-      --replace "zeroconf==0.28.*" "zeroconf"
+      --replace "zeroconf==0.37.*" "zeroconf"
   '';
 
   meta = with lib; {

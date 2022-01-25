@@ -14,14 +14,14 @@
 
 buildPythonPackage rec {
   pname = "async-upnp-client";
-  version = "0.19.2";
+  version = "0.23.1";
   disabled = pythonOlder "3.6";
 
   src = fetchFromGitHub {
     owner = "StevenLooman";
     repo = "async_upnp_client";
     rev = version;
-    sha256 = "1v8d2lvxihqasn7866zssys16s0lgxkk6ri2dp4rr7wr8g9ixvdr";
+    sha256 = "sha256-m8oTqGbsJ99ImtnSlL4LX1qR0bUhGtVPPWmjsZfV6sE=";
   };
 
   propagatedBuildInputs = [
@@ -39,20 +39,22 @@ buildPythonPackage rec {
 
   disabledTests = [
     # socket.gaierror: [Errno -2] Name or service not known
-    "test_get_local_ip"
     "test_async_get_local_ip"
+    "test_get_local_ip"
     # OSError: [Errno 101] Network is unreachable
-    "test_subscribe_fail"
-    "test_subscribe_auto_resubscribe"
-    "test_subscribe_manual_resubscribe"
     "test_auto_resubscribe_fail"
+    "test_init"
     "test_on_notify_dlna_event"
     "test_on_notify_upnp_event"
-    "test_unsubscribe"
-    "test_subscribe"
-    "test_subscribe_renew"
+    "test_server_init"
+    "test_server_start"
     "test_start_server"
-    "test_init"
+    "test_subscribe"
+    "test_subscribe_auto_resubscribe"
+    "test_subscribe_fail"
+    "test_subscribe_manual_resubscribe"
+    "test_subscribe_renew"
+    "test_unsubscribe"
   ] ++ lib.optionals stdenv.isDarwin [
     "test_deferred_callback_url"
   ];

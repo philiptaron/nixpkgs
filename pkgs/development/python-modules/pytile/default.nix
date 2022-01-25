@@ -13,15 +13,16 @@
 
 buildPythonPackage rec {
   pname = "pytile";
-  version = "5.2.3";
+  version = "2021.12.0";
   format = "pyproject";
+
   disabled = pythonOlder "3.7";
 
   src = fetchFromGitHub {
     owner = "bachya";
     repo = pname;
     rev = version;
-    sha256 = "01gxq6dbqjmsqndjcbqv79wd2wgs7krm0rn47k883gh2xg9sn606";
+    sha256 = "sha256-a76Qzk8ZsoV6HUOcDjMdnFVZJu/iKFbShoC9OZ0caDc=";
   };
 
   nativeBuildInputs = [
@@ -45,7 +46,9 @@ buildPythonPackage rec {
     "examples/"
   ];
 
-  pythonImportsCheck = [ "pytile" ];
+  pythonImportsCheck = [
+    "pytile"
+  ];
 
   __darwinAllowLocalNetworking = true;
 

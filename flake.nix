@@ -11,43 +11,20 @@
 
       lib = import ./lib;
 
-      systems = [
-        "x86_64-linux"
-        "i686-linux"
-        "x86_64-darwin"
-        "aarch64-linux"
-        "armv6l-linux"
-        "armv7l-linux"
-        "aarch64-darwin"
-      ];
+      systems = lib.systems.supported.hydra;
 
       forAllSystems = f: lib.genAttrs systems (system: f system);
 
     in
     {
       lib = lib.extend (final: prev: {
+
+        nixos = import ./nixos/lib { lib = final; };
+
         nixosSystem = { modules, ... } @ args:
           import ./nixos/lib/eval-config.nix (args // {
             modules =
               let
-                vmConfig = (import ./nixos/lib/eval-config.nix
-                  (args // {
-                    modules = modules ++ [ ./nixos/modules/virtualisation/qemu-vm.nix ];
-                  })).config;
-
-                vmWithBootLoaderConfig = (import ./nixos/lib/eval-config.nix
-                  (args // {
-                    modules = modules ++ [
-                      ./nixos/modules/virtualisation/qemu-vm.nix
-                      { virtualisation.useBootLoader = true; }
-                      ({ config, ... }: {
-                        virtualisation.useEFIBoot =
-                          config.boot.loader.systemd-boot.enable ||
-                          config.boot.loader.efi.canTouchEfiVariables;
-                      })
-                    ];
-                  })).config;
-
                 moduleDeclarationFile =
                   let
                     # Even though `modules` is a mandatory argument for `nixosSystem`, it doesn't
@@ -72,10 +49,9 @@
                     ".${final.substring 0 8 (self.lastModifiedDate or self.lastModified or "19700101")}.${self.shortRev or "dirty"}";
                   system.nixos.revision = final.mkIf (self ? rev) self.rev;
 
-                  system.build = {
-                    vm = vmConfig.system.build.vm;
-                    vmWithBootLoader = vmWithBootLoaderConfig.system.build.vm;
-                  };
+                  # NOTE: This assumes that `nixpkgs.config` is _not_ used when
+                  #       nixpkgs.pkgs is set OR _module.args.pkgs is set.
+                  nixpkgs.config.path = self.outPath;
                 }
               ];
           });
@@ -90,7 +66,7 @@
         }).nixos.manual.x86_64-linux;
       };
 
-      legacyPackages = forAllSystems (system: import ./. { inherit system; });
+      legacyPackages = forAllSystems (system: import ./. { inherit system; config.path = self.outPath; });
 
       nixosModules = {
         notDetected = import ./nixos/modules/installer/scan/not-detected.nix;

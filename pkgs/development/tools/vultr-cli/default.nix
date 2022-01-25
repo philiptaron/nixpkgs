@@ -2,13 +2,13 @@
 
 buildGoModule rec {
   pname = "vultr-cli";
-  version = "2.7.0";
+  version = "2.12.0";
 
   src = fetchFromGitHub {
     owner = "vultr";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-3q0in41/ZGuZcMiu+5qT8AGttro2it89xp741RCxAYY=";
+    sha256 = "sha256-mT99flZAAhLSynD/8+fa74Mc3KK8pVs+OOFDYNSBzEE=";
   };
 
   vendorSha256 = null;

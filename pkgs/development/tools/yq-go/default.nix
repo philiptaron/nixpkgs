@@ -2,16 +2,16 @@
 
 buildGoModule rec {
   pname = "yq-go";
-  version = "4.11.2";
+  version = "4.17.2";
 
   src = fetchFromGitHub {
     owner = "mikefarah";
     repo = "yq";
     rev = "v${version}";
-    sha256 = "sha256-IzsI0jS+chm/xOdL1O11qxQTstKcUeZ9YxL7RtKHBZw=";
+    sha256 = "sha256-jfb/r4Z8i23A0e4cJqZoG2TPXGVFOf64FfnZy/keAeQ=";
   };
 
-  vendorSha256 = "sha256-X162NQ+NgOUbwEA6xdnuy0u18/GQLhR3zzi+TVgzMIc=";
+  vendorSha256 = "sha256-0eaD4oT6DyCWkJ0He4A7ysOEJD8CtFH6diQYBuEOoIk=";
 
   doCheck = false;
 
@@ -36,5 +36,6 @@ buildGoModule rec {
     homepage = "https://mikefarah.gitbook.io/yq/";
     license = [ licenses.mit ];
     maintainers = [ maintainers.lewo ];
+    mainProgram = "yq";
   };
 }

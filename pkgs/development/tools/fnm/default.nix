@@ -1,21 +1,29 @@
-{ lib, stdenv, fetchFromGitHub, rustPlatform, installShellFiles, Security }:
+{ lib
+, stdenv
+, fetchFromGitHub
+, rustPlatform
+, installShellFiles
+, DiskArbitration
+, Foundation
+, Security
+}:
 
 rustPlatform.buildRustPackage rec {
   pname = "fnm";
-  version = "1.26.0";
+  version = "1.29.2";
 
   src = fetchFromGitHub {
     owner = "Schniz";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-wKtgMUt7QquT6mS3AI+XrZqbJOZxj6jlJi+7uC9w7xU=";
+    sha256 = "sha256-9U0AOFlD7SROTditW/lv12BtvfstCkU5QOMA/19KG+k=";
   };
 
   nativeBuildInputs = [ installShellFiles ];
 
-  buildInputs = lib.optionals stdenv.isDarwin [ Security ];
+  buildInputs = lib.optionals stdenv.isDarwin [ DiskArbitration Foundation Security ];
 
-  cargoSha256 = "sha256-TMhhCVVFTanKdbDp7L3ZaiNohWo5a/jFbQjdRiBlCkk=";
+  cargoSha256 = "sha256-l5H8O0OLnnv3kku/e6yK0Ps1VcIY5YoR5yFTk5w3h4k=";
 
   doCheck = false;
 

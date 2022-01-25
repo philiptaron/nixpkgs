@@ -91,6 +91,8 @@ let
       # and an extid attribute
       extensions = if nameArray != (lib.unique nameArray) then
         throw "Firefox addon name needs to be unique"
+      else if ! (lib.hasSuffix "esr" browser.name) then
+        throw "Nix addons are only supported in Firefox ESR"
       else builtins.map (a:
         if ! (builtins.hasAttr "extid" a) then
         throw "nixExtensions has an invalid entry. Missing extid attribute. Please use fetchfirefoxaddon"
@@ -187,7 +189,7 @@ let
         ];
       };
 
-      nativeBuildInputs = [ makeWrapper lndir ];
+      nativeBuildInputs = [ makeWrapper lndir replace ];
       buildInputs = [ browser.gtk3 ];
 
 
@@ -224,14 +226,14 @@ let
         cd "${browser}"
 
         find . -type l -print0 | while read -d $'\0' l; do
-          target="$(readlink "$l" | ${replace}/bin/replace-literal -es -- "${browser}" "$out")"
+          target="$(readlink "$l" | replace-literal -es -- "${browser}" "$out")"
           ln -sfT "$target" "$out/$l"
         done
 
         # This will not patch binaries, only "text" files.
         # Its there for the wrapper mostly.
         cd "$out"
-        ${replace}/bin/replace-literal -esfR -- "${browser}" "$out"
+        replace-literal -esfR -- "${browser}" "$out"
 
         # create the wrapper
 
@@ -288,7 +290,7 @@ let
         else
             for res in 16 32 48 64 128; do
             mkdir -p "$out/share/icons/hicolor/''${res}x''${res}/apps"
-            icon=( "${browser}/lib/"*"/browser/chrome/icons/default/default''${res}.png" )
+            icon=$( find "${browser}/lib/" -name "default''${res}.png" )
               if [ -e "$icon" ]; then ln -s "$icon" \
                 "$out/share/icons/hicolor/''${res}x''${res}/apps/${applicationName}.png"
               fi

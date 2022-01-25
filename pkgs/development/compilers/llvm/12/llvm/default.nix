@@ -54,7 +54,8 @@ in stdenv.mkDerivation (rec {
   buildInputs = [ libxml2 libffi ]
     ++ optional enablePFM libpfm; # exegesis
 
-  propagatedBuildInputs = [ ncurses zlib ];
+  propagatedBuildInputs = optionals (stdenv.buildPlatform == stdenv.hostPlatform) [ ncurses ]
+    ++ [ zlib ];
 
   patches = [
     ./gnu-install-dirs.patch
@@ -73,7 +74,7 @@ in stdenv.mkDerivation (rec {
       --replace 'set(_install_rpath "@loader_path/../''${CMAKE_INSTALL_LIBDIR}''${LLVM_LIBDIR_SUFFIX}" ''${extra_libdir})' ""
   ''
   # Patch llvm-config to return correct library path based on --link-{shared,static}.
-  + optionalString (enableSharedLibraries) ''
+  + ''
     substitute '${./outputs.patch}' ./outputs.patch --subst-var lib
     patch -p1 < ./outputs.patch
   '' + ''

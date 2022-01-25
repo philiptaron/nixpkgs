@@ -1,18 +1,17 @@
 { lib
 , buildPythonPackage
 , fetchPypi
-, pytestCheckHook
 , pythonOlder
 }:
 
 buildPythonPackage rec {
   pname = "policyuniverse";
-  version = "1.4.0.20210816";
+  version = "1.4.0.20220110";
   disabled = pythonOlder "3.7";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "05fxn89f6rr5rrp117cnqsfzy1p3nbmq3izq2jqk6kackcr3cl8x";
+    sha256 = "sha256-EWuAhVTX6nXvyXtMuQQIVUbbRZNO8xUXXLR1XHpEid4=";
   };
 
   # Tests are not shipped and there are no GitHub tags

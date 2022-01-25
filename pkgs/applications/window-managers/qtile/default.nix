@@ -1,4 +1,4 @@
-{ lib, fetchFromGitHub, python3, glib, cairo, pango, pkg-config, libxcb, xcbutilcursor }:
+{ lib, fetchFromGitHub, python3, mypy, glib, cairo, pango, pkg-config, libxcb, xcbutilcursor }:
 
 let
   enabled-xcffib = cairocffi-xcffib: cairocffi-xcffib.override {
@@ -10,14 +10,14 @@ let
   pythonPackages = python.pkgs;
 
   unwrapped = pythonPackages.buildPythonPackage rec {
-    name = "qtile-${version}";
-    version = "0.18.0";
+    pname = "qtile";
+    version = "0.19.0";
 
     src = fetchFromGitHub {
       owner = "qtile";
       repo = "qtile";
       rev = "v${version}";
-      sha256 = "sha256-S9G/EI18p9EAyWgI1ajDrLimeE+ETBC9feUDb/QthqI=";
+      sha256 = "BLHGVPMQd8O4h5TVx/F/klzSra+FZYogp22V6Yq04T0=";
     };
 
     postPatch = ''
@@ -47,6 +47,14 @@ let
       psutil
       pyxdg
       pygobject3
+      pywayland
+      pywlroots
+      xkbcommon
+    ];
+
+    # for `qtile check`, needs `stubtest` and `mypy` commands
+    makeWrapperArgs = [
+      "--suffix PATH : ${lib.makeBinPath [ mypy ]}"
     ];
 
     doCheck = false; # Requires X server #TODO this can be worked out with the existing NixOS testing infrastructure.
@@ -61,6 +69,8 @@ let
   };
 in
   (python.withPackages (ps: [ unwrapped ])).overrideAttrs (_: {
+    # otherwise will be exported as "env", this restores `nix search` behavior
+    name = "${unwrapped.pname}-${unwrapped.version}";
     # export underlying qtile package
     passthru = { inherit unwrapped; };
   })

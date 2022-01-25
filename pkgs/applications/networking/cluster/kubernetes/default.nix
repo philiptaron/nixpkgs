@@ -21,13 +21,13 @@
 
 stdenv.mkDerivation rec {
   pname = "kubernetes";
-  version = "1.22.0";
+  version = "1.22.4";
 
   src = fetchFromGitHub {
     owner = "kubernetes";
     repo = "kubernetes";
     rev = "v${version}";
-    sha256 = "sha256-4lqqD3SBLBWrnFWhRzV3QgRLdGRW1Jx/eL6swtHL0Vw=";
+    sha256 = "sha256-6ivBecOttzbX85+WCttaU5nXjaiEiKU8xRhnCPkjLXg=";
   };
 
   nativeBuildInputs = [ removeReferencesTo makeWrapper which go rsync installShellFiles ];
@@ -60,6 +60,7 @@ stdenv.mkDerivation rec {
   '';
 
   installPhase = ''
+    runHook preInstall
     for p in $WHAT; do
       install -D _output/local/go/bin/''${p##*/} -t $out/bin
     done
@@ -83,6 +84,7 @@ stdenv.mkDerivation rec {
         --bash <($out/bin/$tool completion bash) \
         --zsh <($out/bin/$tool completion zsh)
     done
+    runHook postInstall
   '';
 
   preFixup = ''
@@ -93,14 +95,9 @@ stdenv.mkDerivation rec {
     description = "Production-Grade Container Scheduling and Management";
     license = licenses.asl20;
     homepage = "https://kubernetes.io";
-    maintainers = with maintainers; [ johanot offline saschagrunert ];
+    maintainers = with maintainers; [ ] ++ teams.kubernetes.members;
     platforms = platforms.unix;
   };
 
-  passthru.tests = with nixosTests.kubernetes; {
-    dns-single-node = dns.singlenode;
-    dns-multi-node = dns.multinode;
-    rbac-single-node = rbac.singlenode;
-    rbac-multi-node = rbac.multinode;
-  };
+  passthru.tests = nixosTests.kubernetes;
 }

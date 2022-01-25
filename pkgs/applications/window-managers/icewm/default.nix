@@ -1,6 +1,7 @@
 { lib
 , stdenv
 , fetchFromGitHub
+, fetchpatch
 , asciidoc
 , cmake
 , expat
@@ -39,13 +40,13 @@
 
 stdenv.mkDerivation rec {
   pname = "icewm";
-  version = "2.6.0";
+  version = "2.9.4";
 
   src = fetchFromGitHub {
     owner  = "ice-wm";
     repo = pname;
     rev = version;
-    hash = "sha256-R06tiWS9z6K5Nbi+vvk7DyozpcFdrHleMeh7Iq/FfHQ=";
+    hash = "sha256-ne2lqo9CAhGgC8dd9R03zhFXy9nPBQR0NcfAY0DeVj4=";
   };
 
   nativeBuildInputs = [

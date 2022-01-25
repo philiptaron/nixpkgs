@@ -33,6 +33,8 @@ stdenv.mkDerivation rec {
 
   autoreconfFlags = "--install --force --verbose . libgcc";
 
+  hardeningDisable = [ "pie" ];
+
   preConfigure = ''
     cd "$buildRoot"
   ''

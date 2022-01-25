@@ -13,11 +13,11 @@
 
 buildPythonPackage rec {
   pname = "SQLAlchemy";
-  version = "1.4.22";
+  version = "1.4.29";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-7BvibNzNYNGANZpSfVmA2VmiYmmix7GzJ6HuoMqzftg=";
+    sha256 = "sha256:+iutFOFHS6ZJz8lpwdLskV3T55Z380a7/gjpPvkCCzk=";
   };
 
   propagatedBuildInputs = [

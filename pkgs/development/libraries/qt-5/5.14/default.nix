@@ -18,7 +18,7 @@ top-level attribute to `top-level/all-packages.nix`.
 , lib, stdenv, fetchurl, fetchpatch, fetchFromGitHub, makeSetupHook, makeWrapper
 , bison, cups ? null, harfbuzz, libGL, perl
 , gstreamer, gst-plugins-base, gtk3, dconf
-, llvmPackages_5, darwin
+, darwin
 
   # options
 , developerBuild ? false
@@ -29,8 +29,6 @@ top-level attribute to `top-level/all-packages.nix`.
 let
 
   qtCompatVersion = srcs.qtbase.version;
-
-  stdenvActual = if stdenv.cc.isClang then llvmPackages_5.stdenv else stdenv;
 
   mirror = "https://download.qt.io";
   srcs = import ./srcs.nix { inherit fetchurl; inherit mirror; } // {
@@ -120,30 +118,32 @@ let
     qtwayland = [ ./qtwayland-libdrm-build.patch ];
   };
 
-  qtModule =
-    import ../qtModule.nix
-    {
-      inherit perl;
-      inherit lib;
-      # Use a variant of mkDerivation that does not include wrapQtApplications
-      # to avoid cyclic dependencies between Qt modules.
-      mkDerivation =
-        import ../mkDerivation.nix
-        { inherit lib; inherit debug; wrapQtAppsHook = null; }
-        stdenvActual.mkDerivation;
-    }
-    { inherit self srcs patches; };
-
   addPackages = self: with self;
     let
+      qtModule =
+        import ../qtModule.nix
+        {
+          inherit perl;
+          inherit lib;
+          # Use a variant of mkDerivation that does not include wrapQtApplications
+          # to avoid cyclic dependencies between Qt modules.
+          mkDerivation =
+            import ../mkDerivation.nix
+            { inherit lib; inherit debug; wrapQtAppsHook = null; }
+            stdenv.mkDerivation;
+        }
+        { inherit self srcs patches; };
+
       callPackage = self.newScope { inherit qtCompatVersion qtModule srcs; };
     in {
+
+      inherit callPackage qtCompatVersion qtModule srcs;
 
       mkDerivationWith =
         import ../mkDerivation.nix
         { inherit lib; inherit debug; inherit (self) wrapQtAppsHook; };
 
-      mkDerivation = mkDerivationWith stdenvActual.mkDerivation;
+      mkDerivation = mkDerivationWith stdenv.mkDerivation;
 
       qtbase = callPackage ../modules/qtbase.nix {
         inherit (srcs.qtbase) src version;
@@ -156,10 +156,14 @@ let
         inherit (darwin) libobjc;
       };
 
+      qt3d = callPackage ../modules/qt3d.nix {};
       qtcharts = callPackage ../modules/qtcharts.nix {};
       qtconnectivity = callPackage ../modules/qtconnectivity.nix {};
       qtdeclarative = callPackage ../modules/qtdeclarative.nix {};
       qtdoc = callPackage ../modules/qtdoc.nix {};
+      qtgamepad = callPackage ../modules/qtgamepad.nix {
+        inherit (darwin.apple_sdk.frameworks) GameController;
+      };
       qtgraphicaleffects = callPackage ../modules/qtgraphicaleffects.nix {};
       qtimageformats = callPackage ../modules/qtimageformats.nix {};
       qtlocation = callPackage ../modules/qtlocation.nix {};
@@ -202,7 +206,7 @@ let
 
       env = callPackage ../qt-env.nix {};
       full = env "qt-full-${qtbase.version}" ([
-        qtcharts qtconnectivity qtdeclarative qtdoc qtgraphicaleffects
+        qt3d qtcharts qtconnectivity qtdeclarative qtdoc qtgraphicaleffects
         qtimageformats qtlocation qtmultimedia qtquickcontrols qtquickcontrols2
         qtscript qtsensors qtserialport qtsvg qttools qttranslations
         qtvirtualkeyboard qtwebchannel qtwebengine qtwebkit qtwebsockets
@@ -224,6 +228,4 @@ let
       } ../hooks/wrap-qt-apps-hook.sh;
     };
 
-   self = lib.makeScope newScope addPackages;
-
-in self
+in lib.makeScope newScope addPackages

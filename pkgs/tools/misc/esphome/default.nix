@@ -2,6 +2,7 @@
 , pkgs
 , python3
 , fetchFromGitHub
+, fetchpatch
 , platformio
 , esptool
 , git
@@ -16,18 +17,19 @@ let
 in
 with python.pkgs; buildPythonApplication rec {
   pname = "esphome";
-  version = "2021.8.0";
+  version = "2022.1.1";
+  format = "setuptools";
 
   src = fetchFromGitHub {
     owner = pname;
     repo = pname;
     rev = version;
-    sha256 = "sha256-yVqma5WRQTt5Vq7poqHexASc59xthYaNcz/kkefC7qI=";
+    sha256 = "sha256-cqL+54Hjqql1YpsXEFLTD5UhxoEizFSr//4TZm7QEVU=";
   };
 
   patches = [
     # fix missing write permissions on src files before modifing them
-   ./fix-src-permissions.patch
+    ./fix-src-permissions.patch
   ];
 
   postPatch = ''
@@ -48,17 +50,20 @@ with python.pkgs; buildPythonApplication rec {
   # - validate_cryptography_installed
   # - validate_pillow_installed
   propagatedBuildInputs = [
+    aioesphomeapi
     click
     colorama
     cryptography
     esphome-dashboard
     ifaddr
+    kconfiglib
     paho-mqtt
     pillow
     protobuf
     pyserial
     pyyaml
     tornado
+    tzdata
     tzlocal
     voluptuous
   ];

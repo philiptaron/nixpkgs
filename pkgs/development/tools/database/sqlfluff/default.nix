@@ -5,19 +5,19 @@
 
 python3.pkgs.buildPythonApplication rec {
   pname = "sqlfluff";
-  version = "0.6.3";
-  disabled = python3.pythonOlder "3.6";
+  version = "0.9.1";
 
   src = fetchFromGitHub {
     owner = pname;
     repo = pname;
     rev = version;
-    sha256 = "sha256-rGtaxa75cFv7LjRI5yuTgKW7F2t8llejcrnjKlUdyEY=";
+    hash = "sha256-sA9iMTDQ7SjaRG0/Uy+wGQ/2yQDqbZP6M5r1lFLBex4=";
   };
 
   propagatedBuildInputs = with python3.pkgs; [
     appdirs
     cached-property
+    chardet
     click
     colorama
     configparser
@@ -26,11 +26,16 @@ python3.pkgs.buildPythonApplication rec {
     oyaml
     pathspec
     pytest
+    regex
     tblib
     toml
+    tqdm
     typing-extensions
   ] ++ lib.optionals (pythonOlder "3.7") [
     dataclasses
+  ] ++ lib.optionals (pythonOlder "3.8") [
+    backports.cached-property
+    importlib_metadata
   ];
 
   checkInputs = with python3.pkgs; [
@@ -39,10 +44,9 @@ python3.pkgs.buildPythonApplication rec {
   ];
 
   disabledTestPaths = [
-    # dbt is not available yet
-    "test/core/templaters/dbt_test.py"
     # Don't run the plugin related tests
     "test/core/plugin_test.py"
+    "plugins/sqlfluff-templater-dbt"
     "plugins/sqlfluff-plugin-example/test/rules/rule_test_cases_test.py"
   ];
 
@@ -53,7 +57,9 @@ python3.pkgs.buildPythonApplication rec {
     "test__rules__std_file_dbt"
   ];
 
-  pythonImportsCheck = [ "sqlfluff" ];
+  pythonImportsCheck = [
+    "sqlfluff"
+  ];
 
   meta = with lib; {
     description = "SQL linter and auto-formatter";

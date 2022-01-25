@@ -1,9 +1,9 @@
 { config, lib, pkgs, utils, ... }:
 
 with utils;
+with systemdUtils.unitOptions;
+with systemdUtils.lib;
 with lib;
-with import ./systemd-unit-options.nix { inherit config lib; };
-with import ./systemd-lib.nix { inherit config lib pkgs; };
 
 let
 
@@ -26,6 +26,8 @@ let
       "nss-user-lookup.target"
       "time-sync.target"
       "cryptsetup.target"
+      "cryptsetup-pre.target"
+      "remote-cryptsetup.target"
       "sigpwr.target"
       "timers.target"
       "paths.target"
@@ -40,7 +42,7 @@ let
       "systemd-udevd-kernel.socket"
       "systemd-udevd.service"
       "systemd-udev-settle.service"
-      "systemd-udev-trigger.service"
+      ] ++ (optional (!config.boot.isContainer) "systemd-udev-trigger.service") ++ [
       # hwdb.bin is managed by NixOS
       # "systemd-hwdb-update.service"
 
@@ -65,6 +67,7 @@ let
       "systemd-user-sessions.service"
       "dbus-org.freedesktop.import1.service"
       "dbus-org.freedesktop.machine1.service"
+      "dbus-org.freedesktop.login1.service"
       "user@.service"
       "user-runtime-dir@.service"
 
@@ -426,7 +429,7 @@ in
 
     systemd.package = mkOption {
       default = pkgs.systemd;
-      defaultText = "pkgs.systemd";
+      defaultText = literalExpression "pkgs.systemd";
       type = types.package;
       description = "The systemd package.";
     };
@@ -446,7 +449,7 @@ in
     systemd.packages = mkOption {
       default = [];
       type = types.listOf types.package;
-      example = literalExample "[ pkgs.systemd-cryptsetup-generator ]";
+      example = literalExpression "[ pkgs.systemd-cryptsetup-generator ]";
       description = "Packages providing systemd units and hooks.";
     };
 
@@ -663,7 +666,7 @@ in
 
     services.journald.forwardToSyslog = mkOption {
       default = config.services.rsyslogd.enable || config.services.syslog-ng.enable;
-      defaultText = "services.rsyslogd.enable || services.syslog-ng.enable";
+      defaultText = literalExpression "services.rsyslogd.enable || services.syslog-ng.enable";
       type = types.bool;
       description = ''
         Whether to forward log messages to syslog.
@@ -722,7 +725,7 @@ in
 
     services.logind.lidSwitchExternalPower = mkOption {
       default = config.services.logind.lidSwitch;
-      defaultText = "services.logind.lidSwitch";
+      defaultText = literalExpression "services.logind.lidSwitch";
       example = "ignore";
       type = logindHandlerType;
 
@@ -768,7 +771,7 @@ in
     systemd.tmpfiles.packages = mkOption {
       type = types.listOf types.package;
       default = [];
-      example = literalExample "[ pkgs.lvm2 ]";
+      example = literalExpression "[ pkgs.lvm2 ]";
       apply = map getLib;
       description = ''
         List of packages containing <command>systemd-tmpfiles</command> rules.
@@ -1056,10 +1059,20 @@ in
 
     services.dbus.enable = true;
 
-    users.users.systemd-coredump.uid = config.ids.uids.systemd-coredump;
-    users.users.systemd-network.uid = config.ids.uids.systemd-network;
+    users.users.systemd-coredump = {
+      uid = config.ids.uids.systemd-coredump;
+      group = "systemd-coredump";
+    };
+    users.groups.systemd-coredump = {};
+    users.users.systemd-network = {
+      uid = config.ids.uids.systemd-network;
+      group = "systemd-network";
+    };
     users.groups.systemd-network.gid = config.ids.gids.systemd-network;
-    users.users.systemd-resolve.uid = config.ids.uids.systemd-resolve;
+    users.users.systemd-resolve = {
+      uid = config.ids.uids.systemd-resolve;
+      group = "systemd-resolve";
+    };
     users.groups.systemd-resolve.gid = config.ids.gids.systemd-resolve;
 
     # Target for ‘charon send-keys’ to hook into.

@@ -5,7 +5,6 @@
 , google-api-core
 , google-cloud-core
 , google-cloud-testutils
-, grpcio
 , libcst
 , mock
 , proto-plus
@@ -14,11 +13,11 @@
 
 buildPythonPackage rec {
   pname = "google-cloud-translate";
-  version = "3.3.2";
+  version = "3.6.1";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-XkHNIu7KWPUpgBceIBqzWgYPCay+Ud1/nM0KbeRnHk0=";
+    sha256 = "38772cc60ef4315d25a7dbeef5ddab9e75674722cb4500bc69b295e5d0af6a97";
   };
 
   propagatedBuildInputs = [

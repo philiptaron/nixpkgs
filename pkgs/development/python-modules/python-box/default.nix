@@ -5,26 +5,26 @@
 , pytestCheckHook
 , pythonOlder
 , pyyaml
-, ruamel_yaml
+, ruamel-yaml
 , toml
 }:
 
 buildPythonPackage rec {
   pname = "python-box";
-  version = "5.4.0";
+  version = "5.4.1";
   disabled = pythonOlder "3.6";
 
   src = fetchFromGitHub {
     owner = "cdgriffith";
     repo = "Box";
     rev = version;
-    sha256 = "sha256-1eRuTpwANyLjnAK1guPOQmH2EW0ITvC7nvyFcEUErz8=";
+    sha256 = "sha256-SkteajcWG7rBFMm6Xp6QCfkZfwthRituGL/RtICbtYk=";
   };
 
   propagatedBuildInputs = [
     msgpack
     pyyaml
-    ruamel_yaml
+    ruamel-yaml
     toml
   ];
 

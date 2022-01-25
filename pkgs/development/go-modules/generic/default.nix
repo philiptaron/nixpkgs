@@ -1,4 +1,4 @@
-{ go, cacert, git, lib, stdenv, vend }:
+{ go, cacert, git, lib, stdenv }:
 
 { name ? "${args'.pname}-${args'.version}"
 , src
@@ -26,12 +26,10 @@
 , vendorSha256
 # Whether to delete the vendor folder supplied with the source.
 , deleteVendor ? false
-# Whether to run the vend tool to regenerate the vendor directory.
-# This is useful if any dependency contain C files.
-, runVend ? false
 # Whether to fetch (go mod download) and proxy the vendor directory.
-# This is useful if any dependency has case-insensitive conflicts
-# which will produce platform dependant `vendorSha256` checksums.
+# This is useful if your code depends on c code and go mod tidy does not
+# include the needed sources to build or if any dependency has case-insensitive
+# conflicts which will produce platform dependant `vendorSha256` checksums.
 , proxyVendor ? false
 
 # We want parallel builds by default
@@ -43,14 +41,21 @@
 
 , meta ? {}
 
+# disabled
+, runVend ? false
+
 # Not needed with buildGoModule
 , goPackagePath ? ""
+
+# needed for buildFlags{,Array} warning
+, buildFlags ? ""
+, buildFlagsArray ? ""
 
 , ... }@args':
 
 with builtins;
 
-assert (runVend == true && proxyVendor == true) -> throw "can't use `runVend` and `proxyVendor` together";
+assert runVend != false -> throw "`runVend` has been replaced by `proxyVendor`";
 
 assert goPackagePath != "" -> throw "`goPackagePath` is not needed with `buildGoModule`";
 
@@ -67,6 +72,7 @@ let
     inherit (go) GOOS GOARCH;
 
     patches = args.patches or [];
+    patchFlags = args.patchFlags or [];
     preBuild = args.preBuild or "";
     sourceRoot = args.sourceRoot or "";
 
@@ -100,10 +106,7 @@ let
         exit 10
       fi
 
-    ${if runVend then ''
-      echo "running 'vend' to rewrite vendor folder"
-      ${vend}/bin/vend
-    '' else if proxyVendor then ''
+    ${if proxyVendor then ''
       mkdir -p "''${GOPATH}/pkg/mod/cache/download"
       go mod download
     '' else ''
@@ -268,4 +271,6 @@ let
     };
   });
 in
+lib.warnIf (buildFlags != "" || buildFlagsArray != "")
+  "Use the `ldflags` and/or `tags` attributes instead of `buildFlags`/`buildFlagsArray`"
   package

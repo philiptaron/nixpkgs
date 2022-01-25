@@ -12,15 +12,19 @@
 , mock
 , pkgs
 , urllib3
+, pythonOlder
 }:
 
 buildPythonPackage rec {
-  version = "0.20.24";
+  version = "0.20.31";
   pname = "dulwich";
+  format = "setuptools";
+
+  disabled = pythonOlder "3.6";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "1wacchqxxwbhwnfnnhlb40s66f92lkvz6423j4c1w6wb585aqqbb";
+    hash = "sha256-9vwYpVDNsU5xCjcqBflcnIMc/DEp/X7RGyASDuVwFYc=";
   };
 
   LC_ALL = "en_US.UTF-8";
@@ -43,7 +47,9 @@ buildPythonPackage rec {
 
   doCheck = !stdenv.isDarwin;
 
-  pythonImportsCheck = [ "dulwich" ];
+  pythonImportsCheck = [
+    "dulwich"
+  ];
 
   meta = with lib; {
     description = "Simple Python implementation of the Git file formats and protocols";

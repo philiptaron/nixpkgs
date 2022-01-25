@@ -4,8 +4,10 @@
 , makeWrapper
 , makeDesktopItem
 , mkYarnPackage
+, fetchYarnDeps
 , electron
 , element-web
+, sqlcipher
 , callPackage
 , Security
 , AppKit
@@ -13,27 +15,28 @@
 
 , useWayland ? false
 }:
-# Notes for maintainers:
-# * versions of `element-web` and `element-desktop` should be kept in sync.
-# * the Yarn dependency expression must be updated with `./update-element-desktop.sh <git release tag>`
 
 let
+  pinData = lib.importJSON ./pin.json;
   executableName = "element-desktop";
-  version = "1.8.1";
+  electron_exec = if stdenv.isDarwin then "${electron}/Applications/Electron.app/Contents/MacOS/Electron" else "${electron}/bin/electron";
+in
+mkYarnPackage rec {
+  pname = "element-desktop";
+  inherit (pinData) version;
+  name = "${pname}-${version}";
   src = fetchFromGitHub {
     owner = "vector-im";
     repo = "element-desktop";
     rev = "v${version}";
-    sha256 = "sha256-FIKbyfnRuHBbmtjwxNC//n5UiGTCQNr+PeiZEi3+RGI=";
+    sha256 = pinData.desktopSrcHash;
   };
-  electron_exec = if stdenv.isDarwin then "${electron}/Applications/Electron.app/Contents/MacOS/Electron" else "${electron}/bin/electron";
-in
-mkYarnPackage rec {
-  name = "element-desktop-${version}";
-  inherit version src;
 
   packageJSON = ./element-desktop-package.json;
-  yarnNix = ./element-desktop-yarndeps.nix;
+  offlineCache = fetchYarnDeps {
+    yarnLock = src + "/yarn.lock";
+    sha256 = pinData.desktopYarnHash;
+  };
 
   nativeBuildInputs = [ makeWrapper ];
 
@@ -76,7 +79,9 @@ mkYarnPackage rec {
     ln -s "${desktopItem}/share/applications" "$out/share/applications"
 
     # executable wrapper
+    # LD_PRELOAD workaround for sqlcipher not found: https://github.com/matrix-org/seshat/issues/102
     makeWrapper '${electron_exec}' "$out/bin/${executableName}" \
+      --set LD_PRELOAD ${sqlcipher}/lib/libsqlcipher.so \
       --add-flags "$out/share/element/electron${lib.optionalString useWayland " --enable-features=UseOzonePlatform --ozone-platform=wayland"}"
   '';
 
@@ -92,7 +97,7 @@ mkYarnPackage rec {
     name = "element-desktop";
     exec = "${executableName} %u";
     icon = "element";
-    desktopName = "Element (Riot)";
+    desktopName = "Element";
     genericName = "Matrix Client";
     comment = meta.description;
     categories = "Network;InstantMessaging;Chat;";
@@ -101,6 +106,8 @@ mkYarnPackage rec {
       MimeType=x-scheme-handler/element;
     '';
   };
+
+  passthru.updateScript = ./update.sh;
 
   meta = with lib; {
     description = "A feature-rich client for Matrix.org";

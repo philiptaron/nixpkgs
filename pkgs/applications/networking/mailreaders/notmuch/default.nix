@@ -1,4 +1,4 @@
-{ fetchurl, fetchgit, lib, stdenv
+{ fetchurl, lib, stdenv
 , pkg-config, gnupg
 , xapian, gmime, talloc, zlib
 , doxygen, perl, texinfo
@@ -11,18 +11,24 @@
 
 stdenv.mkDerivation rec {
   pname = "notmuch";
-  version = "0.32.2";
+  version = "0.34.3";
 
   src = fetchurl {
     url = "https://notmuchmail.org/releases/notmuch-${version}.tar.xz";
-    sha256 = "1myylb19hj5nb1vriqng252vfjwwkgbi3gxj93pi2q1fzyw7w2lf";
+    sha256 = "sha256-P+kQSDv9gVpcO5UOImp7yoFWBT/TLXrR6xoKijrK6Ig=";
   };
+
+  patches = [
+    # https://nmbug.notmuchmail.org/nmweb/show/87o84iza9r.fsf%40starbuck.i-did-not-set--mail-host-address--so-tickle-me
+    ./test-fix-support-for-gpgsm-in-gnupg-2.3.patch
+  ];
 
   nativeBuildInputs = [
     pkg-config
     doxygen                   # (optional) api docs
     pythonPackages.sphinx     # (optional) documentation -> doc/INSTALL
     texinfo                   # (optional) documentation -> doc/INSTALL
+    pythonPackages.cffi
   ] ++ lib.optional withEmacs emacs;
 
   buildInputs = [

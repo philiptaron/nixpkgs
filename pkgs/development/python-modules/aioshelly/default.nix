@@ -3,17 +3,21 @@
 , buildPythonPackage
 , fetchFromGitHub
 , netifaces
+, pythonOlder
 }:
 
 buildPythonPackage rec {
   pname = "aioshelly";
-  version = "0.6.4";
+  version = "1.0.7";
+  format = "setuptools";
+
+  disabled = pythonOlder "3.8";
 
   src = fetchFromGitHub {
     owner = "home-assistant-libs";
     repo = pname;
     rev = version;
-    sha256 = "sha256-QRCqkaKhPQQjNt9mw8nlTB5YKLmIZbXfrxarb3Ksr5k=";
+    sha256 = "1jx2m03c8f76nn8r14vk0v7qq2kijgjhqcqwl95kih50cgmj0yzf";
   };
 
   propagatedBuildInputs = [
@@ -23,7 +27,10 @@ buildPythonPackage rec {
 
   # Project has no test
   doCheck = false;
-  pythonImportsCheck = [ "aioshelly" ];
+
+  pythonImportsCheck = [
+    "aioshelly"
+  ];
 
   meta = with lib; {
     description = "Python library to control Shelly";

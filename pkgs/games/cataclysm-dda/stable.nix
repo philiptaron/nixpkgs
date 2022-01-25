@@ -10,17 +10,17 @@ let
   };
 
   self = common.overrideAttrs (common: rec {
-    version = "0.F-1";
+    version = "0.F-3";
 
     src = fetchFromGitHub {
       owner = "CleverRaven";
       repo = "Cataclysm-DDA";
       rev = version;
-      sha256 = "sha256-bVIln8cLZ15qXpW5iB8Odqk0OQbNLLM8OiKybTzARA0=";
+      sha256 = "sha256-2su1uQaWl9WG41207dRvOTdVKcQsEz/y0uTi9JX52uI=";
     };
 
     makeFlags = common.makeFlags ++ [
-      # Makefile declares version as 0.F, even under 0.F-1
+      # Makefile declares version as 0.F, with no minor release number
       "VERSION=${version}"
     ];
 

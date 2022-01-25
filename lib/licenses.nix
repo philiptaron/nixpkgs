@@ -67,6 +67,11 @@ in mkLicense lset) ({
     free = false;
   };
 
+  aom = {
+    fullName = "Alliance for Open Media Patent License 1.0";
+    url = "https://aomedia.org/license/patent-license/";
+  };
+
   apsl20 = {
     spdxId = "APSL-2.0";
     fullName = "Apple Public Source License 2.0";
@@ -151,6 +156,11 @@ in mkLicense lset) ({
     fullName = "Business Source License 1.1";
     url = "https://mariadb.com/bsl11";
     free = false;
+  };
+
+  capec = {
+    fullName = "Common Attack Pattern Enumeration and Classification";
+    url = "https://capec.mitre.org/about/termsofuse.html";
   };
 
   clArtistic = {
@@ -238,6 +248,11 @@ in mkLicense lset) ({
   cecill20 = {
     spdxId = "CECILL-2.0";
     fullName = "CeCILL Free Software License Agreement v2.0";
+  };
+
+  cecill21 = {
+    spdxId = "CECILL-2.1";
+    fullName = "CeCILL Free Software License Agreement v2.1";
   };
 
   cecill-b = {
@@ -452,13 +467,13 @@ in mkLicense lset) ({
 
   inria-compcert = {
     fullName  = "INRIA Non-Commercial License Agreement for the CompCert verified compiler";
-    url       = "http://compcert.inria.fr/doc/LICENSE"; # https is broken
+    url       = "https://compcert.org/doc/LICENSE.txt";
     free      = false;
   };
 
   inria-icesl = {
     fullName = "INRIA Non-Commercial License Agreement for IceSL";
-    url      = "http://shapeforge.loria.fr/icesl/EULA_IceSL_binary.pdf"; # https is broken
+    url      = "https://icesl.loria.fr/assets/pdf/EULA_IceSL_binary.pdf";
     free     = false;
   };
 

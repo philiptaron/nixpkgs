@@ -2,15 +2,15 @@
 
 buildGoModule rec {
   pname = "traefik";
-  version = "2.5.0";
+  version = "2.5.7";
 
   src = fetchzip {
     url = "https://github.com/traefik/traefik/releases/download/v${version}/traefik-v${version}.src.tar.gz";
-    sha256 = "sha256-8UqnMORAPENkVcWVbNHRje+rjIAlE8CMwBTLYrihBDw=";
+    sha256 = "sha256-CQXrAKdfNqGKXw3Ds47uq6ALsDh6JRf+94axOvLzWbE=";
     stripRoot = false;
   };
 
-  vendorSha256 = "sha256-tBUW6iBZZYc2OgSzFcDZ1C8YnyrXnuy3SdQiy8FPksM=";
+  vendorSha256 = "sha256-aZemr1waV2hIujbI+1PrivXxa1RrT0Ams4xT4QxTQPY=";
 
   doCheck = false;
 
@@ -33,6 +33,7 @@ buildGoModule rec {
   meta = with lib; {
     homepage = "https://traefik.io";
     description = "A modern reverse proxy";
+    changelog = "https://github.com/traefik/traefik/raw/v${version}/CHANGELOG.md";
     license = licenses.mit;
     maintainers = with maintainers; [ vdemeester ];
   };

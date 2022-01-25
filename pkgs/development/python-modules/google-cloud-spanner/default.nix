@@ -14,11 +14,11 @@
 
 buildPythonPackage rec {
   pname = "google-cloud-spanner";
-  version = "3.7.0";
+  version = "3.12.1";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-4LGSB7KU+RGvjSQ/w1vXxa5fkfFT4C5omhk/LnGSUng=";
+    sha256 = "98e53298a7c79f0af351c80e6fc0b57bc735afdec764424e459179ef04f5a40f";
   };
 
   propagatedBuildInputs = [
@@ -43,8 +43,13 @@ buildPythonPackage rec {
 
   disabledTestPaths = [
     # Requires credentials
-    "tests/system/test_system.py"
-    "tests/system/test_system_dbapi.py"
+    "tests/system/test_backup_api.py"
+    "tests/system/test_database_api.py"
+    "tests/system/test_dbapi.py"
+    "tests/system/test_instance_api.py"
+    "tests/system/test_session_api.py"
+    "tests/system/test_streaming_chunking.py"
+    "tests/system/test_table_api.py"
     "tests/unit/spanner_dbapi/test_connect.py"
     "tests/unit/spanner_dbapi/test_connection.py"
     "tests/unit/spanner_dbapi/test_cursor.py"

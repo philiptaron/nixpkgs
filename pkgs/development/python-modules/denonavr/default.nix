@@ -15,14 +15,16 @@
 
 buildPythonPackage rec {
   pname = "denonavr";
-  version = "0.10.8";
+  version = "0.10.10";
+  format = "setuptools";
+
   disabled = pythonOlder "3.6";
 
   src = fetchFromGitHub {
     owner = "scarface-4711";
     repo = pname;
     rev = version;
-    sha256 = "02q76mbmg2rkm4shy2apwbw9pvicy9j5v4zgpjwzxif9yf7m8aqk";
+    sha256 = "sha256-ZL04JJZStOr6egoki85qCQrXoSTTO43RlLVbNBVz3QA=";
   };
 
   propagatedBuildInputs = [
@@ -40,7 +42,9 @@ buildPythonPackage rec {
     pytest-timeout
   ];
 
-  pythonImportsCheck = [ "denonavr" ];
+  pythonImportsCheck = [
+    "denonavr"
+  ];
 
   meta = with lib; {
     description = "Automation Library for Denon AVR receivers";

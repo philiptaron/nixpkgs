@@ -9,11 +9,11 @@ let
 in
 mkDerivation rec {
   pname = "supercollider";
-  version = "3.11.2";
+  version = "3.12.2";
 
   src = fetchurl {
     url = "https://github.com/supercollider/supercollider/releases/download/Version-${version}/SuperCollider-${version}-Source.tar.bz2";
-    sha256 = "wiwyxrxIJnHU+49RZy33Etl6amJ3I1xNojEpEDA6BQY=";
+    sha256 = "sha256-1QYorCgSwBK+SVAm4k7HZirr1j+znPmVicFmJdvO3g4=";
   };
 
   hardeningDisable = [ "stackprotector" ];
@@ -35,6 +35,6 @@ mkDerivation rec {
     homepage = "https://supercollider.github.io";
     maintainers = with maintainers; [ mrmebelman ];
     license = licenses.gpl3Plus;
-    platforms = [ "x686-linux" "x86_64-linux" ];
+    platforms = platforms.linux;
   };
 }

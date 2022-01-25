@@ -10,7 +10,7 @@
 
 buildGoModule rec {
   pname = "containerd";
-  version = "1.5.5";
+  version = "1.5.9";
 
   outputs = [ "out" "man" ];
 
@@ -18,7 +18,7 @@ buildGoModule rec {
     owner = "containerd";
     repo = "containerd";
     rev = "v${version}";
-    sha256 = "sha256-6mDTTXHpXBcKOcT+VrGgt6HJzvTeKgJ0ItJ+IjCTJxk=";
+    sha256 = "sha256-v5seKJMfZUVMbydxKiTSy0OSwen6I/3DrGJnL2DyqHg=";
   };
 
   vendorSha256 = null;
@@ -27,14 +27,12 @@ buildGoModule rec {
 
   buildInputs = [ btrfs-progs ];
 
-  buildFlags = [ "VERSION=v${version}" "REVISION=${src.rev}" ];
-
   BUILDTAGS = lib.optionals (btrfs-progs == null) [ "no_btrfs" ];
 
   buildPhase = ''
     runHook preBuild
     patchShebangs .
-    make binaries man $buildFlags
+    make binaries man "VERSION=v${version}" "REVISION=${src.rev}"
     runHook postBuild
   '';
 
@@ -53,7 +51,7 @@ buildGoModule rec {
     homepage = "https://containerd.io/";
     description = "A daemon to control runC";
     license = licenses.asl20;
-    maintainers = with maintainers; [ offline vdemeester ];
+    maintainers = with maintainers; [ offline vdemeester endocrimes ];
     platforms = platforms.linux;
   };
 }

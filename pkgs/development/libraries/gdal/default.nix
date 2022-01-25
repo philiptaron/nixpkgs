@@ -7,13 +7,13 @@ with lib;
 
 stdenv.mkDerivation rec {
   pname = "gdal";
-  version = "3.2.2";
+  version = "3.4.1";
 
   src = fetchFromGitHub {
     owner = "OSGeo";
     repo = "gdal";
-    rev = "a33784291d19015217ea2604988e53d448e14a07";
-    sha256 = "sha256-ynCju3chDfYtyrGmUE0n3kkaH2Mpm+/DDHHxCahjhSQ=";
+    rev = "v${version}";
+    sha256 = "11rjdaxmsp9n3r9xhmgd7ksy8bh5fazwsxdj0xvl4hsy6bcn4n97";
   };
 
   sourceRoot = "source/gdal";
@@ -36,7 +36,7 @@ stdenv.mkDerivation rec {
     expat
     libxml2
     postgresql
-  ] ++ (with pythonPackages; [ python numpy wrapPython ])
+  ] ++ (with pythonPackages; [ python setuptools numpy wrapPython ])
     ++ lib.optional stdenv.isDarwin libiconv
     ++ lib.optionals netcdfSupport [ netcdf hdf5 curl ];
 
@@ -51,7 +51,7 @@ stdenv.mkDerivation rec {
     "--with-mysql=${getDev libmysqlclient}/bin/mysql_config"
     "--with-geotiff=${libgeotiff}"
     "--with-sqlite3=${sqlite.dev}"
-    "--with-spatialite=${libspatialite}"
+    "--with-spatialite=${libspatialite.dev}"
     "--with-python" # optional
     "--with-proj=${proj.dev}" # optional
     "--with-geos=${geos}/bin/geos-config" # optional

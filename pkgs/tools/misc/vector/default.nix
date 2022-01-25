@@ -14,6 +14,7 @@
 , coreutils
 , CoreServices
 , tzdata
+, cmake
   # kafka is optional but one of the most used features
 , enableKafka ? true
   # TODO investigate adding "api" "api-client" "vrl-cli" and various "vendor-*"
@@ -22,23 +23,26 @@
 , features ? ([ "sinks" "sources" "transforms" ]
     # the second feature flag is passed to the rdkafka dependency
     # building on linux fails without this feature flag (both x86_64 and AArch64)
-    ++ (lib.optionals enableKafka [ "rdkafka-plain" "rdkafka/dynamic_linking" ])
-    ++ (lib.optional stdenv.targetPlatform.isUnix "unix"))
+    ++ lib.optionals enableKafka [ "rdkafka-plain" "rdkafka/dynamic_linking" ]
+    ++ lib.optional stdenv.targetPlatform.isUnix "unix")
 }:
 
-rustPlatform.buildRustPackage rec {
+let
   pname = "vector";
-  version = "0.15.2";
+  version = "0.19.0";
+in
+rustPlatform.buildRustPackage {
+  inherit pname version;
 
   src = fetchFromGitHub {
     owner = "timberio";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-u/KHiny9o/q74dh/w3cShAb6oEkMxNaTMF2lOFx+1po=";
+    sha256 = "sha256-A+Ok/BNEs0V00B8P6ghSHZ2pQ8tumfpkurplnvjpWZ8=";
   };
 
-  cargoSha256 = "sha256-wUNF+810Yh4hPQzraWo2mDi8KSmRKp9Z9D+4kwKQ+IU=";
-  nativeBuildInputs = [ pkg-config ];
+  cargoSha256 = "sha256-B9z+8TqAl0yFaou1LfNcFsDJjw7qGti6MakDPhz49tc=";
+  nativeBuildInputs = [ pkg-config cmake ];
   buildInputs = [ oniguruma openssl protobuf rdkafka zstd ]
     ++ lib.optionals stdenv.isDarwin [ Security libiconv coreutils CoreServices ];
 
@@ -48,12 +52,28 @@ rustPlatform.buildRustPackage rec {
   RUSTONIG_SYSTEM_LIBONIG = true;
   LIBCLANG_PATH = "${llvmPackages.libclang.lib}/lib";
 
-  cargoBuildFlags = [ "--no-default-features" "--features" (lib.concatStringsSep "," features) ];
+  TZDIR = "${tzdata}/share/zoneinfo";
+
+  buildNoDefaultFeatures = true;
+  buildFeatures = features;
+
   # TODO investigate compilation failure for tests
   # dev dependency includes httpmock which depends on iashc which depends on curl-sys with http2 feature enabled
   # compilation fails because of a missing http2 include
   doCheck = !stdenv.isDarwin;
-  checkPhase = "TZDIR=${tzdata}/share/zoneinfo cargo test --no-default-features --features ${lib.concatStringsSep "," features} -- --test-threads 1";
+
+  checkFlags = [
+    # tries to make a network access
+    "--skip=sinks::loki::tests::healthcheck_grafana_cloud"
+
+    # flaky on linux-aarch64
+    "--skip=kubernetes::api_watcher::tests::test_stream_errors"
+
+    # flaky on linux-x86_64
+    "--skip=sources::socket::test::tcp_with_tls_intermediate_ca"
+
+    "--skip=sources::host_metrics::cgroups::tests::generates_cgroups_metrics"
+  ];
 
   # recent overhauls of DNS support in 0.9 mean that we try to resolve
   # vector.dev during the checkPhase, which obviously isn't going to work.

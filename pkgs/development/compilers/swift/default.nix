@@ -252,6 +252,7 @@ stdenv.mkDerivation {
     # LLVM toolchain patches.
     patch -p1 -d llvm-project/clang -i ${./patches/0005-clang-toolchain-dir.patch}
     patch -p1 -d llvm-project/clang -i ${./patches/0006-clang-purity.patch}
+    patch -p1 -d llvm-project/compiler-rt -i ${../llvm/common/compiler-rt/libsanitizer-no-cyclades-11.patch}
     substituteInPlace llvm-project/clang/lib/Driver/ToolChains/Linux.cpp \
       --replace 'SysRoot + "/lib' '"${glibc}/lib" "' \
       --replace 'SysRoot + "/usr/lib' '"${glibc}/lib" "' \
@@ -339,7 +340,7 @@ stdenv.mkDerivation {
     # TODO: consider using stress-tester and integration-test.
 
     # Match the wrapped version of Swift to be installed.
-    export LIBRARY_PATH=${icu}/lib:${libgcc}/lib:${libuuid.out}/lib:$l
+    export LIBRARY_PATH=${lib.makeLibraryPath [icu libgcc libuuid]}:$l
 
     checkTarget=check-swift-all-${stdenv.hostPlatform.parsed.kernel.name}-${stdenv.hostPlatform.parsed.cpu.name}
     ninjaFlags='-C buildbot_linux/swift-${stdenv.hostPlatform.parsed.kernel.name}-${stdenv.hostPlatform.parsed.cpu.name}'
@@ -362,13 +363,13 @@ stdenv.mkDerivation {
       --set CC $out/bin/clang \
       --suffix C_INCLUDE_PATH : $out/lib/swift/clang/include \
       --suffix CPLUS_INCLUDE_PATH : $out/lib/swift/clang/include \
-      --suffix LIBRARY_PATH : ${icu}/lib:${libgcc}/lib:${libuuid.out}/lib
+      --suffix LIBRARY_PATH : ${lib.makeLibraryPath [icu libgcc libuuid]}
 
     wrapProgram $out/bin/swiftc \
       --set CC $out/bin/clang \
       --suffix C_INCLUDE_PATH : $out/lib/swift/clang/include \
       --suffix CPLUS_INCLUDE_PATH : $out/lib/swift/clang/include \
-      --suffix LIBRARY_PATH : ${icu}/lib:${libgcc}/lib:${libuuid.out}/lib
+      --suffix LIBRARY_PATH : ${lib.makeLibraryPath [icu libgcc libuuid]}
   '';
 
   # Hack to avoid build and install directories in RPATHs.

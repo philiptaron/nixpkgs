@@ -6,14 +6,12 @@
 
 stdenv.mkDerivation rec {
   pname = "upwork";
-  version = "5.6.7.13";
+  version = "5.6.10.0";
 
   src = fetchurl {
-    url = "https://upwork-usw2-desktopapp.upwork.com/binaries/v5_6_7_13_9f0e0a44a59e4331/${pname}_${version}_amd64.deb";
-    sha256 = "f1d3168cda47f77100192ee97aa629e2452fe62fb364dd59ad361adbc0d1da87";
+    url = "https://upwork-usw2-desktopapp.upwork.com/binaries/v5_6_10_0_b124e6f3a4944b32/${pname}_${version}_amd64.deb";
+    sha256 = "fd201ce817abe32e1b582bb4b55fef85ac8132806f5ddf0548fd25bbfd48833c";
   };
-
-  dontWrapGApps = true;
 
   nativeBuildInputs = [
     dpkg
@@ -30,6 +28,10 @@ stdenv.mkDerivation rec {
   ];
 
   libPath = lib.makeLibraryPath buildInputs;
+
+  dontWrapGApps = true;
+  dontBuild = true;
+  dontConfigure = true;
 
   unpackPhase = ''
     dpkg-deb -x ${src} ./

@@ -13,14 +13,14 @@
 
 buildPythonPackage rec {
   pname = "aioswitcher";
-  version = "2.0.4";
+  version = "2.0.7";
   format = "pyproject";
 
   src = fetchFromGitHub {
     owner = "TomerFi";
     repo = pname;
     rev = version;
-    sha256 = "sha256-n4JvtShs2/shJxAzxm6qyipVQ7e3QfeVwhnqu6RWZss=";
+    sha256 = "05m5jgn8g3kwrp92x3mdfpnpga1jc4whlxx9vlymg0r9s5y84lz5";
   };
 
   nativeBuildInputs = [

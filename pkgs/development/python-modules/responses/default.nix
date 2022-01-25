@@ -13,11 +13,11 @@
 
 buildPythonPackage rec {
   pname = "responses";
-  version = "0.13.4";
+  version = "0.16.0";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-lHZ3XYVtPCSuZgu+vin7bXidStFqzXI++/tu4gmQuJk=";
+    sha256 = "sha256-ouOsoqgnfmElfNOxwVSx3Q14Kxrj04t/o3y+P+tTF5E=";
   };
 
   propagatedBuildInputs = [

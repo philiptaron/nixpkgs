@@ -13,11 +13,11 @@
 
 buildPythonPackage rec {
   pname = "google-cloud-storage";
-  version = "1.42.0";
+  version = "2.1.0";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "c1dd3d09198edcf24ec6803dd4545e867d82b998f06a68ead3b6857b1840bdae";
+    sha256 = "0a5e7ab1a38d2c24be8e566e50b8b0daa8af8fd49d4ab312b1fda5c147429893";
   };
 
   propagatedBuildInputs = [
@@ -56,9 +56,12 @@ buildPythonPackage rec {
     "tests/system/test_kms_integration.py"
   ];
 
-  # prevent google directory from shadowing google imports
   preCheck = ''
+    # prevent google directory from shadowing google imports
     rm -r google
+
+    # requires docker and network
+    rm tests/conformance/test_conformance.py
   '';
 
   pythonImportsCheck = [ "google.cloud.storage" ];

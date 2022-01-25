@@ -12,11 +12,11 @@
 
 buildPythonPackage rec {
   pname = "google-cloud-securitycenter";
-  version = "1.5.0";
+  version = "1.8.0";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-DrdzC7Oe/8cq41OLcN51Qm208L0zPa9cxscHqmYji04=";
+    sha256 = "c77a765415d5e5465a3d74fefee9ce8f9a914ff228f1b10dda70841400ce1320";
   };
 
   propagatedBuildInputs = [ grpc-google-iam-v1 google-api-core libcst proto-plus ];

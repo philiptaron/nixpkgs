@@ -7,16 +7,16 @@
 }:
 buildGoModule rec {
   pname = "aws-vault";
-  version = "6.3.1";
+  version = "6.4.0";
 
   src = fetchFromGitHub {
     owner = "99designs";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-yNmjoCq9fYzt/lZQlVgxQvxKWCh5Lxd4NSX7c+gE/As=";
+    sha256 = "sha256-5cBQFkagDfMb8xvEQgWlVbYp++mXIHl2p5TZuiaO4Rw=";
   };
 
-  vendorSha256 = "sha256-Lb5iiuT/Fd3RMt98AafIi9I0FHJaSpJ8pH7r4yZiiiw=";
+  vendorSha256 = "sha256-iRJjN+fG5tFhMvHHR3pnWW8Y9VWopuKVv/AgivJC4Eo=";
 
   nativeBuildInputs = [ installShellFiles makeWrapper ];
 
@@ -34,10 +34,9 @@ buildGoModule rec {
   subPackages = [ "." ];
 
   # set the version. see: aws-vault's Makefile
-  buildFlagsArray = ''
-    -ldflags=
-    -X main.Version=v${version}
-  '';
+  ldflags = [
+    "-X main.Version=v${version}"
+  ];
 
   doInstallCheck = true;
 

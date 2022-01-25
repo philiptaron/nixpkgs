@@ -3,7 +3,8 @@
 pkgs.runCommand "nixpkgs-release-checks" { src = nixpkgs; buildInputs = [nix]; } ''
     set -o pipefail
 
-    export NIX_STATE_DIR=$TMPDIR
+    export NIX_STORE_DIR=$TMPDIR/store
+    export NIX_STATE_DIR=$TMPDIR/state
     export NIX_PATH=nixpkgs=$TMPDIR/barf.nix
     opts=(--option build-users-group "")
     nix-store --init
@@ -32,12 +33,18 @@ pkgs.runCommand "nixpkgs-release-checks" { src = nixpkgs; buildInputs = [nix]; }
     for platform in ${pkgs.lib.concatStringsSep " " supportedSystems}; do
         header "checking Nixpkgs on $platform"
 
+        # To get a call trace; see https://nixos.org/manual/nixpkgs/stable/#function-library-lib.trivial.warn
+        # Relies on impure eval
+        export NIX_ABORT_ON_WARN=true
+
         nix-env -f $src \
             --show-trace --argstr system "$platform" \
             --arg config '{ allowAliases = false; }' \
+            --option experimental-features 'no-url-literals' \
             -qa --drv-path --system-filter \* --system \
             "''${opts[@]}" 2>&1 >/dev/null | tee eval-warnings.log
 
+        # Catch any trace calls not caught by NIX_ABORT_ON_WARN (lib.warn)
         if [ -s eval-warnings.log ]; then
             echo "Nixpkgs on $platform evaluated with warnings, aborting"
             exit 1
@@ -47,6 +54,7 @@ pkgs.runCommand "nixpkgs-release-checks" { src = nixpkgs; buildInputs = [nix]; }
         nix-env -f $src \
             --show-trace --argstr system "$platform" \
             --arg config '{ allowAliases = false; }' \
+            --option experimental-features 'no-url-literals' \
             -qa --drv-path --system-filter \* --system --meta --xml \
             "''${opts[@]}" > /dev/null
     done

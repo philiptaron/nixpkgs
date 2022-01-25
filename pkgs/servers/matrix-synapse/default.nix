@@ -1,27 +1,22 @@
 { lib, stdenv, python3, openssl
 , enableSystemd ? stdenv.isLinux, nixosTests
-, enableRedis ? false
+, enableRedis ? true
 , callPackage
 }:
-
-with python3.pkgs;
 
 let
   plugins = python3.pkgs.callPackage ./plugins { };
   tools = callPackage ./tools { };
 in
+with python3.pkgs;
 buildPythonApplication rec {
   pname = "matrix-synapse";
-  version = "1.40.0";
+  version = "1.50.1";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-5RCeKTAtuFERQSoz4WinGz36tMuKtijnupPR/X02hCU=";
+    sha256 = "sha256-fdO+HJ1+fk+s65jLkPDiG+Ei89x5Fbkh9BUUFQ3NJ3M=";
   };
-
-  patches = [
-    ./0001-setup-add-homeserver-as-console-script.patch
-  ];
 
   buildInputs = [ openssl ];
 
@@ -36,11 +31,12 @@ buildPythonApplication rec {
     jinja2
     jsonschema
     lxml
+    matrix-common
     msgpack
     netaddr
     phonenumbers
     pillow
-    prometheus_client
+    prometheus-client
     psutil
     psycopg2
     pyasn1
@@ -66,7 +62,7 @@ buildPythonApplication rec {
   doCheck = !stdenv.isDarwin;
 
   checkPhase = ''
-    PYTHONPATH=".:$PYTHONPATH" ${python3.interpreter} -m twisted.trial tests
+    PYTHONPATH=".:$PYTHONPATH" ${python3.interpreter} -m twisted.trial -j $NIX_BUILD_CORES tests
   '';
 
   passthru.tests = { inherit (nixosTests) matrix-synapse; };

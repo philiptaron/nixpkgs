@@ -17,14 +17,16 @@
 
 buildPythonPackage rec {
   pname = "cloudsplaining";
-  version = "0.4.5";
+  version = "0.4.10";
+  format = "setuptools";
+
   disabled = pythonOlder "3.6";
 
   src = fetchFromGitHub {
     owner = "salesforce";
     repo = pname;
     rev = version;
-    sha256 = "0s446jji3c9x1gw0lsb03giir91cnv6dgh4nzxg9mc1rm9wy7gzw";
+    hash = "sha256-zTsqrHu8eQsQ4ZFocvHdVsgCjWE6JVrlyaztFNir2fk=";
   };
 
   propagatedBuildInputs = [
@@ -44,7 +46,19 @@ buildPythonPackage rec {
     pytestCheckHook
   ];
 
-  pythonImportsCheck = [ "cloudsplaining" ];
+  postPatch = ''
+    # Ignore pinned versions
+    sed -i "s/'\(.*\)\(==\|>=\).*'/'\1'/g" requirements.txt
+  '';
+
+  disabledTests = [
+    "test_policy_expansion"
+    "test_statement_details_for_allow_not_action"
+  ];
+
+  pythonImportsCheck = [
+    "cloudsplaining"
+  ];
 
   meta = with lib; {
     description = "Python module for AWS IAM security assessment";

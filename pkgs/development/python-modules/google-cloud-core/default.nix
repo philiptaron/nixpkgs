@@ -1,21 +1,18 @@
 { lib
 , buildPythonPackage
 , fetchPypi
-, pythonOlder
 , pytestCheckHook
-, python
 , google-api-core
-, grpcio
 , mock
 }:
 
 buildPythonPackage rec {
   pname = "google-cloud-core";
-  version = "1.7.2";
+  version = "2.2.2";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-sQMKrcuyrrTuUUdUJjUa+DwQckVrkY+4/bgGZsS7Y7U=";
+    sha256 = "sha256-fRm/iGi0ENC99aA0aKPz8tsjPA7oagI/TswreksV9zY=";
   };
 
   propagatedBuildInputs = [ google-api-core ];

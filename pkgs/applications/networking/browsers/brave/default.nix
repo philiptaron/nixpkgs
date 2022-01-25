@@ -36,11 +36,13 @@
 , nspr
 , nss
 , pango
+, pipewire
 , udev
 , xorg
 , zlib
 , xdg-utils
 , wrapGAppsHook
+, commandLineArgs ? ""
 }:
 
 let
@@ -80,6 +82,7 @@ rpath = lib.makeLibraryPath [
   nspr
   nss
   pango
+  pipewire
   udev
   xdg-utils
   xorg.libxcb
@@ -90,11 +93,11 @@ in
 
 stdenv.mkDerivation rec {
   pname = "brave";
-  version = "1.28.106";
+  version = "1.34.81";
 
   src = fetchurl {
     url = "https://github.com/brave/brave-browser/releases/download/v${version}/brave-browser_${version}_amd64.deb";
-    sha256 = "gr8d5Dh6ZHb2kThVOA61BoGo64MB77qF7ualUY2RRq0=";
+    sha256 = "bMNk1l3MguQho0vck78U1e3A+/571DyoWSKKerQVE7s=";
   };
 
   dontConfigure = true;
@@ -124,7 +127,7 @@ stdenv.mkDerivation rec {
 
       ln -sf $BINARYWRAPPER $out/bin/brave
 
-      for exe in $out/opt/brave.com/brave/{brave,crashpad_handler}; do
+      for exe in $out/opt/brave.com/brave/{brave,chrome_crashpad_handler}; do
       patchelf \
           --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" \
           --set-rpath "${rpath}" $exe
@@ -156,6 +159,11 @@ stdenv.mkDerivation rec {
       runHook postInstall
   '';
 
+  preFixup = ''
+    # Add command line args to wrapGApp.
+    gappsWrapperArgs+=(--add-flags ${lib.escapeShellArg commandLineArgs})
+  '';
+
   installCheckPhase = ''
     # Bypass upstream wrapper which suppresses errors
     $out/opt/brave.com/brave/brave --version
@@ -166,7 +174,7 @@ stdenv.mkDerivation rec {
   meta = with lib; {
     homepage = "https://brave.com/";
     description = "Privacy-oriented browser for Desktop and Laptop computers";
-    changelog = "https://github.com/brave/brave-browser/blob/master/CHANGELOG_DESKTOP.md";
+    changelog = "https://github.com/brave/brave-browser/blob/master/CHANGELOG_DESKTOP.md#" + lib.replaceStrings [ "." ] [ "" ] version;
     longDescription = ''
       Brave browser blocks the ads and trackers that slow you down,
       chew up your bandwidth, and invade your privacy. Brave lets you
