@@ -2,13 +2,13 @@
 
 buildGoModule rec {
   pname = "dnsproxy";
-  version = "0.40.3";
+  version = "0.43.0";
 
   src = fetchFromGitHub {
     owner = "AdguardTeam";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-OkicEDu2sMEpvBbb7JFRGusMKJeQoVe3ShsbuNCoIis=";
+    sha256 = "sha256-rhhfXdtPxNnHqMgkLfm9ZMXWbKHMAPnFzeyMxt3LbeA=";
   };
 
   vendorSha256 = null;

@@ -9,6 +9,7 @@
 , pandas-stubs
 , requests
 , tqdm
+, wandb
 
 # Check dependencies
 , pytest-mock
@@ -17,7 +18,7 @@
 
 buildPythonPackage rec {
   pname = "openai";
-  version = "0.12.0";
+  version = "0.19.0";
 
   disabled = pythonOlder "3.7.1";
 
@@ -26,7 +27,7 @@ buildPythonPackage rec {
     owner = "openai";
     repo = "openai-python";
     rev = "v${version}";
-    sha256 = "12qkbaw1gyqhs6qwyj65g6l8v5xxnilwgk0gxlwnlzrr82q458ia";
+    sha256 = "sha256-v/EBmKIzHGPR2KGLUqyWlTSZjV2MqALYRRofCXRjH24=";
   };
 
   propagatedBuildInputs = [
@@ -35,6 +36,7 @@ buildPythonPackage rec {
     pandas-stubs
     requests
     tqdm
+    wandb
   ];
 
   pythonImportsCheck = [ "openai" ];

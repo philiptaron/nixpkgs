@@ -13,7 +13,7 @@
 , buildPackages }:
 
 let
-  version = "5.8";
+  version = "5.9";
 in
 
 stdenv.mkDerivation {
@@ -22,22 +22,16 @@ stdenv.mkDerivation {
 
   src = fetchurl {
     url = "mirror://sourceforge/zsh/zsh-${version}.tar.xz";
-    sha256 = "09yyaadq738zlrnlh1hd3ycj1mv3q5hh4xl1ank70mjnqm6bbi6w";
+    sha256 = "sha256-m40ezt1bXoH78ZGOh2dSp92UjgXBoNuhCrhjhC1FrNU=";
   };
 
   patches = [
     # fix location of timezone data for TZ= completion
     ./tz_completion.patch
-    # This commit will be released with the next version of zsh
-    (fetchpatch {
-      name = "fix-git-stash-drop-completions.patch";
-      url = "https://github.com/zsh-users/zsh/commit/754658aff38e1bdf487c58bec6174cbecd019d11.patch";
-      sha256 = "sha256-ud/rLD+SqvyTzT6vwOr+MWH+LY5o5KACrU1TpmL15Lo=";
-      excludes = [ "ChangeLog" ];
-    })
   ];
 
-  nativeBuildInputs = [ autoreconfHook perl groff texinfo ]
+  strictDeps = true;
+  nativeBuildInputs = [ autoreconfHook perl groff texinfo pcre]
                       ++ lib.optionals stdenv.isLinux [ util-linux yodl ];
 
   buildInputs = [ ncurses pcre ];
@@ -88,6 +82,8 @@ EOF
       ${lib.getBin buildPackages.zsh}/bin/zsh -c "zcompile $out/etc/zprofile"
     ''}
     mv $out/etc/zprofile $out/etc/zprofile_zwc_is_used
+
+    rm $out/bin/zsh-${version}
   '';
   # XXX: patch zsh to take zwc if newer _or equal_
 
@@ -103,7 +99,7 @@ EOF
     '';
     license = "MIT-like";
     homepage = "https://www.zsh.org/";
-    maintainers = with lib.maintainers; [ pSub ];
+    maintainers = with lib.maintainers; [ pSub artturin ];
     platforms = lib.platforms.unix;
   };
 

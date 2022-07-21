@@ -1,5 +1,5 @@
 { stdenv, lib, fetchFromGitHub, makeWrapper, autoreconfHook
-, bash, fuse, libmspack, openssl, pam, xercesc, icu, libdnet, procps, libtirpc, rpcsvc-proto
+, bash, fuse3, libmspack, openssl, pam, xercesc, icu, libdnet, procps, libtirpc, rpcsvc-proto
 , libX11, libXext, libXinerama, libXi, libXrender, libXrandr, libXtst
 , pkg-config, glib, gdk-pixbuf-xlib, gtk3, gtkmm3, iproute2, dbus, systemd, which
 , libdrm, udev
@@ -8,13 +8,13 @@
 
 stdenv.mkDerivation rec {
   pname = "open-vm-tools";
-  version = "11.3.5";
+  version = "12.0.5";
 
   src = fetchFromGitHub {
     owner  = "vmware";
     repo   = "open-vm-tools";
     rev    = "stable-${version}";
-    sha256 = "03fahljrijq4ij8a4v8d7806mpf22ppkgr61n5s974g3xfdvpl13";
+    sha256 = "sha256-rjYYRh4ZWAd9iELW2/4PZvMOfQfgwtGcrI2icaed2Eg=";
   };
 
   sourceRoot = "${src.name}/open-vm-tools";
@@ -22,7 +22,7 @@ stdenv.mkDerivation rec {
   outputs = [ "out" "dev" ];
 
   nativeBuildInputs = [ autoreconfHook makeWrapper pkg-config ];
-  buildInputs = [ fuse glib icu libdnet libdrm libmspack libtirpc openssl pam procps rpcsvc-proto udev xercesc ]
+  buildInputs = [ fuse3 glib icu libdnet libdrm libmspack libtirpc openssl pam procps rpcsvc-proto udev xercesc ]
       ++ lib.optionals withX [ gdk-pixbuf-xlib gtk3 gtkmm3 libX11 libXext libXinerama libXi libXrender libXrandr libXtst ];
 
   postPatch = ''
@@ -43,6 +43,7 @@ stdenv.mkDerivation rec {
     "--without-kernel-modules"
     "--without-xmlsecurity"
     "--with-udev-rules-dir=${placeholder "out"}/lib/udev/rules.d"
+    "--with-fuse=fuse3"
   ] ++ lib.optional (!withX) "--without-x";
 
   enableParallelBuilding = true;

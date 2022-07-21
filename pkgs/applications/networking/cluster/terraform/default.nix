@@ -1,6 +1,5 @@
 { stdenv
 , lib
-, buildEnv
 , buildGoModule
 , fetchFromGitHub
 , makeWrapper
@@ -67,6 +66,7 @@ let
           timstott
           zimbatm
           zowoq
+          techknowlogick
         ];
       };
     } // attrs');
@@ -85,9 +85,28 @@ let
           passthru = {
             withPlugins = newplugins:
               withPlugins (x: newplugins x ++ actualPlugins);
-            full = withPlugins (p: lib.filter lib.isDerivation (lib.attrValues p));
+            full = withPlugins (p: lib.filter lib.isDerivation (lib.attrValues p.actualProviders));
 
-            # Ouch
+            # Expose wrappers around the override* functions of the terraform
+            # derivation.
+            #
+            # Note that this does not behave as anyone would expect if plugins
+            # are specified. The overrides are not on the user-visible wrapper
+            # derivation but instead on the function application that eventually
+            # generates the wrapper. This means:
+            #
+            # 1. When using overrideAttrs, only `passthru` attributes will
+            #    become visible on the wrapper derivation. Other overrides that
+            #    modify the derivation *may* still have an effect, but it can be
+            #    difficult to follow.
+            #
+            # 2. Other overrides may work if they modify the terraform
+            #    derivation, or they may have no effect, depending on what
+            #    exactly is being changed.
+            #
+            # 3. Specifying overrides on the wrapper is unsupported.
+            #
+            # See nixpkgs#158620 for details.
             overrideDerivation = f:
               (pluggable (terraform.overrideDerivation f)).withPlugins plugins;
             overrideAttrs = f:
@@ -102,12 +121,35 @@ let
           terraform.overrideAttrs
             (orig: { passthru = orig.passthru // passthru; })
         else
-          lib.appendToName "with-plugins" (buildEnv {
+          lib.appendToName "with-plugins" (stdenv.mkDerivation {
             inherit (terraform) name meta;
-            paths = actualPlugins;
             nativeBuildInputs = [ makeWrapper ];
-            postBuild = ''
-              mkdir -p $out/bin
+
+            # Expose the passthru set with the override functions
+            # defined above, as well as any passthru values already
+            # set on `terraform` at this point (relevant in case a
+            # user overrides attributes).
+            passthru = terraform.passthru // passthru;
+
+            buildCommand = ''
+              # Create wrappers for terraform plugins because Terraform only
+              # walks inside of a tree of files.
+              for providerDir in ${toString actualPlugins}
+              do
+                for file in $(find $providerDir/libexec/terraform-providers -type f)
+                do
+                  relFile=''${file#$providerDir/}
+                  mkdir -p $out/$(dirname $relFile)
+                  cat <<WRAPPER > $out/$relFile
+              #!${runtimeShell}
+              exec "$file" "$@"
+              WRAPPER
+                  chmod +x $out/$relFile
+                done
+              done
+
+              # Create a wrapper for terraform to point it to the plugins dir.
+              mkdir -p $out/bin/
               makeWrapper "${terraform}/bin/terraform" "$out/bin/terraform" \
                 --set NIX_TERRAFORM_PLUGIN_DIR $out/libexec/terraform-providers \
                 --prefix PATH : "${lib.makeBinPath wrapperInputs}"
@@ -150,11 +192,14 @@ rec {
   };
 
   terraform_1 = mkTerraform {
-    version = "1.1.4";
-    sha256 = "sha256-PzBdo4zqWB9ma+uYFGmZtJNCXlRnAHxQmzWxZFPzHH0=";
-    vendorSha256 = "sha256-Rk2hHtJfaS553MJIea6n51irMas3qcBrWAD+adzTi1Y=";
+    version = "1.2.2";
+    sha256 = "sha256-LkRCumyNHVBSsXRp1ovNMGCeidK/jVCjh9H1HSE1Lm8=";
+    vendorSha256 = "sha256-CVgAmPM0nt0Wx+N0qs+IO5KwCWnbfif70EHjBi0bIsQ=";
     patches = [ ./provider-path-0_15.patch ];
-    passthru = { inherit plugins; };
+    passthru = {
+      inherit plugins;
+      tests = { inherit terraform_plugins_test; };
+    };
   };
 
   # Tests that the plugins are being used. Terraform looks at the specific

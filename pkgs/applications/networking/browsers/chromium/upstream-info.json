@@ -1,63 +1,63 @@
 {
   "stable": {
-    "version": "97.0.4692.99",
-    "sha256": "1fpc07zvashaqqalwn7wxnswxclrxvhjrxy1rzr6gcq5awhaw6y9",
-    "sha256bin64": "18afashha667rzcscq3frkp5ixa7nrirs7i3061njqi4z9ql0cs8",
+    "version": "102.0.5005.61",
+    "sha256": "07vbi3gn9g4n04b2qi2hm34r122snrqaifa46yk3pyh1d79rfdqs",
+    "sha256bin64": "100n8k3d9k5bq58irc36ig6m5m0lxggffyk4crqqqcib2anqd0zv",
     "deps": {
       "gn": {
-        "version": "2021-11-03",
+        "version": "2022-04-14",
         "url": "https://gn.googlesource.com/gn",
-        "rev": "90294ccdcf9334ed25a76ac9b67689468e506342",
-        "sha256": "0n0jml8s00ayy186jzrf207hbz70pxiq426znxwxd4gjcp60scsa"
+        "rev": "fd9f2036f26d83f9fcfe93042fb952e5a7fe2167",
+        "sha256": "0b5xs0chcv3hfhy71rycsmgxnqbm375a333hwav8929k9cbi5p9h"
       }
     },
     "chromedriver": {
-      "version": "97.0.4692.71",
-      "sha256_linux": "0lw74ycw8vh3qz4nxynnvrw8sngy3g0vcaana15y4b2ks73gcvci",
-      "sha256_darwin": "1zv1ndv1d7a29yvg0b242g8dw5f8s9vxhr454zd9vahn0ar4ksbs",
-      "sha256_darwin_aarch64": "0jzn75rrjw3y1bqg0ywfjcm2zn9dd2h3lswih51glvdrlcz3vw2a"
+      "version": "102.0.5005.27",
+      "sha256_linux": "1978xwj9kf8nihgakmnzgibizq6wp74qp2d2fxgrsgggjy1clmbv",
+      "sha256_darwin": "0abnqpdm5hgirzj9g2zwkjcc7cwnnr3va4qn09g5yqndlbvi9nqd",
+      "sha256_darwin_aarch64": "0mw7vypghnw3qdci8g11hgfwbfln471dq1mymxn4bi7691xxb6a2"
     }
   },
   "beta": {
-    "version": "98.0.4758.66",
-    "sha256": "06hdd2cy6mdiiwbrn2jawmcidxbf46z9wyklkm3mmzbrj1xrh0gd",
-    "sha256bin64": "0r1lmgvvxb1h6p20gzp8qwdfs4czvqyg6bgp4wb2aax1n0448rbr",
+    "version": "103.0.5060.33",
+    "sha256": "00s9nwy5y2vik08snqxv1wbajllb7d81bryl5v4miyihjs511zjb",
+    "sha256bin64": "1l1fmfsl6ms4ps6sixp6chq3p6spik2fsvz5njvj1zf84p90mx4l",
     "deps": {
       "gn": {
-        "version": "2021-12-07",
+        "version": "2022-05-11",
         "url": "https://gn.googlesource.com/gn",
-        "rev": "fc295f3ac7ca4fe7acc6cb5fb052d22909ef3a8f",
-        "sha256": "02bx3bp85kkis704gndb6jvjph7gv3ij746bq4anl30kfrkpcifh"
+        "rev": "578a7fe4c3c6b0bc2ae1fd2e37f14857d09895bf",
+        "sha256": "03dqfrdpf5xxl64dby3qmbwpzdq2gsa8g7xl438py3a629rgxg63"
       }
     }
   },
   "dev": {
-    "version": "99.0.4840.0",
-    "sha256": "0l1azyd7an8nw2gjnn313gn6sljvw6lbd9g59s7d59lpn2bmbc7j",
-    "sha256bin64": "145qjhdmi39aaw0a3sarlgi67rjhik1xbm62rw7ba0wgnrbvvrjb",
+    "version": "104.0.5098.0",
+    "sha256": "1h5szy6jp2n55m0fs2czdlldgkgyrqsnkfhhpwxzl8fyanlpw1hj",
+    "sha256bin64": "1w97mkdz3ab9wxw7fj5fpm8cjazdpb0s715c85hd3h0wrvwm1g8p",
     "deps": {
       "gn": {
-        "version": "2022-01-10",
+        "version": "2022-05-31",
         "url": "https://gn.googlesource.com/gn",
-        "rev": "80a40b07305373617eba2d5878d353532af77da3",
-        "sha256": "1103lf38h7412949j6nrk48m2vv2rrxacn42sjg33lg88nyv7skv"
+        "rev": "37baefb026b199605affa7bcb24810d1724ce373",
+        "sha256": "166ciclcp77vn7k4k8nvb7xn1clddbrk35am4hqiayfya57yal3c"
       }
     }
   },
   "ungoogled-chromium": {
-    "version": "97.0.4692.99",
-    "sha256": "1fpc07zvashaqqalwn7wxnswxclrxvhjrxy1rzr6gcq5awhaw6y9",
-    "sha256bin64": "18afashha667rzcscq3frkp5ixa7nrirs7i3061njqi4z9ql0cs8",
+    "version": "102.0.5005.61",
+    "sha256": "07vbi3gn9g4n04b2qi2hm34r122snrqaifa46yk3pyh1d79rfdqs",
+    "sha256bin64": "100n8k3d9k5bq58irc36ig6m5m0lxggffyk4crqqqcib2anqd0zv",
     "deps": {
       "gn": {
-        "version": "2021-11-03",
+        "version": "2022-04-14",
         "url": "https://gn.googlesource.com/gn",
-        "rev": "90294ccdcf9334ed25a76ac9b67689468e506342",
-        "sha256": "0n0jml8s00ayy186jzrf207hbz70pxiq426znxwxd4gjcp60scsa"
+        "rev": "fd9f2036f26d83f9fcfe93042fb952e5a7fe2167",
+        "sha256": "0b5xs0chcv3hfhy71rycsmgxnqbm375a333hwav8929k9cbi5p9h"
       },
       "ungoogled-patches": {
-        "rev": "97.0.4692.99-1",
-        "sha256": "1jgxpp3wl24hq39291mgmdwcxbarxg4rpa6il53k8z3rf6gd2s4i"
+        "rev": "102.0.5005.61-1",
+        "sha256": "1hlyi6k894blkkqmqsizx72bag2vj6wlpza0fvi8db5wp6i5b58g"
       }
     }
   }

@@ -12,21 +12,20 @@
 , proto-plus
 , pytestCheckHook
 , pytest-asyncio
+, pythonOlder
 }:
 
 buildPythonPackage rec {
   pname = "google-cloud-logging";
-  version = "2.7.0";
+  version = "3.1.1";
+  format = "setuptools";
+
+  disabled = pythonOlder "3.6";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "5a4ad2832be3b86c8f0fb57b2d382a1f67218137c6f6051372647ac5147d6421";
+    hash = "sha256-YjR2pdEWEWh84nixN/lDO4HssDlNN8CfhX1TOmBnsQs=";
   };
-
-  postPatch = ''
-    substituteInPlace setup.py \
-      --replace "google-cloud-appengine-logging >= 0.1.0, < 1.0.0dev" "google-cloud-appengine-logging >= 0.1.0"
-  '';
 
   propagatedBuildInputs = [
     google-api-core

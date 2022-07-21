@@ -1,40 +1,30 @@
-{ lib
-, python3Packages
+{ stdenv
+, lib
+, buildPythonPackage
 , fetchFromGitHub
+, asgineer
+, itemdb
+, jinja2
+, markdown
+, pscript
+, pyjwt
+, uvicorn
 , pytestCheckHook
 , requests
 }:
 
-python3Packages.buildPythonPackage rec {
+buildPythonPackage rec {
   pname = "timetagger";
-  version = "22.1.2";
+  version = "22.4.2";
 
   src = fetchFromGitHub {
     owner = "almarklein";
     repo = pname;
-    rev = "v${version}";
-    sha256 = "0xrajx0iij7r70ch17m4y6ydyh368dn6nbjsv74pn1x8frd686rw";
+    rev = "refs/tags/v${version}";
+    sha256 = "sha256-CWY+5O4Y1dvKQNy1Cclqj4+U6q5vVVj9hZq41MYqXKs=";
   };
 
-  meta = with lib; {
-    homepage = "https://timetagger.app";
-    license = licenses.gpl3;
-    description = "Tag your time, get the insight";
-    maintainers = with maintainers; [ matthiasbeyer ];
-  };
-
-  checkInputs = [
-    pytestCheckHook
-    requests
-  ];
-
-  preCheck = ''
-    # https://github.com/NixOS/nixpkgs/issues/12591
-    mkdir -p check-phase
-    export HOME=$(pwd)/check-phase
-  '';
-
-  propagatedBuildInputs = with python3Packages; [
+  propagatedBuildInputs = [
     asgineer
     itemdb
     jinja2
@@ -44,4 +34,20 @@ python3Packages.buildPythonPackage rec {
     uvicorn
   ];
 
+  preCheck = ''
+    export HOME=$(mktemp -d)
+  '';
+
+  checkInputs = [
+    pytestCheckHook
+    requests
+  ];
+
+  meta = with lib; {
+    broken = stdenv.isDarwin;
+    homepage = "https://timetagger.app";
+    license = licenses.gpl3Only;
+    description = "Tag your time, get the insight";
+    maintainers = with maintainers; [ matthiasbeyer ];
+  };
 }

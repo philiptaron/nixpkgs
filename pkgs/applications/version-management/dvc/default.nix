@@ -1,6 +1,7 @@
 { lib
 , python3
 , fetchFromGitHub
+, fetchpatch
 , enableGoogle ? false
 , enableAWS ? false
 , enableAzure ? false
@@ -9,14 +10,14 @@
 
 python3.pkgs.buildPythonApplication rec {
   pname = "dvc";
-  version = "2.9.3";
+  version = "2.10.2";
   format = "setuptools";
 
   src = fetchFromGitHub {
     owner = "iterative";
     repo = pname;
     rev = version;
-    hash = "sha256-nRlgo7Wjs7RgTUxoMYQh5YEsqiJtdWH2ex79rhXagAQ=";
+    hash = "sha256-boaQSg0jajWQZKB5wvcP2musVR2/pifT4pU64Y5hiQ0=";
   };
 
   nativeBuildInputs = with python3.pkgs; [
@@ -25,8 +26,8 @@ python3.pkgs.buildPythonApplication rec {
   ];
 
   propagatedBuildInputs = with python3.pkgs; [
-    appdirs
     aiohttp-retry
+    appdirs
     colorama
     configobj
     configobj
@@ -34,12 +35,15 @@ python3.pkgs.buildPythonApplication rec {
     diskcache
     distro
     dpath
+    dvclive
+    dvc-render
     flatten-dict
     flufl_lock
     funcy
     grandalf
     nanotime
     networkx
+    packaging
     pathspec
     ply
     psutil
@@ -73,11 +77,10 @@ python3.pkgs.buildPythonApplication rec {
     importlib-resources
   ];
 
-  patches = [ ./dvc-daemon.patch ];
-
   postPatch = ''
     substituteInPlace setup.cfg \
-      --replace "grandalf==0.6" "grandalf>=0.6"
+      --replace "grandalf==0.6" "grandalf>=0.6" \
+      --replace "scmrepo==0.0.19" "scmrepo"
     substituteInPlace dvc/daemon.py \
       --subst-var-by dvc "$out/bin/dcv"
   '';

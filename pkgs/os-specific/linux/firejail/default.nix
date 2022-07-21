@@ -11,13 +11,13 @@
 
 stdenv.mkDerivation rec {
   pname = "firejail";
-  version = "0.9.66";
+  version = "0.9.68";
 
   src = fetchFromGitHub {
     owner = "netblue30";
     repo = "firejail";
     rev = version;
-    sha256 = "sha256-oKstTiGt0r4wePaZ9u1o78GZ1XWJ27aS0BdLxmfYk9Q=";
+    sha256 = "18yy1mykx7h78yj7sz729i3dlsrgi25m17m5x9gbrvsx7f87rw7j";
   };
 
   nativeBuildInputs = [
@@ -37,12 +37,22 @@ stdenv.mkDerivation rec {
     # Adds the /nix directory when using an overlay.
     # Required to run any programs under this mode.
     ./mount-nix-dir-on-overlay.patch
+
     # By default fbuilder hardcodes the firejail binary to the install path.
     # On NixOS the firejail binary is a setuid wrapper available in $PATH.
     ./fbuilder-call-firejail-on-path.patch
-    # Disable symlink check on /etc/hosts, see
-    # https://github.com/netblue30/firejail/issues/2758#issuecomment-805174951
-    ./remove-link-check.patch
+
+    # NixOS specific whitelist to resolve binary paths in user environment
+    # Fixes https://github.com/NixOS/nixpkgs/issues/170784
+    # Upstream fix https://github.com/netblue30/firejail/pull/5131
+    # Upstream hopefully fixed in later versions > 0.9.68
+   ./whitelist-nix-profile.patch
+
+    # Fix OpenGL support for various applications including Firefox
+    # Issue: https://github.com/NixOS/nixpkgs/issues/55191
+    # Upstream fix: https://github.com/netblue30/firejail/pull/5132
+    # Hopefully fixed upstream in version > 0.9.68
+    ./fix-opengl-support.patch
   ];
 
   prePatch = ''

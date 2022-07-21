@@ -18,31 +18,23 @@ with self; with super; {
 
   cheetah = callPackage ../development/python2-modules/cheetah { };
 
-  click = callPackage ../development/python2-modules/click { };
-
   configparser = callPackage ../development/python2-modules/configparser { };
 
   construct = callPackage ../development/python2-modules/construct { };
 
   contextlib2 = callPackage ../development/python2-modules/contextlib2 { };
 
-  cryptography = callPackage ../development/python2-modules/cryptography { };
-
-  cryptography_vectors = callPackage ../development/python2-modules/cryptography-vectors { };
-
-  decorator = callPackage ../development/python2-modules/decorator { };
+  coverage = callPackage ../development/python2-modules/coverage { };
 
   enum = callPackage ../development/python2-modules/enum { };
 
   filelock =  callPackage ../development/python2-modules/filelock { };
 
-  flask = callPackage ../development/python2-modules/flask { };
-
-  freezegun = callPackage ../development/python2-modules/freezegun { };
-
   futures = callPackage ../development/python2-modules/futures { };
 
   google-apputils = callPackage ../development/python2-modules/google-apputils { };
+
+  gtkme = callPackage ../development/python2-modules/gtkme { };
 
   httpretty = callPackage ../development/python2-modules/httpretty { };
 
@@ -52,15 +44,7 @@ with self; with super; {
 
   importlib-metadata = callPackage ../development/python2-modules/importlib-metadata { };
 
-  ipaddr = callPackage ../development/python2-modules/ipaddr { };
-
-  itsdangerous = callPackage ../development/python2-modules/itsdangerous { };
-
   jinja2 = callPackage ../development/python2-modules/jinja2 { };
-
-  libcloud = callPackage ../development/python2-modules/libcloud { };
-
-  lpod = callPackage ../development/python2-modules/lpod { };
 
   marisa = callPackage ../development/python2-modules/marisa {
     inherit (pkgs) marisa;
@@ -108,11 +92,7 @@ with self; with super; {
 
   pygtk = callPackage ../development/python2-modules/pygtk { };
 
-  pyGtkGlade = self.pygtk.override {
-    inherit (pkgs.gnome2) libglade;
-  };
-
-  pyjwt = callPackage ../development/python2-modules/pyjwt { };
+  pyparsing = callPackage ../development/python2-modules/pyparsing { };
 
   pyroma = callPackage ../development/python2-modules/pyroma { };
 
@@ -159,20 +139,6 @@ with self; with super; {
   TurboCheetah = callPackage ../development/python2-modules/TurboCheetah { };
 
   typing = callPackage ../development/python2-modules/typing { };
-
-  urllib3 = callPackage ../development/python2-modules/urllib3 { };
-
-  werkzeug = callPackage ../development/python2-modules/werkzeug { };
-
-  wsproto = callPackage ../development/python2-modules/wsproto { };
-
-  wxPython30 = callPackage ../development/python2-modules/wxPython {
-    wxGTK = pkgs.wxGTK30;
-  };
-
-  wxPython = self.wxPython30;
-
-  vcrpy = callPackage ../development/python2-modules/vcrpy { };
 
   zeek = disabled super.zeek;
 

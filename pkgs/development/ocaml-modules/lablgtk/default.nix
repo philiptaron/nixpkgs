@@ -23,8 +23,8 @@ stdenv.mkDerivation {
   pname = "lablgtk";
   inherit (param) version src;
 
-  nativeBuildInputs = [ pkg-config ];
-  buildInputs = [ ocaml findlib gtk2 libgnomecanvas gtksourceview ];
+  nativeBuildInputs = [ pkg-config ocaml findlib ];
+  buildInputs = [ gtk2 libgnomecanvas gtksourceview ];
 
   configureFlags = [ "--with-libdir=$(out)/lib/ocaml/${ocaml.version}/site-lib" ];
   buildFlags = [ "world" ];
@@ -37,12 +37,11 @@ stdenv.mkDerivation {
   dontStrip = true;
 
   meta = with lib; {
-    platforms = ocaml.meta.platforms or [];
-    maintainers = with maintainers; [
-      maggesi roconnor vbgl
-    ];
-    homepage = "http://lablgtk.forge.ocamlcore.org/";
     description = "An OCaml interface to GTK";
+    homepage = "http://lablgtk.forge.ocamlcore.org/";
     license = licenses.lgpl21Plus;
+    maintainers = with maintainers; [ maggesi roconnor vbgl ];
+    mainProgram = "lablgtk2";
+    inherit (ocaml.meta) platforms;
   };
 }

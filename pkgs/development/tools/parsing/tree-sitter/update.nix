@@ -16,7 +16,6 @@ let
   knownTreeSitterOrgGrammarRepos = [
     "tree-sitter-javascript"
     "tree-sitter-c"
-    "tree-sitter-swift"
     "tree-sitter-json"
     "tree-sitter-cpp"
     "tree-sitter-ruby"
@@ -42,6 +41,7 @@ let
     "tree-sitter-ql"
     "tree-sitter-embedded-template"
     "tree-sitter-tsq"
+    "tree-sitter-toml"
   ];
   knownTreeSitterOrgGrammarReposJson = jsonFile "known-tree-sitter-org-grammar-repos" knownTreeSitterOrgGrammarRepos;
 
@@ -69,6 +69,8 @@ let
     "tree-sitter-razor"
     # rust library for constructing arbitrary graph structures from source code
     "tree-sitter-graph"
+    # abandoned
+    "tree-sitter-swift"
   ];
   ignoredTreeSitterOrgReposJson = jsonFile "ignored-tree-sitter-org-repos" ignoredTreeSitterOrgRepos;
 
@@ -105,7 +107,7 @@ let
       repo = "tree-sitter-latex";
     };
     "tree-sitter-lua" = {
-      orga = "nvim-treesitter";
+      orga = "MunifTanjim";
       repo = "tree-sitter-lua";
     };
     "tree-sitter-fennel" = {
@@ -117,7 +119,7 @@ let
       repo = "tree-sitter-make";
     };
     "tree-sitter-markdown" = {
-      orga = "ikatyang";
+      orga = "MDeiml";
       repo = "tree-sitter-markdown";
     };
     "tree-sitter-rst" = {
@@ -135,10 +137,6 @@ let
     "tree-sitter-yaml" = {
       orga = "ikatyang";
       repo = "tree-sitter-yaml";
-    };
-    "tree-sitter-toml" = {
-      orga = "ikatyang";
-      repo = "tree-sitter-toml";
     };
     "tree-sitter-zig" = {
       orga = "maxxnino";
@@ -183,6 +181,10 @@ let
     "tree-sitter-graphql" = {
       orga = "bkegley";
       repo = "tree-sitter-graphql";
+    };
+    "tree-sitter-pgn" = {
+      orga = "rolandwalker";
+      repo = "tree-sitter-pgn";
     };
     "tree-sitter-perl" = {
       orga = "ganezdragon";
@@ -280,6 +282,10 @@ let
       orga = "uyha";
       repo = "tree-sitter-cmake";
     };
+    "tree-sitter-janet-simple" = {
+      orga = "sogaiu";
+      repo = "tree-sitter-janet-simple";
+    };
     "tree-sitter-json5" = {
       orga = "joakker";
       repo = "tree-sitter-json5";
@@ -304,9 +310,17 @@ let
       orga = "victorhqc";
       repo = "tree-sitter-prisma";
     };
-    "tree-sitter-org" = {
+    "tree-sitter-org-nvim" = {
       orga = "milisims";
       repo = "tree-sitter-org";
+    };
+    "tree-sitter-hcl" = {
+      orga = "MichaHoffmann";
+      repo = "tree-sitter-hcl";
+    };
+    "tree-sitter-scheme" = {
+      orga = "6cdh";
+      repo = "tree-sitter-scheme";
     };
   };
 
@@ -376,7 +390,7 @@ let
     if [[ "$(printf "%s" "$res" | ${jq}/bin/jq '.message?')" =~ "rate limit" ]]; then
       echo "rate limited" >&2
     fi
-    release=$(printf "%s" "$res" | ${jq}/bin/jq '.tag_name')
+    release="$(printf "%s" "$res" | ${jq}/bin/jq -r '.tag_name' | tr -d \")"
     # github sometimes returns an empty list even tough there are releases
     if [ "$release" = "null" ]; then
       echo "uh-oh, latest for ${orga + "/" + repo} is not there, using HEAD" >&2

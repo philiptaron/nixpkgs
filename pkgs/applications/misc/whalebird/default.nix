@@ -1,13 +1,13 @@
 { lib, stdenv, fetchurl, dpkg, autoPatchelfHook, makeWrapper, electron
-, nodePackages, alsa-lib, gtk3, libxshmfence, mesa, nss }:
+, nodePackages, alsa-lib, gtk3, libdbusmenu, libxshmfence, mesa, nss }:
 
 stdenv.mkDerivation rec {
   pname = "whalebird";
-  version = "4.5.0";
+  version = "4.5.4";
 
   src = fetchurl {
     url = "https://github.com/h3poteto/whalebird-desktop/releases/download/${version}/Whalebird-${version}-linux-x64.deb";
-    sha256 = "sha256-yl4R/1flm2Lfvyh9PXlJcZ1VtnP8nBQC0i7zs4U+g7g=";
+    sha256 = "048c2hpnlzjli8r1lcm7hd32qfsq4p9vkimrgc049yw9f15ndjpr";
   };
 
   nativeBuildInputs = [
@@ -17,7 +17,7 @@ stdenv.mkDerivation rec {
     nodePackages.asar
   ];
 
-  buildInputs = [ alsa-lib gtk3 libxshmfence mesa nss ];
+  buildInputs = [ alsa-lib gtk3 libdbusmenu libxshmfence mesa nss ];
 
   dontConfigure = true;
 
