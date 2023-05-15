@@ -12,12 +12,12 @@
 }:
 
 let
-  version = "11.2.0";
+  version = "12.1.0";
 
   # fetchzip to unpack makes debug cycle much better
   gcc_src = fetchzip {
     url = "mirror://gcc/releases/gcc-${version}/gcc-${version}.tar.xz";
-    sha256 = "0aj1l0wkdbd5l2h5qybw0i5nwqbhqx89klnp7m5mwr63gmjfxwmi";
+    sha256 = "0xmb0glrf99ms20f0fj0vdav9r71i5jk7wq5g74pqav6qjsp6wn8";
   };
 
   gcc_meta = {

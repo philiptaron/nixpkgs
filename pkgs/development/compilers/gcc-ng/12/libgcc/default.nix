@@ -90,7 +90,7 @@ stdenv.mkDerivation rec {
         options.h \
         insn-constants.h \
         insn-modes.h \
-        gcov-iov.h
+        version.h
     )
     mkdir -p "$buildRoot/gcc/include"
   ''

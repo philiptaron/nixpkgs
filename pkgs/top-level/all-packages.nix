@@ -12956,15 +12956,15 @@ with pkgs;
 
   gnatboot = wrapCC (callPackage ../development/compilers/gnatboot { });
 
-  gccNgPackages = gccNgPackages_11;
+  gccNgPackages = gccNgPackages_12;
 
-  gccNgPackages_11 = recurseIntoAttrs (callPackage ../development/compilers/gcc-ng/11 ({
+  gccNgPackages_12 = recurseIntoAttrs (callPackage ../development/compilers/gcc-ng/12 ({
     inherit (stdenvAdapters) overrideCC;
     # These are the default arguments, but do this to avoid splicing which was
     # causing infinite recursion.
     inherit bintools bintoolsNoLibc;
-    buildGccTools = buildPackages.gccNgPackages_11.tools;
-    targetGccLibraries = targetPackages.gccNgPackages_11.libraries;
+    buildGccTools = buildPackages.gccNgPackages_12.tools;
+    targetGccLibraries = targetPackages.gccNgPackages_12.libraries;
   }));
 
   gnu-smalltalk = callPackage ../development/compilers/gnu-smalltalk { };
