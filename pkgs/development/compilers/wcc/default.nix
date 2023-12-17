@@ -1,24 +1,57 @@
-{ lib, stdenv, fetchFromGitHub, capstone, libbfd, libelf, libiberty, readline }:
+{ lib
+, stdenv
+, fetchFromGitHub
+, substituteAll
+, capstone
+, linenoise
+, openlibm
+, luajit_2_0
+, libbfd
+, libelf
+, libiberty
+}:
+
+let
+  luajit = luajit_2_0;
+in
 
 stdenv.mkDerivation {
-  pname = "wcc-unstable";
-  version = "2018-04-05";
+  pname = "wcc";
+  version = "0.0.4-unstable-2023-02-04";
 
   src = fetchFromGitHub {
     owner = "endrazine";
     repo = "wcc";
-    rev = "f141963ff193d7e1931d41acde36d20d7221e74f";
-    sha256 = "1f0w869x0176n5nsq7m70r344gv5qvfmk7b58syc0jls8ghmjvb4";
-    fetchSubmodules = true;
+    rev = "825448004e5e53c3ab9a9dac0886544bc499d259";
+    hash = "sha256-SZnZYgTGx8vrGt+suShCvkqIx7aDvFkhCySCYfMrODA=";
   };
 
-  buildInputs = [ capstone libbfd libelf libiberty readline ];
+  # Remove headers provided by upstream
+  postUnpack = ''
+    rm -f source/src/wsh/include/{lauxlib.h,linenoise.h,lua.h,luaconf.h,lualib.h}
+  '';
+
+  patches = [
+    (substituteAll {
+      src = ./fix-dependencies.patch;
+      luajit = "${luajit}";
+      openlibm = "${openlibm}";
+      linenoise = "${linenoise}";
+    })
+  ];
+
+  nativeBuildInputs = [ linenoise luajit openlibm ];
+
+  buildInputs = [
+    capstone
+    libbfd
+    libelf
+    libiberty
+  ];
 
   postPatch = ''
     sed -i src/wsh/include/libwitch/wsh.h src/wsh/scripts/INDEX \
       -e "s#/usr/share/wcc#$out/share/wcc#"
-
-    sed -i -e '/stropts.h>/d' src/wsh/include/libwitch/wsh.h
   '';
 
   installFlags = [ "DESTDIR=$(out)" ];
