@@ -15,6 +15,7 @@ let
   atLeast210 = lib.versionAtLeast version "2.10pre";
   atLeast213 = lib.versionAtLeast version "2.13pre";
   atLeast214 = lib.versionAtLeast version "2.14pre";
+  atLeast220 = lib.versionAtLeast version "2.20pre";
 in
 { stdenv
 , autoconf-archive
@@ -40,6 +41,7 @@ in
 , lib
 , libarchive
 , libcpuid
+, libgit2
 , libsodium
 , libxml2
 , libxslt
@@ -118,6 +120,8 @@ self = stdenv.mkDerivation {
     gtest
     libarchive
     lowdown
+  ] ++ lib.optionals atLeast220 [
+    libgit2
   ] ++ lib.optionals stdenv.isDarwin [
     Security
   ] ++ lib.optionals (stdenv.isx86_64) [

@@ -253,6 +253,19 @@ in lib.makeExtensible (self: ({
     hash = "sha256-EtL6M0H5+0mFbFh+teVjm+0B+xmHoKwtBvigS5NMWoo=";
   };
 
+  nix_2_20 = common {
+    version = "2.20.3";
+    hash = "sha256-s7QTMxLzVA5UF80sFCv8jwaTMBLA8/110YFkZNkNsCk=";
+    patches = [
+      # Handle empty Git repositories / workdirs
+      # required for /lib/tests/release.nix
+      (fetchpatch {
+        url = "https://github.com/NixOS/nix/commit/d2c6a93bd5a213e66c5e6774776889eecbe3e625.patch";
+        hash = "sha256-lO6c7f1SzOKhKmYtU2Vaun1o7RvJvOBxKVgdamDAjQ8=";
+      })
+    ];
+  };
+
   # The minimum Nix version supported by Nixpkgs
   # Note that some functionality *might* have been backported into this Nix version,
   # making this package an inaccurate representation of what features are available
