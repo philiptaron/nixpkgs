@@ -3,9 +3,22 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    escapeShellArg
+    filterAttrs
+    mapAttrs
+    mapAttrsFlatten
+    mdDoc
+    mkDefault
+    mkIf
+    mkOption
+    mkOptionDefault
+    mkRemovedOptionModule
+    optionals
+    types
+    ;
 
   cfge = config.environment;
 
@@ -30,7 +43,7 @@ in
       /*
       enable = mkOption {
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whenever to configure Bash as an interactive shell.
           Note that this tries to make Bash the default
           {option}`users.defaultUserShell`,
@@ -44,7 +57,7 @@ in
 
       shellAliases = mkOption {
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Set of aliases for bash shell, which overrides {option}`environment.shellAliases`.
           See {option}`environment.shellAliases` for an option format description.
         '';
@@ -53,7 +66,7 @@ in
 
       shellInit = mkOption {
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Shell script code called during bash shell initialisation.
         '';
         type = types.lines;
@@ -61,7 +74,7 @@ in
 
       loginShellInit = mkOption {
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Shell script code called during login bash shell initialisation.
         '';
         type = types.lines;
@@ -69,7 +82,7 @@ in
 
       interactiveShellInit = mkOption {
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Shell script code called during interactive bash shell initialisation.
         '';
         type = types.lines;
@@ -92,7 +105,7 @@ in
             fi
           fi
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Shell script code used to initialise the bash prompt.
         '';
         type = types.lines;
@@ -100,7 +113,7 @@ in
 
       promptPluginInit = mkOption {
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Shell script code used to initialise bash prompt plugins.
         '';
         type = types.lines;
