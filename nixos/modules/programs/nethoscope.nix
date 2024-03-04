@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
 
-let cfg = config.programs.nethoscope;
+  cfg = config.programs.nethoscope;
 in
 {
   meta.maintainers = with maintainers; [ _0x4A6F ];
@@ -12,7 +19,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to add nethoscope to the global environment and configure a
           setcap wrapper for it.
         '';
