@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
 
-let cfg = config.programs.bandwhich;
+  cfg = config.programs.bandwhich;
 in {
   meta.maintainers = with maintainers; [ Br1ght0ne ];
 
@@ -11,7 +18,7 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to add bandwhich to the global environment and configure a
           setcap wrapper for it.
         '';
