@@ -1,8 +1,20 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    init
+    literalExpression
+    maintainers
+    mdDoc
+    meta
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalString
+    types
+    unique
+    ;
+
   cfg = config.users.mysql;
 in
 {
