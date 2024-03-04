@@ -2,7 +2,21 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    concatStringsSep
+    makeLibraryPath
+    mdDoc
+    mkBefore
+    mkForce
+    mkMerge
+    mkOption
+    mkOrder
+    mkRenamedOptionModule
+    modules
+    types
+    ;
+in
 
 {
   options = {
