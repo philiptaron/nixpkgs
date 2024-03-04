@@ -1,11 +1,20 @@
 { config, lib, pkgs, ... }:
-with lib;
+
+let
+  inherit (lib)
+    head
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+in
 
 {
   options.hardware.usbStorage.manageStartStop = mkOption {
     type = types.bool;
     default = true;
-    description = lib.mdDoc ''
+    description = mdDoc ''
       Enable this option to gracefully spin-down external storage during shutdown.
       If you suspect improper head parking after poweroff, install `smartmontools` and check
       for the `Power-Off_Retract_Count` field for an increment.
