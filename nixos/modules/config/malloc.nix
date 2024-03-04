@@ -1,7 +1,19 @@
 { config, lib, pkgs, ... }:
-with lib;
 
 let
+  inherit (lib)
+    attrNames
+    concatStringsSep
+    maintainers
+    mapAttrsToList
+    mdDoc
+    meta
+    mkIf
+    mkOption
+    replaceStrings
+    types
+    ;
+
   cfg = config.environment.memoryAllocator;
 
   # The set of alternative malloc(3) providers.
