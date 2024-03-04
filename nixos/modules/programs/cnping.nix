@@ -1,14 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.programs.cnping;
 in
 {
   options = {
     programs.cnping = {
-      enable = mkEnableOption (lib.mdDoc "a setcap wrapper for cnping");
+      enable = mkEnableOption (mdDoc "a setcap wrapper for cnping");
     };
   };
 
