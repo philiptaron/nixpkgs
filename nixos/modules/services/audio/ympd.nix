@@ -1,10 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.ympd;
-in {
+in
+{
 
   ###### interface
 
@@ -12,12 +20,12 @@ in {
 
     services.ympd = {
 
-      enable = mkEnableOption (lib.mdDoc "ympd, the MPD Web GUI");
+      enable = mkEnableOption (mdDoc "ympd, the MPD Web GUI");
 
       webPort = mkOption {
         type = types.either types.str types.port; # string for backwards compat
         default = "8080";
-        description = lib.mdDoc "The port where ympd's web interface will be available.";
+        description = mdDoc "The port where ympd's web interface will be available.";
         example = "ssl://8080:/path/to/ssl-private-key.pem";
       };
 
@@ -25,14 +33,14 @@ in {
         host = mkOption {
           type = types.str;
           default = "localhost";
-          description = lib.mdDoc "The host where MPD is listening.";
+          description = mdDoc "The host where MPD is listening.";
         };
 
         port = mkOption {
           type = types.port;
           default = config.services.mpd.network.port;
           defaultText = literalExpression "config.services.mpd.network.port";
-          description = lib.mdDoc "The port where MPD is listening.";
+          description = mdDoc "The port where MPD is listening.";
           example = 6600;
         };
       };
