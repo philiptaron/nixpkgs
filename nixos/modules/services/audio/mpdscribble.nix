@@ -1,8 +1,24 @@
 { config, lib, options, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    any
+    attrNames
+    concatStringsSep
+    findFirst
+    last
+    literalExpression
+    literalMD
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optional
+    optionalString
+    types
+    ;
+
   cfg = config.services.mpdscribble;
   mpdCfg = config.services.mpd;
   mpdOpt = options.services.mpd;
@@ -77,12 +93,12 @@ in {
 
   options.services.mpdscribble = {
 
-    enable = mkEnableOption (lib.mdDoc "mpdscribble");
+    enable = mkEnableOption (mdDoc "mpdscribble");
 
     proxy = mkOption {
       default = null;
       type = types.nullOr types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         HTTP proxy URL.
       '';
     };
@@ -90,7 +106,7 @@ in {
     verbose = mkOption {
       default = 1;
       type = types.int;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Log level for the mpdscribble daemon.
       '';
     };
@@ -99,7 +115,7 @@ in {
       default = 600;
       example = 60;
       type = types.int;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         How often should mpdscribble save the journal file? [seconds]
       '';
     };
@@ -115,7 +131,7 @@ in {
         else "localhost"
       '';
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Host for the mpdscribble daemon to search for a mpd daemon on.
       '';
     };
@@ -133,7 +149,7 @@ in {
         otherwise `null`.
       '';
       type = types.nullOr types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         File containing the password for the mpd daemon.
         If there is a local mpd configured using {option}`services.mpd.credentials`
         the default is automatically set to a matching passwordFile of the local mpd.
@@ -144,7 +160,7 @@ in {
       default = mpdCfg.network.port;
       defaultText = literalExpression "config.${mpdOpt.network.port}";
       type = types.port;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Port for the mpdscribble daemon to search for a mpd daemon on.
       '';
     };
@@ -157,18 +173,18 @@ in {
               type = types.str;
               default = endpointUrls.${name} or "";
               description =
-                lib.mdDoc "The url endpoint where the scrobble API is listening.";
+                mdDoc "The url endpoint where the scrobble API is listening.";
             };
             username = mkOption {
               type = types.str;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Username for the scrobble service.
               '';
             };
             passwordFile = mkOption {
               type = types.nullOr types.str;
               description =
-                lib.mdDoc "File containing the password, either as MD5SUM or cleartext.";
+                mdDoc "File containing the password, either as MD5SUM or cleartext.";
             };
           };
         };
@@ -180,7 +196,7 @@ in {
           passwordFile = "/run/secrets/lastfm_password";
         };
       };
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Endpoints to scrobble to.
         If the endpoint is one of "${
           concatStringsSep "\", \"" (attrNames endpointUrls)
