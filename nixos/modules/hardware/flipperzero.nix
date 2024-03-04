@@ -1,11 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
 
   cfg = config.hardware.flipperzero;
-
 in
 
 {
