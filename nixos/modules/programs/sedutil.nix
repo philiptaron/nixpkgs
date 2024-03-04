@@ -1,12 +1,17 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.programs.sedutil;
 
-in {
-  options.programs.sedutil.enable = mkEnableOption (lib.mdDoc "sedutil");
+in
+{
+  options.programs.sedutil.enable = mkEnableOption (mdDoc "sedutil");
 
   config = mkIf cfg.enable {
     boot.kernelParams = [
