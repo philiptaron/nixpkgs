@@ -1,6 +1,13 @@
 { config, pkgs, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+in
 
 let
   cfg = config.i18n.inputMethod.uim;
@@ -13,7 +20,7 @@ in
         type    = types.enum [ "gtk" "gtk3" "gtk-systray" "gtk3-systray" "qt5" ];
         default = "gtk";
         example = "gtk-systray";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           selected UIM toolbar.
         '';
       };
