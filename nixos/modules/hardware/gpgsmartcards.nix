@@ -1,7 +1,12 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   # gnupg's manual describes how to setup ccid udev rules:
   #   https://www.gnupg.org/howtos/card-howto/en/ch02s03.html
   # gnupg folks advised me (https://dev.gnupg.org/T5409) to look at debian's rules:
@@ -28,7 +33,7 @@ let
   cfg = config.hardware.gpgSmartcards;
 in {
   options.hardware.gpgSmartcards = {
-    enable = mkEnableOption (lib.mdDoc "udev rules for gnupg smart cards");
+    enable = mkEnableOption (mdDoc "udev rules for gnupg smart cards");
   };
 
   config = mkIf cfg.enable {
