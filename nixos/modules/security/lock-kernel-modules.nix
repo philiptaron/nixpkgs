@@ -1,6 +1,17 @@
 { config, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    concatMap
+    maintainers
+    mdDoc
+    mkIf
+    mkOption
+    modules
+    optionals
+    types
+    ;
+in
 
 {
   meta = {
@@ -11,7 +22,7 @@ with lib;
     security.lockKernelModules = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Disable kernel module loading once the system is fully initialised.
         Module loading is disabled until the next reboot. Problems caused
         by delayed module loading can be fixed by adding the module(s) in
