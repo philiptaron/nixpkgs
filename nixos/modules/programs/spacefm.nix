@@ -2,10 +2,18 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    concatStrings
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
 
-let cfg = config.programs.spacefm;
-
+  cfg = config.programs.spacefm;
 in
 {
   ###### interface
@@ -17,7 +25,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to install SpaceFM and create {file}`/etc/spacefm/spacefm.conf`.
         '';
       };
@@ -34,7 +42,7 @@ in
             terminal_su = "''${pkgs.sudo}/bin/sudo";
           }
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The system-wide spacefm configuration.
           Parameters to be written to {file}`/etc/spacefm/spacefm.conf`.
           Refer to the [relevant entry](https://ignorantguru.github.io/spacefm/spacefm-manual-en.html#programfiles-etc) in the SpaceFM manual.
