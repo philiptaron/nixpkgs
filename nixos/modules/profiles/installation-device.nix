@@ -1,7 +1,14 @@
 # Provide a basic configuration for installation devices like CDs.
 { config, pkgs, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mkDefault
+    mkImageMediaOverride
+    mkOverride
+    optionalString
+    ;
+in
 
 {
   imports =
@@ -20,7 +27,7 @@ with lib;
     ];
 
   config = {
-    system.nixos.variant_id = lib.mkDefault "installer";
+    system.nixos.variant_id = mkDefault "installer";
 
     # Enable in installer, even if the minimal profile disables it.
     documentation.enable = mkImageMediaOverride true;
