@@ -2,9 +2,13 @@
 
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
 
   cfg = config.programs.cfs-zen-tweaks;
 
@@ -17,7 +21,7 @@ in
   };
 
   options = {
-    programs.cfs-zen-tweaks.enable = mkEnableOption (lib.mdDoc "CFS Zen Tweaks");
+    programs.cfs-zen-tweaks.enable = mkEnableOption (mdDoc "CFS Zen Tweaks");
   };
 
   config = mkIf cfg.enable {
