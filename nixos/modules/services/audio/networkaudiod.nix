@@ -1,14 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   name = "networkaudiod";
   cfg = config.services.networkaudiod;
-in {
+in
+{
   options = {
     services.networkaudiod = {
-      enable = mkEnableOption (lib.mdDoc "Networkaudiod (NAA)");
+      enable = mkEnableOption (mdDoc "Networkaudiod (NAA)");
     };
   };
 
