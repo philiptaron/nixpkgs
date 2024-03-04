@@ -1,14 +1,27 @@
 { config, lib, pkgs, ... }:
-with lib;
+
 let
+  inherit (lib)
+    escapeShellArgs
+    lists
+    literalExpression
+    mapAttrs
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    sort
+    types
+    ;
+
   concatAndSort = name: files: pkgs.runCommand name {} ''
-    awk 1 ${lib.escapeShellArgs files} | sed '{ /^\s*$/d; s/^\s\+//; s/\s\+$// }' | sort | uniq > $out
+    awk 1 ${escapeShellArgs files} | sed '{ /^\s*$/d; s/^\s\+//; s/\s\+$// }' | sort | uniq > $out
   '';
 in
 {
   options = {
     environment.wordlist = {
-      enable = mkEnableOption (lib.mdDoc "environment variables for lists of words");
+      enable = mkEnableOption (mdDoc "environment variables for lists of words");
 
       lists = mkOption {
         type = types.attrsOf (types.nonEmptyListOf types.path);
@@ -23,7 +36,7 @@ in
           }
         '';
 
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A set with the key names being the environment variable you'd like to
           set and the values being a list of paths to text documents containing
           lists of words. The various files will be merged, sorted, duplicates
@@ -52,7 +65,7 @@ in
 
   config = mkIf config.environment.wordlist.enable {
     environment.variables =
-      lib.mapAttrs
+      mapAttrs
         (name: value: "${concatAndSort "wordlist-${name}" value}")
         config.environment.wordlist.lists;
   };
