@@ -1,18 +1,26 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.programs.streamdeck-ui;
 in
 {
   options.programs.streamdeck-ui = {
-    enable = mkEnableOption (lib.mdDoc "streamdeck-ui");
+    enable = mkEnableOption (mdDoc "streamdeck-ui");
 
     autoStart = mkOption {
       default = true;
       type = types.bool;
-      description = lib.mdDoc "Whether streamdeck-ui should be started automatically.";
+      description = mdDoc "Whether streamdeck-ui should be started automatically.";
     };
 
     package = mkPackageOption pkgs "streamdeck-ui" {
