@@ -1,11 +1,19 @@
 { config, lib, ... }:
 
-with lib;
-
-# unixODBC drivers (this solution is not perfect.. Because the user has to
-# ask the admin to add a driver.. but it's simple and works
-
 let
+  inherit (lib)
+    concatMapStringsSep
+    literalExpression
+    mdDoc
+    meta
+    mkIf
+    mkOption
+    types
+    ;
+
+  # unixODBC drivers (this solution is not perfect.. Because the user has to
+  # ask the admin to add a driver.. but it's simple and works)
+
   iniDescription = pkg: ''
     [${pkg.fancyName}]
     Description = ${pkg.meta.description}
