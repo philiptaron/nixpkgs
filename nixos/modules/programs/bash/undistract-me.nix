@@ -1,20 +1,28 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    take
+    types
+    ;
+
   cfg = config.programs.bash.undistractMe;
 in
 {
   options = {
     programs.bash.undistractMe = {
-      enable = mkEnableOption (lib.mdDoc "notifications when long-running terminal commands complete");
+      enable = mkEnableOption (mdDoc "notifications when long-running terminal commands complete");
 
-      playSound = mkEnableOption (lib.mdDoc "notification sounds when long-running terminal commands complete");
+      playSound = mkEnableOption (mdDoc "notification sounds when long-running terminal commands complete");
 
       timeout = mkOption {
         default = 10;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Number of seconds it would take for a command to be considered long-running.
         '';
         type = types.int;
