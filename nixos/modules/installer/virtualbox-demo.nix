@@ -1,6 +1,12 @@
 { lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mkDefault
+    mkOverride
+    trivial
+    ;
+in
 
 {
   imports =
@@ -21,7 +27,7 @@ with lib;
   services.xserver.videoDrivers = mkOverride 40 [ "virtualbox" "vmware" "cirrus" "vesa" "modesetting" ];
 
   powerManagement.enable = false;
-  system.stateVersion = lib.mkDefault lib.trivial.release;
+  system.stateVersion = mkDefault trivial.release;
 
   installer.cloneConfigExtra = ''
   # Let demo build as a trusted user.
