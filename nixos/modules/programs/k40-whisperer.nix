@@ -1,6 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+in
 
 let
   cfg = config.programs.k40-whisperer;
@@ -10,11 +19,11 @@ let
 in
 {
   options.programs.k40-whisperer = {
-    enable = mkEnableOption (lib.mdDoc "K40-Whisperer");
+    enable = mkEnableOption (mdDoc "K40-Whisperer");
 
     group = mkOption {
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Group assigned to the device when connected.
       '';
       default = "k40";
