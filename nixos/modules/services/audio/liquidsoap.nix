@@ -1,8 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   streams = builtins.attrNames config.services.liquidsoap.streams;
 
   streamService =
@@ -32,7 +38,7 @@ in
     services.liquidsoap.streams = mkOption {
 
       description =
-        lib.mdDoc ''
+        mdDoc ''
           Set of Liquidsoap streams to start,
           one systemd service per stream.
         '';
