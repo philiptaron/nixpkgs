@@ -1,8 +1,17 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    literalMD
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkRenamedOptionModule
+    optional
+    optionals
+    ;
+
   cfg = config.hardware;
 in {
 
@@ -22,7 +31,7 @@ in {
 
     hardware.enableRedistributableFirmware = mkEnableOption "firmware with a license allowing redistribution" // {
       default = config.hardware.enableAllFirmware;
-      defaultText = lib.literalExpression "config.hardware.enableAllFirmware";
+      defaultText = literalExpression "config.hardware.enableAllFirmware";
     };
 
     hardware.wirelessRegulatoryDatabase = mkEnableOption "loading the wireless regulatory database at boot" // {
