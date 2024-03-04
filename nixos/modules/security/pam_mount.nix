@@ -1,8 +1,23 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    any
+    attrByPath
+    attrValues
+    concatStrings
+    concatStringsSep
+    filterAttrs
+    literalExpression
+    makeBinPath
+    mapAttrsToList
+    mdDoc
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
+
   cfg = config.security.pam.mount;
 
   oflRequired = cfg.logoutHup || cfg.logoutTerm || cfg.logoutKill;
@@ -23,7 +38,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable PAM mount system to mount filesystems on user login.
         '';
       };
@@ -31,7 +46,7 @@ in
       extraVolumes = mkOption {
         type = types.listOf types.str;
         default = [];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of volume definitions for pam_mount.
           For more information, visit <https://pam-mount.sourceforge.net/pam_mount.conf.5.html>.
         '';
@@ -41,7 +56,7 @@ in
         type = types.listOf types.package;
         default = [];
         example = literalExpression "[ pkgs.bindfs ]";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Additional programs to include in the search path of pam_mount.
           Useful for example if you want to use some FUSE filesystems like bindfs.
         '';
@@ -53,7 +68,7 @@ in
         example = literalExpression ''
           [ "allow_discard" ]
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Global mount options that apply to every crypt volume.
           You can define volume-specific options in the volume definitions.
         '';
@@ -65,7 +80,7 @@ in
         example = literalExpression ''
           [ "nodev" "nosuid" "force-user=%(USER)" "gid=%(USERGID)" "perms=0700" "chmod-deny" "chown-deny" "chgrp-deny" ]
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Global mount options that apply to every FUSE volume.
           You can define volume-specific options in the volume definitions.
         '';
@@ -75,7 +90,7 @@ in
         type = types.int;
         default = 0;
         example = 1;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Sets the Debug-Level. 0 disables debugging, 1 enables pam_mount tracing,
           and 2 additionally enables tracing in mount.crypt. The default is 0.
           For more information, visit <https://pam-mount.sourceforge.net/pam_mount.conf.5.html>.
@@ -85,7 +100,7 @@ in
       logoutWait = mkOption {
         type = types.int;
         default = 0;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Amount of microseconds to wait until killing remaining processes after
           final logout.
           For more information, visit <https://pam-mount.sourceforge.net/pam_mount.conf.5.html>.
@@ -95,7 +110,7 @@ in
       logoutHup = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Kill remaining processes after logout by sending a SIGHUP.
         '';
       };
@@ -103,7 +118,7 @@ in
       logoutTerm = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Kill remaining processes after logout by sending a SIGTERM.
         '';
       };
@@ -111,7 +126,7 @@ in
       logoutKill = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Kill remaining processes after logout by sending a SIGKILL.
         '';
       };
@@ -119,7 +134,7 @@ in
       createMountPoints = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Create mountpoints for volumes if they do not exist.
         '';
       };
@@ -127,7 +142,7 @@ in
       removeCreatedMountPoints = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Remove mountpoints created by pam_mount after logout. This
           only affects mountpoints that have been created by pam_mount
           in the same session.
