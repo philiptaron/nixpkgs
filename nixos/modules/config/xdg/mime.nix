@@ -1,6 +1,20 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    maintainers
+    concatStringsSep
+    generators
+    info
+    mdDoc
+    meta
+    mkIf
+    mkOption
+    teams
+    toList
+    types
+    ;
+in
 
 let
   cfg = config.xdg.mime;
