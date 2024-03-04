@@ -1,8 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.programs.plotinus;
 in
 {
@@ -17,7 +23,7 @@ in
     programs.plotinus = {
       enable = mkOption {
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the Plotinus GTK 3 plugin. Plotinus provides a
           popup (triggered by Ctrl-Shift-P) to search the menus of a
           compatible application.
