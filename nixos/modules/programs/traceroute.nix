@@ -1,16 +1,22 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.programs.traceroute;
-in {
+in
+{
   options = {
     programs.traceroute = {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to configure a setcap wrapper for traceroute.
         '';
       };
