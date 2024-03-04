@@ -3,9 +3,18 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStringsSep
+    info
+    literalExpression
+    literalMD
+    mdDoc
+    meta
+    mkOption
+    setPrio
+    types
+    ;
 
   requiredPackages = map (pkg: setPrio ((pkg.meta.priority or 5) + 3) pkg)
     [ pkgs.acl
