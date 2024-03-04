@@ -1,6 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+in
 {
   options = {
     gtk.iconCache.enable = mkOption {
