@@ -1,6 +1,21 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    attrNames
+    literalExpression
+    maintainers
+    mdDoc
+    mkAfter
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    optional
+    sort
+    types
+    ;
+in
 
 let
   cfg = config.programs.rust-motd;
@@ -24,7 +39,7 @@ let
     '';
 in {
   options.programs.rust-motd = {
-    enable = mkEnableOption (lib.mdDoc "rust-motd");
+    enable = mkEnableOption (mdDoc "rust-motd");
     enableMotdInSSHD = mkOption {
       default = true;
       type = types.bool;
