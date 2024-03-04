@@ -1,13 +1,17 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.hardware.gkraken;
 in
 {
   options.hardware.gkraken = {
-    enable = mkEnableOption (lib.mdDoc "gkraken's udev rules for NZXT AIO liquid coolers");
+    enable = mkEnableOption (mdDoc "gkraken's udev rules for NZXT AIO liquid coolers");
   };
 
   config = mkIf cfg.enable {
