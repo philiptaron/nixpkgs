@@ -1,6 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    mkOrder
+    types
+    ;
+in
 
 {
 
@@ -11,7 +19,7 @@ with lib;
     hardware.cpu.amd.updateMicrocode = mkOption {
       default = false;
       type = types.bool;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Update the CPU microcode for AMD processors.
       '';
     };
