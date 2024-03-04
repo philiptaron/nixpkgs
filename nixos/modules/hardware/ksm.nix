@@ -1,21 +1,30 @@
 { config, lib, ... }:
 
-with lib;
-
 let
-  cfg = config.hardware.ksm;
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRenamedOptionModule
+    optionalString
+    types
+    ;
 
-in {
+  cfg = config.hardware.ksm;
+in
+
+{
   imports = [
     (mkRenamedOptionModule [ "hardware" "enableKSM" ] [ "hardware" "ksm" "enable" ])
   ];
 
   options.hardware.ksm = {
-    enable = mkEnableOption (lib.mdDoc "Kernel Same-Page Merging");
+    enable = mkEnableOption (mdDoc "Kernel Same-Page Merging");
     sleep = mkOption {
       type = types.nullOr types.int;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         How many milliseconds ksmd should sleep between scans.
         Setting it to `null` uses the kernel's default time.
       '';
