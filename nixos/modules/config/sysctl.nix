@@ -1,8 +1,24 @@
 { config, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStrings
+    filterOverrides
+    foldl
+    isBool
+    isInt
+    isString
+    literalExpression
+    mapAttrsToList
+    max
+    mdDoc
+    mergeOneOption
+    mkDefault
+    mkOption
+    mkOptionType
+    optionalString
+    types
+    ;
 
   sysctlOption = mkOptionType {
     name = "sysctl option value";
