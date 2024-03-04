@@ -1,4 +1,38 @@
-{ lib, config, pkgs }: with lib;
+{ lib, config, pkgs }:
+
+let
+  inherit (lib)
+    any
+    attrNames
+    concatMapStringsSep
+    concatStringsSep
+    elem
+    escapeShellArg
+    filter
+    flatten
+    getName
+    hasPrefix
+    hasSuffix
+    imap0
+    imap1
+    isAttrs
+    isDerivation
+    isFloat
+    isInt
+    isList
+    isPath
+    isString
+    listToAttrs
+    nameValuePair
+    optionalString
+    removePrefix
+    removeSuffix
+    replaceStrings
+    strings
+    stringToCharacters
+    types
+    ;
+in
 
 rec {
 
@@ -62,9 +96,9 @@ rec {
   # substitution for the directive.
   escapeSystemdExecArg = arg:
     let
-      s = if builtins.isPath arg then "${arg}"
-        else if builtins.isString arg then arg
-        else if builtins.isInt arg || builtins.isFloat arg then toString arg
+      s = if isPath arg then "${arg}"
+        else if isString arg then arg
+        else if isInt arg || isFloat arg then toString arg
         else throw "escapeSystemdExecArg only allows strings, paths and numbers";
     in
       replaceStrings [ "%" "$" ] [ "%%" "$$" ] (builtins.toJSON s);
@@ -197,7 +231,7 @@ rec {
                (attrNames secrets))
     + "\n"
     + "${pkgs.jq}/bin/jq >'${output}' "
-    + lib.escapeShellArg (stringOrDefault
+    + escapeShellArg (stringOrDefault
           (concatStringsSep
             " | "
             (imap1 (index: name: ''${name} = $ENV.secret${toString index}'')
@@ -222,9 +256,9 @@ rec {
   */
   removePackagesByName = packages: packagesToRemove:
     let
-      namesToRemove = map lib.getName packagesToRemove;
+      namesToRemove = map getName packagesToRemove;
     in
-      lib.filter (x: !(builtins.elem (lib.getName x) namesToRemove)) packages;
+      filter (x: !(elem (getName x) namesToRemove)) packages;
 
   systemdUtils = {
     lib = import ./systemd-lib.nix { inherit lib config pkgs; };
