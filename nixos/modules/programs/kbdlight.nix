@@ -1,13 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
-  cfg = config.programs.kbdlight;
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
 
+  cfg = config.programs.kbdlight;
 in
 {
-  options.programs.kbdlight.enable = mkEnableOption (lib.mdDoc "kbdlight");
+  options.programs.kbdlight.enable = mkEnableOption (mdDoc "kbdlight");
 
   config = mkIf cfg.enable {
     environment.systemPackages = [ pkgs.kbdlight ];
