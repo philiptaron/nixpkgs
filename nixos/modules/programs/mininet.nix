@@ -2,13 +2,17 @@
 # kernel must have NETNS/VETH/SCHED
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.programs.mininet;
 in
 {
-  options.programs.mininet.enable = mkEnableOption (lib.mdDoc "Mininet");
+  options.programs.mininet.enable = mkEnableOption (mdDoc "Mininet");
 
   config = mkIf cfg.enable {
 
