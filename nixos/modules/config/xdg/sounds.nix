@@ -1,6 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    meta
+    mkIf
+    mkOption
+    teams
+    types
+    ;
+in
 {
   meta = {
     maintainers = teams.freedesktop.members;
