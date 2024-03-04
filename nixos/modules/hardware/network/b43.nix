@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
 
-let kernelVersion = config.boot.kernelPackages.kernel.version; in
+  kernelVersion = config.boot.kernelPackages.kernel.version;
+in
 
 {
 
@@ -13,7 +20,7 @@ let kernelVersion = config.boot.kernelPackages.kernel.version; in
     networking.enableB43Firmware = mkOption {
       default = false;
       type = types.bool;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Turn on this option if you want firmware for the NICs supported by the b43 module.
       '';
     };
