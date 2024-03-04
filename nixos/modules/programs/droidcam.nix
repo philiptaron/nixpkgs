@@ -1,13 +1,19 @@
 { lib, pkgs, config, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+in
 
 {
   options.programs.droidcam = {
-    enable = mkEnableOption (lib.mdDoc "DroidCam client");
+    enable = mkEnableOption (mdDoc "DroidCam client");
   };
 
-  config = lib.mkIf config.programs.droidcam.enable {
+  config = mkIf config.programs.droidcam.enable {
     environment.systemPackages = [ pkgs.droidcam ];
 
     boot.extraModulePackages = [ config.boot.kernelPackages.v4l2loopback ];
