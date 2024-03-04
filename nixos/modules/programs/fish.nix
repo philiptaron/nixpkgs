@@ -1,8 +1,23 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    escapeShellArg
+    filterAttrs
+    mapAttrs
+    mapAttrsFlatten
+    mdDoc
+    mkDefault
+    mkIf
+    mkMerge
+    mkOption
+    optional
+    optionalAttrs
+    stringLength
+    substring
+    types
+    ;
 
   cfge = config.environment;
 
@@ -49,7 +64,7 @@ in
 
       enable = mkOption {
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to configure fish as an interactive shell.
         '';
         type = types.bool;
@@ -58,7 +73,7 @@ in
       useBabelfish = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If enabled, the configured environment will be translated to native fish using [babelfish](https://github.com/bouk/babelfish).
           Otherwise, [foreign-env](https://github.com/oh-my-fish/plugin-foreign-env) will be used.
         '';
@@ -67,7 +82,7 @@ in
       vendor.config.enable = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether fish should source configuration snippets provided by other packages.
         '';
       };
@@ -75,7 +90,7 @@ in
       vendor.completions.enable = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether fish should use completion files provided by other packages.
         '';
       };
@@ -83,7 +98,7 @@ in
       vendor.functions.enable = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether fish should autoload fish functions provided by other packages.
         '';
       };
@@ -94,7 +109,7 @@ in
           gco = "git checkout";
           npu = "nix-prefetch-url";
         };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Set of fish abbreviations.
         '';
         type = with types; attrsOf str;
@@ -102,7 +117,7 @@ in
 
       shellAliases = mkOption {
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Set of aliases for fish shell, which overrides {option}`environment.shellAliases`.
           See {option}`environment.shellAliases` for an option format description.
         '';
@@ -111,7 +126,7 @@ in
 
       shellInit = mkOption {
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Shell script code called during fish shell initialisation.
         '';
         type = types.lines;
@@ -119,7 +134,7 @@ in
 
       loginShellInit = mkOption {
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Shell script code called during fish login shell initialisation.
         '';
         type = types.lines;
@@ -127,7 +142,7 @@ in
 
       interactiveShellInit = mkOption {
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Shell script code called during interactive fish shell initialisation.
         '';
         type = types.lines;
@@ -135,7 +150,7 @@ in
 
       promptInit = mkOption {
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Shell script code used to initialise fish prompt.
         '';
         type = types.lines;
@@ -150,7 +165,7 @@ in
     programs.fish.shellAliases = mapAttrs (name: mkDefault) cfge.shellAliases;
 
     # Required for man completions
-    documentation.man.generateCaches = lib.mkDefault true;
+    documentation.man.generateCaches = mkDefault true;
 
     environment = mkMerge [
       (mkIf cfg.useBabelfish
@@ -259,7 +274,8 @@ in
             allowSubstitutes = false;
           };
           generateCompletions = package: pkgs.runCommandLocal
-            ( with lib.strings; let
+            ( let
+                inherit (lib.strings) storeDir stringLength;
                 storeLength = stringLength storeDir + 34; # Nix' StorePath::HashLen + 2 for the separating slash and dash
                 pathName = substring storeLength (stringLength package - storeLength) package;
               in (package.name or pathName) + "_fish-completions")
