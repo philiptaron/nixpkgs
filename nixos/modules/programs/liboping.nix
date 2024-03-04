@@ -1,12 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    ;
+
   cfg = config.programs.liboping;
-in {
+in
+{
   options.programs.liboping = {
-    enable = mkEnableOption (lib.mdDoc "liboping");
+    enable = mkEnableOption (mdDoc "liboping");
   };
   config = mkIf cfg.enable {
     environment.systemPackages = with pkgs; [ liboping ];
