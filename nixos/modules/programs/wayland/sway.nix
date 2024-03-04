@@ -1,8 +1,26 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrNames
+    functionArgs
+    intersectLists
+    literalExpression
+    maintainers
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkOptionDefault
+    naturalSort
+    optional
+    optionalAttrs
+    optionals
+    types
+    ;
+
   cfg = config.programs.sway;
 
   wrapperOptions = types.submodule {
@@ -12,7 +30,7 @@ let
           type = types.bool;
           inherit default;
           example = !default;
-          description = lib.mdDoc "Whether to make use of the ${description}";
+          description = mdDoc "Whether to make use of the ${description}";
         };
       in {
         base = mkWrapperFeature true ''
@@ -28,7 +46,7 @@ let
 
   genFinalPackage = pkg:
     let
-      expectedArgs = lib.naturalSort [
+      expectedArgs = naturalSort [
         "extraSessionCommands"
         "extraOptions"
         "withBaseWrapper"
@@ -50,7 +68,7 @@ let
       };
 in {
   options.programs.sway = {
-    enable = mkEnableOption (lib.mdDoc ''
+    enable = mkEnableOption (mdDoc ''
       Sway, the i3-compatible tiling Wayland compositor. You can manually launch
       Sway by executing "exec sway" on a TTY. Copy /etc/sway/config to
       ~/.config/sway/config to modify the default configuration. See
@@ -62,7 +80,7 @@ in {
       default = pkgs.sway;
       apply = p: if p == null then null else genFinalPackage p;
       defaultText = literalExpression "pkgs.sway";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Sway package to use. If the package does not contain the override arguments
         `extraSessionCommands`, `extraOptions`, `withBaseWrapper`, `withGtkWrapper`,
         `isNixOS`, then the module options {option}`wrapperFeatures`,
@@ -76,7 +94,7 @@ in {
       type = wrapperOptions;
       default = { };
       example = { gtk = true; };
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Attribute set of features to enable in the wrapper.
       '';
     };
@@ -94,7 +112,7 @@ in {
         # use this if they aren't displayed properly:
         export _JAVA_AWT_WM_NONREPARENTING=1
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Shell commands executed just before Sway is started. See
         <https://github.com/swaywm/sway/wiki/Running-programs-natively-under-wayland>
         and <https://github.com/swaywm/wlroots/blob/master/docs/env_vars.md>
@@ -110,7 +128,7 @@ in {
         "--debug"
         "--unsupported-gpu"
       ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Command line arguments passed to launch Sway. Please DO NOT report
         issues if you use an unsupported GPU (proprietary drivers).
       '';
@@ -130,7 +148,7 @@ in {
           termite rofi light
         ]
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra packages to be installed system wide. See
         <https://github.com/swaywm/sway/wiki/Useful-add-ons-for-sway> and
         <https://github.com/swaywm/sway/wiki/i3-Migration-Guide#common-x11-apps-used-on-i3-with-wayland-alternatives>
@@ -178,5 +196,5 @@ in {
       (import ./wayland-session.nix { inherit lib pkgs; })
     ]);
 
-  meta.maintainers = with lib.maintainers; [ primeos colemickens ];
+  meta.maintainers = with maintainers; [ primeos colemickens ];
 }
