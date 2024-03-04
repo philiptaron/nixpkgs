@@ -1,11 +1,27 @@
 { lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrValues
+    elem
+    flatten
+    imap1
+    last
+    listToAttrs
+    literalExpression
+    maintainers
+    mdDoc
+    mkOption
+    mkOptionType
+    nameValuePair
+    singleton
+    types
+    zipAttrs
+    ;
+
   maintainer = mkOptionType {
     name = "maintainer";
-    check = email: elem email (attrValues lib.maintainers);
+    check = email: elem email (attrValues maintainers);
     merge = loc: defs: listToAttrs (singleton (nameValuePair (last defs).file (last defs).value));
   };
 
@@ -37,8 +53,8 @@ in
         type = listOfMaintainers;
         internal = true;
         default = [];
-        example = literalExpression ''[ lib.maintainers.all ]'';
-        description = lib.mdDoc ''
+        example = literalExpression ''[ maintainers.all ]'';
+        description = mdDoc ''
           List of maintainers of each module.  This option should be defined at
           most once per module.
         '';
@@ -48,7 +64,7 @@ in
         type = docFile;
         internal = true;
         example = "./meta.chapter.md";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Documentation prologue for the set of options of each module.  This
           option should be defined at most once per module.
         '';
@@ -60,7 +76,7 @@ in
         };
         internal = true;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to include this module in the split options doc build.
           Disable if the module references `config`, `pkgs` or other module
           arguments that cannot be evaluated as constants.
@@ -72,5 +88,5 @@ in
     };
   };
 
-  meta.maintainers = singleton lib.maintainers.pierron;
+  meta.maintainers = singleton maintainers.pierron;
 }
