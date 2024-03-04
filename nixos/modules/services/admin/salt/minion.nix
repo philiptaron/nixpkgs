@@ -1,12 +1,18 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    recursiveUpdate
+    types
+    ;
 
   cfg  = config.services.salt.minion;
 
-  fullConfig = lib.recursiveUpdate {
+  fullConfig = recursiveUpdate {
     # Provide defaults for some directories to allow an immutable config dir
     # NOTE: the config dir being immutable prevents `minion_id` caching
 
@@ -21,11 +27,11 @@ in
 {
   options = {
     services.salt.minion = {
-      enable = mkEnableOption (lib.mdDoc "Salt minion service");
+      enable = mkEnableOption (mdDoc "Salt minion service");
       configuration = mkOption {
         type = types.attrs;
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Salt minion configuration as Nix attribute set.
           See <https://docs.saltstack.com/en/latest/ref/configuration/minion.html>
           for details.
