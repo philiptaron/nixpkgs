@@ -1,6 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+in
 
 {
   meta.maintainers = [ maintainers.mic92 ];
@@ -11,7 +19,7 @@ with lib;
       enable = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to configure system to use Android Debug Bridge (adb).
           To grant access to a user, it must be part of adbusers group:
           `users.users.alice.extraGroups = ["adbusers"];`
