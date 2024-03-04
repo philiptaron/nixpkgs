@@ -1,18 +1,25 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.programs.weylus;
 in
 {
   options.programs.weylus = with types; {
-    enable = mkEnableOption (lib.mdDoc "weylus");
+    enable = mkEnableOption (mdDoc "weylus");
 
     openFirewall = mkOption {
       type = bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Open ports needed for the functionality of the program.
       '';
     };
@@ -20,7 +27,7 @@ in
      users = mkOption {
       type = listOf str;
       default = [ ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         To enable stylus and multi-touch support, the user you're going to use must be added to this list.
         These users can synthesize input events system-wide, even when another user is logged in - untrusted users should not be added.
       '';
