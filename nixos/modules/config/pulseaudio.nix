@@ -1,9 +1,28 @@
 { config, lib, pkgs, ... }:
 
 with pkgs;
-with lib;
 
 let
+  inherit (lib)
+    concatStringsSep
+    generators
+    getBin
+    literalExpression
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mod
+    modules
+    optional
+    optionalAttrs
+    optionalString
+    systems
+    take
+    types
+    ;
 
   cfg = config.hardware.pulseaudio;
   alsaCfg = config.sound;
