@@ -1,16 +1,22 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.programs.wavemon;
-in {
+in
+{
   options = {
     programs.wavemon = {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to add wavemon to the global environment and configure a
           setcap wrapper for it.
         '';
