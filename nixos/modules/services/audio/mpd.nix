@@ -1,8 +1,20 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    hasPrefix
+    imap0
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    optional
+    optionalAttrs
+    optionals
+    optionalString
+    types
+    ;
 
   name = "mpd";
 
@@ -25,7 +37,7 @@ let
 
     music_directory     "${cfg.musicDirectory}"
     playlist_directory  "${cfg.playlistDirectory}"
-    ${lib.optionalString (cfg.dbFile != null) ''
+    ${optionalString (cfg.dbFile != null) ''
       db_file             "${cfg.dbFile}"
     ''}
     state_file          "${cfg.dataDir}/state"
@@ -56,7 +68,7 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable MPD, the music player daemon.
         '';
       };
@@ -64,7 +76,7 @@ in {
       startWhenNeeded = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If set, {command}`mpd` is socket-activated; that
           is, instead of having it permanently running as a daemon,
           systemd will start it on the first incoming connection.
@@ -75,7 +87,7 @@ in {
         type = with types; either path (strMatching "(http|https|nfs|smb)://.+");
         default = "${cfg.dataDir}/music";
         defaultText = literalExpression ''"''${dataDir}/music"'';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The directory or NFS/SMB network share where MPD reads music from. If left
           as the default value this directory will automatically be created before
           the MPD server starts, otherwise the sysadmin is responsible for ensuring
@@ -87,7 +99,7 @@ in {
         type = types.path;
         default = "${cfg.dataDir}/playlists";
         defaultText = literalExpression ''"''${dataDir}/playlists"'';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The directory where MPD stores playlists. If left as the default value
           this directory will automatically be created before the MPD server starts,
           otherwise the sysadmin is responsible for ensuring the directory exists
@@ -98,7 +110,7 @@ in {
       extraConfig = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra directives added to to the end of MPD's configuration file,
           mpd.conf. Basic configuration like file location and uid/gid
           is added automatically to the beginning of the file. For available
@@ -109,7 +121,7 @@ in {
       dataDir = mkOption {
         type = types.path;
         default = "/var/lib/${name}";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The directory where MPD stores its state, tag cache, playlists etc. If
           left as the default value this directory will automatically be created
           before the MPD server starts, otherwise the sysadmin is responsible for
@@ -120,13 +132,13 @@ in {
       user = mkOption {
         type = types.str;
         default = name;
-        description = lib.mdDoc "User account under which MPD runs.";
+        description = mdDoc "User account under which MPD runs.";
       };
 
       group = mkOption {
         type = types.str;
         default = name;
-        description = lib.mdDoc "Group account under which MPD runs.";
+        description = mdDoc "Group account under which MPD runs.";
       };
 
       network = {
@@ -135,7 +147,7 @@ in {
           type = types.str;
           default = "127.0.0.1";
           example = "any";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The address for the daemon to listen on.
             Use `any` to listen on all addresses.
           '';
@@ -144,7 +156,7 @@ in {
         port = mkOption {
           type = types.port;
           default = 6600;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             This setting is the TCP port that is desired for the daemon to get assigned
             to.
           '';
@@ -156,7 +168,7 @@ in {
         type = types.nullOr types.str;
         default = "${cfg.dataDir}/tag_cache";
         defaultText = literalExpression ''"''${dataDir}/tag_cache"'';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The path to MPD's database. If set to `null` the
           parameter is omitted from the configuration.
         '';
@@ -167,7 +179,7 @@ in {
           options = {
             passwordFile = mkOption {
               type = types.path;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Path to file containing the password.
               '';
             };
@@ -176,14 +188,14 @@ in {
             in mkOption {
               type = types.listOf (types.enum perms);
               default = [ "read" ];
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 List of permissions that are granted with this password.
                 Permissions can be "${concatStringsSep "\", \"" perms}".
               '';
             };
           };
         });
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Credentials and permissions for accessing the mpd server.
         '';
         default = [];
@@ -196,7 +208,7 @@ in {
       fluidsynth = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If set, add fluidsynth soundfont and configure the plugin.
         '';
       };
@@ -216,7 +228,7 @@ in {
       wantedBy = [ "sockets.target" ];
       listenStreams = [
         ""  # Note: this is needed to override the upstream unit
-        (if pkgs.lib.hasPrefix "/" cfg.network.listenAddress
+        (if hasPrefix "/" cfg.network.listenAddress
           then cfg.network.listenAddress
           else "${optionalString (cfg.network.listenAddress != "any") "${cfg.network.listenAddress}:"}${toString cfg.network.port}")
       ];
