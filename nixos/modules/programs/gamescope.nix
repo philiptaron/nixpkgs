@@ -3,7 +3,21 @@
 , pkgs
 , ...
 }:
-with lib; let
+let
+  inherit (lib)
+    attrValues
+    literalExpression
+    maintainers
+    mapAttrs
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optional
+    types
+    ;
+
   cfg = config.programs.gamescope;
 
   gamescope =
