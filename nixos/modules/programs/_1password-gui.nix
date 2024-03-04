@@ -1,8 +1,16 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRemovedOptionModule
+    types
+    ;
 
   cfg = config.programs._1password-gui;
 
@@ -16,13 +24,13 @@ in
 
   options = {
     programs._1password-gui = {
-      enable = mkEnableOption (lib.mdDoc "the 1Password GUI application");
+      enable = mkEnableOption (mdDoc "the 1Password GUI application");
 
       polkitPolicyOwners = mkOption {
         type = types.listOf types.str;
         default = [ ];
         example = literalExpression ''["user1" "user2" "user3"]'';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A list of users who should be able to integrate 1Password with polkit-based authentication mechanisms.
         '';
       };
