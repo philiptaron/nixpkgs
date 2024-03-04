@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    filter
+    mdDoc
+    mkIf
+    mkOption
+    optionalAttrs
+    stringToCharacters
+    types
+    ;
 
   tzdir = "${pkgs.tzdata}/share/zoneinfo";
   nospace  = str: filter (c: c == " ") (stringToCharacters str) == [];
