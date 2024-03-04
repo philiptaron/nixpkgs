@@ -1,7 +1,18 @@
 { config, pkgs, lib, ... }:
 
-with lib;
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkForce
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalAttrs
+    types
+    ;
+
   cfg = config.programs.singularity;
 in
 {
@@ -36,7 +47,7 @@ in
         }
         ```
 
-        Use `lib.mkForce` to forcefully specify the overridden package.
+        Use `mkForce` to forcefully specify the overridden package.
       '';
     };
     enableExternalLocalStateDir = mkOption {
