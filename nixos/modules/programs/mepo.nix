@@ -1,6 +1,16 @@
 { pkgs, config, lib, ...}:
-with lib;
+
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optional
+    types
+    ;
+
   cfg = config.programs.mepo;
 in
 {
@@ -28,8 +38,8 @@ in
   config = mkIf cfg.enable {
     environment.systemPackages = with pkgs; [
       mepo
-    ] ++ lib.optional cfg.locationBackends.geoclue geoclue2-with-demo-agent
-    ++ lib.optional cfg.locationBackends.gpsd gpsd;
+    ] ++ optional cfg.locationBackends.geoclue geoclue2-with-demo-agent
+    ++ optional cfg.locationBackends.gpsd gpsd;
 
     services.geoclue2 = mkIf cfg.locationBackends.geoclue {
       enable = true;
