@@ -1,9 +1,15 @@
 # ALSA sound support.
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    mkRenamedOptionModule
+    optional
+    types
+    ;
 
   inherit (pkgs) alsa-utils;
 
@@ -25,7 +31,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable ALSA sound.
         '';
       };
@@ -33,7 +39,7 @@ in
       enableOSSEmulation = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable ALSA OSS emulation (with certain cards sound mixing may not work!).
         '';
       };
@@ -44,7 +50,7 @@ in
         example = ''
           defaults.pcm.!card 3
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Set addition configuration for system-wide alsa.
         '';
       };
@@ -54,7 +60,7 @@ in
         enable = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Whether to enable volume and capture control with keyboard media keys.
 
             You want to leave this disabled if you run a desktop environment
@@ -70,7 +76,7 @@ in
           type = types.str;
           default = "1";
           example = "1%";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The value by which to increment/decrement volume on media keys.
 
             See amixer(1) for allowed values.
