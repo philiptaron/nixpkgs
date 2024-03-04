@@ -1,9 +1,21 @@
 { config, lib, pkgs, ... }:
 
 with pkgs;
-with lib;
 
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkRenamedOptionModule
+    optional
+    optionalAttrs
+    optionalString
+    singleton
+    types
+    ;
 
   cfg = config.users.ldap;
 
