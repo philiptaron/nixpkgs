@@ -1,8 +1,16 @@
 { config, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    maybeEnv
+    mdDoc
+    mkDefault
+    mkOption
+    sort
+    types
+    ;
+
   cfg = config.system.nixos;
 in
 
@@ -12,7 +20,7 @@ in
 
     nixos.label = mkOption {
       type = types.strMatching "[a-zA-Z0-9:_\\.-]*";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         NixOS version name to be used in the names of generated
         outputs and boot labels.
 
@@ -47,7 +55,7 @@ in
       type = types.listOf types.str;
       default = [];
       example = [ "with-xen" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Strings to prefix to the default
         {option}`system.nixos.label`.
 
