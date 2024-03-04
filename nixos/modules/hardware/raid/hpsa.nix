@@ -1,8 +1,17 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    licenses
+    maintainers
+    makeLibraryPath
+    mdDoc
+    mkEnableOption
+    mkIf
+    modules
+    platforms
+    ;
+
   hpssacli = pkgs.stdenv.mkDerivation rec {
     pname = "hpssacli";
     version = "2.40-13.0";
@@ -28,7 +37,7 @@ let
       for file in $out/bin/*; do
         chmod +w $file
         patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" \
-                 --set-rpath ${lib.makeLibraryPath [ pkgs.stdenv.cc.cc ]} \
+                 --set-rpath ${makeLibraryPath [ pkgs.stdenv.cc.cc ]} \
                  $file
       done
     '';
@@ -48,7 +57,7 @@ in {
 
   options = {
     hardware.raid.HPSmartArray = {
-      enable = mkEnableOption (lib.mdDoc "HP Smart Array kernel modules and CLI utility");
+      enable = mkEnableOption (mdDoc "HP Smart Array kernel modules and CLI utility");
     };
   };
 
