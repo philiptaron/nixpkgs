@@ -1,7 +1,18 @@
 # Configuration for the pwdutils suite of tools: passwd, useradd, etc.
 { config, lib, utils, pkgs, ... }:
-with lib;
 let
+  inherit (lib)
+    generators
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    optional
+    optionalAttrs
+    types
+    ;
+
   cfg = config.security.loginDefs;
 in
 {
