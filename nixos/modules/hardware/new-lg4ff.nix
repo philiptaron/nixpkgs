@@ -1,8 +1,15 @@
 { pkgs, lib, config, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkIf
+    mkOption
+    modules
+    types
+    ;
+
   cfg = config.hardware.new-lg4ff;
   kernelPackages = config.boot.kernelPackages;
 in {
@@ -10,7 +17,7 @@ in {
     enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Enables improved Linux module drivers for Logitech driving wheels.
         This will replace the existing in-kernel hid-logitech modules.
         Works most notably on the Logitech G25, G27, G29 and Driving Force (GT).
@@ -18,12 +25,12 @@ in {
     };
   };
 
-  config = lib.mkIf cfg.enable {
+  config = mkIf cfg.enable {
     boot = {
       extraModulePackages = [ kernelPackages.new-lg4ff ];
       kernelModules = [ "hid-logitech-new" ];
     };
   };
 
-  meta.maintainers = with lib.maintainers; [ matthiasbenaets ];
+  meta.maintainers = with maintainers; [ matthiasbenaets ];
 }
