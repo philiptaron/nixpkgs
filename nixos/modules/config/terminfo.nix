@@ -2,7 +2,14 @@
 # and its integration in the system.
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+in
 
 {
 
