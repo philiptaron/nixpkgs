@@ -1,13 +1,19 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.programs.iotop;
-in {
+in
+{
   options = {
-    programs.iotop.enable = mkEnableOption (lib.mdDoc "iotop + setcap wrapper");
+    programs.iotop.enable = mkEnableOption (mdDoc "iotop + setcap wrapper");
   };
+
   config = mkIf cfg.enable {
     security.wrappers.iotop = {
       owner = "root";
