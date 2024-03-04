@@ -1,11 +1,17 @@
 { config, pkgs, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+in
 
 {
   options = {
     programs.appgate-sdp = {
-      enable = mkEnableOption (lib.mdDoc "AppGate SDP VPN client");
+      enable = mkEnableOption (mdDoc "AppGate SDP VPN client");
     };
   };
 
