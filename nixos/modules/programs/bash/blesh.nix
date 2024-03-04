@@ -1,8 +1,17 @@
 { lib, config, pkgs, ... }:
-with lib;
+
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkBefore
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.programs.bash.blesh;
-in {
+in
+{
   options = {
     programs.bash.blesh.enable = mkEnableOption (mdDoc "blesh");
   };
