@@ -1,8 +1,30 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    filter
+    flatten
+    isInt
+    isString
+    length
+    literalExpression
+    maintainers
+    mdDoc
+    mkAfter
+    mkBefore
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkOrder
+    mkPackageOption
+    optional
+    optionalString
+    pipe
+    types
+    ;
 
   cfg = config.security.sudo-rs;
 
@@ -264,6 +286,6 @@ in
 
   };
 
-  meta.maintainers = [ lib.maintainers.nicoo ];
+  meta.maintainers = [ maintainers.nicoo ];
 
 }
