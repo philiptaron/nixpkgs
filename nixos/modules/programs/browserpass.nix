@@ -1,10 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+in
 
 {
 
-  options.programs.browserpass.enable = mkEnableOption (lib.mdDoc "Browserpass native messaging host");
+  options.programs.browserpass.enable = mkEnableOption (mdDoc "Browserpass native messaging host");
 
   config = mkIf config.programs.browserpass.enable {
     environment.etc = let
