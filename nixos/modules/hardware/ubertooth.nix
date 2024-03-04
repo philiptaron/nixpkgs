@@ -1,8 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.hardware.ubertooth;
 
   ubertoothPkg = pkgs.ubertooth.override {
@@ -10,13 +16,13 @@ let
   };
 in {
   options.hardware.ubertooth = {
-    enable = mkEnableOption (lib.mdDoc "Ubertooth software and its udev rules");
+    enable = mkEnableOption (mdDoc "Ubertooth software and its udev rules");
 
     group = mkOption {
       type = types.str;
       default = "ubertooth";
       example = "wheel";
-      description = lib.mdDoc "Group for Ubertooth's udev rules.";
+      description = mdDoc "Group for Ubertooth's udev rules.";
     };
   };
 
