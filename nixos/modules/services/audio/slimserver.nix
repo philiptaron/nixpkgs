@@ -1,12 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    getExe
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
 
   cfg = config.services.slimserver;
-
-in {
+in
+{
   options = {
 
     services.slimserver = {
@@ -14,7 +20,7 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable slimserver.
         '';
       };
@@ -24,7 +30,7 @@ in {
       dataDir = mkOption {
         type = types.path;
         default = "/var/lib/slimserver";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The directory where slimserver stores its state, tag cache,
           playlists etc.
         '';
@@ -49,7 +55,7 @@ in {
       serviceConfig = {
         User = "slimserver";
         # Issue 40589: Disable broken image/video support (audio still works!)
-        ExecStart = "${lib.getExe cfg.package} --logdir ${cfg.dataDir}/logs --prefsdir ${cfg.dataDir}/prefs --cachedir ${cfg.dataDir}/cache --noimage --novideo";
+        ExecStart = "${getExe cfg.package} --logdir ${cfg.dataDir}/logs --prefsdir ${cfg.dataDir}/prefs --cachedir ${cfg.dataDir}/cache --noimage --novideo";
       };
     };
 
