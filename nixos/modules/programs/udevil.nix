@@ -1,19 +1,24 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
-  cfg = config.programs.udevil;
+  inherit (lib)
+    getBin
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
 
-in {
-  options.programs.udevil.enable = mkEnableOption (lib.mdDoc "udevil");
+  cfg = config.programs.udevil;
+in
+{
+  options.programs.udevil.enable = mkEnableOption (mdDoc "udevil");
 
   config = mkIf cfg.enable {
     security.wrappers.udevil =
       { setuid = true;
         owner = "root";
         group = "root";
-        source = "${lib.getBin pkgs.udevil}/bin/udevil";
+        source = "${getBin pkgs.udevil}/bin/udevil";
       };
   };
 }
