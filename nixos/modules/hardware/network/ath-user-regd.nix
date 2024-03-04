@@ -1,7 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    lessThan
+    mdDoc
+    mkIf
+    mkOption
+    singleton
+    types
+    ;
+
   kernelVersion = config.boot.kernelPackages.kernel.version;
   linuxKernelMinVersion = "5.8";
   kernelPatch = pkgs.kernelPatches.ath_regd_optional // {
@@ -14,7 +22,7 @@ in
   options.networking.wireless.athUserRegulatoryDomain = mkOption {
     default = false;
     type = types.bool;
-    description = lib.mdDoc ''
+    description = mdDoc ''
       If enabled, sets the ATH_USER_REGD kernel config switch to true to
       disable the enforcement of EEPROM regulatory restrictions for ath
       drivers. Requires at least Linux ${linuxKernelMinVersion}.
