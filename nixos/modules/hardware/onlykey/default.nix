@@ -1,6 +1,14 @@
 { config, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    readFile
+    types
+    ;
+in
 
 {
 
@@ -12,7 +20,7 @@ with lib;
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable OnlyKey device (https://crp.to/p/) support.
         '';
       };
