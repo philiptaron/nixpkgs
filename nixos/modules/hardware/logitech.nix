@@ -1,14 +1,22 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStringsSep
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRenamedOptionModule
+    optional
+    types
+    ;
+
   cfg = config.hardware.logitech;
 
   vendor = "046d";
 
   daemon = "g15daemon";
-
 in
 {
   imports = [
@@ -19,12 +27,12 @@ in
   options.hardware.logitech = {
 
     lcd = {
-      enable = mkEnableOption (lib.mdDoc "Logitech LCD Devices");
+      enable = mkEnableOption (mdDoc "Logitech LCD Devices");
 
       startWhenNeeded = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Only run the service when an actual supported device is plugged.
         '';
       };
@@ -32,7 +40,7 @@ in
       devices = mkOption {
         type = types.listOf types.str;
         default = [ "0a07" "c222" "c225" "c227" "c251" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of USB device ids supported by g15daemon.
 
           You most likely do not need to change this.
@@ -41,41 +49,41 @@ in
     };
 
     wireless = {
-      enable = mkEnableOption (lib.mdDoc "Logitech Wireless Devices");
+      enable = mkEnableOption (mdDoc "Logitech Wireless Devices");
 
       enableGraphical = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Enable graphical support applications.";
+        description = mdDoc "Enable graphical support applications.";
       };
     };
   };
 
-  config = lib.mkIf (cfg.wireless.enable || cfg.lcd.enable) {
+  config = mkIf (cfg.wireless.enable || cfg.lcd.enable) {
     environment.systemPackages = []
-      ++ lib.optional cfg.wireless.enable pkgs.ltunify
-      ++ lib.optional cfg.wireless.enableGraphical pkgs.solaar;
+      ++ optional cfg.wireless.enable pkgs.ltunify
+      ++ optional cfg.wireless.enableGraphical pkgs.solaar;
 
     services.udev = {
       # ltunifi and solaar both provide udev rules but the most up-to-date have been split
       # out into a dedicated derivation
 
       packages = []
-      ++ lib.optional cfg.wireless.enable pkgs.logitech-udev-rules
-      ++ lib.optional cfg.lcd.enable pkgs.g15daemon;
+      ++ optional cfg.wireless.enable pkgs.logitech-udev-rules
+      ++ optional cfg.lcd.enable pkgs.g15daemon;
 
       extraRules = ''
         # nixos: hardware.logitech.lcd
-      '' + lib.concatMapStringsSep "\n" (
+      '' + concatMapStringsSep "\n" (
         dev:
           ''ACTION=="add", SUBSYSTEMS=="usb", ATTRS{idVendor}=="${vendor}", ATTRS{idProduct}=="${dev}", TAG+="systemd", ENV{SYSTEMD_WANTS}+="${daemon}.service"''
       ) cfg.lcd.devices;
     };
 
-    systemd.services."${daemon}" = lib.mkIf cfg.lcd.enable {
+    systemd.services."${daemon}" = mkIf cfg.lcd.enable {
       description = "Logitech LCD Support Daemon";
       documentation = [ "man:g15daemon(1)" ];
-      wantedBy = lib.mkIf (! cfg.lcd.startWhenNeeded) "multi-user.target";
+      wantedBy = mkIf (! cfg.lcd.startWhenNeeded) "multi-user.target";
 
       serviceConfig = {
         Type = "forking";
