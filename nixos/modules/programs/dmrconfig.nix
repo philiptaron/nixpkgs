@@ -1,11 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
-  cfg = config.programs.dmrconfig;
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
 
-in {
+  cfg = config.programs.dmrconfig;
+in
+{
   meta.maintainers = with maintainers; [ ];
 
   ###### interface
@@ -14,7 +21,7 @@ in {
       enable = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to configure system to enable use of dmrconfig. This
           enables the required udev rules and installs the program.
         '';
