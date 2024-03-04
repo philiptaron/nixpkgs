@@ -1,23 +1,29 @@
 { config, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
 
-let cfg = config.programs.systemtap;
-in {
-
+  cfg = config.programs.systemtap;
+in
+{
   options = {
     programs.systemtap = {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Install {command}`systemtap` along with necessary kernel options.
         '';
       };
     };
   };
   config = mkIf cfg.enable {
-    system.requiredKernelConfig = with config.lib.kernelConfig; [
+    system.requiredKernelConfig = with config.kernelConfig; [
       (isYes "DEBUG")
     ];
     boot.kernel.features.debug = true;
