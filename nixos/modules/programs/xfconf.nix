@@ -1,17 +1,24 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    teams
+    ;
 
-let cfg = config.programs.xfconf;
-
-in {
+  cfg = config.programs.xfconf;
+in
+{
   meta = {
     maintainers = teams.xfce.members;
   };
 
   options = {
     programs.xfconf = {
-      enable = mkEnableOption (lib.mdDoc "Xfconf, the Xfce configuration storage system");
+      enable = mkEnableOption (mdDoc "Xfconf, the Xfce configuration storage system");
     };
   };
 
