@@ -3,7 +3,14 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+in
 
 {
 
@@ -12,7 +19,7 @@ with lib;
     security.rtkit.enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to enable the RealtimeKit system service, which hands
         out realtime scheduling priority to user processes on
         demand. For example, the PulseAudio server uses this to
