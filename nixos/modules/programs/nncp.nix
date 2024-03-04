@@ -1,22 +1,33 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   nncpCfgFile = "/run/nncp.hjson";
   programCfg = config.programs.nncp;
   settingsFormat = pkgs.formats.json { };
   jsonCfgFile = settingsFormat.generate "nncp.json" programCfg.settings;
   pkg = programCfg.package;
-in {
+in
+{
   options.programs.nncp = {
 
     enable =
-      mkEnableOption (lib.mdDoc "NNCP (Node to Node copy) utilities and configuration");
+      mkEnableOption (mdDoc "NNCP (Node to Node copy) utilities and configuration");
 
     group = mkOption {
       type = types.str;
       default = "uucp";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The group under which NNCP files shall be owned.
         Any member of this group may access the secret keys
         of this NNCP node.
@@ -28,7 +39,7 @@ in {
     secrets = mkOption {
       type = with types; listOf str;
       example = [ "/run/keys/nncp.hjson" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         A list of paths to NNCP configuration files that should not be
         in the Nix store. These files are layered on top of the values at
         [](#opt-programs.nncp.settings).
@@ -37,7 +48,7 @@ in {
 
     settings = mkOption {
       type = settingsFormat.type;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         NNCP configuration, see
         <http://www.nncpgo.org/Configuration.html>.
         At runtime these settings will be overlayed by the contents of
@@ -92,5 +103,5 @@ in {
     };
   };
 
-  meta.maintainers = with lib.maintainers; [ ehmry ];
+  meta.maintainers = with maintainers; [ ehmry ];
 }
