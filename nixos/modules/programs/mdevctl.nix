@@ -1,11 +1,17 @@
 { config, pkgs, lib, ... }:
 
-with lib;
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.programs.mdevctl;
-in {
+in
+{
   options.programs.mdevctl = {
-    enable = mkEnableOption (lib.mdDoc "Mediated Device Management");
+    enable = mkEnableOption (mdDoc "Mediated Device Management");
   };
 
   config = mkIf cfg.enable {
