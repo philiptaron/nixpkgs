@@ -2,12 +2,24 @@
 # initialised by pam_env (that is, not only in shells).
 { config, lib, options, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatLists
+    concatMap
+    concatStringsSep
+    flip
+    mapAttrs
+    mapAttrsToList
+    mdDoc
+    mkOption
+    replaceStrings
+    strings
+    toList
+    types
+    zipAttrsWith
+    ;
 
   cfg = config.environment;
-
 in
 
 {
