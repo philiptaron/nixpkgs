@@ -4,11 +4,27 @@
   lib,
   ...
 }:
-with lib; let
+let
+  inherit (lib)
+    literalExpression
+    maintainers
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    optional
+    optionals
+    types
+    ;
+
   cfg = config.programs.river;
-in {
+in
+{
   options.programs.river = {
-    enable = mkEnableOption (lib.mdDoc "river, a dynamic tiling Wayland compositor");
+    enable = mkEnableOption (mdDoc "river, a dynamic tiling Wayland compositor");
 
     package = mkPackageOption pkgs "river" {
       nullable = true;
@@ -33,7 +49,7 @@ in {
           termite rofi light
         ]
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra packages to be installed system wide. See
         [Common X11 apps used on i3 with Wayland alternatives](https://github.com/swaywm/sway/wiki/i3-Migration-Guide#common-x11-apps-used-on-i3-with-wayland-alternatives)
         for a list of useful software.
@@ -55,5 +71,5 @@ in {
       (import ./wayland-session.nix { inherit lib pkgs; })
     ]);
 
-  meta.maintainers = with lib.maintainers; [ GaetanLepage ];
+  meta.maintainers = with maintainers; [ GaetanLepage ];
 }
