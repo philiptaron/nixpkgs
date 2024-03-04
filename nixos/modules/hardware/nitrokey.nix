@@ -1,11 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.hardware.nitrokey;
-
 in
 
 {
@@ -13,7 +16,7 @@ in
     enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Enables udev rules for Nitrokey devices. By default grants access
         to users in the "nitrokey" group. You may want to install the
         nitrokey-app package, depending on your device and needs.
