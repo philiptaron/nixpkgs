@@ -3,7 +3,11 @@
 
 { lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mkImageMediaOverride
+    ;
+in
 
 {
   imports = [ ./installation-cd-base.nix ];
