@@ -2,12 +2,16 @@
 
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkRenamedOptionModule
+    teams
+    ;
 
   cfg = config.programs.gnome-terminal;
-
 in
 
 {
@@ -24,7 +28,7 @@ in
   ];
 
   options = {
-    programs.gnome-terminal.enable = mkEnableOption (lib.mdDoc "GNOME Terminal");
+    programs.gnome-terminal.enable = mkEnableOption (mdDoc "GNOME Terminal");
   };
 
   config = mkIf cfg.enable {
