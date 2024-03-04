@@ -1,11 +1,18 @@
 { lib, pkgs, config, ... }:
-with lib;
+
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+in
 {
   options.programs.joycond-cemuhook = {
-    enable = mkEnableOption (lib.mdDoc "joycond-cemuhook, a program to enable support for cemuhook's UDP protocol for joycond devices.");
+    enable = mkEnableOption (mdDoc "joycond-cemuhook, a program to enable support for cemuhook's UDP protocol for joycond devices.");
   };
 
-  config = lib.mkIf config.programs.joycond-cemuhook.enable {
+  config = mkIf config.programs.joycond-cemuhook.enable {
     assertions = [
       {
         assertion = config.services.joycond.enable;
