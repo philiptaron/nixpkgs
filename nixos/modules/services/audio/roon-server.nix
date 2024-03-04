@@ -1,32 +1,41 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalAttrs
+    optionalString
+    types
+    ;
+
   name = "roon-server";
   cfg = config.services.roon-server;
-in {
+in
+{
   options = {
     services.roon-server = {
-      enable = mkEnableOption (lib.mdDoc "Roon Server");
+      enable = mkEnableOption (mdDoc "Roon Server");
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Open ports in the firewall for the server.
         '';
       };
       user = mkOption {
         type = types.str;
         default = "roon-server";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           User to run the Roon Server as.
         '';
       };
       group = mkOption {
         type = types.str;
         default = "roon-server";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Group to run the Roon Server as.
         '';
       };
