@@ -1,13 +1,19 @@
 { lib, pkgs, config, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkPackageOption
+    ;
+
   cfg = config.programs.waybar;
 in
 {
   options.programs.waybar = {
-    enable = mkEnableOption (lib.mdDoc "waybar");
+    enable = mkEnableOption (mdDoc "waybar");
     package = mkPackageOption pkgs "waybar" { };
   };
 
