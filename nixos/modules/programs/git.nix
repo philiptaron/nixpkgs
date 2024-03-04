@@ -1,15 +1,30 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStringsSep
+    filter
+    foldl'
+    generators
+    init
+    isList
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.programs.git;
 in
 
 {
   options = {
     programs.git = {
-      enable = mkEnableOption (lib.mdDoc "git");
+      enable = mkEnableOption (mdDoc "git");
 
       package = mkPackageOption pkgs "git" {
         example = "gitFull";
@@ -43,7 +58,7 @@ in
           init.defaultBranch = "main";
           url."https://github.com/".insteadOf = [ "gh:" "github:" ];
         };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration to write to /etc/gitconfig. A list can also be
           specified to keep the configuration in order. For example, setting
           `config` to `[ { foo.x = 42; } { bar.y = 42; }]` will put the `foo`
@@ -59,7 +74,7 @@ in
       };
 
       lfs = {
-        enable = mkEnableOption (lib.mdDoc "git-lfs");
+        enable = mkEnableOption (mdDoc "git-lfs");
 
         package = mkPackageOption pkgs "git-lfs" { };
       };
