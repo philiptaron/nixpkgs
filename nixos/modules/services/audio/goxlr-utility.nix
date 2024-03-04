@@ -1,10 +1,17 @@
 { config, lib, pkgs, ... }:
 
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.goxlr-utility;
 in
-
-with lib;
 {
 
   options = {
@@ -12,7 +19,7 @@ with lib;
       enable = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable goxlr-utility for controlling your TC-Helicon GoXLR or GoXLR Mini
         '';
       };
@@ -20,7 +27,7 @@ with lib;
       autoStart.xdg = mkOption {
         default = true;
         type = with types; bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Start the daemon automatically using XDG autostart.
           Sets `xdg.autostart.enable = true` if not already enabled.
         '';
