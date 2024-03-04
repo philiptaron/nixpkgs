@@ -1,8 +1,17 @@
 { config, options, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    fakeHash
+    mdDoc
+    mkDefault
+    mkIf
+    mkMerge
+    mkOption
+    optional
+    types
+    ;
+
   cfg = config.nixpkgs.flake;
 in
 {
@@ -16,14 +25,14 @@ in
       type = types.nullOr (types.either types.str types.path);
 
       default = null;
-      defaultText = "if (using nixpkgsFlake.lib.nixosSystem) then self.outPath else null";
+      defaultText = "if (using nixpkgsFlake.nixosSystem) then self.outPath else null";
 
-      example = ''builtins.fetchTarball { name = "source"; sha256 = "${lib.fakeHash}"; url = "https://github.com/nixos/nixpkgs/archive/somecommit.tar.gz"; }'';
+      example = ''builtins.fetchTarball { name = "source"; sha256 = "${fakeHash}"; url = "https://github.com/nixos/nixpkgs/archive/somecommit.tar.gz"; }'';
 
       description = mdDoc ''
         The path to the nixpkgs sources used to build the system. This is automatically set up to be
         the store path of the nixpkgs flake used to build the system if using
-        `nixpkgs.lib.nixosSystem`, and is otherwise null by default.
+        `nixpkgs.nixosSystem`, and is otherwise null by default.
 
         This can also be optionally set if the NixOS system is not built with a flake but still uses
         pinned sources: set this to the store path for the nixpkgs sources used to build the system,
