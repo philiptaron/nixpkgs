@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    misc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.programs.npm;
 in
 
@@ -11,15 +19,15 @@ in
 
   options = {
     programs.npm = {
-      enable = mkEnableOption (lib.mdDoc "{command}`npm` global config");
+      enable = mkEnableOption (mdDoc "{command}`npm` global config");
 
       package = mkPackageOption pkgs [ "nodePackages" "npm" ] {
         example = "nodePackages_13_x.npm";
       };
 
       npmrc = mkOption {
-        type = lib.types.lines;
-        description = lib.mdDoc ''
+        type = types.lines;
+        description = mdDoc ''
           The system-wide npm configuration.
           See <https://docs.npmjs.com/misc/config>.
         '';
@@ -39,7 +47,7 @@ in
 
   ###### implementation
 
-  config = lib.mkIf cfg.enable {
+  config = mkIf cfg.enable {
     environment.etc.npmrc.text = cfg.npmrc;
 
     environment.variables.NPM_CONFIG_GLOBALCONFIG = "/etc/npmrc";
