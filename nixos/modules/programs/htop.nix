@@ -1,8 +1,21 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    isBool
+    isInt
+    isList
+    isString
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    typeOf
+    ;
 
   cfg = config.programs.htop;
 
@@ -20,7 +33,7 @@ in
   options.programs.htop = {
     package = mkPackageOption pkgs "htop" { };
 
-    enable = mkEnableOption (lib.mdDoc "htop process monitor");
+    enable = mkEnableOption (mdDoc "htop process monitor");
 
     settings = mkOption {
       type = with types; attrsOf (oneOf [ str int bool (listOf (oneOf [ str int bool ])) ]);
@@ -29,7 +42,7 @@ in
         hide_kernel_threads = true;
         hide_userland_threads = true;
       };
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra global default configuration for htop
         which is read on first startup only.
         Htop subsequently uses ~/.config/htop/htoprc
