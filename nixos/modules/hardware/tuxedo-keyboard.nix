@@ -1,14 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.hardware.tuxedo-keyboard;
   tuxedo-keyboard = config.boot.kernelPackages.tuxedo-keyboard;
 in
   {
     options.hardware.tuxedo-keyboard = {
-      enable = mkEnableOption (lib.mdDoc ''
+      enable = mkEnableOption (mdDoc ''
           the tuxedo-keyboard driver.
 
           To configure the driver, pass the options to the {option}`boot.kernelParams` configuration.
