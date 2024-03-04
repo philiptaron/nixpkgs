@@ -1,20 +1,26 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
 
   cfg = config.security.polkit;
-
 in
 
 {
 
   options = {
 
-    security.polkit.enable = mkEnableOption (lib.mdDoc "polkit");
+    security.polkit.enable = mkEnableOption (mdDoc "polkit");
 
-    security.polkit.debug = mkEnableOption (lib.mdDoc "debug logs from polkit. This is required in order to see log messages from rule definitions");
+    security.polkit.debug = mkEnableOption (mdDoc "debug logs from polkit. This is required in order to see log messages from rule definitions");
 
     security.polkit.extraConfig = mkOption {
       type = types.lines;
@@ -32,7 +38,7 @@ in
             if (subject.local) return "yes";
           });
         '';
-      description = lib.mdDoc
+      description = mdDoc
         ''
           Any polkit rules to be added to config (in JavaScript ;-). See:
           <https://www.freedesktop.org/software/polkit/docs/latest/polkit.8.html#polkit-rules>
@@ -43,7 +49,7 @@ in
       type = types.listOf types.str;
       default = [ "unix-group:wheel" ];
       example = [ "unix-user:alice" "unix-group:admin" ];
-      description = lib.mdDoc
+      description = mdDoc
         ''
           Specifies which users are considered “administrators”, for those
           actions that require the user to authenticate as an
