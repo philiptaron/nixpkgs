@@ -2,7 +2,16 @@
 
 { config, pkgs, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    mkRenamedOptionModule
+    teams
+    types
+    ;
+in
 
 {
 
@@ -26,7 +35,7 @@ with lib;
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable GNOME Disks daemon, a program designed to
           be a UDisks2 graphical front-end.
         '';
