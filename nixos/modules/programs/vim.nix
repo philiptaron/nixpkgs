@@ -1,15 +1,23 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    mkOverride
+    mkPackageOption
+    types
+    ;
+
   cfg = config.programs.vim;
-in {
+in
+{
   options.programs.vim = {
     defaultEditor = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         When enabled, installs vim and configures vim to be the default editor
         using the EDITOR environment variable.
       '';
