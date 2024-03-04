@@ -1,11 +1,21 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    filterAttrs
+    generators
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optional
+    recursiveUpdate
+    ;
+
   cfg = config.services.gonic;
   settingsFormat = pkgs.formats.keyValue {
-    mkKeyValue = lib.generators.mkKeyValueDefault { } " ";
+    mkKeyValue = generators.mkKeyValueDefault { } " ";
     listsAsDuplicateKeys = true;
   };
 in
@@ -13,7 +23,7 @@ in
   options = {
     services.gonic = {
 
-      enable = mkEnableOption (lib.mdDoc "Gonic music server");
+      enable = mkEnableOption (mdDoc "Gonic music server");
 
       settings = mkOption rec {
         type = settingsFormat.type;
@@ -28,7 +38,7 @@ in
           music-path = [ "/mnt/music" ];
           podcast-path = "/mnt/podcasts";
         };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration for Gonic, see <https://github.com/sentriz/gonic#configuration-options> for supported values.
         '';
       };
@@ -62,8 +72,8 @@ in
           builtins.storeDir
           cfg.settings.podcast-path
         ] ++ cfg.settings.music-path
-        ++ lib.optional (cfg.settings.tls-cert != null) cfg.settings.tls-cert
-        ++ lib.optional (cfg.settings.tls-key != null) cfg.settings.tls-key;
+        ++ optional (cfg.settings.tls-cert != null) cfg.settings.tls-cert
+        ++ optional (cfg.settings.tls-key != null) cfg.settings.tls-key;
         CapabilityBoundingSet = "";
         RestrictAddressFamilies = [ "AF_UNIX" "AF_INET" "AF_INET6" ];
         RestrictNamespaces = true;
