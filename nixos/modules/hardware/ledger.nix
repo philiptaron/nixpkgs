@@ -1,12 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
-  cfg = config.hardware.ledger;
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
 
-in {
-  options.hardware.ledger.enable = mkEnableOption (lib.mdDoc "udev rules for Ledger devices");
+  cfg = config.hardware.ledger;
+in
+{
+  options.hardware.ledger.enable = mkEnableOption (mdDoc "udev rules for Ledger devices");
 
   config = mkIf cfg.enable {
     services.udev.packages = [ pkgs.ledger-udev-rules ];
