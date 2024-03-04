@@ -1,14 +1,35 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrsets
+    concatMapAttrs
+    concatStringsSep
+    generators
+    literalExpression
+    mapAttrs'
+    mapAttrsToList
+    mdDoc
+    mergeAttrsList
+    mkIf
+    mkOption
+    mkRemovedOptionModule
+    nameValuePair
+    optionalAttrs
+    optionals
+    types
+    versions
+    ;
+
   im = config.i18n.inputMethod;
+
   cfg = im.fcitx5;
+
   fcitx5Package =
     if cfg.plasma6Support
     then pkgs.qt6Packages.fcitx5-with-addons.override { inherit (cfg) addons; }
     else pkgs.libsForQt5.fcitx5-with-addons.override { inherit (cfg) addons; };
+
   settingsFormat = pkgs.formats.ini { };
 in
 {
@@ -18,14 +39,14 @@ in
         type = with types; listOf package;
         default = [ ];
         example = literalExpression "with pkgs; [ fcitx5-rime ]";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enabled Fcitx5 addons.
         '';
       };
       waylandFrontend = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Use the Wayland input method frontend.
           See [Using Fcitx 5 on Wayland](https://fcitx-im.org/wiki/Using_Fcitx_5_on_Wayland).
         '';
@@ -34,7 +55,7 @@ in
         type = types.bool;
         default = config.services.xserver.desktopManager.plasma6.enable;
         defaultText = literalExpression "config.services.xserver.desktopManager.plasma6.enable";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Use qt6 versions of fcitx5 packages.
           Required for configuring fcitx5 in KDE System Settings.
         '';
@@ -48,7 +69,7 @@ in
             angry = "(￣ー￣)";
           }
         '';
-        description = lib.mdDoc "Quick phrases.";
+        description = mdDoc "Quick phrases.";
       };
       quickPhraseFiles = mkOption {
         type = with types; attrsOf path;
@@ -59,41 +80,41 @@ in
             numbers = ./numbers.mb;
           }
         '';
-        description = lib.mdDoc "Quick phrase files.";
+        description = mdDoc "Quick phrase files.";
       };
       settings = {
-        globalOptions = lib.mkOption {
-          type = lib.types.submodule {
+        globalOptions = mkOption {
+          type = types.submodule {
             freeformType = settingsFormat.type;
           };
           default = { };
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The global options in `config` file in ini format.
           '';
         };
-        inputMethod = lib.mkOption {
-          type = lib.types.submodule {
+        inputMethod = mkOption {
+          type = types.submodule {
             freeformType = settingsFormat.type;
           };
           default = { };
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The input method configure in `profile` file in ini format.
           '';
         };
-        addons = lib.mkOption {
-          type = with lib.types; (attrsOf anything);
+        addons = mkOption {
+          type = with types; (attrsOf anything);
           default = { };
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The addon configures in `conf` folder in ini format with global sections.
             Each item is written to the corresponding file.
           '';
           example = literalExpression "{ pinyin.globalSection.EmojiEnabled = \"True\"; }";
         };
       };
-      ignoreUserConfig = lib.mkOption {
-        type = lib.types.bool;
+      ignoreUserConfig = mkOption {
+        type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Ignore the user configures. **Warning**: When this is enabled, the
           user config files are totally ignored and the user dict can't be saved
           and loaded.
@@ -111,28 +132,28 @@ in
   config = mkIf (im.enabled == "fcitx5") {
     i18n.inputMethod.package = fcitx5Package;
 
-    i18n.inputMethod.fcitx5.addons = lib.optionals (cfg.quickPhrase != { }) [
+    i18n.inputMethod.fcitx5.addons = optionals (cfg.quickPhrase != { }) [
       (pkgs.writeTextDir "share/fcitx5/data/QuickPhrase.mb"
-        (lib.concatStringsSep "\n"
-          (lib.mapAttrsToList (name: value: "${name} ${value}") cfg.quickPhrase)))
-    ] ++ lib.optionals (cfg.quickPhraseFiles != { }) [
-      (pkgs.linkFarm "quickPhraseFiles" (lib.mapAttrs'
-        (name: value: lib.nameValuePair ("share/fcitx5/data/quickphrase.d/${name}.mb") value)
+        (concatStringsSep "\n"
+          (mapAttrsToList (name: value: "${name} ${value}") cfg.quickPhrase)))
+    ] ++ optionals (cfg.quickPhraseFiles != { }) [
+      (pkgs.linkFarm "quickPhraseFiles" (mapAttrs'
+        (name: value: nameValuePair ("share/fcitx5/data/quickphrase.d/${name}.mb") value)
         cfg.quickPhraseFiles))
     ];
     environment.etc =
       let
-        optionalFile = p: f: v: lib.optionalAttrs (v != { }) {
+        optionalFile = p: f: v: optionalAttrs (v != { }) {
           "xdg/fcitx5/${p}".text = f v;
         };
       in
-      lib.attrsets.mergeAttrsList [
-        (optionalFile "config" (lib.generators.toINI { }) cfg.settings.globalOptions)
-        (optionalFile "profile" (lib.generators.toINI { }) cfg.settings.inputMethod)
-        (lib.concatMapAttrs
+      attrsets.mergeAttrsList [
+        (optionalFile "config" (generators.toINI { }) cfg.settings.globalOptions)
+        (optionalFile "profile" (generators.toINI { }) cfg.settings.inputMethod)
+        (concatMapAttrs
           (name: value: optionalFile
             "conf/${name}.conf"
-            (lib.generators.toINIWithGlobalSection { })
+            (generators.toINIWithGlobalSection { })
             value)
           cfg.settings.addons)
       ];
@@ -140,10 +161,10 @@ in
     environment.variables = {
       XMODIFIERS = "@im=fcitx";
       QT_PLUGIN_PATH = [ "${fcitx5Package}/${pkgs.qt6.qtbase.qtPluginPrefix}" ];
-    } // lib.optionalAttrs (!cfg.waylandFrontend) {
+    } // optionalAttrs (!cfg.waylandFrontend) {
       GTK_IM_MODULE = "fcitx";
       QT_IM_MODULE = "fcitx";
-    } // lib.optionalAttrs cfg.ignoreUserConfig {
+    } // optionalAttrs cfg.ignoreUserConfig {
       SKIP_FCITX_USER_PATH = "1";
     };
   };
