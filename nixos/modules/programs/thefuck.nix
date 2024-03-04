@@ -1,8 +1,14 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   prg = config.programs;
   cfg = prg.thefuck;
 
@@ -16,13 +22,13 @@ in
   {
     options = {
       programs.thefuck = {
-        enable = mkEnableOption (lib.mdDoc "thefuck");
+        enable = mkEnableOption (mdDoc "thefuck");
 
         alias = mkOption {
           default = "fuck";
           type = types.str;
 
-          description = lib.mdDoc ''
+          description = mdDoc ''
             `thefuck` needs an alias to be configured.
             The default value is `fuck`, but you can use anything else as well.
           '';
