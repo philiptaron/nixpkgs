@@ -1,17 +1,25 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    cli
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.programs.wireshark;
   wireshark = cfg.package;
-in {
+in
+{
   options = {
     programs.wireshark = {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to add Wireshark to the global environment and configure a
           setcap wrapper for 'dumpcap' for users in the 'wireshark' group.
         '';
