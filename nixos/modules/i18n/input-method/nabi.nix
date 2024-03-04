@@ -1,6 +1,10 @@
 { config, pkgs, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mkIf
+    ;
+in
 {
   config = mkIf (config.i18n.inputMethod.enabled == "nabi") {
     i18n.inputMethod.package = pkgs.nabi;
