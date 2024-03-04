@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    optional
+    types
+    ;
 
-let cfg = config.programs.cdemu;
+  cfg = config.programs.cdemu;
 in {
 
   options = {
@@ -10,7 +17,7 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           {command}`cdemu` for members of
           {option}`programs.cdemu.group`.
         '';
@@ -18,21 +25,21 @@ in {
       group = mkOption {
         type = types.str;
         default = "cdrom";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Group that users must be in to use {command}`cdemu`.
         '';
       };
       gui = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to install the {command}`cdemu` GUI (gCDEmu).
         '';
       };
       image-analyzer = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to install the image analyzer.
         '';
       };
