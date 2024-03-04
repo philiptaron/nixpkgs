@@ -1,8 +1,14 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    cli
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkPackageOption
+    mkRemovedOptionModule
+    ;
 
   cfg = config.programs._1password;
 
@@ -16,7 +22,7 @@ in
 
   options = {
     programs._1password = {
-      enable = mkEnableOption (lib.mdDoc "the 1Password CLI tool");
+      enable = mkEnableOption (mdDoc "the 1Password CLI tool");
 
       package = mkPackageOption pkgs "1Password CLI" {
         default = [ "_1password" ];
