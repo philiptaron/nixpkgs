@@ -1,13 +1,19 @@
 { pkgs, lib, config, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkPackageOption
+    ;
+
   cfg = config.programs.feedbackd;
-in {
+in
+{
   options = {
     programs.feedbackd = {
-      enable = mkEnableOption (lib.mdDoc ''
+      enable = mkEnableOption (mdDoc ''
         the feedbackd D-BUS service and udev rules.
 
         Your user needs to be in the `feedbackd` group to trigger effects
