@@ -1,12 +1,17 @@
 { pkgs, config, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.programs.zmap;
-in {
+in
+{
   options.programs.zmap = {
-    enable = mkEnableOption (lib.mdDoc "ZMap");
+    enable = mkEnableOption (mdDoc "ZMap");
   };
 
   config = mkIf cfg.enable {
