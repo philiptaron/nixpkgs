@@ -1,8 +1,17 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    maintainers
+    mdDoc
+    meta
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.xdg.portal.wlr;
   package = pkgs.xdg-desktop-portal-wlr;
   settingsFormat = pkgs.formats.ini { };
