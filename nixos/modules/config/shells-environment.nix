@@ -3,9 +3,26 @@
 
 { config, lib, utils, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatLists
+    concatMap
+    concatStringsSep
+    flip
+    isList
+    literalExpression
+    mapAttrs
+    mapAttrsToList
+    mdDoc
+    mkDefault
+    mkOption
+    optionalString
+    stringAfter
+    strings
+    toList
+    types
+    zipAttrsWith
+    ;
 
   cfg = config.environment;
 
