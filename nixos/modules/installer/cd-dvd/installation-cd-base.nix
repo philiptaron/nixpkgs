@@ -3,7 +3,13 @@
 
 { config, lib, options, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mkDefault
+    mkImageMediaOverride
+    trivial
+    ;
+in
 
 {
   imports =
@@ -46,5 +52,5 @@ with lib;
     done
   '';
 
-  system.stateVersion = lib.mkDefault lib.trivial.release;
+  system.stateVersion = mkDefault trivial.release;
 }
