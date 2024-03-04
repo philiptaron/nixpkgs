@@ -1,13 +1,19 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkPackageOption
+    ;
+
   cfg = config.programs.flexoptix-app;
-in {
+in
+{
   options = {
     programs.flexoptix-app = {
-      enable = mkEnableOption (lib.mdDoc "FLEXOPTIX app + udev rules");
+      enable = mkEnableOption (mdDoc "FLEXOPTIX app + udev rules");
 
       package = mkPackageOption pkgs "flexoptix-app" { };
     };
