@@ -1,6 +1,10 @@
 { lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mkRemovedOptionModule
+    ;
+in
 
 {
   imports = [
