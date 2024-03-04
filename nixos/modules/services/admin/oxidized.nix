@@ -1,18 +1,25 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.oxidized;
 in
 {
   options.services.oxidized = {
-    enable = mkEnableOption (lib.mdDoc "the oxidized configuration backup service");
+    enable = mkEnableOption (mdDoc "the oxidized configuration backup service");
 
     user = mkOption {
       type = types.str;
       default = "oxidized";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         User under which the oxidized service runs.
       '';
     };
@@ -20,7 +27,7 @@ in
     group = mkOption {
       type = types.str;
       default = "oxidized";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Group under which the oxidized service runs.
       '';
     };
@@ -28,7 +35,7 @@ in
     dataDir = mkOption {
       type = types.path;
       default = "/var/lib/oxidized";
-      description = lib.mdDoc "State directory for the oxidized service.";
+      description = mdDoc "State directory for the oxidized service.";
     };
 
     configFile = mkOption {
@@ -62,7 +69,7 @@ in
           # ... additional config
         ''';
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path to the oxidized configuration file.
       '';
     };
@@ -76,7 +83,7 @@ in
           # ... additional hosts
         '''
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path to the file/database which contains the targets for oxidized.
       '';
     };
