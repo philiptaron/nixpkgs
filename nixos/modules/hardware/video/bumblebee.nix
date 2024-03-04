@@ -1,7 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    optional
+    types
+    ;
+
   cfg = config.hardware.bumblebee;
 
   kernel = config.boot.kernelPackages;
@@ -29,7 +36,7 @@ in
       enable = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable the bumblebee daemon to manage Optimus hybrid video cards.
           This should power off secondary GPU until its use is requested
           by running an application with optirun.
@@ -40,13 +47,13 @@ in
         default = "wheel";
         example = "video";
         type = types.str;
-        description = lib.mdDoc "Group for bumblebee socket";
+        description = mdDoc "Group for bumblebee socket";
       };
 
       connectDisplay = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Set to true if you intend to connect your discrete card to a
           monitor. This option will set up your Nvidia card for EDID
           discovery and to turn on the monitor signal.
@@ -58,7 +65,7 @@ in
       driver = mkOption {
         default = "nvidia";
         type = types.enum [ "nvidia" "nouveau" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Set driver used by bumblebeed. Supported are nouveau and nvidia.
         '';
       };
@@ -66,7 +73,7 @@ in
       pmMethod = mkOption {
         default = "auto";
         type = types.enum [ "auto" "bbswitch" "switcheroo" "none" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Set preferred power management method for unused card.
         '';
       };
