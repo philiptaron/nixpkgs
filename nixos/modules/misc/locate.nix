@@ -1,8 +1,27 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatLists
+    concatStringsSep
+    hasPrefix
+    literalMD
+    maintainers
+    mdDoc
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    optional
+    optionalAttrs
+    optionals
+    optionalString
+    toLower
+    types
+    ;
+
   cfg = config.services.locate;
   isMLocate = hasPrefix "mlocate" cfg.package.name;
   isPLocate = hasPrefix "plocate" cfg.package.name;
@@ -20,7 +39,7 @@ in
     enable = mkOption {
       type = bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         If enabled, NixOS will periodically update the database of
         files used by the {command}`locate` command.
       '';
@@ -34,7 +53,7 @@ in
       type = str;
       default = "02:15";
       example = "hourly";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Update the locate database at this interval. Updates by
         default at 2:15 AM every day.
 
@@ -49,7 +68,7 @@ in
     extraFlags = mkOption {
       type = listOf str;
       default = [ ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra flags to pass to {command}`updatedb`.
       '';
     };
@@ -57,7 +76,7 @@ in
     output = mkOption {
       type = path;
       default = "/var/cache/locatedb";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The database file to build.
       '';
     };
@@ -65,7 +84,7 @@ in
     localuser = mkOption {
       type = nullOr str;
       default = "nobody";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The user to search non-network directories as, using
         {command}`su`.
       '';
@@ -153,7 +172,7 @@ in
         "vboxsf"
         "vperfctrfs"
       ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Which filesystem types to exclude from indexing
       '';
     };
@@ -170,19 +189,19 @@ in
         "/nix/store"
         "/nix/var/log/nix"
       ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Which paths to exclude from indexing
       '';
     };
 
     pruneNames = mkOption {
       type = listOf str;
-      default = lib.optionals (!isFindutils) [ ".bzr" ".cache" ".git" ".hg" ".svn" ];
+      default = optionals (!isFindutils) [ ".bzr" ".cache" ".git" ".hg" ".svn" ];
       defaultText = literalMD ''
         `[ ".bzr" ".cache" ".git" ".hg" ".svn" ]`, if
         supported by the locate implementation (i.e. mlocate or plocate).
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Directory components which should exclude paths containing them from indexing
       '';
     };
@@ -190,7 +209,7 @@ in
     pruneBindMounts = mkOption {
       type = bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether not to index bind mounts
       '';
     };
@@ -233,9 +252,9 @@ in
       # write /etc/updatedb.conf for manual calls to `updatedb`
       "updatedb.conf" = {
         text = ''
-          PRUNEFS="${lib.concatStringsSep " " cfg.pruneFS}"
-          PRUNENAMES="${lib.concatStringsSep " " cfg.pruneNames}"
-          PRUNEPATHS="${lib.concatStringsSep " " cfg.prunePaths}"
+          PRUNEFS="${concatStringsSep " " cfg.pruneFS}"
+          PRUNENAMES="${concatStringsSep " " cfg.pruneNames}"
+          PRUNEPATHS="${concatStringsSep " " cfg.prunePaths}"
           PRUNE_BIND_MOUNTS="${if cfg.pruneBindMounts then "yes" else "no"}"
         '';
       };
@@ -259,7 +278,7 @@ in
           let
             toFlags = x:
               optional (cfg.${x} != [ ])
-                "--${lib.toLower x} '${concatStringsSep " " cfg.${x}}'";
+                "--${toLower x} '${concatStringsSep " " cfg.${x}}'";
             args = concatLists (map toFlags [ "pruneFS" "pruneNames" "prunePaths" ]);
           in
           ''
@@ -301,5 +320,5 @@ in
     };
   };
 
-  meta.maintainers = with lib.maintainers; [ SuperSandro2000 ];
+  meta.maintainers = with maintainers; [ SuperSandro2000 ];
 }
