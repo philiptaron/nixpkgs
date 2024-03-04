@@ -1,7 +1,24 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    concatStringsSep
+    flatten
+    length
+    lists
+    literalExpression
+    maintainers
+    mdDoc
+    mkAfter
+    mkBefore
+    mkIf
+    mkOption
+    mkOrder
+    optionals
+    optionalString
+    types
+    ;
+
   cfg = config.security.doas;
 
   inherit (pkgs) doas;
@@ -53,7 +70,7 @@ in
     enable = mkOption {
       type = with types; bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to enable the {command}`doas` command, which allows
         non-root users to execute commands as root.
       '';
@@ -62,7 +79,7 @@ in
     wheelNeedsPassword = mkOption {
       type = with types; bool;
       default = true;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether users of the `wheel` group must provide a password to
         run commands as super user via {command}`doas`.
       '';
@@ -70,7 +87,7 @@ in
 
     extraRules = mkOption {
       default = [];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Define specific rules to be set in the
         {file}`/etc/doas.conf` file. More specific rules should
         come after more general ones in order to yield the expected behavior.
@@ -115,7 +132,7 @@ in
             noPass = mkOption {
               type = with types; bool;
               default = false;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 If `true`, the user is not required to enter a
                 password.
               '';
@@ -124,7 +141,7 @@ in
             noLog = mkOption {
               type = with types; bool;
               default = false;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 If `true`, successful executions will not be logged
                 to
                 {manpage}`syslogd(8)`.
@@ -134,7 +151,7 @@ in
             persist = mkOption {
               type = with types; bool;
               default = false;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 If `true`, do not ask for a password again for some
                 time after the user successfully authenticates.
               '';
@@ -143,7 +160,7 @@ in
             keepEnv = mkOption {
               type = with types; bool;
               default = false;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 If `true`, environment variables other than those
                 listed in
                 {manpage}`doas(1)`
@@ -154,7 +171,7 @@ in
             setEnv = mkOption {
               type = with types; listOf str;
               default = [];
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Keep or set the specified variables. Variables may also be
                 removed with a leading '-' or set using
                 `variable=value`. If the first character of
@@ -173,19 +190,19 @@ in
             users = mkOption {
               type = with types; listOf (either str int);
               default = [];
-              description = lib.mdDoc "The usernames / UIDs this rule should apply for.";
+              description = mdDoc "The usernames / UIDs this rule should apply for.";
             };
 
             groups = mkOption {
               type = with types; listOf (either str int);
               default = [];
-              description = lib.mdDoc "The groups / GIDs this rule should apply for.";
+              description = mdDoc "The groups / GIDs this rule should apply for.";
             };
 
             runAs = mkOption {
               type = with types; nullOr str;
               default = null;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Which user or group the specified command is allowed to run as.
                 When set to `null` (the default), all users are
                 allowed.
@@ -199,7 +216,7 @@ in
             cmd = mkOption {
               type = with types; nullOr str;
               default = null;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The command the user is allowed to run. When set to
                 `null` (the default), all commands are allowed.
 
@@ -212,7 +229,7 @@ in
             args = mkOption {
               type = with types; nullOr (listOf str);
               default = null;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Arguments that must be provided to the command. When set to
                 `[]`, the command must be run without any arguments.
               '';
@@ -225,7 +242,7 @@ in
     extraConfig = mkOption {
       type = with types; lines;
       default = "";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra configuration text appended to {file}`doas.conf`. Be aware that
         this option cannot be used to override the behaviour allowing
         passwordless operation for root.
