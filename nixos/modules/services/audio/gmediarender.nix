@@ -1,8 +1,16 @@
 { pkgs, lib, config, utils, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.gmediarender;
 in
 {
