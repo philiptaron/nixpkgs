@@ -2,9 +2,14 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.programs.turbovnc;
 in
 {
@@ -15,7 +20,7 @@ in
       ensureHeadlessSoftwareOpenGL = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to set up NixOS such that TurboVNC's built-in software OpenGL
           implementation works.
 
