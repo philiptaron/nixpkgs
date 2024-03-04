@@ -2,12 +2,20 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrNames
+    concatStrings
+    length
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.environment.freetds;
-
 in
 {
   ###### interface
@@ -26,7 +34,7 @@ in
         }
       '';
       description =
-        lib.mdDoc ''
+        mdDoc ''
         Configure freetds database entries. Each attribute denotes
         a section within freetds.conf, and the value (a string) is the config
         content for that section. When at least one entry is configured
