@@ -1,13 +1,27 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrByPath
+    attrNames
+    concatStringsSep
+    const
+    filterAttrs
+    isDerivation
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    mkRenamedOptionModule
+    optionalString
+    types
+    ;
+
   cfg = config.i18n.inputMethod.ibus;
   ibusPackage = pkgs.ibus-with-plugins.override { plugins = cfg.engines; };
   ibusEngine = types.package // {
     name  = "ibus-engine";
-    check = x: (lib.types.package.check x) && (attrByPath ["meta" "isIbusEngine"] false x);
+    check = x: (types.package.check x) && (attrByPath ["meta" "isIbusEngine"] false x);
   };
 
   impanel = optionalString (cfg.panel != null) "--panel=${cfg.panel}";
@@ -42,13 +56,13 @@ in
             engines = concatStringsSep ", "
               (map (name: "`${name}`") (attrNames enginesDrv));
           in
-            lib.mdDoc "Enabled IBus engines. Available engines are: ${engines}.";
+            mdDoc "Enabled IBus engines. Available engines are: ${engines}.";
       };
       panel = mkOption {
         type = with types; nullOr path;
         default = null;
         example = literalExpression ''"''${pkgs.plasma5Packages.plasma-desktop}/libexec/kimpanel-ibus-panel"'';
-        description = lib.mdDoc "Replace the IBus panel with another panel.";
+        description = mdDoc "Replace the IBus panel with another panel.";
       };
     };
   };
