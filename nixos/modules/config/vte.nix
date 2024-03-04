@@ -1,8 +1,16 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    meta
+    mkBefore
+    mkIf
+    mkMerge
+    mkOption
+    teams
+    types
+    ;
 
   vteInitSnippet = ''
     # Show current working directory in VTE terminals window title.
