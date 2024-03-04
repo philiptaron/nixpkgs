@@ -1,13 +1,17 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   enable = config.programs.bash.enableCompletion;
 in
 {
   options = {
-    programs.bash.enableCompletion = mkEnableOption (lib.mdDoc "Bash completion for all interactive bash shells") // {
+    programs.bash.enableCompletion = mkEnableOption (mdDoc "Bash completion for all interactive bash shells") // {
       default = true;
     };
   };
