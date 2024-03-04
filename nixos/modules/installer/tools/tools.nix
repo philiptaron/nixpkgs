@@ -3,9 +3,18 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    makeBinPath
+    mdDoc
+    mkDefault
+    mkIf
+    mkMerge
+    mkOption
+    optionalAttrs
+    types
+    ;
+
   makeProg = args: pkgs.substituteAll (args // {
     dir = "bin";
     isExecutable = true;
@@ -87,7 +96,7 @@ in
     configuration = mkOption {
       internal = true;
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The NixOS module that `nixos-generate-config`
         saves to `/etc/nixos/configuration.nix`.
 
@@ -104,7 +113,7 @@ in
       internal = true;
       type = types.listOf types.lines;
       default = [];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Text to preseed the desktop configuration that `nixos-generate-config`
         saves to `/etc/nixos/configuration.nix`.
 
@@ -122,7 +131,7 @@ in
     internal = true;
     type = types.bool;
     default = false;
-    description = lib.mdDoc ''
+    description = mdDoc ''
       Disable nixos-rebuild, nixos-generate-config, nixos-installer
       and other NixOS tools. This is useful to shrink embedded,
       read-only systems which are not expected to be rebuild or
@@ -130,7 +139,7 @@ in
     '';
   };
 
-  config = lib.mkMerge [ (lib.mkIf (config.nix.enable && !config.system.disableInstallerTools) {
+  config = mkMerge [ (mkIf (config.nix.enable && !config.system.disableInstallerTools) {
 
     system.nixos-generate-config.configuration = mkDefault ''
       # Edit this configuration file to define what should be installed on
