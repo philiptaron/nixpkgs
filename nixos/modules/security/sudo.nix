@@ -1,8 +1,27 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    filter
+    flatten
+    isInt
+    isString
+    length
+    literalExpression
+    mdDoc
+    mkAfter
+    mkBefore
+    mkIf
+    mkMerge
+    mkOption
+    mkOrder
+    mkPackageOption
+    optional
+    optionalString
+    pipe
+    types
+    ;
 
   cfg = config.security.sudo;
 
@@ -43,7 +62,7 @@ in
       type = types.bool;
       default = true;
       description =
-        lib.mdDoc ''
+        mdDoc ''
           Whether to enable the {command}`sudo` command, which
           allows non-root users to execute commands as root.
         '';
