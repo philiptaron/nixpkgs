@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkForce
+    mkIf
+    mkOption
+    ;
+
   cfg = config.programs.gamemode;
   settingsFormat = pkgs.formats.ini { };
   configFile = settingsFormat.generate "gamemode.ini" cfg.settings;
@@ -10,16 +18,16 @@ in
 {
   options = {
     programs.gamemode = {
-      enable = mkEnableOption (lib.mdDoc "GameMode to optimise system performance on demand");
+      enable = mkEnableOption (mdDoc "GameMode to optimise system performance on demand");
 
-      enableRenice = mkEnableOption (lib.mdDoc "CAP_SYS_NICE on gamemoded to support lowering process niceness") // {
+      enableRenice = mkEnableOption (mdDoc "CAP_SYS_NICE on gamemoded to support lowering process niceness") // {
         default = true;
       };
 
       settings = mkOption {
         type = settingsFormat.type;
         default = { };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           System-wide configuration for GameMode (/etc/gamemode.ini).
           See gamemoded(8) man page for available settings.
         '';
