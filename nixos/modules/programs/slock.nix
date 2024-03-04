@@ -1,10 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
-  cfg = config.programs.slock;
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
 
+  cfg = config.programs.slock;
 in
 {
   options = {
@@ -12,7 +16,7 @@ in
       enable = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to install slock screen locker with setuid wrapper.
         '';
       };
