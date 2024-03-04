@@ -1,6 +1,15 @@
 { pkgs, config, lib, ... }:
-with lib;
+
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    optional
+    optionalString
+    ;
+
   cfg = config.programs.fzf;
 in
 {
@@ -26,7 +35,7 @@ in
         source ${pkgs.fzf}/share/fzf/key-bindings.zsh
       '');
 
-    programs.zsh.ohMyZsh.plugins = lib.mkIf (cfg.keybindings || cfg.fuzzyCompletion) [ "fzf" ];
+    programs.zsh.ohMyZsh.plugins = mkIf (cfg.keybindings || cfg.fuzzyCompletion) [ "fzf" ];
   };
   meta.maintainers = with maintainers; [ laalsaas ];
 }
