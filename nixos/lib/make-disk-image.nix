@@ -202,10 +202,21 @@ assert (lib.assertMsg (lib.all
               == ((attrs.group or null) == null))
         contents) "Contents of the disk image should set none of {user, group} or both at the same time.");
 
-with lib;
+let
+  inherit (lib)
+    cleanSource
+    concatStringsSep
+    makeBinPath
+    optional
+    optionals
+    optionalString
+    optionalString
+    or
+    subtractLists
+    ;
 
-let format' = format; in let
-
+  format' = format;
+in let
   format = if format' == "qcow2-compressed" then "qcow2" else format';
 
   compress = optionalString (format' == "qcow2-compressed") "-c";
