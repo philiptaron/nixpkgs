@@ -1,13 +1,20 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.programs.openvpn3;
 in
 {
   options.programs.openvpn3 = {
-    enable = mkEnableOption (lib.mdDoc "the openvpn3 client");
+    enable = mkEnableOption (mdDoc "the openvpn3 client");
     package = mkOption {
       type = types.package;
       default = pkgs.openvpn3.override {
@@ -16,7 +23,7 @@ in
       defaultText = literalExpression ''pkgs.openvpn3.override {
         enableSystemdResolved = config.services.resolved.enable;
       }'';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Which package to use for `openvpn3`.
       '';
     };
