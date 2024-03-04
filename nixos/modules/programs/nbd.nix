@@ -1,14 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.programs.nbd;
 in
 {
   options = {
     programs.nbd = {
-      enable = mkEnableOption (lib.mdDoc "Network Block Device (nbd) support");
+      enable = mkEnableOption (mdDoc "Network Block Device (nbd) support");
     };
   };
 
