@@ -2,9 +2,15 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    elem
+    kernel
+    mkIf
+    modules
+    optional
+    singleton
+    ;
 
   drivers = config.services.xserver.videoDrivers;
 
@@ -44,7 +50,7 @@ in
       "/run/amdgpu-pro"."L+".argument = "${package}/opt/amdgpu-pro";
     };
 
-    system.requiredKernelConfig = with config.lib.kernelConfig; [
+    system.requiredKernelConfig = with config.kernelConfig; [
       (isYes "DEVICE_PRIVATE")
       (isYes "KALLSYMS_ALL")
     ];
