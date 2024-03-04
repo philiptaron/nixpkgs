@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.programs.digitalbitbox;
 in
 
@@ -11,7 +18,7 @@ in
     enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Installs the Digital Bitbox application and enables the complementary hardware module.
       '';
     };
@@ -33,6 +40,6 @@ in
 
   meta = {
     doc = ./default.md;
-    maintainers = with lib.maintainers; [ vidbina ];
+    maintainers = with maintainers; [ vidbina ];
   };
 }
