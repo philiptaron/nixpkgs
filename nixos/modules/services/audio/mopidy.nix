@@ -1,9 +1,19 @@
 { config, lib, pkgs, ... }:
 
 with pkgs;
-with lib;
 
 let
+  inherit (lib)
+    closePropagation
+    concatStringsSep
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   uid = config.ids.uids.mopidy;
   gid = config.ids.gids.mopidy;
   cfg = config.services.mopidy;
@@ -26,12 +36,12 @@ in {
 
     services.mopidy = {
 
-      enable = mkEnableOption (lib.mdDoc "Mopidy, a music player daemon");
+      enable = mkEnableOption (mdDoc "Mopidy, a music player daemon");
 
       dataDir = mkOption {
         default = "/var/lib/mopidy";
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The directory where Mopidy stores its state.
         '';
       };
@@ -40,7 +50,7 @@ in {
         default = [];
         type = types.listOf types.package;
         example = literalExpression "[ pkgs.mopidy-spotify ]";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Mopidy extensions that should be loaded by the service.
         '';
       };
@@ -48,7 +58,7 @@ in {
       configuration = mkOption {
         default = "";
         type = types.lines;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The configuration that Mopidy should use.
         '';
       };
@@ -56,7 +66,7 @@ in {
       extraConfigFiles = mkOption {
         default = [];
         type = types.listOf types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra config file read by Mopidy when the service starts.
           Later files in the list overrides earlier configuration.
         '';
