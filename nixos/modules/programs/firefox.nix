@@ -1,8 +1,22 @@
 { pkgs, config, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    flatten
+    listToAttrs
+    literalExpression
+    maintainers
+    mapAttrs
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    nameValuePair
+    optional
+    types
+    ;
+
   cfg = config.programs.firefox;
 
   policyFormat = pkgs.formats.json { };
@@ -258,7 +272,7 @@ in
   };
 
   config = let
-    forEachEnabledNmh = fn: flatten (mapAttrsToList (k: v: lib.optional cfg.nativeMessagingHosts.${k} (fn k v)) nmhOptions);
+    forEachEnabledNmh = fn: flatten (mapAttrsToList (k: v: optional cfg.nativeMessagingHosts.${k} (fn k v)) nmhOptions);
   in mkIf cfg.enable {
     warnings = forEachEnabledNmh (k: v:
       "The `programs.firefox.nativeMessagingHosts.${k}` option is deprecated, " +
