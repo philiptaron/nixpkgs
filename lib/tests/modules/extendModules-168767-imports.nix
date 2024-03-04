@@ -2,10 +2,13 @@
 , extendModules
 , ...
 }:
-with lib;
+
+let
+  inherit (lib) mkOption mkOverride types;
+in
+
 {
   imports = [
-
     {
       options.sub = mkOption {
         default = { };
@@ -35,7 +38,5 @@ with lib;
     }
 
     { config.sub.value = 1; }
-
-
   ];
 }
