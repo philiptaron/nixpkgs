@@ -1,11 +1,15 @@
 { config, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.powerManagement;
-
 in
 
 {
