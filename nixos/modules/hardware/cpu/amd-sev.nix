@@ -1,29 +1,40 @@
 { config, options, lib, ... }:
-with lib;
+
 let
+  inherit (lib)
+    hasAttr
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    optionalAttrs
+    types
+    ;
+
   cfgSev = config.hardware.cpu.amd.sev;
   cfgSevGuest = config.hardware.cpu.amd.sevGuest;
 
   optionsFor = device: group: {
-    enable = mkEnableOption (lib.mdDoc "access to the AMD ${device} device");
+    enable = mkEnableOption (mdDoc "access to the AMD ${device} device");
     user = mkOption {
-      description = lib.mdDoc "Owner to assign to the ${device} device.";
+      description = mdDoc "Owner to assign to the ${device} device.";
       type = types.str;
       default = "root";
     };
     group = mkOption {
-      description = lib.mdDoc "Group to assign to the ${device} device.";
+      description = mdDoc "Group to assign to the ${device} device.";
       type = types.str;
       default = group;
     };
     mode = mkOption {
-      description = lib.mdDoc "Mode to set for the ${device} device.";
+      description = mdDoc "Mode to set for the ${device} device.";
       type = types.str;
       default = "0660";
     };
   };
 in
-with lib; {
+{
   options.hardware.cpu.amd.sev = optionsFor "SEV" "sev";
 
   options.hardware.cpu.amd.sevGuest = optionsFor "SEV guest" "sev-guest";
