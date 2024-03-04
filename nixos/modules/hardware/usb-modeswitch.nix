@@ -1,6 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    mkRenamedOptionModule
+    types
+    ;
+in
 
 {
   ###### interface
@@ -11,7 +19,7 @@ with lib;
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable this option to support certain USB WLAN and WWAN adapters.
 
           These network adapters initial present themselves as Flash Drives containing their drivers.
