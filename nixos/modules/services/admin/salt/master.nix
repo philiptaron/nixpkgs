@@ -1,12 +1,19 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    recursiveUpdate
+    types
+    ;
 
   cfg  = config.services.salt.master;
 
-  fullConfig = lib.recursiveUpdate {
+  fullConfig = recursiveUpdate {
     # Provide defaults for some directories to allow an immutable config dir
 
     # Default is equivalent to /etc/salt/master.d/*.conf
@@ -20,11 +27,11 @@ in
 {
   options = {
     services.salt.master = {
-      enable = mkEnableOption (lib.mdDoc "Salt master service");
+      enable = mkEnableOption (mdDoc "Salt master service");
       configuration = mkOption {
         type = types.attrs;
         default = {};
-        description = lib.mdDoc "Salt master configuration as Nix attribute set.";
+        description = mdDoc "Salt master configuration as Nix attribute set.";
       };
     };
   };
@@ -59,5 +66,5 @@ in
     };
   };
 
-  meta.maintainers = with lib.maintainers; [ Flakebi ];
+  meta.maintainers = with maintainers; [ Flakebi ];
 }
