@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.icecast;
   configFile = pkgs.writeText "icecast.xml" ''
     <icecast>
@@ -44,11 +51,11 @@ in {
 
     services.icecast = {
 
-      enable = mkEnableOption (lib.mdDoc "Icecast server");
+      enable = mkEnableOption (mdDoc "Icecast server");
 
       hostname = mkOption {
         type = types.nullOr types.str;
-        description = lib.mdDoc "DNS name or IP address that will be used for the stream directory lookups or possibly the playlist generation if a Host header is not provided.";
+        description = mdDoc "DNS name or IP address that will be used for the stream directory lookups or possibly the playlist generation if a Host header is not provided.";
         default = config.networking.domain;
         defaultText = literalExpression "config.networking.domain";
       };
@@ -56,51 +63,51 @@ in {
       admin = {
         user = mkOption {
           type = types.str;
-          description = lib.mdDoc "Username used for all administration functions.";
+          description = mdDoc "Username used for all administration functions.";
           default = "admin";
         };
 
         password = mkOption {
           type = types.str;
-          description = lib.mdDoc "Password used for all administration functions.";
+          description = mdDoc "Password used for all administration functions.";
         };
       };
 
       logDir = mkOption {
         type = types.path;
-        description = lib.mdDoc "Base directory used for logging.";
+        description = mdDoc "Base directory used for logging.";
         default = "/var/log/icecast";
       };
 
       listen = {
         port = mkOption {
           type = types.port;
-          description = lib.mdDoc "TCP port that will be used to accept client connections.";
+          description = mdDoc "TCP port that will be used to accept client connections.";
           default = 8000;
         };
 
         address = mkOption {
           type = types.str;
-          description = lib.mdDoc "Address Icecast will listen on.";
+          description = mdDoc "Address Icecast will listen on.";
           default = "::";
         };
       };
 
       user = mkOption {
         type = types.str;
-        description = lib.mdDoc "User privileges for the server.";
+        description = mdDoc "User privileges for the server.";
         default = "nobody";
       };
 
       group = mkOption {
         type = types.str;
-        description = lib.mdDoc "Group privileges for the server.";
+        description = mdDoc "Group privileges for the server.";
         default = "nogroup";
       };
 
       extraConf = mkOption {
         type = types.lines;
-        description = lib.mdDoc "icecast.xml content.";
+        description = mdDoc "icecast.xml content.";
         default = "";
       };
 
