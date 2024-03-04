@@ -1,15 +1,21 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.programs.wshowkeys;
-in {
+in
+{
   meta.maintainers = with maintainers; [ primeos ];
 
   options = {
     programs.wshowkeys = {
-      enable = mkEnableOption (lib.mdDoc ''
+      enable = mkEnableOption (mdDoc ''
         wshowkeys (displays keypresses on screen on supported Wayland
         compositors). It requires root permissions to read input events, but
         these permissions are dropped after startup'');
