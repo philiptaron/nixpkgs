@@ -1,32 +1,41 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalAttrs
+    optionalString
+    types
+    ;
+
   name = "roon-bridge";
   cfg = config.services.roon-bridge;
-in {
+in
+{
   options = {
     services.roon-bridge = {
-      enable = mkEnableOption (lib.mdDoc "Roon Bridge");
+      enable = mkEnableOption (mdDoc "Roon Bridge");
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Open ports in the firewall for the bridge.
         '';
       };
       user = mkOption {
         type = types.str;
         default = "roon-bridge";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           User to run the Roon bridge as.
         '';
       };
       group = mkOption {
         type = types.str;
         default = "roon-bridge";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Group to run the Roon Bridge as.
         '';
       };
