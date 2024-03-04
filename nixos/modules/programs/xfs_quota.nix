@@ -2,9 +2,21 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    filesystem
+    id
+    mapAttrs'
+    mapAttrsToList
+    mdDoc
+    mkIf
+    mkOption
+    nameValuePair
+    optionalString
+    replaceStrings
+    types
+    ;
 
   cfg = config.programs.xfs_quota;
 
@@ -28,37 +40,37 @@ in
           options = {
             id = mkOption {
               type = types.int;
-              description = lib.mdDoc "Project ID.";
+              description = mdDoc "Project ID.";
             };
 
             fileSystem = mkOption {
               type = types.str;
-              description = lib.mdDoc "XFS filesystem hosting the xfs_quota project.";
+              description = mdDoc "XFS filesystem hosting the xfs_quota project.";
               default = "/";
             };
 
             path = mkOption {
               type = types.str;
-              description = lib.mdDoc "Project directory.";
+              description = mdDoc "Project directory.";
             };
 
             sizeSoftLimit = mkOption {
               type = types.nullOr types.str;
               default = null;
               example = "30g";
-              description = lib.mdDoc "Soft limit of the project size";
+              description = mdDoc "Soft limit of the project size";
             };
 
             sizeHardLimit = mkOption {
               type = types.nullOr types.str;
               default = null;
               example = "50g";
-              description = lib.mdDoc "Hard limit of the project size.";
+              description = mdDoc "Hard limit of the project size.";
             };
           };
         });
 
-        description = lib.mdDoc "Setup of xfs_quota projects. Make sure the filesystem is mounted with the pquota option.";
+        description = mdDoc "Setup of xfs_quota projects. Make sure the filesystem is mounted with the pquota option.";
 
         example = {
           projname = {
