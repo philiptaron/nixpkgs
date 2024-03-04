@@ -6,7 +6,9 @@
 
 { config, lib, ... }:
 
-with lib;
+let
+  inherit (lib) types;
+in
 
 {
   options = {
@@ -21,7 +23,7 @@ with lib;
     };
 
     # mkAliasOptionModule sets warnings, so this has to be defined.
-    warnings = mkOption {
+    warnings = lib.mkOption {
       internal = true;
       default = [];
       type = types.listOf types.str;
@@ -35,7 +37,7 @@ with lib;
 
   imports = [
     # Create an alias for the "enable" option.
-    (mkAliasOptionModule [ "enableAlias" ] [ "enable" ])
+    (lib.mkAliasOptionModule [ "enableAlias" ] [ "enable" ])
 
     # Disable the aliased option, but with a default (low) priority so it
     # should be able to be overridden by the next import.
