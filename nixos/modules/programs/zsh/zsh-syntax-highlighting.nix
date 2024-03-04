@@ -1,8 +1,24 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrNames
+    concatStringsSep
+    elem
+    length
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkAfter
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRenamedOptionModule
+    optional
+    optionals
+    types
+    ;
+
   cfg = config.programs.zsh.syntaxHighlighting;
 in
 {
@@ -15,7 +31,7 @@ in
 
   options = {
     programs.zsh.syntaxHighlighting = {
-      enable = mkEnableOption (lib.mdDoc "zsh-syntax-highlighting");
+      enable = mkEnableOption (mdDoc "zsh-syntax-highlighting");
 
       highlighters = mkOption {
         default = [ "main" ];
@@ -31,7 +47,7 @@ in
           "line"
         ]));
 
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Specifies the highlighters to be used by zsh-syntax-highlighting.
 
           The following defined options can be found here:
@@ -49,7 +65,7 @@ in
           }
         '';
 
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Specifies custom patterns to be highlighted by zsh-syntax-highlighting.
 
           Please refer to the docs for more information about the usage:
@@ -66,7 +82,7 @@ in
           }
         '';
 
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Specifies custom styles to be highlighted by zsh-syntax-highlighting.
 
           Please refer to the docs for more information about the usage:
@@ -89,7 +105,7 @@ in
     ];
 
     programs.zsh.interactiveShellInit = with pkgs;
-      lib.mkAfter (lib.concatStringsSep "\n" ([
+      mkAfter (concatStringsSep "\n" ([
         "source ${zsh-syntax-highlighting}/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
       ] ++ optional (length(cfg.highlighters) > 0)
         "ZSH_HIGHLIGHT_HIGHLIGHTERS=(${concatStringsSep " " cfg.highlighters})"
