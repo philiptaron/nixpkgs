@@ -2,9 +2,27 @@
 
 { config, lib, options, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    any
+    attrNames
+    attrValues
+    concatMapStrings
+    concatStringsSep
+    elem
+    filterAttrs
+    literalExpression
+    literalMD
+    mdDoc
+    mkBefore
+    mkDefault
+    mkOption
+    mkRemovedOptionModule
+    optional
+    optionalAttrs
+    optionalString
+    types
+    ;
 
   cfg = config.networking;
   opt = options.networking;
