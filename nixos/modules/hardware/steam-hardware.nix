@@ -1,11 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.hardware.steam-hardware;
-
 in
 
 {
@@ -13,7 +16,7 @@ in
     enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc "Enable udev rules for Steam hardware such as the Steam Controller, other supported controllers and the HTC Vive";
+      description = mdDoc "Enable udev rules for Steam hardware such as the Steam Controller, other supported controllers and the HTC Vive";
     };
   };
 
