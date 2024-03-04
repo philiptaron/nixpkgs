@@ -1,8 +1,22 @@
 { config, options, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStrings
+    concatStringsSep
+    filter
+    literalExpression
+    maintainers
+    mapAttrsToList
+    mdDoc
+    mkIf
+    mkOption
+    mkRenamedOptionModule
+    optional
+    optionals
+    optionalString
+    types
+    ;
 
   name = "snapserver";
 
@@ -12,7 +26,7 @@ let
   sampleFormat = mkOption {
     type = with types; nullOr str;
     default = null;
-    description = lib.mdDoc ''
+    description = mdDoc ''
       Default sample format.
     '';
     example = "48000:16:2";
@@ -21,7 +35,7 @@ let
   codec = mkOption {
     type = with types; nullOr str;
     default = null;
-    description = lib.mdDoc ''
+    description = mdDoc ''
       Default audio compression method.
     '';
     example = "flac";
@@ -77,7 +91,7 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable snapserver.
         '';
       };
@@ -86,7 +100,7 @@ in {
         type = types.str;
         default = "::";
         example = "0.0.0.0";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The address where snapclients can connect.
         '';
       };
@@ -94,7 +108,7 @@ in {
       port = mkOption {
         type = types.port;
         default = 1704;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The port that snapclients can connect to.
         '';
       };
@@ -102,7 +116,7 @@ in {
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to automatically open the specified ports in the firewall.
         '';
       };
@@ -113,7 +127,7 @@ in {
       streamBuffer = mkOption {
         type = with types; nullOr int;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Stream read (input) buffer in ms.
         '';
         example = 20;
@@ -122,7 +136,7 @@ in {
       buffer = mkOption {
         type = with types; nullOr int;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Network buffer in ms.
         '';
         example = 1000;
@@ -131,7 +145,7 @@ in {
       sendToMuted = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Send audio to muted clients.
         '';
       };
@@ -139,7 +153,7 @@ in {
       tcp.enable = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the JSON-RPC via TCP.
         '';
       };
@@ -148,7 +162,7 @@ in {
         type = types.str;
         default = "::";
         example = "0.0.0.0";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The address where the TCP JSON-RPC listens on.
         '';
       };
@@ -156,7 +170,7 @@ in {
       tcp.port = mkOption {
         type = types.port;
         default = 1705;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The port where the TCP JSON-RPC listens on.
         '';
       };
@@ -164,7 +178,7 @@ in {
       http.enable = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the JSON-RPC via HTTP.
         '';
       };
@@ -173,7 +187,7 @@ in {
         type = types.str;
         default = "::";
         example = "0.0.0.0";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The address where the HTTP JSON-RPC listens on.
         '';
       };
@@ -181,7 +195,7 @@ in {
       http.port = mkOption {
         type = types.port;
         default = 1780;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The port where the HTTP JSON-RPC listens on.
         '';
       };
@@ -189,7 +203,7 @@ in {
       http.docRoot = mkOption {
         type = with types; nullOr path;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Path to serve from the HTTP servers root.
         '';
       };
@@ -199,7 +213,7 @@ in {
           options = {
             location = mkOption {
               type = types.oneOf [ types.path types.str ];
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 For type `pipe` or `file`, the path to the pipe or file.
                 For type `librespot`, `airplay` or `process`, the path to the corresponding binary.
                 For type `tcp`, the `host:port` address to connect to or listen on.
@@ -216,14 +230,14 @@ in {
             type = mkOption {
               type = types.enum [ "pipe" "librespot" "airplay" "file" "process" "tcp" "alsa" "spotify" "meta" ];
               default = "pipe";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The type of input stream.
               '';
             };
             query = mkOption {
               type = attrsOf str;
               default = {};
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Key-value pairs that convey additional parameters about a stream.
               '';
               example = literalExpression ''
@@ -251,7 +265,7 @@ in {
           };
         });
         default = { default = {}; };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The definition for an input source.
         '';
         example = literalExpression ''
