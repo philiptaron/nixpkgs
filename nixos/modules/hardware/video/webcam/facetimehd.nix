@@ -1,8 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optional
+    types
+    ;
 
   cfg = config.hardware.facetimehd;
 
@@ -12,13 +18,13 @@ in
 
 {
 
-  options.hardware.facetimehd.enable = mkEnableOption (lib.mdDoc "the facetimehd kernel module");
+  options.hardware.facetimehd.enable = mkEnableOption (mdDoc "the facetimehd kernel module");
 
   options.hardware.facetimehd.withCalibration = mkOption {
     default = false;
     example = true;
     type = types.bool;
-    description = lib.mdDoc ''
+    description = mdDoc ''
       Whether to include sensor calibration files for facetimehd.
       This makes colors look much better but is experimental, see
       <https://github.com/patjak/facetimehd/wiki/Extracting-the-sensor-calibration-files>
