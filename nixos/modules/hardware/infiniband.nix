@@ -1,10 +1,17 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    listToAttrs
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.hardware.infiniband;
+
   opensm-services = {
     "opensm@" = {
       enable = true;
@@ -36,7 +43,7 @@ in
       type = with types; listOf str;
       default = [];
       example = [ "0xe8ebd30000eee2e1" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         A list of infiniband port guids on the system. This is discoverable using `ibstat -p`
       '';
     };
