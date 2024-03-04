@@ -2,9 +2,24 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    drop
+    length
+    literalExpression
+    mdDoc
+    mkIf
+    mkMerge
+    mkOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    modules
+    optional
+    optionalString
+    types
+    versions
+    ;
 
   cfg = config.networking.resolvconf;
 
