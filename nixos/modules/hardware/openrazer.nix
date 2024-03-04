@@ -1,8 +1,15 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.hardware.openrazer;
   kernelPackages = config.boot.kernelPackages;
 
@@ -49,14 +56,14 @@ in
 {
   options = {
     hardware.openrazer = {
-      enable = mkEnableOption (lib.mdDoc ''
+      enable = mkEnableOption (mdDoc ''
         OpenRazer drivers and userspace daemon
       '');
 
       verboseLogging = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable verbose logging. Logs debug messages.
         '';
       };
@@ -64,7 +71,7 @@ in
       syncEffectsEnabled = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Set the sync effects flag to true so any assignment of
           effects will work across devices.
         '';
@@ -73,7 +80,7 @@ in
       devicesOffOnScreensaver = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Turn off the devices when the systems screensaver kicks in.
         '';
       };
@@ -81,7 +88,7 @@ in
       mouseBatteryNotifier = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Mouse battery notifier.
         '';
       };
@@ -89,7 +96,7 @@ in
       keyStatistics = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Collects number of keypresses per hour per key used to
           generate a heatmap.
         '';
@@ -98,7 +105,7 @@ in
       users = mkOption {
         type = with types; listOf str;
         default = [];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Usernames to be added to the "openrazer" group, so that they
           can start and interact with the OpenRazer userspace daemon.
         '';
@@ -141,6 +148,6 @@ in
   };
 
   meta = {
-    maintainers = with lib.maintainers; [ roelvandijk ];
+    maintainers = with maintainers; [ roelvandijk ];
   };
 }
