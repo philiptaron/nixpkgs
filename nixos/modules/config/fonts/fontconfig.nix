@@ -24,9 +24,26 @@ And do not repeat our mistakes.
 
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    boolToString
+    concatStringsSep
+    filter
+    forEach
+    hasPrefix
+    mdDoc
+    mkIf
+    mkMerge
+    mkOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    optionalString
+    options
+    removePrefix
+    types
+    warnIf
+    ;
+
   cfg = config.fonts.fontconfig;
 
   fcBool = x: "<bool>" + (boolToString x) + "</bool>";
@@ -261,8 +278,8 @@ in
     (mkRemovedOptionModule [ "fonts" "fontconfig" "dpi" ] "Use display server-specific options")
     (mkRemovedOptionModule [ "hardware" "video" "hidpi" "enable" ] fontconfigNote)
     (mkRemovedOptionModule [ "fonts" "optimizeForVeryHighDPI" ] fontconfigNote)
-  ] ++ lib.forEach [ "enable" "substitutions" "preset" ]
-     (opt: lib.mkRemovedOptionModule [ "fonts" "fontconfig" "ultimate" "${opt}" ] ''
+  ] ++ forEach [ "enable" "substitutions" "preset" ]
+     (opt: mkRemovedOptionModule [ "fonts" "fontconfig" "ultimate" "${opt}" ] ''
        The fonts.fontconfig.ultimate module and configuration is obsolete.
        The repository has since been archived and activity has ceased.
        https://github.com/bohoomil/fontconfig-ultimate/issues/171.
@@ -278,7 +295,7 @@ in
         enable = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             If enabled, a Fontconfig configuration file will be built
             pointing to a set of default fonts.  If you don't care about
             running X11 applications or any other program that uses
@@ -291,7 +308,7 @@ in
           internal = true;
           type     = with types; listOf path;
           default  = [ ];
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Fontconfig configuration packages.
           '';
         };
@@ -299,7 +316,7 @@ in
         antialias = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Enable font antialiasing. At high resolution (> 200 DPI),
             antialiasing has no visible effect; users of such displays may want
             to disable this option.
@@ -309,7 +326,7 @@ in
         localConf = mkOption {
           type = types.lines;
           default = "";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             System-wide customization file contents, has higher priority than
             `defaultFonts` settings.
           '';
@@ -319,7 +336,7 @@ in
           monospace = mkOption {
             type = types.listOf types.str;
             default = ["DejaVu Sans Mono"];
-            description = lib.mdDoc ''
+            description = mdDoc ''
               System-wide default monospace font(s). Multiple fonts may be
               listed in case multiple languages must be supported.
             '';
@@ -328,7 +345,7 @@ in
           sansSerif = mkOption {
             type = types.listOf types.str;
             default = ["DejaVu Sans"];
-            description = lib.mdDoc ''
+            description = mdDoc ''
               System-wide default sans serif font(s). Multiple fonts may be
               listed in case multiple languages must be supported.
             '';
@@ -337,7 +354,7 @@ in
           serif = mkOption {
             type = types.listOf types.str;
             default = ["DejaVu Serif"];
-            description = lib.mdDoc ''
+            description = mdDoc ''
               System-wide default serif font(s). Multiple fonts may be listed
               in case multiple languages must be supported.
             '';
@@ -346,7 +363,7 @@ in
           emoji = mkOption {
             type = types.listOf types.str;
             default = ["Noto Color Emoji"];
-            description = lib.mdDoc ''
+            description = mdDoc ''
               System-wide default emoji font(s). Multiple fonts may be listed
               in case a font does not support all emoji.
 
@@ -363,7 +380,7 @@ in
           enable = mkOption {
             type = types.bool;
             default = true;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Enable font hinting. Hinting aligns glyphs to pixel boundaries to
               improve rendering sharpness at low resolution. At high resolution
               (> 200 dpi) hinting will do nothing (at best); users of such
@@ -374,7 +391,7 @@ in
           autohint = mkOption {
             type = types.bool;
             default = false;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Enable the autohinter in place of the default interpreter.
               The results are usually lower quality than correctly-hinted
               fonts, but better than unhinted fonts.
@@ -384,7 +401,7 @@ in
           style = mkOption {
             type = types.enum ["none" "slight" "medium" "full"];
             default = "slight";
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Hintstyle is the amount of font reshaping done to line up
               to the grid.
 
@@ -397,17 +414,17 @@ in
               val:
               let
                 from = "fonts.fontconfig.hinting.style";
-                val' = lib.removePrefix "hint" val;
+                val' = removePrefix "hint" val;
                 warning = "The option `${from}` contains a deprecated value `${val}`. Use `${val'}` instead.";
               in
-              lib.warnIf (lib.hasPrefix "hint" val) warning val';
+              warnIf (hasPrefix "hint" val) warning val';
           };
         };
 
         includeUserConf = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Include the user configuration from
             {file}`~/.config/fontconfig/fonts.conf` or
             {file}`~/.config/fontconfig/conf.d`.
@@ -419,7 +436,7 @@ in
           rgba = mkOption {
             default = "none";
             type = types.enum ["rgb" "bgr" "vrgb" "vbgr" "none"];
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Subpixel order. The overwhelming majority of displays are
               `rgb` in their normal orientation. Select
               `vrgb` for mounting such a display 90 degrees
@@ -435,7 +452,7 @@ in
           lcdfilter = mkOption {
             default = "default";
             type = types.enum ["none" "default" "light" "legacy"];
-            description = lib.mdDoc ''
+            description = mdDoc ''
               FreeType LCD filter. At high resolution (> 200 DPI), LCD filtering
               has no visible effect; users of such displays may want to select
               `none`.
@@ -447,7 +464,7 @@ in
         cache32Bit = mkOption {
           default = false;
           type = types.bool;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Generate system fonts cache for 32-bit applications.
           '';
         };
@@ -455,7 +472,7 @@ in
         allowBitmaps = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Allow bitmap fonts. Set to `false` to ban all
             bitmap fonts.
           '';
@@ -464,7 +481,7 @@ in
         allowType1 = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Allow Type-1 fonts. Default is `false` because of
             poor rendering.
           '';
@@ -473,7 +490,7 @@ in
         useEmbeddedBitmaps = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc "Use embedded bitmaps in fonts like Calibri.";
+          description = mdDoc "Use embedded bitmaps in fonts like Calibri.";
         };
 
       };
