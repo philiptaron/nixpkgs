@@ -1,25 +1,32 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionals
+    types
+    ;
+
   cfg  = config.programs.ausweisapp;
 in
 {
   options.programs.ausweisapp = {
-    enable = mkEnableOption (lib.mdDoc "AusweisApp");
+    enable = mkEnableOption (mdDoc "AusweisApp");
 
     openFirewall = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to open the required firewall ports for the Smartphone as Card Reader (SaC) functionality of AusweisApp.
       '';
       default = false;
-      type = lib.types.bool;
+      type = types.bool;
     };
   };
 
   config = mkIf cfg.enable {
     environment.systemPackages = with pkgs; [ ausweisapp ];
-    networking.firewall.allowedUDPPorts = lib.optionals cfg.openFirewall [ 24727 ];
+    networking.firewall.allowedUDPPorts = optionals cfg.openFirewall [ 24727 ];
   };
 }
