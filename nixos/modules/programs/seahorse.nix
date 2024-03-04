@@ -2,7 +2,15 @@
 
 { config, pkgs, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkRenamedOptionModule
+    ;
+in
 
 {
 
@@ -20,7 +28,7 @@ with lib;
 
     programs.seahorse = {
 
-      enable = mkEnableOption (lib.mdDoc "Seahorse, a GNOME application for managing encryption keys and passwords in the GNOME Keyring");
+      enable = mkEnableOption (mdDoc "Seahorse, a GNOME application for managing encryption keys and passwords in the GNOME Keyring");
 
     };
 
