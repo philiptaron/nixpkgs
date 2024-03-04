@@ -1,9 +1,15 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    getBin
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.services.uvcvideo;
 
@@ -22,7 +28,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable {command}`uvcvideo` dynamic controls.
 
           Note that enabling this brings the {command}`uvcdynctrl` tool
@@ -34,7 +40,7 @@ in
       packages = mkOption {
         type = types.listOf types.path;
         example = literalExpression "[ pkgs.tiscamera ]";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of packages containing {command}`uvcvideo` dynamic controls
           rules. All files found in
           {file}`«pkg»/share/uvcdynctrl/data`
