@@ -1,8 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    mkRenamedOptionModule
+    types
+    ;
+
   cfg     = config.security.chromiumSuidSandbox;
   sandbox = pkgs.chromium.sandbox;
 in
@@ -14,7 +20,7 @@ in
   options.security.chromiumSuidSandbox.enable = mkOption {
     type = types.bool;
     default = false;
-    description = lib.mdDoc ''
+    description = mdDoc ''
       Whether to install the Chromium SUID sandbox which is an executable that
       Chromium may use in order to achieve sandboxing.
 
