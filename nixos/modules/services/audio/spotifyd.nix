@@ -1,13 +1,22 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    id
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    trace
+    types
+    ;
+
   cfg = config.services.spotifyd;
   toml = pkgs.formats.toml {};
   warnConfig =
     if cfg.config != ""
-    then lib.trace "Using the stringly typed .config attribute is discouraged. Use the TOML typed .settings attribute instead."
+    then trace "Using the stringly typed .config attribute is discouraged. Use the TOML typed .settings attribute instead."
     else id;
   spotifydConf =
     if cfg.settings != {}
@@ -17,12 +26,12 @@ in
 {
   options = {
     services.spotifyd = {
-      enable = mkEnableOption (lib.mdDoc "spotifyd, a Spotify playing daemon");
+      enable = mkEnableOption (mdDoc "spotifyd, a Spotify playing daemon");
 
       config = mkOption {
         default = "";
         type = types.lines;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           (Deprecated) Configuration for Spotifyd. For syntax and directives, see
           <https://github.com/Spotifyd/spotifyd#Configuration>.
         '';
@@ -32,7 +41,7 @@ in
         default = {};
         type = toml.type;
         example = { global.bitrate = 320; };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration for Spotifyd. For syntax and directives, see
           <https://github.com/Spotifyd/spotifyd#Configuration>.
         '';
