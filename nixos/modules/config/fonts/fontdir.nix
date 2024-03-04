@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    mkRenamedOptionModule
+    optionalString
+    options
+    types
+    ;
 
   cfg = config.fonts.fontDir;
 
