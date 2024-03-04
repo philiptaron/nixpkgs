@@ -1,6 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    teams
+    ;
+in
 
 {
   meta = {
@@ -9,7 +16,7 @@ with lib;
 
   ###### interface
   options = {
-    programs.pantheon-tweaks.enable = mkEnableOption (lib.mdDoc "Pantheon Tweaks, an unofficial system settings panel for Pantheon");
+    programs.pantheon-tweaks.enable = mkEnableOption (mdDoc "Pantheon Tweaks, an unofficial system settings panel for Pantheon");
   };
 
   ###### implementation
