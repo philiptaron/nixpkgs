@@ -1,13 +1,22 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.programs.corectrl;
 in
 {
   options.programs.corectrl = {
-    enable = mkEnableOption (lib.mdDoc ''
+    enable = mkEnableOption (mdDoc ''
       CoreCtrl, a tool to overclock amd graphics cards and processors.
       Add your user to the corectrl group to run corectrl without needing to enter your password
     '');
@@ -17,14 +26,14 @@ in
     };
 
     gpuOverclock = {
-      enable = mkEnableOption (lib.mdDoc ''
+      enable = mkEnableOption (mdDoc ''
         GPU overclocking
       '');
       ppfeaturemask = mkOption {
         type = types.str;
         default = "0xfffd7fff";
         example = "0xffffffff";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Sets the `amdgpu.ppfeaturemask` kernel option.
           In particular, it is used here to set the overdrive bit.
           Default is `0xfffd7fff` as it is less likely to cause flicker issues.
@@ -34,7 +43,7 @@ in
     };
   };
 
-  config = mkIf cfg.enable (lib.mkMerge [
+  config = mkIf cfg.enable (mkMerge [
     {
       environment.systemPackages = [ cfg.package ];
 
@@ -55,12 +64,12 @@ in
       '';
     }
 
-    (lib.mkIf cfg.gpuOverclock.enable {
+    (mkIf cfg.gpuOverclock.enable {
       # https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/gpu/drm/amd/include/amd_shared.h#n169
       # The overdrive bit
       boot.kernelParams = [ "amdgpu.ppfeaturemask=${cfg.gpuOverclock.ppfeaturemask}" ];
     })
   ]);
 
-  meta.maintainers = with lib.maintainers; [ artturin ];
+  meta.maintainers = with maintainers; [ artturin ];
 }
