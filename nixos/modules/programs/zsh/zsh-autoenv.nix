@@ -1,13 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkPackageOption
+    ;
+
   cfg = config.programs.zsh.zsh-autoenv;
-in {
+in
+{
   options = {
     programs.zsh.zsh-autoenv = {
-      enable = mkEnableOption (lib.mdDoc "zsh-autoenv");
+      enable = mkEnableOption (mdDoc "zsh-autoenv");
       package = mkPackageOption pkgs "zsh-autoenv" { };
     };
   };
