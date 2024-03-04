@@ -1,9 +1,28 @@
 { config, lib, pkgs, utils, ... }:
 
 with utils;
-with lib;
 
 let
+  inherit (lib)
+    concatMap
+    concatStringsSep
+    count
+    filter
+    flatten
+    hasPrefix
+    length
+    listToAttrs
+    mdDoc
+    mkIf
+    mkOption
+    modules
+    nameValuePair
+    optional
+    optionalString
+    partition
+    replaceStrings
+    types
+    ;
 
   randomEncryptionCoerce = enable: { inherit enable; };
 
