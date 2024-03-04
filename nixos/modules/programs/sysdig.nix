@@ -1,11 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.programs.sysdig;
-in {
-  options.programs.sysdig.enable = mkEnableOption (lib.mdDoc "sysdig");
+in
+{
+  options.programs.sysdig.enable = mkEnableOption (mdDoc "sysdig");
 
   config = mkIf cfg.enable {
     environment.systemPackages = [ pkgs.sysdig ];
