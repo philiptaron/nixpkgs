@@ -3,7 +3,19 @@
 , pkgs
 , ...
 }:
-with lib; let
+let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRemovedOptionModule
+    types
+    ;
+
   cfg = config.programs.hyprland;
 
   finalPortalPackage = cfg.portalPackage.override {
