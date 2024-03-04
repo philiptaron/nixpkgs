@@ -1,11 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
-  cfg = config.programs.dublin-traceroute;
+  inherit (lib)
+    getExe
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkPackageOption
+    ;
 
-in {
+  cfg = config.programs.dublin-traceroute;
+in
+{
   meta.maintainers = pkgs.dublin-traceroute.meta.maintainers;
 
   options = {
