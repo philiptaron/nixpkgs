@@ -2,7 +2,11 @@
 # Common devices are enabled by default.
 { lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mkDefault
+    ;
+in
 
 {
   config = mkDefault {
