@@ -1,15 +1,25 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optional
+    recursiveUpdate
+    types
+    ;
+
   cfg = config.services.navidrome;
   settingsFormat = pkgs.formats.json {};
-in {
+in
+{
   options = {
     services.navidrome = {
 
-      enable = mkEnableOption (lib.mdDoc "Navidrome music server");
+      enable = mkEnableOption (mdDoc "Navidrome music server");
 
       package = mkPackageOption pkgs "navidrome" { };
 
@@ -23,7 +33,7 @@ in {
         example = {
           MusicFolder = "/mnt/music";
         };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration for Navidrome, see <https://www.navidrome.org/docs/usage/configuration-options/> for supported values.
         '';
       };
@@ -31,7 +41,7 @@ in {
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to open the TCP port in the firewall";
+        description = mdDoc "Whether to open the TCP port in the firewall";
       };
     };
   };
@@ -53,13 +63,13 @@ in {
         RuntimeDirectory = "navidrome";
         RootDirectory = "/run/navidrome";
         ReadWritePaths = "";
-        BindPaths = lib.optional (cfg.settings ? DataFolder) cfg.settings.DataFolder;
+        BindPaths = optional (cfg.settings ? DataFolder) cfg.settings.DataFolder;
         BindReadOnlyPaths = [
           # navidrome uses online services to download additional album metadata / covers
           "${config.environment.etc."ssl/certs/ca-certificates.crt".source}:/etc/ssl/certs/ca-certificates.crt"
           builtins.storeDir
           "/etc"
-        ] ++ lib.optional (cfg.settings ? MusicFolder) cfg.settings.MusicFolder;
+        ] ++ optional (cfg.settings ? MusicFolder) cfg.settings.MusicFolder;
         CapabilityBoundingSet = "";
         RestrictAddressFamilies = [ "AF_UNIX" "AF_INET" "AF_INET6" ];
         RestrictNamespaces = true;
