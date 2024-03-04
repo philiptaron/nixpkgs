@@ -1,13 +1,20 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+in
 
 {
   meta.maintainers = [ maintainers.oxalica ];
 
   ###### interface
   options = {
-    programs.partition-manager.enable = mkEnableOption (lib.mdDoc "KDE Partition Manager");
+    programs.partition-manager.enable = mkEnableOption (mdDoc "KDE Partition Manager");
   };
 
   ###### implementation
