@@ -1,8 +1,13 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    init
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   prg = config.programs;
   cfg = prg.bash-my-aws;
 
@@ -13,7 +18,7 @@ in
   {
     options = {
       programs.bash-my-aws = {
-        enable = mkEnableOption (lib.mdDoc "bash-my-aws");
+        enable = mkEnableOption (mdDoc "bash-my-aws");
       };
     };
 
