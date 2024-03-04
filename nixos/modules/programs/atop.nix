@@ -2,9 +2,22 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    concatStrings
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    recursiveUpdate
+    types
+    ;
 
-let cfg = config.programs.atop;
+  cfg = config.programs.atop;
 
 in
 {
@@ -14,7 +27,7 @@ in
 
     programs.atop = rec {
 
-      enable = mkEnableOption (lib.mdDoc "Atop");
+      enable = mkEnableOption (mdDoc "Atop");
 
       package = mkPackageOption pkgs "atop" { };
 
@@ -22,7 +35,7 @@ in
         enable = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Whether to install and enable the netatop kernel module.
             Note: this sets the kernel taint flag "O" for loading out-of-tree modules.
           '';
@@ -31,7 +44,7 @@ in
           type = types.package;
           default = config.boot.kernelPackages.netatop;
           defaultText = literalExpression "config.boot.kernelPackages.netatop";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Which package to use for netatop.
           '';
         };
@@ -40,7 +53,7 @@ in
       atopgpu.enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to install and enable the atopgpud daemon to get information about
           NVIDIA gpus.
         '';
@@ -49,7 +62,7 @@ in
       setuidWrapper.enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to install a setuid wrapper for Atop. This is required to use some of
           the features as non-root user (e.g.: ipc information, netatop, atopgpu).
           Atop tries to drop the root privileges shortly after starting.
@@ -59,7 +72,7 @@ in
       atopService.enable = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the atop service responsible for storing statistics for
           long-term analysis.
         '';
@@ -67,7 +80,7 @@ in
       atopRotateTimer.enable = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the atop-rotate timer, which restarts the atop service
           daily to make sure the data files are rotate.
         '';
@@ -75,7 +88,7 @@ in
       atopacctService.enable = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the atopacct service which manages process accounting.
           This allows Atop to gather data about processes that disappeared in between
           two refresh intervals.
@@ -88,7 +101,7 @@ in
           flags = "a1f";
           interval = 5;
         };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Parameters to be written to {file}`/etc/atoprc`.
         '';
       };
@@ -112,8 +125,8 @@ in
             '')
             cfg.settings);
       };
-      environment.systemPackages = [ atop (lib.mkIf cfg.netatop.enable cfg.netatop.package) ];
-      boot.extraModulePackages = [ (lib.mkIf cfg.netatop.enable cfg.netatop.package) ];
+      environment.systemPackages = [ atop (mkIf cfg.netatop.enable cfg.netatop.package) ];
+      boot.extraModulePackages = [ (mkIf cfg.netatop.enable cfg.netatop.package) ];
       systemd =
         let
           mkSystemd = type: name: restartTriggers: {
@@ -126,9 +139,9 @@ in
           mkTimer = mkSystemd "timers";
         in
         {
-          packages = [ atop (lib.mkIf cfg.netatop.enable cfg.netatop.package) ];
-          services = lib.mkMerge [
-            (lib.mkIf cfg.atopService.enable (lib.recursiveUpdate
+          packages = [ atop (mkIf cfg.netatop.enable cfg.netatop.package) ];
+          services = mkMerge [
+            (mkIf cfg.atopService.enable (recursiveUpdate
               (mkService "atop" [ atop ])
               {
                 # always convert logs to newer version first
@@ -152,14 +165,14 @@ in
                   done
                 '';
               }))
-            (lib.mkIf cfg.atopacctService.enable (mkService "atopacct" [ atop ]))
-            (lib.mkIf cfg.netatop.enable (mkService "netatop" [ cfg.netatop.package ]))
-            (lib.mkIf cfg.atopgpu.enable (mkService "atopgpu" [ atop ]))
+            (mkIf cfg.atopacctService.enable (mkService "atopacct" [ atop ]))
+            (mkIf cfg.netatop.enable (mkService "netatop" [ cfg.netatop.package ]))
+            (mkIf cfg.atopgpu.enable (mkService "atopgpu" [ atop ]))
           ];
-          timers = lib.mkIf cfg.atopRotateTimer.enable (mkTimer "atop-rotate" [ atop ]);
+          timers = mkIf cfg.atopRotateTimer.enable (mkTimer "atop-rotate" [ atop ]);
         };
 
-      security.wrappers = lib.mkIf cfg.setuidWrapper.enable {
+      security.wrappers = mkIf cfg.setuidWrapper.enable {
         atop = {
           setuid = true;
           owner = "root";
