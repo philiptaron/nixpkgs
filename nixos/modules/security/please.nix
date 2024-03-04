@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.security.please;
   ini = pkgs.formats.ini { };
 in
@@ -18,7 +26,7 @@ in
     wheelNeedsPassword = mkOption {
       type = types.bool;
       default = true;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether users of the `wheel` group must provide a password to run
         commands or edit files with {command}`please` and
         {command}`pleaseedit` respectively.
