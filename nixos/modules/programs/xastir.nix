@@ -1,10 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.programs.xastir;
-in {
+in
+{
   meta.maintainers = with maintainers; [ melling ];
 
   options.programs.xastir = {
