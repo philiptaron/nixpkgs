@@ -1,8 +1,11 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    elem
+    getBin
+    mkIf
+    ;
 
   enabled = elem "displaylink" config.services.xserver.videoDrivers;
 
@@ -33,7 +36,7 @@ in
 
     # make the device available
     services.xserver.displayManager.sessionCommands = ''
-      ${lib.getBin pkgs.xorg.xrandr}/bin/xrandr --setprovideroutputsource 1 0
+      ${getBin pkgs.xorg.xrandr}/bin/xrandr --setprovideroutputsource 1 0
     '';
 
     # Those are taken from displaylink-installer.sh and from Arch Linux AUR package.
