@@ -1,8 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    escapeShellArg
+    literalExpression
+    maintainers
+    mdDoc
+    mkOption
+    optionalString
+    types
+    version
+    versionAtLeast
+    ;
+
   cfg = config.amazonImage;
   amiBootMode = if config.ec2.efi then "uefi" else "legacy-bios";
 
@@ -15,7 +25,7 @@ in {
   # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/nvme-ebs-volumes.html#timeout-nvme-ebs-volumes
   config.boot.kernelParams =
     let timeout =
-      if pkgs.lib.versionAtLeast config.boot.kernelPackages.kernel.version "4.15"
+      if versionAtLeast config.boot.kernelPackages.kernel.version "4.15"
       then "4294967295"
       else  "255";
     in [ "nvme_core.io_timeout=${timeout}" ];
@@ -23,7 +33,7 @@ in {
   options.amazonImage = {
     name = mkOption {
       type = types.str;
-      description = lib.mdDoc "The name of the generated derivation";
+      description = mdDoc "The name of the generated derivation";
       default = "nixos-amazon-image-${config.system.nixos.label}-${pkgs.stdenv.hostPlatform.system}";
     };
 
@@ -35,7 +45,7 @@ in {
         ]
       '';
       default = [];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         This option lists files to be copied to fixed locations in the
         generated image. Glob patterns work.
       '';
@@ -45,13 +55,13 @@ in {
       type = with types; either (enum [ "auto" ]) int;
       default = 3072;
       example = 8192;
-      description = lib.mdDoc "The size in MB of the image";
+      description = mdDoc "The size in MB of the image";
     };
 
     format = mkOption {
       type = types.enum [ "raw" "qcow2" "vpc" ];
       default = "vpc";
-      description = lib.mdDoc "The image format to output";
+      description = mdDoc "The image format to output";
     };
   };
 
@@ -100,8 +110,8 @@ in {
         echo "file ${cfg.format} $rootDisk" >> $out/nix-support/hydra-build-products
 
        ${pkgs.jq}/bin/jq -n \
-         --arg system_label ${lib.escapeShellArg config.system.nixos.label} \
-         --arg system ${lib.escapeShellArg pkgs.stdenv.hostPlatform.system} \
+         --arg system_label ${escapeShellArg config.system.nixos.label} \
+         --arg system ${escapeShellArg pkgs.stdenv.hostPlatform.system} \
          --arg root_logical_bytes "$(${pkgs.qemu_kvm}/bin/qemu-img info --output json "$rootDisk" | ${pkgs.jq}/bin/jq '."virtual-size"')" \
          --arg boot_logical_bytes "$(${pkgs.qemu_kvm}/bin/qemu-img info --output json "$bootDisk" | ${pkgs.jq}/bin/jq '."virtual-size"')" \
          --arg boot_mode "${amiBootMode}" \
@@ -140,8 +150,8 @@ in {
         echo "file ${cfg.format} $diskImage" >> $out/nix-support/hydra-build-products
 
        ${pkgs.jq}/bin/jq -n \
-         --arg system_label ${lib.escapeShellArg config.system.nixos.label} \
-         --arg system ${lib.escapeShellArg pkgs.stdenv.hostPlatform.system} \
+         --arg system_label ${escapeShellArg config.system.nixos.label} \
+         --arg system ${escapeShellArg pkgs.stdenv.hostPlatform.system} \
          --arg logical_bytes "$(${pkgs.qemu_kvm}/bin/qemu-img info --output json "$diskImage" | ${pkgs.jq}/bin/jq '."virtual-size"')" \
          --arg boot_mode "${amiBootMode}" \
          --arg file "$diskImage" \
