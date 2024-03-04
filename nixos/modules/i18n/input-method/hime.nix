@@ -1,6 +1,10 @@
 { config, pkgs, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mkIf
+    ;
+in
 {
   config = mkIf (config.i18n.inputMethod.enabled == "hime") {
     i18n.inputMethod.package = pkgs.hime;
