@@ -1,18 +1,26 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.botamusique;
 
   format = pkgs.formats.ini {};
   configFile = format.generate "botamusique.ini" cfg.settings;
 in
 {
-  meta.maintainers = with lib.maintainers; [ hexa ];
+  meta.maintainers = with maintainers; [ hexa ];
 
   options.services.botamusique = {
-    enable = mkEnableOption (lib.mdDoc "botamusique, a bot to play audio streams on mumble");
+    enable = mkEnableOption (mdDoc "botamusique, a bot to play audio streams on mumble");
 
     package = mkPackageOption pkgs "botamusique" { };
 
@@ -24,30 +32,30 @@ in
             type = types.str;
             default = "localhost";
             example = "mumble.example.com";
-            description = lib.mdDoc "Hostname of the mumble server to connect to.";
+            description = mdDoc "Hostname of the mumble server to connect to.";
           };
 
           server.port = mkOption {
             type = types.port;
             default = 64738;
-            description = lib.mdDoc "Port of the mumble server to connect to.";
+            description = mdDoc "Port of the mumble server to connect to.";
           };
 
           bot.username = mkOption {
             type = types.str;
             default = "botamusique";
-            description = lib.mdDoc "Name the bot should appear with.";
+            description = mdDoc "Name the bot should appear with.";
           };
 
           bot.comment = mkOption {
             type = types.str;
             default = "Hi, I'm here to play radio, local music or youtube/soundcloud music. Have fun!";
-            description = lib.mdDoc "Comment displayed for the bot.";
+            description = mdDoc "Comment displayed for the bot.";
           };
         };
       };
       default = {};
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Your {file}`configuration.ini` as a Nix attribute set. Look up
         possible options in the [configuration.example.ini](https://github.com/azlux/botamusique/blob/master/configuration.example.ini).
       '';
