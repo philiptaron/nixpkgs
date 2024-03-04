@@ -1,13 +1,27 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
-  cfg = config.services.rabbitmq;
-
   inherit (builtins) concatStringsSep;
 
-  config_file_content = lib.generators.toKeyValue { } cfg.configItems;
+  inherit (lib)
+    generators
+    literalExpression
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRemovedOptionModule
+    optional
+    optionalAttrs
+    optionalString
+    types
+    ;
+
+  cfg = config.services.rabbitmq;
+
+  config_file_content = generators.toKeyValue { } cfg.configItems;
   config_file = pkgs.writeText "rabbitmq.conf" config_file_content;
 
   advanced_config_file = pkgs.writeText "advanced.config" cfg.config;
@@ -29,7 +43,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the RabbitMQ server, an Advanced Message
           Queuing Protocol (AMQP) broker.
         '';
@@ -40,7 +54,7 @@ in
       listenAddress = mkOption {
         default = "127.0.0.1";
         example = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           IP address on which RabbitMQ will listen for AMQP
           connections.  Set to the empty string to listen on all
           interfaces.  Note that RabbitMQ creates a user named
@@ -57,7 +71,7 @@ in
 
       port = mkOption {
         default = 5672;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Port on which RabbitMQ will listen for AMQP connections.
         '';
         type = types.port;
@@ -66,7 +80,7 @@ in
       dataDir = mkOption {
         type = types.path;
         default = "/var/lib/rabbitmq";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Data directory for rabbitmq.
         '';
       };
@@ -74,7 +88,7 @@ in
       unsafeCookie = mkOption {
         default = "";
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Erlang cookie is a string of arbitrary length which must
           be the same for several nodes to be allowed to communicate.
           Leave empty to generate automatically.
@@ -95,7 +109,7 @@ in
             "auth_backends.1.authz" = "rabbit_auth_backend_internal";
           }
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration options in RabbitMQ's new config file format,
           which is a simple key-value format that can not express nested
           data structures. This is known as the `rabbitmq.conf` file,
@@ -115,7 +129,7 @@ in
       config = mkOption {
         default = "";
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Verbatim advanced configuration file contents using the Erlang syntax.
           This is also known as the `advanced.config` file or the old config format.
 
@@ -133,21 +147,21 @@ in
       plugins = mkOption {
         default = [ ];
         type = types.listOf types.str;
-        description = lib.mdDoc "The names of plugins to enable";
+        description = mdDoc "The names of plugins to enable";
       };
 
       pluginDirs = mkOption {
         default = [ ];
         type = types.listOf types.path;
-        description = lib.mdDoc "The list of directories containing external plugins";
+        description = mdDoc "The list of directories containing external plugins";
       };
 
       managementPlugin = {
-        enable = mkEnableOption (lib.mdDoc "the management plugin");
+        enable = mkEnableOption (mdDoc "the management plugin");
         port = mkOption {
           default = 15672;
           type = types.port;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             On which port to run the management plugin
           '';
         };
