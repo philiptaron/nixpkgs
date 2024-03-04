@@ -3,7 +3,11 @@
 
 { config, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mkDefault
+    ;
+in
 
 {
   environment.noXlibs = mkDefault true;
