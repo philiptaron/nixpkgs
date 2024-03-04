@@ -1,12 +1,18 @@
 { config, pkgs, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkPackageOption
+    ;
 
-let cfg = config.programs.noisetorch;
+  cfg = config.programs.noisetorch;
 in
 {
   options.programs.noisetorch = {
-    enable = mkEnableOption (lib.mdDoc "noisetorch + setcap wrapper");
+    enable = mkEnableOption (mdDoc "noisetorch + setcap wrapper");
 
     package = mkPackageOption pkgs "noisetorch" { };
   };
