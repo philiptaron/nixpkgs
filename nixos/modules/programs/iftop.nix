@@ -1,12 +1,17 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.programs.iftop;
-in {
+in
+{
   options = {
-    programs.iftop.enable = mkEnableOption (lib.mdDoc "iftop + setcap wrapper");
+    programs.iftop.enable = mkEnableOption (mdDoc "iftop + setcap wrapper");
   };
   config = mkIf cfg.enable {
     environment.systemPackages = [ pkgs.iftop ];
