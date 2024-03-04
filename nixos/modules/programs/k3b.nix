@@ -1,6 +1,13 @@
 { config, pkgs, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+in
 
 {
   # interface
@@ -8,7 +15,7 @@ with lib;
     enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to enable k3b, the KDE disk burning application.
 
         Additionally to installing `k3b` enabling this will
