@@ -3,7 +3,17 @@
 
 { config, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    const
+    mdDoc
+    mkForce
+    mkIf
+    mkOption
+    singleton
+    types
+    ;
+in
 
 {
   options = {
