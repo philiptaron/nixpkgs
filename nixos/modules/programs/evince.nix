@@ -2,11 +2,18 @@
 
 { config, pkgs, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkPackageOption
+    mkRenamedOptionModule
+    ;
 
-let cfg = config.programs.evince;
-
-in {
+  cfg = config.programs.evince;
+in
+{
 
   # Added 2019-08-09
   imports = [
@@ -22,7 +29,7 @@ in {
     programs.evince = {
 
       enable = mkEnableOption
-        (lib.mdDoc "Evince, the GNOME document viewer");
+        (mdDoc "Evince, the GNOME document viewer");
 
       package = mkPackageOption pkgs "evince" { };
 
