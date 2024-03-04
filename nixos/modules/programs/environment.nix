@@ -4,12 +4,15 @@
 
 { config, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    mkAfter
+    mkDefault
+    reverseList
+    ;
 
   cfg = config.environment;
-
 in
 
 {
