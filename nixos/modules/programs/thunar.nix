@@ -1,8 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    literalExpression
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    teams
+    types
+    ;
 
-let cfg = config.programs.thunar;
+  cfg = config.programs.thunar;
 
 in {
   meta = {
@@ -11,12 +21,12 @@ in {
 
   options = {
     programs.thunar = {
-      enable = mkEnableOption (lib.mdDoc "Thunar, the Xfce file manager");
+      enable = mkEnableOption (mdDoc "Thunar, the Xfce file manager");
 
       plugins = mkOption {
         default = [];
         type = types.listOf types.package;
-        description = lib.mdDoc "List of thunar plugins to install.";
+        description = mdDoc "List of thunar plugins to install.";
         example = literalExpression "with pkgs.xfce; [ thunar-archive-plugin thunar-volman ]";
       };
 
