@@ -1,10 +1,18 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
-  cfg = config.xdg.portal.lxqt;
+  inherit (lib)
+    literalExpression
+    mdDoc
+    meta
+    mkEnableOption
+    mkIf
+    mkOption
+    teams
+    types
+    ;
 
+  cfg = config.xdg.portal.lxqt;
 in
 {
   meta = {
