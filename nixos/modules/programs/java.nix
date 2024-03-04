@@ -3,9 +3,15 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    init
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkPackageOption
+    ;
+
   cfg = config.programs.java;
 in
 {
@@ -14,8 +20,8 @@ in
 
     programs.java = {
 
-      enable = mkEnableOption (lib.mdDoc "java") // {
-        description = lib.mdDoc ''
+      enable = mkEnableOption (mdDoc "java") // {
+        description = mdDoc ''
           Install and setup the Java development kit.
 
           ::: {.note}
@@ -34,7 +40,7 @@ in
         example = "jre";
       };
 
-      binfmt = mkEnableOption (lib.mdDoc "binfmt to execute java jar's and classes");
+      binfmt = mkEnableOption (mdDoc "binfmt to execute java jar's and classes");
 
     };
 
