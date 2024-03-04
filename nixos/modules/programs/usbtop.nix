@@ -1,12 +1,17 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.programs.usbtop;
-in {
+in
+{
   options = {
-    programs.usbtop.enable = mkEnableOption (lib.mdDoc "usbtop and required kernel module");
+    programs.usbtop.enable = mkEnableOption (mdDoc "usbtop and required kernel module");
   };
 
   config = mkIf cfg.enable {
