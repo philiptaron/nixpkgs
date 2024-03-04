@@ -1,12 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.hardware.xone;
 in
 {
   options.hardware.xone = {
-    enable = mkEnableOption (lib.mdDoc "the xone driver for Xbox One and Xbobx Series X|S accessories");
+    enable = mkEnableOption (mdDoc "the xone driver for Xbox One and Xbobx Series X|S accessories");
   };
 
   config = mkIf cfg.enable {
