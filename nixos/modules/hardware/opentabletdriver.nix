@@ -1,18 +1,27 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    modules
+    types
+    ;
+
   cfg = config.hardware.opentabletdriver;
 in
 {
-  meta.maintainers = with lib.maintainers; [ thiagokokada ];
+  meta.maintainers = with maintainers; [ thiagokokada ];
 
   options = {
     hardware.opentabletdriver = {
       enable = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable OpenTabletDriver udev rules, user service and blacklist kernel
           modules known to conflict with OpenTabletDriver.
         '';
@@ -21,7 +30,7 @@ in
       blacklistedKernelModules = mkOption {
         type = types.listOf types.str;
         default = [ "hid-uclogic" "wacom" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Blacklist of kernel modules known to conflict with OpenTabletDriver.
         '';
       };
@@ -32,7 +41,7 @@ in
         enable = mkOption {
           default = true;
           type = types.bool;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Whether to start OpenTabletDriver daemon as a systemd user service.
           '';
         };
