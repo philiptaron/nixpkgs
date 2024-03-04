@@ -1,7 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.hardware.acpilight;
 in
 {
@@ -10,7 +16,7 @@ in
       enable = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable acpilight.
           This will allow brightness control via xbacklight from users in the video group
         '';
