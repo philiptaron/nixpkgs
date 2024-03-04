@@ -1,8 +1,16 @@
 { config, pkgs, lib, ... }:
-with lib;
+
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkPackageOption
+    ;
+in
 {
   options.programs.kdeconnect = {
-    enable = mkEnableOption (lib.mdDoc ''
+    enable = mkEnableOption (mdDoc ''
       kdeconnect.
 
       Note that it will open the TCP and UDP port from
