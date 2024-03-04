@@ -1,6 +1,24 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    any
+    attrValues
+    concatStringsSep
+    filterAttrs
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkIf
+    mkOption
+    optional
+    replaceStrings
+    setPrio
+    sort
+    types
+    unique
+    ;
+in
 
 {
   ###### interface
