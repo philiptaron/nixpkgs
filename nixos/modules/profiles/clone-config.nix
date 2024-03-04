@@ -1,8 +1,16 @@
 { config, lib, pkgs, modules, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    filter
+    isAttrs
+    isFunction
+    mdDoc
+    mkOption
+    optionalString
+    partition
+    removePrefix
+    ;
 
   # Location of the repository on the harddrive
   nixosPath = toString ../..;
@@ -17,7 +25,7 @@ let
   # you should use files).
   moduleFiles =
     # FIXME: use typeOf (Nix 1.6.1).
-    filter (x: !isAttrs x && !lib.isFunction x) modules;
+    filter (x: !isAttrs x && !isFunction x) modules;
 
   # Partition module files because between NixOS and non-NixOS files.  NixOS
   # files may change if the repository is updated.
@@ -61,7 +69,7 @@ in
 
     installer.cloneConfig = mkOption {
       default = true;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Try to clone the installation-device configuration by re-using it's
         profile from the list of imported modules.
       '';
@@ -70,14 +78,14 @@ in
     installer.cloneConfigIncludes = mkOption {
       default = [];
       example = [ "./nixos/modules/hardware/network/rt73.nix" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         List of modules used to re-build this installation device profile.
       '';
     };
 
     installer.cloneConfigExtra = mkOption {
       default = "";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra text to include in the cloned configuration.nix included in this
         installer.
       '';
