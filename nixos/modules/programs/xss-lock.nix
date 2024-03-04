@@ -1,27 +1,37 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    escapeShellArg
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    strings
+    types
+    ;
+
   cfg = config.programs.xss-lock;
 in
 {
   options.programs.xss-lock = {
-    enable = mkEnableOption (lib.mdDoc "xss-lock");
+    enable = mkEnableOption (mdDoc "xss-lock");
 
     lockerCommand = mkOption {
       default = "${pkgs.i3lock}/bin/i3lock";
       defaultText = literalExpression ''"''${pkgs.i3lock}/bin/i3lock"'';
       example = literalExpression ''"''${pkgs.i3lock-fancy}/bin/i3lock-fancy"'';
       type = types.separatedString " ";
-      description = lib.mdDoc "Locker to be used with xsslock";
+      description = mdDoc "Locker to be used with xsslock";
     };
 
     extraOptions = mkOption {
       default = [ ];
       example = [ "--ignore-sleep" ];
       type = types.listOf types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Additional command-line arguments to pass to
         {command}`xss-lock`.
       '';
