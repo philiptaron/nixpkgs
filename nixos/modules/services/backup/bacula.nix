@@ -4,9 +4,17 @@
 # TODO: test configuration when building nixexpr (use -t parameter)
 # TODO: support sqlite3 (it's deprecate?) and mysql
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   libDir = "/var/lib/bacula";
 
   fd_cfg = config.services.bacula-fd;
@@ -114,7 +122,7 @@ let
       password = mkOption {
         type = types.str;
         # TODO: required?
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Specifies the password that must be supplied for the default Bacula
           Console to be authorized. The same password must appear in the
           Director resource of the Console configuration file. For added
@@ -135,7 +143,7 @@ let
         type = types.enum [ "no" "yes" ];
         default = "no";
         example = "yes";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If Monitor is set to `no`, this director will have
           full access to this Storage daemon. If Monitor is set to
           `yes`, this director will only be able to fetch the
@@ -154,7 +162,7 @@ let
     options = {
       changerDevice = mkOption {
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The specified name-string must be the generic SCSI device name of the
           autochanger that corresponds to the normal read/write Archive Device
           specified in the Device resource. This generic SCSI device name
@@ -173,7 +181,7 @@ let
 
       changerCommand = mkOption {
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The name-string specifies an external program to be called that will
           automatically change volumes as required by Bacula. Normally, this
           directive will be specified only in the AutoChanger resource, which
@@ -195,14 +203,14 @@ let
       };
 
       devices = mkOption {
-        description = lib.mdDoc "";
+        description = mdDoc "";
         type = types.listOf types.str;
       };
 
       extraAutochangerConfig = mkOption {
         default = "";
         type = types.lines;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra configuration to be passed in Autochanger directive.
         '';
         example = ''
@@ -219,7 +227,7 @@ let
       archiveDevice = mkOption {
         # TODO: required?
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The specified name-string gives the system file name of the storage
           device managed by this storage daemon. This will usually be the
           device file name of a removable storage device (tape drive), for
@@ -236,7 +244,7 @@ let
       mediaType = mkOption {
         # TODO: required?
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The specified name-string names the type of media supported by this
           device, for example, `DLT7000`. Media type names are
           arbitrary in that you set them to anything you want, but they must be
@@ -274,7 +282,7 @@ let
       extraDeviceConfig = mkOption {
         default = "";
         type = types.lines;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra configuration to be passed in Device directive.
         '';
         example = ''
@@ -295,7 +303,7 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the Bacula File Daemon.
         '';
       };
@@ -304,7 +312,7 @@ in {
         default = "${config.networking.hostName}-fd";
         defaultText = literalExpression ''"''${config.networking.hostName}-fd"'';
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The client name that must be used by the Director when connecting.
           Generally, it is a good idea to use a name related to the machine so
           that error messages can be easily identified if you have multiple
@@ -315,7 +323,7 @@ in {
       port = mkOption {
         default = 9102;
         type = types.port;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           This specifies the port number on which the Client listens for
           Director connections. It must agree with the FDPort specified in
           the Client resource of the Director's configuration file.
@@ -324,7 +332,7 @@ in {
 
       director = mkOption {
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           This option defines director resources in Bacula File Daemon.
         '';
         type = with types; attrsOf (submodule directorOptions);
@@ -333,7 +341,7 @@ in {
       extraClientConfig = mkOption {
         default = "";
         type = types.lines;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra configuration to be passed in Client directive.
         '';
         example = ''
@@ -345,7 +353,7 @@ in {
       extraMessagesConfig = mkOption {
         default = "";
         type = types.lines;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra configuration to be passed in Messages directive.
         '';
         example = ''
@@ -358,7 +366,7 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable Bacula Storage Daemon.
         '';
       };
@@ -367,7 +375,7 @@ in {
         default = "${config.networking.hostName}-sd";
         defaultText = literalExpression ''"''${config.networking.hostName}-sd"'';
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Specifies the Name of the Storage daemon.
         '';
       };
@@ -375,7 +383,7 @@ in {
       port = mkOption {
         default = 9103;
         type = types.port;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Specifies port number on which the Storage daemon listens for
           Director connections.
         '';
@@ -383,7 +391,7 @@ in {
 
       director = mkOption {
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           This option defines Director resources in Bacula Storage Daemon.
         '';
         type = with types; attrsOf (submodule directorOptions);
@@ -391,7 +399,7 @@ in {
 
       device = mkOption {
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           This option defines Device resources in Bacula Storage Daemon.
         '';
         type = with types; attrsOf (submodule deviceOptions);
@@ -399,7 +407,7 @@ in {
 
       autochanger = mkOption {
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           This option defines Autochanger resources in Bacula Storage Daemon.
         '';
         type = with types; attrsOf (submodule autochangerOptions);
@@ -408,7 +416,7 @@ in {
       extraStorageConfig = mkOption {
         default = "";
         type = types.lines;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra configuration to be passed in Storage directive.
         '';
         example = ''
@@ -420,7 +428,7 @@ in {
       extraMessagesConfig = mkOption {
         default = "";
         type = types.lines;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra configuration to be passed in Messages directive.
         '';
         example = ''
@@ -434,7 +442,7 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable Bacula Director Daemon.
         '';
       };
@@ -443,7 +451,7 @@ in {
         default = "${config.networking.hostName}-dir";
         defaultText = literalExpression ''"''${config.networking.hostName}-dir"'';
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The director name used by the system administrator. This directive is
           required.
         '';
@@ -452,7 +460,7 @@ in {
       port = mkOption {
         default = 9101;
         type = types.port;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Specify the port (a positive integer) on which the Director daemon
           will listen for Bacula Console connections. This same port number
           must be specified in the Director resource of the Console
@@ -465,7 +473,7 @@ in {
       password = mkOption {
         # TODO: required?
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
            Specifies the password that must be supplied for a Director.
         '';
       };
@@ -473,7 +481,7 @@ in {
       extraMessagesConfig = mkOption {
         default = "";
         type = types.lines;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra configuration to be passed in Messages directive.
         '';
         example = ''
@@ -484,7 +492,7 @@ in {
       extraDirectorConfig = mkOption {
         default = "";
         type = types.lines;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra configuration to be passed in Director directive.
         '';
         example = ''
@@ -496,7 +504,7 @@ in {
       extraConfig = mkOption {
         default = "";
         type = types.lines;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra configuration for Bacula Director Daemon.
         '';
         example = ''
@@ -533,7 +541,7 @@ in {
       };
     };
 
-    services.postgresql.enable = lib.mkIf dir_cfg.enable true;
+    services.postgresql.enable = mkIf dir_cfg.enable true;
 
     systemd.services.bacula-dir = mkIf dir_cfg.enable {
       after = [ "network.target" "postgresql.service" ];
