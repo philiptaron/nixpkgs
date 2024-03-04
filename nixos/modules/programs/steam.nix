@@ -1,8 +1,24 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrValues
+    concatStringsSep
+    literalExpression
+    makeBinPath
+    mapAttrs
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    optional
+    optionalAttrs
+    teams
+    types
+    ;
+
   cfg = config.programs.steam;
   gamescopeCfg = config.programs.gamescope;
 
@@ -24,7 +40,7 @@ let
     '').overrideAttrs (_: { passthru.providedSessions = [ "steam" ]; });
 in {
   options.programs.steam = {
-    enable = mkEnableOption (lib.mdDoc "steam");
+    enable = mkEnableOption (mdDoc "steam");
 
     package = mkOption {
       type = types.package;
@@ -62,7 +78,7 @@ in {
       } // optionalAttrs cfg.extest.enable {
         extraEnv.LD_PRELOAD = "${pkgs.pkgsi686Linux.extest}/lib/libextest.so";
       });
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The Steam package to use. Additional libraries are added from the system
         configuration to ensure graphics work properly.
 
@@ -84,7 +100,7 @@ in {
     remotePlay.openFirewall = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Open ports in the firewall for Steam Remote Play.
       '';
     };
@@ -92,7 +108,7 @@ in {
     dedicatedServer.openFirewall = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Open ports in the firewall for Source Dedicated Server.
       '';
     };
@@ -100,7 +116,7 @@ in {
     localNetworkGameTransfers.openFirewall = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Open ports in the firewall for Steam Local Network Game Transfers.
       '';
     };
@@ -130,7 +146,7 @@ in {
       };
     };
 
-    extest.enable = mkEnableOption (lib.mdDoc ''
+    extest.enable = mkEnableOption (mdDoc ''
       Load the extest library into Steam, to translate X11 input events to
       uinput events (e.g. for using Steam Input on Wayland)
     '');
@@ -164,9 +180,9 @@ in {
     environment.systemPackages = [
       cfg.package
       cfg.package.run
-    ] ++ lib.optional cfg.gamescopeSession.enable steam-gamescope;
+    ] ++ optional cfg.gamescopeSession.enable steam-gamescope;
 
-    networking.firewall = lib.mkMerge [
+    networking.firewall = mkMerge [
       (mkIf (cfg.remotePlay.openFirewall || cfg.localNetworkGameTransfers.openFirewall) {
         allowedUDPPorts = [ 27036 ]; # Peer discovery
       })
