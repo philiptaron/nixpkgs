@@ -1,12 +1,19 @@
 { config, lib, ... }:
 
-with lib;
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    versionOlder
+    ;
+
   cfg = config.hardware.xpadneo;
 in
 {
   options.hardware.xpadneo = {
-    enable = mkEnableOption (lib.mdDoc "the xpadneo driver for Xbox One wireless controllers");
+    enable = mkEnableOption (mdDoc "the xpadneo driver for Xbox One wireless controllers");
   };
 
   config = mkIf cfg.enable {
@@ -16,7 +23,7 @@ in
       extraModprobeConfig =
         mkIf
           (config.hardware.bluetooth.enable &&
-            (lib.versionOlder config.boot.kernelPackages.kernel.version "5.12"))
+            (versionOlder config.boot.kernelPackages.kernel.version "5.12"))
           "options bluetooth disable_ertm=1";
 
       extraModulePackages = with config.boot.kernelPackages; [ xpadneo ];
