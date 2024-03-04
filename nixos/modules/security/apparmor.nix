@@ -1,13 +1,29 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
-  inherit (builtins) attrNames head map match readFile;
-  inherit (lib) types;
+  inherit (builtins) attrNames map match readFile;
+
+  inherit (lib)
+    concatMapStrings
+    concatMapStringsSep
+    filterAttrs
+    maintainers
+    mapAttrs
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRemovedOptionModule
+    optional
+    optionalString
+    types
+    ;
+
   inherit (config.environment) etc;
+
   cfg = config.security.apparmor;
-  mkDisableOption = name: mkEnableOption (lib.mdDoc name) // {
+  mkDisableOption = name: mkEnableOption (mdDoc name) // {
     default = true;
     example = false;
   };
@@ -24,7 +40,7 @@ in
 
   options = {
     security.apparmor = {
-      enable = mkEnableOption (lib.mdDoc ''
+      enable = mkEnableOption (mdDoc ''
         the AppArmor Mandatory Access Control system.
 
         If you're enabling this module on a running system,
@@ -42,7 +58,7 @@ in
         if you want this service to do such killing
         by sending a `SIGTERM` to those running processes'');
       policies = mkOption {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           AppArmor policies.
         '';
         type = types.attrsOf (types.submodule ({ name, config, ... }: {
@@ -50,7 +66,7 @@ in
             enable = mkDisableOption "loading of the profile into the kernel";
             enforce = mkDisableOption "enforcing of the policy or only complain in the logs";
             profile = mkOption {
-              description = lib.mdDoc "The policy of the profile.";
+              description = mdDoc "The policy of the profile.";
               type = types.lines;
               apply = pkgs.writeText name;
             };
@@ -61,7 +77,7 @@ in
       includes = mkOption {
         type = types.attrsOf types.lines;
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of paths to be added to AppArmor's searched paths
           when resolving `include` directives.
         '';
@@ -70,16 +86,16 @@ in
       packages = mkOption {
         type = types.listOf types.package;
         default = [];
-        description = lib.mdDoc "List of packages to be added to AppArmor's include path";
+        description = mdDoc "List of packages to be added to AppArmor's include path";
       };
-      enableCache = mkEnableOption (lib.mdDoc ''
+      enableCache = mkEnableOption (mdDoc ''
         caching of AppArmor policies
         in `/var/cache/apparmor/`.
 
         Beware that AppArmor policies almost always contain Nix store paths,
         and thus produce at each change of these paths
         a new cached version accumulating in the cache'');
-      killUnconfinedConfinables = mkEnableOption (lib.mdDoc ''
+      killUnconfinedConfinables = mkEnableOption (mdDoc ''
         killing of processes which have an AppArmor profile enabled
         (in [](#opt-security.apparmor.policies))
         but are not confined (because AppArmor can only confine new processes).
