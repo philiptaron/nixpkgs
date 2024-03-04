@@ -1,6 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    options
+    types
+    ;
+in
 
 {
   options = {
