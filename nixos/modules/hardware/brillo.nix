@@ -1,13 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.hardware.brillo;
 in
 {
   options = {
     hardware.brillo = {
-      enable = mkEnableOption (lib.mdDoc ''
+      enable = mkEnableOption (mdDoc ''
         brillo in userspace.
         This will allow brightness control from users in the video group
       '');
