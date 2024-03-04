@@ -1,8 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.hardware.digitalbitbox;
 in
 
@@ -11,7 +17,7 @@ in
     enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Enables udev rules for Digital Bitbox devices.
       '';
     };
