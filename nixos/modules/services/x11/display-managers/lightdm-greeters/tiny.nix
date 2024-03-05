@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    const
+    mdDoc
+    mkDefault
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
 
   dmcfg = config.services.xserver.displayManager;
   ldmcfg = dmcfg.lightdm;
@@ -17,7 +24,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable lightdm-tiny-greeter as the lightdm greeter.
 
           Note that this greeter starts only the default X session.
@@ -30,7 +37,7 @@ in
         user = mkOption {
           type = types.str;
           default = "Username";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The string to represent the user_text label.
           '';
         };
@@ -38,7 +45,7 @@ in
         pass = mkOption {
           type = types.str;
           default = "Password";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The string to represent the pass_text label.
           '';
         };
@@ -48,7 +55,7 @@ in
       extraConfig = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Section to describe style and ui.
         '';
       };
