@@ -1,11 +1,20 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRenamedOptionModule
+    types
+    ;
 
   cfg = config.services.opensmtpd;
+
   conf = pkgs.writeText "smtpd.conf" cfg.serverConfiguration;
+
   args = concatStringsSep " " cfg.extraServerArgs;
 
   sendmail = pkgs.runCommand "opensmtpd-sendmail" { preferLocalBuild = true; } ''
@@ -13,7 +22,8 @@ let
     ln -s ${cfg.package}/sbin/smtpctl $out/bin/sendmail
   '';
 
-in {
+in
+{
 
   ###### interface
 
@@ -28,7 +38,7 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to enable the OpenSMTPD server.";
+        description = mdDoc "Whether to enable the OpenSMTPD server.";
       };
 
       package = mkPackageOption pkgs "opensmtpd" { };
@@ -36,14 +46,14 @@ in {
       setSendmail = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc "Whether to set the system sendmail to OpenSMTPD's.";
+        description = mdDoc "Whether to set the system sendmail to OpenSMTPD's.";
       };
 
       extraServerArgs = mkOption {
         type = types.listOf types.str;
         default = [];
         example = [ "-v" "-P mta" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra command line arguments provided when the smtpd process
           is started.
         '';
@@ -55,7 +65,7 @@ in {
           listen on lo
           accept for any deliver to lmtp localhost:24
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The contents of the smtpd.conf configuration file. See the
           OpenSMTPD documentation for syntax information.
         '';
@@ -64,7 +74,7 @@ in {
       procPackages = mkOption {
         type = types.listOf types.package;
         default = [];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Packages to search for filters, tables, queues, and schedulers.
 
           Add OpenSMTPD-extras here if you want to use the filters, etc. from
