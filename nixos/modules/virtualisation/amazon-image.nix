@@ -6,9 +6,13 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mkDefault
+    mkIf
+    ;
+
   cfg = config.ec2;
 in
 
