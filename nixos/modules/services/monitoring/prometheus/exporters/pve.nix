@@ -1,7 +1,14 @@
 { config, lib, pkgs, options }:
 
-with lib;
 let
+  inherit (lib)
+    mkOption
+    mkPackageOption
+    optionalAttrs
+    optionalString
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.pve;
 
   # pve exporter requires a config file so create an empty one if configFile is not provided
