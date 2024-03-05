@@ -1,25 +1,35 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-let cfg = config.services.phylactery;
+let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
+  cfg = config.services.phylactery;
 in {
   options.services.phylactery = {
-    enable = mkEnableOption (lib.mdDoc "Phylactery server");
+    enable = mkEnableOption (mdDoc "Phylactery server");
 
     host = mkOption {
       type = types.str;
       default = "localhost";
-      description = lib.mdDoc "Listen host for Phylactery";
+      description = mdDoc "Listen host for Phylactery";
     };
 
     port = mkOption {
       type = types.port;
-      description = lib.mdDoc "Listen port for Phylactery";
+      description = mdDoc "Listen port for Phylactery";
     };
 
     library = mkOption {
       type = types.path;
-      description = lib.mdDoc "Path to CBZ library";
+      description = mdDoc "Path to CBZ library";
     };
 
     package = mkPackageOption pkgs "phylactery" { };
