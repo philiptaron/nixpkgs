@@ -1,7 +1,43 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    any
+    attrByPath
+    catAttrs
+    collect
+    concatMapStrings
+    concatStringsSep
+    escape
+    escapeShellArg
+    escapeShellArgs
+    fileContents
+    hasInfix
+    isAttrs
+    isList
+    isStorePath
+    isString
+    literalExpression
+    literalMD
+    maintainers
+    mapAttrs
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkOptionType
+    mkPackageOption
+    optionals
+    optionalString
+    replaceStrings
+    splitString
+    substring
+    types
+    updateManyAttrsByPath
+    ;
+
   cfg = config.services.akkoma;
   ex = cfg.config;
   db = ex.":pleroma"."Pleroma.Repo";
@@ -99,13 +135,13 @@ let
   format = pkgs.formats.elixirConf { elixir = cfg.package.elixirPackage; };
   configFile = format.generate "config.exs"
     (replaceSec
-      (attrsets.updateManyAttrsByPath [{
+      (updateManyAttrsByPath [{
         path = [ ":pleroma" "Pleroma.Web.Endpoint" "http" "ip" ];
         update = addr:
           if isAbsolutePath addr
-            then format.lib.mkTuple
-              [ (format.lib.mkAtom ":local") addr ]
-            else format.lib.mkRaw (erlAddr addr);
+            then format.mkTuple
+              [ (format.mkAtom ":local") addr ]
+            else format.mkRaw (erlAddr addr);
       }] cfg.config));
 
   writeShell = { name, text, runtimeInputs ? [ ] }:
@@ -282,7 +318,7 @@ let
         AKKOMA_CONFIG_PATH="$RUNTIME_DIRECTORY/config.exs" \
         ERL_EPMD_ADDRESS="${cfg.dist.address}" \
         ERL_EPMD_PORT="${toString cfg.dist.epmdPort}" \
-        ERL_FLAGS=${lib.escapeShellArg (lib.escapeShellArgs ([
+        ERL_FLAGS=${escapeShellArg (escapeShellArgs ([
           "-kernel" "inet_dist_use_interface" (erlAddr cfg.dist.address)
           "-kernel" "inet_dist_listen_min" (toString cfg.dist.portMin)
           "-kernel" "inet_dist_listen_max" (toString cfg.dist.portMax)
@@ -639,14 +675,14 @@ in {
               "Pleroma.Repo" = mkOption {
                 type = elixirValue;
                 default = {
-                  adapter = format.lib.mkRaw "Ecto.Adapters.Postgres";
+                  adapter = format.mkRaw "Ecto.Adapters.Postgres";
                   socket_dir = "/run/postgresql";
                   username = cfg.user;
                   database = "akkoma";
                 };
                 defaultText = literalExpression ''
                   {
-                    adapter = (pkgs.formats.elixirConf { }).lib.mkRaw "Ecto.Adapters.Postgres";
+                    adapter = (pkgs.formats.elixirConf { }).mkRaw "Ecto.Adapters.Postgres";
                     socket_dir = "/run/postgresql";
                     username = config.services.akkoma.user;
                     database = "akkoma";
@@ -767,11 +803,11 @@ in {
               ":frontends" = mkOption {
                 type = elixirValue;
                 default = mapAttrs
-                  (key: val: format.lib.mkMap { name = val.name; ref = val.ref; })
+                  (key: val: format.mkMap { name = val.name; ref = val.ref; })
                   cfg.frontends;
                 defaultText = literalExpression ''
-                  lib.mapAttrs (key: val:
-                    (pkgs.formats.elixirConf { }).lib.mkMap { name = val.name; ref = val.ref; })
+                  mapAttrs (key: val:
+                    (pkgs.formats.elixirConf { }).mkMap { name = val.name; ref = val.ref; })
                     config.services.akkoma.frontends;
                 '';
                 description = mdDoc ''
@@ -863,7 +899,7 @@ in {
 
                 level = mkOption {
                   type = types.nonEmptyStr;
-                  apply = format.lib.mkAtom;
+                  apply = format.mkAtom;
                   default = ":info";
                   example = ":warning";
                   description = mdDoc ''
@@ -881,7 +917,7 @@ in {
               ":data_dir" = mkOption {
                 type = elixirValue;
                 internal = true;
-                default = format.lib.mkRaw ''
+                default = format.mkRaw ''
                   Path.join(System.fetch_env!("CACHE_DIRECTORY"), "tzdata")
                 '';
               };
@@ -1004,7 +1040,7 @@ in {
           (mkIf isConfined (mkMerge [
             [ "/etc/hosts" "/etc/resolv.conf" ]
             (mkIf (isStorePath staticDir) (map (dir: "${dir}:${dir}:norbind")
-              (splitString "\n" (readFile ((pkgs.closureInfo { rootPaths = staticDir; }) + "/store-paths")))))
+              (splitString "\n" (builtins.readFile ((pkgs.closureInfo { rootPaths = staticDir; }) + "/store-paths")))))
             (mkIf (db ? socket_dir) [ "${db.socket_dir}:${db.socket_dir}:norbind" ])
             (mkIf (db ? socket) [ "${db.socket}:${db.socket}:norbind" ])
           ]))
