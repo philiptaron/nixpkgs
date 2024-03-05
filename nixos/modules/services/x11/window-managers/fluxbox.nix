@@ -1,14 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    singleton
+    ;
+
   cfg = config.services.xserver.windowManager.fluxbox;
 in
 {
   ###### interface
   options = {
-    services.xserver.windowManager.fluxbox.enable = mkEnableOption (lib.mdDoc "fluxbox");
+    services.xserver.windowManager.fluxbox.enable = mkEnableOption (mdDoc "fluxbox");
   };
 
   ###### implementation
