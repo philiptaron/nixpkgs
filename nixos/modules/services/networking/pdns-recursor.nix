@@ -1,8 +1,24 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStringsSep
+    concatStringsSep
+    flip
+    isList
+    literalExpression
+    maintainers
+    mapAttrs
+    mapAttrsToList
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRemovedOptionModule
+    types
+    ;
+
   cfg = config.services.pdns-recursor;
 
   oneOrMore  = type: with types; either type (listOf type);
@@ -27,12 +43,12 @@ let
 
 in {
   options.services.pdns-recursor = {
-    enable = mkEnableOption (lib.mdDoc "PowerDNS Recursor, a recursive DNS server");
+    enable = mkEnableOption (mdDoc "PowerDNS Recursor, a recursive DNS server");
 
     dns.address = mkOption {
       type = oneOrMore types.str;
       default = [ "::" "0.0.0.0" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         IP addresses Recursor DNS server will bind to.
       '';
     };
@@ -40,7 +56,7 @@ in {
     dns.port = mkOption {
       type = types.port;
       default = 53;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Port number Recursor DNS server will bind to.
       '';
     };
@@ -53,7 +69,7 @@ in {
         "::1/128" "fc00::/7" "fe80::/10"
       ];
       example = [ "0.0.0.0/0" "::/0" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         IP address ranges of clients allowed to make DNS queries.
       '';
     };
@@ -61,7 +77,7 @@ in {
     api.address = mkOption {
       type = types.str;
       default = "0.0.0.0";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         IP address Recursor REST API server will bind to.
       '';
     };
@@ -69,7 +85,7 @@ in {
     api.port = mkOption {
       type = types.port;
       default = 8082;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Port number Recursor REST API server will bind to.
       '';
     };
@@ -78,7 +94,7 @@ in {
       type = types.listOf types.str;
       default = [ "127.0.0.1" "::1" ];
       example = [ "0.0.0.0/0" "::/0" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         IP address ranges of clients allowed to make API requests.
       '';
     };
@@ -86,7 +102,7 @@ in {
     exportHosts = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
        Whether to export names and IP addresses defined in /etc/hosts.
       '';
     };
@@ -94,7 +110,7 @@ in {
     forwardZones = mkOption {
       type = types.attrs;
       default = {};
-      description = lib.mdDoc ''
+      description = mdDoc ''
         DNS zones to be forwarded to other authoritative servers.
       '';
     };
@@ -103,7 +119,7 @@ in {
       type = types.attrs;
       example = { eth = "[::1]:5353"; };
       default = {};
-      description = lib.mdDoc ''
+      description = mdDoc ''
         DNS zones to be forwarded to other recursive servers.
       '';
     };
@@ -111,7 +127,7 @@ in {
     dnssecValidation = mkOption {
       type = types.enum ["off" "process-no-validate" "process" "log-fail" "validate"];
       default = "validate";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Controls the level of DNSSEC processing done by the PowerDNS Recursor.
         See https://doc.powerdns.com/md/recursor/dnssec/ for a detailed explanation.
       '';
@@ -120,7 +136,7 @@ in {
     serveRFC1918 = mkOption {
       type = types.bool;
       default = true;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to directly resolve the RFC1918 reverse-mapping domains:
         `10.in-addr.arpa`,
         `168.192.in-addr.arpa`,
@@ -138,7 +154,7 @@ in {
           log-common-errors = true;
         }
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         PowerDNS Recursor settings. Use this option to configure Recursor
         settings not exposed in a NixOS option or to bypass one.
         See the full documentation at
@@ -150,7 +166,7 @@ in {
     luaConfig = mkOption {
       type = types.lines;
       default = "";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The content Lua configuration file for PowerDNS Recursor. See
         <https://doc.powerdns.com/recursor/lua-config/index.html>.
       '';
@@ -208,6 +224,6 @@ in {
      "To change extra Recursor settings use services.pdns-recursor.settings instead.")
   ];
 
-  meta.maintainers = with lib.maintainers; [ rnhmjoj ];
+  meta.maintainers = with maintainers; [ rnhmjoj ];
 
 }
