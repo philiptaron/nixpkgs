@@ -1,8 +1,17 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    all
+    attrValues
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.hardware.sane.brscan5;
 
   netDeviceList = attrValues cfg.netDevices;
@@ -15,7 +24,7 @@ let
 
       name = mkOption {
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The friendly name you give to the network device. If undefined,
           the name of attribute will be used.
         '';
@@ -25,7 +34,7 @@ let
 
       model = mkOption {
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The model of the network device.
         '';
 
@@ -35,7 +44,7 @@ let
       ip = mkOption {
         type = with types; nullOr str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The ip address of the device. If undefined, you will have to
           provide a nodename.
         '';
@@ -46,7 +55,7 @@ let
       nodename = mkOption {
         type = with types; nullOr str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The node name of the device. If undefined, you will have to
           provide an ip.
         '';
@@ -68,7 +77,7 @@ in
   options = {
 
     hardware.sane.brscan5.enable =
-      mkEnableOption (lib.mdDoc "the Brother brscan5 sane backend");
+      mkEnableOption (mdDoc "the Brother brscan5 sane backend");
 
     hardware.sane.brscan5.netDevices = mkOption {
       default = {};
@@ -77,7 +86,7 @@ in
           office2 = { model = "MFC-7860DW"; nodename = "BRW0080927AFBCE"; };
         };
       type = with types; attrsOf (submodule netDeviceOpts);
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The list of network devices that will be registered against the brscan5
         sane backend.
       '';
