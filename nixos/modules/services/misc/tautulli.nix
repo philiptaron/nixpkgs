@@ -1,8 +1,16 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRenamedOptionModule
+    types
+    ;
+
   cfg = config.services.tautulli;
 in
 {
@@ -12,42 +20,42 @@ in
 
   options = {
     services.tautulli = {
-      enable = mkEnableOption (lib.mdDoc "Tautulli Plex Monitor");
+      enable = mkEnableOption (mdDoc "Tautulli Plex Monitor");
 
       dataDir = mkOption {
         type = types.str;
         default = "/var/lib/plexpy";
-        description = lib.mdDoc "The directory where Tautulli stores its data files.";
+        description = mdDoc "The directory where Tautulli stores its data files.";
       };
 
       configFile = mkOption {
         type = types.str;
         default = "/var/lib/plexpy/config.ini";
-        description = lib.mdDoc "The location of Tautulli's config file.";
+        description = mdDoc "The location of Tautulli's config file.";
       };
 
       port = mkOption {
         type = types.port;
         default = 8181;
-        description = lib.mdDoc "TCP port where Tautulli listens.";
+        description = mdDoc "TCP port where Tautulli listens.";
       };
 
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Open ports in the firewall for Tautulli.";
+        description = mdDoc "Open ports in the firewall for Tautulli.";
       };
 
       user = mkOption {
         type = types.str;
         default = "plexpy";
-        description = lib.mdDoc "User account under which Tautulli runs.";
+        description = mdDoc "User account under which Tautulli runs.";
       };
 
       group = mkOption {
         type = types.str;
         default = "nogroup";
-        description = lib.mdDoc "Group under which Tautulli runs.";
+        description = mdDoc "Group under which Tautulli runs.";
       };
 
       package = mkPackageOption pkgs "tautulli" { };
