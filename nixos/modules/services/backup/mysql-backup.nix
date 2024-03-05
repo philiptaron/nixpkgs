@@ -1,8 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStringsSep
+    listToAttrs
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    nameValuePair
+    optionalAttrs
+    optionalString
+    types
+    ;
 
   inherit (pkgs) mariadb gzip;
 
@@ -37,12 +47,12 @@ in
 
     services.mysqlBackup = {
 
-      enable = mkEnableOption (lib.mdDoc "MySQL backups");
+      enable = mkEnableOption (mdDoc "MySQL backups");
 
       calendar = mkOption {
         type = types.str;
         default = "01:15:00";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configured when to run the backup service systemd unit (DayOfWeek Year-Month-Day Hour:Minute:Second).
         '';
       };
@@ -50,7 +60,7 @@ in
       user = mkOption {
         type = types.str;
         default = defaultUser;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           User to be used to perform backup.
         '';
       };
@@ -58,7 +68,7 @@ in
       databases = mkOption {
         default = [];
         type = types.listOf types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of database names to dump.
         '';
       };
@@ -66,7 +76,7 @@ in
       location = mkOption {
         type = types.path;
         default = "/var/backup/mysql";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Location to put the gzipped MySQL database dumps.
         '';
       };
@@ -74,7 +84,7 @@ in
       singleTransaction = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to create database dump in a single transaction
         '';
       };
