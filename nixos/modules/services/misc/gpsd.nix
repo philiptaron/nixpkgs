@@ -1,19 +1,27 @@
 { config, lib, pkgs, utils, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    mkRemovedOptionModule
+    optionalString
+    types
+    ;
 
   uid = config.ids.uids.gpsd;
-  gid = config.ids.gids.gpsd;
-  cfg = config.services.gpsd;
 
-in {
+  gid = config.ids.gids.gpsd;
+
+  cfg = config.services.gpsd;
+in
+{
 
   ###### interface
 
   imports = [
-    (lib.mkRemovedOptionModule [ "services" "gpsd" "device" ]
+    (mkRemovedOptionModule [ "services" "gpsd" "device" ]
       "Use `services.gpsd.devices` instead.")
   ];
 
@@ -24,7 +32,7 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable `gpsd`, a GPS service daemon.
         '';
       };
@@ -32,7 +40,7 @@ in {
       devices = mkOption {
         type = types.listOf types.str;
         default = [ "/dev/ttyUSB0" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of devices that `gpsd` should subscribe to.
 
           A device may be a local serial device for GPS input, or a
@@ -46,7 +54,7 @@ in {
       readonly = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the broken-device-safety, otherwise
           known as read-only mode.  Some popular bluetooth and USB
           receivers lock up or become totally inaccessible when
@@ -63,7 +71,7 @@ in {
       nowait = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           don't wait for client connects to poll GPS
         '';
       };
@@ -71,7 +79,7 @@ in {
       port = mkOption {
         type = types.port;
         default = 2947;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The port where to listen for TCP connections.
         '';
       };
@@ -79,7 +87,7 @@ in {
       debugLevel = mkOption {
         type = types.int;
         default = 0;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The debugging level.
         '';
       };
@@ -87,7 +95,7 @@ in {
       listenany = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Listen on all addresses rather than just loopback.
         '';
       };
@@ -96,7 +104,7 @@ in {
         type = types.listOf types.str;
         default = [ ];
         example = [ "-r" "-s" "19200" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A list of extra command line arguments to pass to gpsd.
           Check gpsd(8) mangpage for possible arguments.
         '';
