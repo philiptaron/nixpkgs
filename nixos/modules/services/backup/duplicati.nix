@@ -1,21 +1,30 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    optionalAttrs
+    types
+    ;
+
   cfg = config.services.duplicati;
 in
 {
   options = {
     services.duplicati = {
-      enable = mkEnableOption (lib.mdDoc "Duplicati");
+      enable = mkEnableOption (mdDoc "Duplicati");
 
       package = mkPackageOption pkgs "duplicati" { };
 
       port = mkOption {
         default = 8200;
         type = types.port;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Port serving the web interface
         '';
       };
@@ -23,7 +32,7 @@ in
       dataDir = mkOption {
         type = types.str;
         default = "/var/lib/duplicati";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The directory where Duplicati stores its data files.
 
           ::: {.note}
@@ -37,7 +46,7 @@ in
       interface = mkOption {
         default = "127.0.0.1";
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Listening interface for the web UI
           Set it to "any" to listen on all available interfaces
         '';
@@ -46,7 +55,7 @@ in
       user = mkOption {
         default = "duplicati";
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Duplicati runs as it's own user. It will only be able to backup world-readable files.
           Run as root with special care.
         '';
@@ -74,7 +83,7 @@ in
       ];
     };
 
-    users.users = lib.optionalAttrs (cfg.user == "duplicati") {
+    users.users = optionalAttrs (cfg.user == "duplicati") {
       duplicati = {
         uid = config.ids.uids.duplicati;
         home = cfg.dataDir;
