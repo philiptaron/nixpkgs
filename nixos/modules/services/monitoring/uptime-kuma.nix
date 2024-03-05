@@ -1,13 +1,23 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optional
+    types
+    ;
+
   cfg = config.services.uptime-kuma;
 in
 {
 
-  meta.maintainers = [ lib.maintainers.julienmalka ];
+  meta.maintainers = [ maintainers.julienmalka ];
 
   options = {
     services.uptime-kuma = {
@@ -17,14 +27,14 @@ in
 
       appriseSupport = mkEnableOption (mdDoc "apprise support for notifications");
 
-      settings = lib.mkOption {
-        type = lib.types.submodule { freeformType = with lib.types; attrsOf str; };
+      settings = mkOption {
+        type = types.submodule { freeformType = with types; attrsOf str; };
         default = { };
         example = {
           PORT = "4000";
           NODE_EXTRA_CA_CERTS = "/etc/ssl/certs/ca-certificates.crt";
         };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Additional configuration for Uptime Kuma, see
           <https://github.com/louislam/uptime-kuma/wiki/Environment-Variables>
           for supported values.
@@ -47,7 +57,7 @@ in
       after = [ "network.target" ];
       wantedBy = [ "multi-user.target" ];
       environment = cfg.settings;
-      path = with pkgs; [ unixtools.ping ] ++ lib.optional cfg.appriseSupport apprise;
+      path = with pkgs; [ unixtools.ping ] ++ optional cfg.appriseSupport apprise;
       serviceConfig = {
         Type = "simple";
         StateDirectory = "uptime-kuma";
