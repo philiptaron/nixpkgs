@@ -1,8 +1,9 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mkIf
+    ;
 
   inInitrd = config.boot.initrd.supportedFilesystems.reiserfs or false;
 
