@@ -1,8 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    ;
+
   pkg = pkgs.haste-server;
   cfg = config.services.haste-server;
 
@@ -10,11 +16,11 @@ let
 in
 {
   options.services.haste-server = {
-    enable = mkEnableOption (lib.mdDoc "haste-server");
-    openFirewall = mkEnableOption (lib.mdDoc "firewall passthrough for haste-server");
+    enable = mkEnableOption (mdDoc "haste-server");
+    openFirewall = mkEnableOption (mdDoc "firewall passthrough for haste-server");
 
     settings = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Configuration for haste-server.
         For documentation see [project readme](https://github.com/toptal/haste-server#settings)
       '';
