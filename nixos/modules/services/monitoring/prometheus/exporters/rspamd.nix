@@ -1,8 +1,17 @@
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    literalExpression
+    mdDoc
+    mkOption
+    mkRemovedOptionModule
+    recursiveUpdate
+    replaceStrings
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.rspamd;
 
   mkFile = conf:
@@ -69,7 +78,7 @@ in
           custom_label = "some_value";
         }
       '';
-      description = lib.mdDoc "Set of labels added to each metric.";
+      description = mdDoc "Set of labels added to each metric.";
     };
   };
   serviceOpts.serviceConfig.ExecStart = ''
