@@ -1,8 +1,12 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.services.serviio;
 
@@ -22,7 +26,8 @@ let
     exec ${pkgs.jre}/bin/java -Xmx512M -Xms20M -XX:+UseG1GC -XX:GCTimeRatio=1 -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=20 $JAVA_OPTS -classpath "$SERVIIO_CLASS_PATH" org.serviio.MediaServer "$@"
   '';
 
-in {
+in
+{
 
   ###### interface
   options = {
@@ -31,7 +36,7 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the Serviio Media Server.
         '';
       };
@@ -39,7 +44,7 @@ in {
       dataDir = mkOption {
         type = types.path;
         default = "/var/lib/serviio";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The directory where serviio stores its state, data, etc.
         '';
       };
