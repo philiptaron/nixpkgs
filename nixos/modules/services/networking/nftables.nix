@@ -1,6 +1,24 @@
 { config, pkgs, lib, ... }:
-with lib;
+
 let
+  inherit (lib)
+    all
+    attrNames
+    concatStringsSep
+    escapeShellArg
+    filterAttrs
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalString
+    types
+    versionOlder
+    ;
+
   cfg = config.networking.nftables;
 
   tableSubmodule = { name, ... }: {
@@ -8,21 +26,21 @@ let
       enable = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc "Enable this table.";
+        description = mdDoc "Enable this table.";
       };
 
       name = mkOption {
         type = types.str;
-        description = lib.mdDoc "Table name.";
+        description = mdDoc "Table name.";
       };
 
       content = mkOption {
         type = types.lines;
-        description = lib.mdDoc "The table content.";
+        description = mdDoc "The table content.";
       };
 
       family = mkOption {
-        description = lib.mdDoc "Table family.";
+        description = mdDoc "Table family.";
         type = types.enum [ "ip" "ip6" "inet" "arp" "bridge" "netdev" ];
       };
     };
@@ -40,7 +58,7 @@ in
       type = types.bool;
       default = false;
       description =
-        lib.mdDoc ''
+        mdDoc ''
           Whether to enable nftables and use nftables based firewall if enabled.
           nftables is a Linux-based packet filtering framework intended to
           replace frameworks like iptables.
@@ -61,7 +79,7 @@ in
     networking.nftables.checkRuleset = mkOption {
       type = types.bool;
       default = true;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Run `nft check` on the ruleset to spot syntax errors during build.
         Because this is executed in a sandbox, the check might fail if it requires
         access to any environmental factors or paths outside the Nix store.
@@ -93,17 +111,17 @@ in
     networking.nftables.preCheckRuleset = mkOption {
       type = types.lines;
       default = "";
-      example = lib.literalExpression ''
+      example = literalExpression ''
         sed 's/skgid meadow/skgid nogroup/g' -i ruleset.conf
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         This script gets run before the ruleset is checked. It can be used to
         create additional files needed for the ruleset check to work, or modify
         the ruleset for cases the build environment cannot cover.
       '';
     };
 
-    networking.nftables.flushRuleset = mkEnableOption (lib.mdDoc "flushing the entire ruleset on each reload");
+    networking.nftables.flushRuleset = mkEnableOption (mdDoc "flushing the entire ruleset on each reload");
 
     networking.nftables.extraDeletions = mkOption {
       type = types.lines;
@@ -115,7 +133,7 @@ in
         delete table inet some-table;
       '';
       description =
-        lib.mdDoc ''
+        mdDoc ''
           Extra deletion commands to be run on every firewall start, reload
           and after stopping the firewall.
         '';
@@ -167,7 +185,7 @@ in
         }
       '';
       description =
-        lib.mdDoc ''
+        mdDoc ''
           The ruleset to be used with nftables.  Should be in a format that
           can be loaded using "/bin/nft -f".  The ruleset is updated atomically.
           Note that if the tables should be cleaned first, either:
@@ -180,7 +198,7 @@ in
       type = types.nullOr types.path;
       default = null;
       description =
-        lib.mdDoc ''
+        mdDoc ''
           The ruleset file to be used with nftables.  Should be in a format that
           can be loaded using "nft -f".  The ruleset is updated atomically.
         '';
@@ -189,7 +207,7 @@ in
     networking.nftables.flattenRulesetFile = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Use `builtins.readFile` rather than `include` to handle {option}`networking.nftables.rulesetFile`. It is useful when you want to apply {option}`networking.nftables.preCheckRuleset` to {option}`networking.nftables.rulesetFile`.
 
         ::: {.note}
@@ -203,7 +221,7 @@ in
 
       default = {};
 
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Tables to be added to ruleset.
         Tables will be added together with delete statements to clean up the table before every update.
       '';
@@ -316,7 +334,7 @@ in
                 ''
               else ""}
           '';
-          checkPhase = lib.optionalString cfg.checkRuleset ''
+          checkPhase = optionalString cfg.checkRuleset ''
             cp $out ruleset.conf
             sed 's|include "${deletionsScriptVar}"||' -i ruleset.conf
             ${cfg.preCheckRuleset}
