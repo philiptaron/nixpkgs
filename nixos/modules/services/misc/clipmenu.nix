@@ -1,13 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkPackageOption
+    ;
+
   cfg = config.services.clipmenu;
-in {
+in
+{
 
   options.services.clipmenu = {
-    enable = mkEnableOption (lib.mdDoc "clipmenu, the clipboard management daemon");
+    enable = mkEnableOption (mdDoc "clipmenu, the clipboard management daemon");
 
     package = mkPackageOption pkgs "clipmenu" { };
   };
