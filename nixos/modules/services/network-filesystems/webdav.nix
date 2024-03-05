@@ -1,31 +1,40 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    literalExpression
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.webdav;
   format = pkgs.formats.yaml { };
 in
 {
   options = {
     services.webdav = {
-      enable = mkEnableOption (lib.mdDoc "WebDAV server");
+      enable = mkEnableOption (mdDoc "WebDAV server");
 
       user = mkOption {
         type = types.str;
         default = "webdav";
-        description = lib.mdDoc "User account under which WebDAV runs.";
+        description = mdDoc "User account under which WebDAV runs.";
       };
 
       group = mkOption {
         type = types.str;
         default = "webdav";
-        description = lib.mdDoc "Group under which WebDAV runs.";
+        description = mdDoc "Group under which WebDAV runs.";
       };
 
       settings = mkOption {
         type = format.type;
         default = { };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Attrset that is converted and passed as config file. Available options
           can be found at
           [here](https://github.com/hacdias/webdav).
@@ -57,7 +66,7 @@ in
         type = types.path;
         default = format.generate "webdav.yaml" cfg.settings;
         defaultText = "Config file generated from services.webdav.settings";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Path to config file. If this option is set, it will override any
           configuration done in options.services.webdav.settings.
         '';
@@ -67,7 +76,7 @@ in
       environmentFile = mkOption {
         type = types.nullOr types.path;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Environment file as defined in {manpage}`systemd.exec(5)`.
         '';
       };
