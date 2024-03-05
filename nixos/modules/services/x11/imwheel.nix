@@ -1,18 +1,29 @@
 { config, lib, pkgs, ... }:
-with lib;
 let
+  inherit (lib)
+    concatStringsSep
+    escapeShellArgs
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.xserver.imwheel;
 in
   {
     options = {
       services.xserver.imwheel = {
-        enable = mkEnableOption (lib.mdDoc "IMWheel service");
+        enable = mkEnableOption (mdDoc "IMWheel service");
 
         extraOptions = mkOption {
           type = types.listOf types.str;
           default = [ "--buttons=45" ];
           example = [ "--debug" ];
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Additional command-line arguments to pass to
             {command}`imwheel`.
           '';
@@ -33,7 +44,7 @@ in
               ''';
             }
           '';
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Window class translation rules.
             /etc/X11/imwheelrc is generated based on this config
             which means this config is global for all users.
