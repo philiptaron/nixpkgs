@@ -1,6 +1,13 @@
 { lib, stdenv, fetchgit, ncurses, conf ? null }:
 
-with lib;
+let
+  inherit (lib)
+    licenses
+    maintainers
+    optionalString
+    platforms
+    ;
+in
 
 stdenv.mkDerivation rec {
   pname = "noice";
