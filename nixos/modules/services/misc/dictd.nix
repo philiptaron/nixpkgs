@@ -1,8 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.dictd;
 in
 
@@ -17,7 +23,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the DICT.org dictionary server.
         '';
       };
@@ -27,7 +33,7 @@ in
         default = with pkgs.dictdDBs; [ wiktionary wordnet ];
         defaultText = literalExpression "with pkgs.dictdDBs; [ wiktionary wordnet ]";
         example = literalExpression "[ pkgs.dictdDBs.nld2eng ]";
-        description = lib.mdDoc "List of databases to make available.";
+        description = mdDoc "List of databases to make available.";
       };
 
     };
