@@ -2,9 +2,15 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    teams
+    types
+    ;
+
   package = pkgs.gsignond.override { plugins = config.services.gsignond.plugins; };
 in
 {
@@ -20,7 +26,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable gSignOn daemon, a DBus service
           which performs user authentication on behalf of its clients.
         '';
@@ -29,7 +35,7 @@ in
       plugins = mkOption {
         type = types.listOf types.package;
         default = [];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           What plugins to use with the gSignOn daemon.
         '';
       };
