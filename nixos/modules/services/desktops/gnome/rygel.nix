@@ -1,7 +1,16 @@
 # rygel service.
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    mkRenamedOptionModule
+    teams
+    types
+    ;
+in
 
 {
   meta = {
@@ -21,7 +30,7 @@ with lib;
     services.gnome.rygel = {
       enable = mkOption {
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable Rygel UPnP Mediaserver.
 
           You will need to also allow UPnP connections in firewall, see the following [comment](https://github.com/NixOS/nixpkgs/pull/45045#issuecomment-416030795).
