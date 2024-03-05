@@ -1,8 +1,19 @@
 { lib, config, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStrings
+    concatStringsSep
+    flip
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRemovedOptionModule
+    types
+    ;
 
   cfg = config.services.xmr-stak;
 
@@ -15,14 +26,14 @@ in
 {
   options = {
     services.xmr-stak = {
-      enable = mkEnableOption (lib.mdDoc "xmr-stak miner");
-      openclSupport = mkEnableOption (lib.mdDoc "support for OpenCL (AMD/ATI graphics cards)");
+      enable = mkEnableOption (mdDoc "xmr-stak miner");
+      openclSupport = mkEnableOption (mdDoc "support for OpenCL (AMD/ATI graphics cards)");
 
       extraArgs = mkOption {
         type = types.listOf types.str;
         default = [];
         example = [ "--noCPU" "--currency monero" ];
-        description = lib.mdDoc "List of parameters to pass to xmr-stak.";
+        description = mdDoc "List of parameters to pass to xmr-stak.";
       };
 
       configFiles = mkOption {
@@ -51,7 +62,7 @@ in
             ''';
           }
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Content of config files like config.txt, pools.txt or cpu.txt.
         '';
       };
