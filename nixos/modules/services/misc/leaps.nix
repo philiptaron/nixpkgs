@@ -1,30 +1,37 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.leaps;
+
   stateDir = "/var/lib/leaps/";
 in
 {
   options = {
     services.leaps = {
-      enable = mkEnableOption (lib.mdDoc "leaps");
+      enable = mkEnableOption (mdDoc "leaps");
       port = mkOption {
         type = types.port;
         default = 8080;
-        description = lib.mdDoc "A port where leaps listens for incoming http requests";
+        description = mdDoc "A port where leaps listens for incoming http requests";
       };
       address = mkOption {
         default = "";
         type = types.str;
         example = "127.0.0.1";
-        description = lib.mdDoc "Hostname or IP-address to listen to. By default it will listen on all interfaces.";
+        description = mdDoc "Hostname or IP-address to listen to. By default it will listen on all interfaces.";
       };
       path = mkOption {
         default = "/";
         type = types.path;
-        description = lib.mdDoc "Subdirectory used for reverse proxy setups";
+        description = mdDoc "Subdirectory used for reverse proxy setups";
       };
     };
   };
