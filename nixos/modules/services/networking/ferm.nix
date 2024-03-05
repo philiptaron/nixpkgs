@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalMD
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.ferm;
 
   configFile = pkgs.stdenv.mkDerivation {
@@ -20,7 +27,7 @@ in {
       enable = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable Ferm Firewall.
           *Warning*: Enabling this service WILL disable the existing NixOS
           firewall! Default firewall rules provided by packages are not
@@ -28,7 +35,7 @@ in {
         '';
       };
       config = mkOption {
-        description = lib.mdDoc "Verbatim ferm.conf configuration.";
+        description = mdDoc "Verbatim ferm.conf configuration.";
         default = "";
         defaultText = literalMD "empty firewall, allows any traffic";
         type = types.lines;
