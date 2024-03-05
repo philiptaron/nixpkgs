@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.services.go-autoconfig;
   format = pkgs.formats.yaml { };
@@ -61,6 +68,6 @@ in {
 
   };
 
-  meta.maintainers = with lib.maintainers; [ onny ];
+  meta.maintainers = with maintainers; [ onny ];
 
 }
