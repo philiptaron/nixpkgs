@@ -1,9 +1,23 @@
 # generate the script used to activate the configuration.
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrNames
+    getBin
+    id
+    isString
+    literalExpression
+    literalMD
+    mapAttrs
+    mdDoc
+    mkOption
+    noDepEntry
+    optionalAttrs
+    optionalString
+    textClosureMap
+    types
+    ;
 
   addAttributeName = mapAttrs (a: v: v // {
     text = ''
@@ -74,17 +88,17 @@ let
       { deps = mkOption
           { type = types.listOf types.str;
             default = [ ];
-            description = lib.mdDoc "List of dependencies. The script will run after these.";
+            description = mdDoc "List of dependencies. The script will run after these.";
           };
         text = mkOption
           { type = types.lines;
-            description = lib.mdDoc "The content of the script.";
+            description = mdDoc "The content of the script.";
           };
       } // optionalAttrs withDry {
         supportsDryActivation = mkOption
           { type = types.bool;
             default = false;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Whether this activation script supports being dry-activated.
               These activation scripts will also be executed on dry-activate
               activations with the environment variable
@@ -119,7 +133,7 @@ in
         }
       '';
 
-      description = lib.mdDoc ''
+      description = mdDoc ''
         A set of shell script fragments that are executed when a NixOS
         system configuration is activated.  Examples are updating
         /etc, creating accounts, and so on.  Since these are executed
@@ -135,7 +149,7 @@ in
     };
 
     system.dryActivationScript = mkOption {
-      description = lib.mdDoc "The shell script that is to be run when dry-activating a system.";
+      description = mdDoc "The shell script that is to be run when dry-activating a system.";
       readOnly = true;
       internal = true;
       default = systemActivationScript (removeAttrs config.system.activationScripts [ "script" ]) true;
@@ -155,7 +169,7 @@ in
         }
       '';
 
-      description = lib.mdDoc ''
+      description = mdDoc ''
         A set of shell script fragments that are executed by a systemd user
         service when a NixOS system configuration is activated. Examples are
         rebuilding the .desktop file cache for showing applications in the menu.
@@ -195,7 +209,7 @@ in
       example = literalExpression ''"''${pkgs.busybox}/bin/env"'';
       type = types.nullOr types.path;
       visible = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The env(1) executable that is linked system-wide to
         `/usr/bin/env`.
       '';
@@ -207,7 +221,7 @@ in
       #             go to `true` instead of `echo`, hiding the useless path
       #             from the log.
       default = "echo 'Warning: do not know how to make this configuration bootable; please enable a boot loader.' 1>&2; true";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         A program that writes a bootloader installation script to the path passed in the first command line argument.
 
         See `nixos/modules/system/activation/switch-to-configuration.pl`.
