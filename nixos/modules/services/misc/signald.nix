@@ -1,31 +1,41 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalAttrs
+    types
+    ;
+
   cfg = config.services.signald;
+
   dataDir = "/var/lib/signald";
+
   defaultUser = "signald";
 in
 {
   options.services.signald = {
-    enable = mkEnableOption (lib.mdDoc "the signald service");
+    enable = mkEnableOption (mdDoc "the signald service");
 
     user = mkOption {
       type = types.str;
       default = defaultUser;
-      description = lib.mdDoc "User under which signald runs.";
+      description = mdDoc "User under which signald runs.";
     };
 
     group = mkOption {
       type = types.str;
       default = defaultUser;
-      description = lib.mdDoc "Group under which signald runs.";
+      description = mdDoc "Group under which signald runs.";
     };
 
     socketPath = mkOption {
       type = types.str;
       default = "/run/signald/signald.sock";
-      description = lib.mdDoc "Path to the signald socket";
+      description = mdDoc "Path to the signald socket";
     };
   };
 
