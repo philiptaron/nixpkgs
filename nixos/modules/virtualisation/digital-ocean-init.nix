@@ -1,6 +1,15 @@
 { config, pkgs, lib, ... }:
-with lib;
 let
+  inherit (lib)
+    concatStringsSep
+    literalMD
+    maintainers
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.virtualisation.digitalOcean;
   defaultConfigFile = pkgs.writeText "digitalocean-configuration.nix" ''
     { modulesPath, lib, ... }:
@@ -15,7 +24,7 @@ in {
     type = types.bool;
     default = true;
     example = true;
-    description = lib.mdDoc "Whether to reconfigure the system from Digital Ocean user data";
+    description = mdDoc "Whether to reconfigure the system from Digital Ocean user data";
   };
   options.virtualisation.digitalOcean.defaultConfigFile = mkOption {
     type = types.path;
@@ -24,7 +33,7 @@ in {
       The default configuration imports user-data if applicable and
       `(modulesPath + "/virtualisation/digital-ocean-config.nix")`.
     '';
-    description = lib.mdDoc ''
+    description = mdDoc ''
       A path to a configuration file which will be placed at
       `/etc/nixos/configuration.nix` and be used when switching to
       a new configuration.
