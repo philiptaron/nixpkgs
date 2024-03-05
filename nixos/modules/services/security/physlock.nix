@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkMerge
+    mkOption
+    optional
+    optionalString
+    types
+    ;
+
   cfg = config.services.physlock;
 in
 
@@ -17,7 +25,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the {command}`physlock` screen locking mechanism.
 
           Enable this and then run {command}`systemctl start physlock`
@@ -33,7 +41,7 @@ in
       allowAnyUser = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to allow any user to lock the screen. This will install a
           setuid wrapper to allow any user to start physlock as root, which
           is a minor security risk. Call the physlock binary to use this instead
@@ -44,7 +52,7 @@ in
       disableSysRq = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to disable SysRq when locked with physlock.
         '';
       };
@@ -52,7 +60,7 @@ in
       lockMessage = mkOption {
         type = types.str;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Message to show on physlock login terminal.
         '';
       };
@@ -60,7 +68,7 @@ in
       muteKernelMessages = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Disable kernel messages on console while physlock is running.
         '';
       };
@@ -70,7 +78,7 @@ in
         suspend = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Whether to lock screen with physlock just before suspend.
           '';
         };
@@ -78,7 +86,7 @@ in
         hibernate = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Whether to lock screen with physlock just before hibernate.
           '';
         };
@@ -87,7 +95,7 @@ in
           type = types.listOf types.str;
           default = [];
           example = [ "display-manager.service" ];
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Other targets to lock the screen just before.
 
             Useful if you want to e.g. both autologin to X11 so that
