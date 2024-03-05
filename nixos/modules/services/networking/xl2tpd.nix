@@ -1,33 +1,43 @@
 { config, pkgs, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    length
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    range
+    types
+    ;
+in
 
 {
   options = {
     services.xl2tpd = {
-      enable = mkEnableOption (lib.mdDoc "xl2tpd, the Layer 2 Tunnelling Protocol Daemon");
+      enable = mkEnableOption (mdDoc "xl2tpd, the Layer 2 Tunnelling Protocol Daemon");
 
       serverIp = mkOption {
         type        = types.str;
-        description = lib.mdDoc "The server-side IP address.";
+        description = mdDoc "The server-side IP address.";
         default     = "10.125.125.1";
       };
 
       clientIpRange = mkOption {
         type        = types.str;
-        description = lib.mdDoc "The range from which client IPs are drawn.";
+        description = mdDoc "The range from which client IPs are drawn.";
         default     = "10.125.125.2-11";
       };
 
       extraXl2tpOptions = mkOption {
         type        = types.lines;
-        description = lib.mdDoc "Adds extra lines to the xl2tpd configuration file.";
+        description = mdDoc "Adds extra lines to the xl2tpd configuration file.";
         default     = "";
       };
 
       extraPppdOptions = mkOption {
         type        = types.lines;
-        description = lib.mdDoc "Adds extra lines to the pppd options file.";
+        description = mdDoc "Adds extra lines to the pppd options file.";
         default     = "";
         example     = ''
           ms-dns 8.8.8.8
