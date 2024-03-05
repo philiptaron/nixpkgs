@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    mkOverride
+    mkPackageOption
+    optionalAttrs
+    types
+    ;
 
   cfg = config.services.emacs;
 
@@ -22,7 +30,7 @@ in
     enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to enable a user service for the Emacs daemon. Use `emacsclient` to connect to the
         daemon. If `true`, {var}`services.emacs.install` is
         considered `true`, whatever its value.
@@ -32,7 +40,7 @@ in
     install = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to install a user service for the Emacs daemon. Once
         the service is started, use emacsclient to connect to the
         daemon.
@@ -49,7 +57,7 @@ in
     defaultEditor = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         When enabled, configures emacsclient to be the default editor
         using the EDITOR environment variable.
       '';
@@ -59,7 +67,7 @@ in
       type = types.bool;
       default = config.services.xserver.enable;
       defaultText = literalExpression "config.services.xserver.enable";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Start emacs with the graphical session instead of any session. Without this, emacs clients will not be able to create frames in the graphical session.
       '';
     };
