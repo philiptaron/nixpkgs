@@ -2,15 +2,43 @@
 
 # TODO: This is not secure, have a look at the file docs/security.txt inside
 # the project sources.
-with lib;
-
 let
+  inherit (lib)
+    add
+    attrValues
+    concatLines
+    concatLists
+    concatMapStringsSep
+    concatStringsSep
+    elem
+    flip
+    foldl'
+    forEach
+    generators
+    hasInfix
+    hasPrefix
+    hasSuffix
+    isList
+    literalMD
+    mapAttrs
+    mapAttrsToList
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkOrder
+    optional
+    types
+    unique
+    ;
+
   cfg = config.power.ups;
   defaultPort = 3493;
 
   nutFormat = {
 
-    type = with lib.types; let
+    type = with types; let
 
       singleAtom = nullOr (oneOf [
         bool
@@ -29,9 +57,9 @@ let
     generate = name: value:
       let
         normalizedValue =
-          lib.mapAttrs (key: val:
-            if lib.isList val
-            then forEach val (elem: if lib.isList elem then elem else [elem])
+          mapAttrs (key: val:
+            if isList val
+            then forEach val (elem: if isList elem then elem else [elem])
             else
               if val == null
               then []
@@ -47,7 +75,7 @@ let
             else str
         );
 
-      in pkgs.writeText name (lib.generators.toKeyValue {
+      in pkgs.writeText name (generators.toKeyValue {
         mkKeyValue = generators.mkKeyValueDefault { inherit mkValueString; } " ";
         listsAsDuplicateKeys = true;
       } normalizedValue);
@@ -90,7 +118,7 @@ let
       # /nix/store/nut/share/driver.list
       driver = mkOption {
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Specify the program to run to talk to this UPS.  apcsmart,
           bestups, and sec are some examples.
         '';
@@ -98,7 +126,7 @@ let
 
       port = mkOption {
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The serial port to which your UPS is connected.  /dev/ttyS0 is
           usually the first port on Linux boxes, for example.
         '';
@@ -107,7 +135,7 @@ let
       shutdownOrder = mkOption {
         default = 0;
         type = types.int;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           When you have multiple UPSes on your system, you usually need to
           turn them off in a certain order.  upsdrvctl shuts down all the
           0s, then the 1s, 2s, and so on.  To exclude a UPS from the
@@ -118,7 +146,7 @@ let
       maxStartDelay = mkOption {
         default = null;
         type = types.uniq (types.nullOr types.int);
-        description = lib.mdDoc ''
+        description = mdDoc ''
           This can be set as a global variable above your first UPS
           definition and it can also be set in a UPS section.  This value
           controls how long upsdrvctl will wait for the driver to finish
@@ -130,7 +158,7 @@ let
       description = mkOption {
         default = "";
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Description of the UPS.
         '';
       };
@@ -138,7 +166,7 @@ let
       directives = mkOption {
         default = [];
         type = types.listOf types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of configuration directives for this UPS.
         '';
       };
@@ -146,7 +174,7 @@ let
       summary = mkOption {
         default = "";
         type = types.lines;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Lines which would be added inside ups.conf for handling this UPS.
         '';
       };
@@ -173,7 +201,7 @@ let
     options = {
       address = mkOption {
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Address of the interface for `upsd` to listen on.
           See `man upsd.conf` for details.
         '';
@@ -182,7 +210,7 @@ let
       port = mkOption {
         type = types.port;
         default = defaultPort;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           TCP port for `upsd` to listen on.
           See `man upsd.conf` for details.
         '';
@@ -210,7 +238,7 @@ let
             port = 5923;
           }
         ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Address of the interface for `upsd` to listen on.
           See `man upsd` for details`.
         '';
@@ -219,7 +247,7 @@ let
       extraConfig = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Additional lines to add to `upsd.conf`.
         '';
       };
@@ -236,7 +264,7 @@ let
       system = mkOption {
         type = types.str;
         default = name;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Identifier of the UPS to monitor, in this form: `<upsname>[@<hostname>[:<port>]]`
           See `upsmon.conf` for details.
         '';
@@ -245,7 +273,7 @@ let
       powerValue = mkOption {
         type = types.int;
         default = 1;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Number of power supplies that the UPS feeds on this system.
           See `upsmon.conf` for details.
         '';
@@ -253,7 +281,7 @@ let
 
       user = mkOption {
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Username from `upsd.users` for accessing this UPS.
           See `upsmon.conf` for details.
         '';
@@ -262,7 +290,7 @@ let
       passwordFile = mkOption {
         type = types.str;
         defaultText = literalMD "power.ups.users.\${user}.passwordFile";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The full path to a file containing the password from
           `upsd.users` for accessing this UPS. The password file
           is read on service start.
@@ -273,7 +301,7 @@ let
       type = mkOption {
         type = types.str;
         default = "master";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The relationship with `upsd`.
           See `upsmon.conf` for details.
         '';
@@ -296,7 +324,7 @@ let
       monitor = mkOption {
         type = with types; attrsOf (submodule monitorOptions);
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Set of UPS to monitor. See `man upsmon.conf` for details.
         '';
       };
@@ -341,7 +369,7 @@ let
     options = {
       passwordFile = mkOption {
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The full path to a file that contains the user's (clear text)
           password. The password file is read on service start.
         '';
@@ -350,7 +378,7 @@ let
       actions = mkOption {
         type = with types; listOf str;
         default = [];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Allow the user to do certain things with upsd.
           See `man upsd.users` for details.
         '';
@@ -359,7 +387,7 @@ let
       instcmds = mkOption {
         type = with types; listOf str;
         default = [];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Let the user initiate specific instant commands. Use "ALL" to grant all commands automatically. For the full list of what your UPS supports, use "upscmd -l".
           See `man upsd.users` for details.
         '';
@@ -368,7 +396,7 @@ let
       upsmon = mkOption {
         type = with types; nullOr str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Add the necessary actions for a upsmon process to work.
           See `man upsd.users` for details.
         '';
@@ -384,7 +412,7 @@ in
     # powerManagement.powerDownCommands
 
     power.ups = {
-      enable = mkEnableOption (lib.mdDoc ''
+      enable = mkEnableOption (mdDoc ''
         Enables support for Power Devices, such as Uninterruptible Power
         Supplies, Power Distribution Units and Solar Controllers.
       '');
@@ -392,7 +420,7 @@ in
       mode = mkOption {
         default = "standalone";
         type = types.enum [ "none" "standalone" "netserver" "netclient" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The MODE determines which part of the NUT is to be started, and
           which configuration files must be modified.
 
@@ -419,7 +447,7 @@ in
       schedulerRules = mkOption {
         example = "/etc/nixos/upssched.conf";
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           File which contains the rules to handle UPS events.
         '';
       };
@@ -427,7 +455,7 @@ in
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Open ports in the firewall for `upsd`.
         '';
       };
@@ -435,7 +463,7 @@ in
       maxStartDelay = mkOption {
         default = 45;
         type = types.int;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           This can be set as a global variable above your first UPS
           definition and it can also be set in a UPS section.  This value
           controls how long upsdrvctl will wait for the driver to finish
@@ -446,7 +474,7 @@ in
 
       upsmon = mkOption {
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Options for the `upsmon.conf` configuration file.
         '';
         type = types.submodule upsmonOptions;
@@ -454,7 +482,7 @@ in
 
       upsd = mkOption {
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Options for the `upsd.conf` configuration file.
         '';
         type = types.submodule upsdOptions;
@@ -463,7 +491,7 @@ in
       ups = mkOption {
         default = {};
         # see nut/etc/ups.conf.sample
-        description = lib.mdDoc ''
+        description = mdDoc ''
           This is where you configure all the UPSes that this system will be
           monitoring directly.  These are usually attached to serial ports,
           but USB devices are also supported.
@@ -473,7 +501,7 @@ in
 
       users = mkOption {
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Users that can access upsd. See `man upsd.users`.
         '';
         type = with types; attrsOf (submodule userOptions);
