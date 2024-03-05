@@ -1,13 +1,19 @@
 # neard service.
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+in
 
 {
   ###### interface
   options = {
     services.neard = {
-      enable = mkEnableOption (lib.mdDoc "neard, NFC daemon");
+      enable = mkEnableOption (mdDoc "neard, NFC daemon");
     };
   };
 
