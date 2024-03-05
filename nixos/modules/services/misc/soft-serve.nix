@@ -1,12 +1,25 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    getExe
+    literalExpression
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    ;
+
   cfg = config.services.soft-serve;
+
   configFile = format.generate "config.yaml" cfg.settings;
+
   format = pkgs.formats.yaml { };
+
   docUrl = "https://charm.sh/blog/self-hosted-soft-serve/";
+
   stateDir = "/var/lib/soft-serve";
 in
 {
