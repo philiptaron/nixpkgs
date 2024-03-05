@@ -1,26 +1,36 @@
 { lib, config, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    makeBinPath
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.onlyoffice;
 in
 {
   options.services.onlyoffice = {
-    enable = mkEnableOption (lib.mdDoc "OnlyOffice DocumentServer");
+    enable = mkEnableOption (mdDoc "OnlyOffice DocumentServer");
 
-    enableExampleServer = mkEnableOption (lib.mdDoc "OnlyOffice example server");
+    enableExampleServer = mkEnableOption (mdDoc "OnlyOffice example server");
 
     hostname = mkOption {
       type = types.str;
       default = "localhost";
-      description = lib.mdDoc "FQDN for the onlyoffice instance.";
+      description = mdDoc "FQDN for the onlyoffice instance.";
     };
 
     jwtSecretFile = mkOption {
       type = types.nullOr types.str;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path to a file that contains the secret to sign web requests using JSON Web Tokens.
         If left at the default value null signing is disabled.
       '';
@@ -31,31 +41,31 @@ in
     port = mkOption {
       type = types.port;
       default = 8000;
-      description = lib.mdDoc "Port the OnlyOffice DocumentServer should listens on.";
+      description = mdDoc "Port the OnlyOffice DocumentServer should listens on.";
     };
 
     examplePort = mkOption {
       type = types.port;
       default = null;
-      description = lib.mdDoc "Port the OnlyOffice Example server should listens on.";
+      description = mdDoc "Port the OnlyOffice Example server should listens on.";
     };
 
     postgresHost = mkOption {
       type = types.str;
       default = "/run/postgresql";
-      description = lib.mdDoc "The Postgresql hostname or socket path OnlyOffice should connect to.";
+      description = mdDoc "The Postgresql hostname or socket path OnlyOffice should connect to.";
     };
 
     postgresName = mkOption {
       type = types.str;
       default = "onlyoffice";
-      description = lib.mdDoc "The name of database OnlyOffice should user.";
+      description = mdDoc "The name of database OnlyOffice should user.";
     };
 
     postgresPasswordFile = mkOption {
       type = types.nullOr types.str;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path to a file that contains the password OnlyOffice should use to connect to Postgresql.
         Unused when using socket authentication.
       '';
@@ -64,7 +74,7 @@ in
     postgresUser = mkOption {
       type = types.str;
       default = "onlyoffice";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The username OnlyOffice should use to connect to Postgresql.
         Unused when using socket authentication.
       '';
@@ -73,11 +83,11 @@ in
     rabbitmqUrl = mkOption {
       type = types.str;
       default = "amqp://guest:guest@localhost:5672";
-      description = lib.mdDoc "The Rabbitmq in amqp URI style OnlyOffice should connect to.";
+      description = mdDoc "The Rabbitmq in amqp URI style OnlyOffice should connect to.";
     };
   };
 
-  config = lib.mkIf cfg.enable {
+  config = mkIf cfg.enable {
     services = {
       nginx = {
         enable = mkDefault true;
@@ -90,7 +100,7 @@ in
           onlyoffice-docservice = {
             servers = { "localhost:${toString cfg.port}" = { }; };
           };
-          onlyoffice-example = lib.mkIf cfg.enableExampleServer {
+          onlyoffice-example = mkIf cfg.enableExampleServer {
             servers = { "localhost:${toString cfg.examplePort}" = { }; };
           };
         };
@@ -162,7 +172,7 @@ in
               alias ${cfg.package}/var/www/onlyoffice/documentserver-example$1;
               index docker.html;
             '';
-            "/example/".extraConfig = lib.mkIf cfg.enableExampleServer ''
+            "/example/".extraConfig = mkIf cfg.enableExampleServer ''
               proxy_pass http://onlyoffice-example/;
               proxy_set_header X-Forwarded-Path /example;
             '';
@@ -186,10 +196,10 @@ in
         };
       };
 
-      rabbitmq.enable = lib.mkDefault true;
+      rabbitmq.enable = mkDefault true;
 
       postgresql = {
-        enable = lib.mkDefault true;
+        enable = mkDefault true;
         ensureDatabases = [ "onlyoffice" ];
         ensureUsers = [{
           name = "onlyoffice";
@@ -218,7 +228,7 @@ in
       onlyoffice-docservice =
         let
           onlyoffice-prestart = pkgs.writeShellScript "onlyoffice-prestart" ''
-            PATH=$PATH:${lib.makeBinPath (with pkgs; [ jq moreutils config.services.postgresql.package ])}
+            PATH=$PATH:${makeBinPath (with pkgs; [ jq moreutils config.services.postgresql.package ])}
             umask 077
             mkdir -p /run/onlyoffice/config/ /var/lib/onlyoffice/documentserver/sdkjs/{slide/themes,common}/ /var/lib/onlyoffice/documentserver/{fonts,server/FileConverter/bin}/
             cp -r ${cfg.package}/etc/onlyoffice/documentserver/* /run/onlyoffice/config/
@@ -235,11 +245,11 @@ in
               .services.CoAuthoring.server.port = ${toString cfg.port} |
               .services.CoAuthoring.sql.dbHost = "${cfg.postgresHost}" |
               .services.CoAuthoring.sql.dbName = "${cfg.postgresName}" |
-            ${lib.optionalString (cfg.postgresPasswordFile != null) ''
+            ${optionalString (cfg.postgresPasswordFile != null) ''
               .services.CoAuthoring.sql.dbPass = "'"$(cat ${cfg.postgresPasswordFile})"'" |
             ''}
               .services.CoAuthoring.sql.dbUser = "${cfg.postgresUser}" |
-            ${lib.optionalString (cfg.jwtSecretFile != null) ''
+            ${optionalString (cfg.jwtSecretFile != null) ''
               .services.CoAuthoring.token.enable.browser = true |
               .services.CoAuthoring.token.enable.request.inbox = true |
               .services.CoAuthoring.token.enable.request.outbox = true |
