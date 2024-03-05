@@ -1,19 +1,28 @@
 { config, lib, options, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.subsonic;
+
   opt = options.services.subsonic;
-in {
+in
+{
   options = {
     services.subsonic = {
-      enable = mkEnableOption (lib.mdDoc "Subsonic daemon");
+      enable = mkEnableOption (mdDoc "Subsonic daemon");
 
       home = mkOption {
         type = types.path;
         default = "/var/lib/subsonic";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The directory where Subsonic will create files.
           Make sure it is writable.
         '';
@@ -22,7 +31,7 @@ in {
       listenAddress = mkOption {
         type = types.str;
         default = "0.0.0.0";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The host name or IP address on which to bind Subsonic.
           Only relevant if you have multiple network interfaces and want
           to make Subsonic available on only one of them. The default value
@@ -33,7 +42,7 @@ in {
       port = mkOption {
         type = types.port;
         default = 4040;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The port on which Subsonic will listen for
           incoming HTTP traffic. Set to 0 to disable.
         '';
@@ -42,7 +51,7 @@ in {
       httpsPort = mkOption {
         type = types.port;
         default = 0;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The port on which Subsonic will listen for
           incoming HTTPS traffic. Set to 0 to disable.
         '';
@@ -51,7 +60,7 @@ in {
       contextPath = mkOption {
         type = types.path;
         default = "/";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The context path, i.e., the last part of the Subsonic
           URL. Typically '/' or '/subsonic'. Default '/'
         '';
@@ -60,7 +69,7 @@ in {
       maxMemory = mkOption {
         type = types.int;
         default = 100;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The memory limit (max Java heap size) in megabytes.
           Default: 100
         '';
@@ -69,7 +78,7 @@ in {
       defaultMusicFolder = mkOption {
         type = types.path;
         default = "/var/music";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configure Subsonic to use this folder for music.  This option
           only has effect the first time Subsonic is started.
         '';
@@ -78,7 +87,7 @@ in {
       defaultPodcastFolder = mkOption {
         type = types.path;
         default = "/var/music/Podcast";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configure Subsonic to use this folder for Podcasts.  This option
           only has effect the first time Subsonic is started.
         '';
@@ -87,7 +96,7 @@ in {
       defaultPlaylistFolder = mkOption {
         type = types.path;
         default = "/var/playlists";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configure Subsonic to use this folder for playlists.  This option
           only has effect the first time Subsonic is started.
         '';
@@ -97,7 +106,7 @@ in {
         type = types.listOf types.path;
         default = [ "${pkgs.ffmpeg.bin}/bin/ffmpeg" ];
         defaultText = literalExpression ''[ "''${pkgs.ffmpeg.bin}/bin/ffmpeg" ]'';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of paths to transcoder executables that should be accessible
           from Subsonic. Symlinks will be created to each executable inside
           ''${config.${opt.home}}/transcoders.
