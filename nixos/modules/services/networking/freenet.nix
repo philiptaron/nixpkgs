@@ -2,9 +2,13 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.services.freenet;
   varDir = "/var/lib/freenet";
@@ -22,13 +26,13 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Enable the Freenet daemon";
+        description = mdDoc "Enable the Freenet daemon";
       };
 
       nice = mkOption {
         type = types.int;
         default = 10;
-        description = lib.mdDoc "Set the nice level for the Freenet daemon";
+        description = mdDoc "Set the nice level for the Freenet daemon";
       };
 
     };
