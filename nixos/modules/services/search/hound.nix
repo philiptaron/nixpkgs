@@ -1,10 +1,22 @@
 { config, lib, pkgs, ... }:
-with lib;
 let
+  inherit (lib)
+    getExe
+    literalExpression
+    maintainers
+    max
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOptionMD
+    mkRemovedOptionModule
+    types
+    ;
+
   cfg = config.services.hound;
 in {
   imports = [
-    (lib.mkRemovedOptionModule [ "services" "hound" "extraGroups" ] "Use users.users.hound.extraGroups instead")
+    (mkRemovedOptionModule [ "services" "hound" "extraGroups" ] "Use users.users.hound.extraGroups instead")
   ];
 
   meta.maintainers = with maintainers; [ SuperSandro2000 ];
@@ -14,7 +26,7 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the hound code search daemon.
         '';
       };
@@ -24,7 +36,7 @@ in {
       user = mkOption {
         default = "hound";
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           User the hound daemon should execute under.
         '';
       };
@@ -32,7 +44,7 @@ in {
       group = mkOption {
         default = "hound";
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Group the hound daemon should execute under.
         '';
       };
@@ -40,7 +52,7 @@ in {
       home = mkOption {
         default = "/var/lib/hound";
         type = types.path;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The path to use as hound's $HOME.
           If the default user "hound" is configured then this is the home of the "hound" user.
         '';
@@ -48,7 +60,7 @@ in {
 
       config = mkOption {
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The full configuration of the Hound daemon. Note the dbpath
           should be an absolute path to a writable location on disk.
         '';
@@ -68,7 +80,7 @@ in {
         type = types.str;
         default = "0.0.0.0:6080";
         example = ":6080";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Listen on this [IP]:port
         '';
       };
@@ -76,11 +88,11 @@ in {
   };
 
   config = mkIf cfg.enable {
-    users.groups = lib.mkIf (cfg.group == "hound") {
+    users.groups = mkIf (cfg.group == "hound") {
       hound = { };
     };
 
-    users.users = lib.mkIf (cfg.user == "hound") {
+    users.users = mkIf (cfg.user == "hound") {
       hound = {
         description = "Hound code search";
         createHome = true;
@@ -95,7 +107,7 @@ in {
         text = cfg.config;
         checkPhase = ''
           # check if the supplied text is valid json
-          ${lib.getExe pkgs.jq} . $target > /dev/null
+          ${getExe pkgs.jq} . $target > /dev/null
         '';
       };
     in {
