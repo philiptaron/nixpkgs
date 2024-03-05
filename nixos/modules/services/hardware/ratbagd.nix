@@ -1,8 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkPackageOption
+    ;
+
   cfg = config.services.ratbagd;
 in
 {
@@ -10,7 +15,7 @@ in
 
   options = {
     services.ratbagd = {
-      enable = mkEnableOption (lib.mdDoc "ratbagd for configuring gaming mice");
+      enable = mkEnableOption (mdDoc "ratbagd for configuring gaming mice");
 
       package = mkPackageOption pkgs "libratbag" { };
     };
