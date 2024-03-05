@@ -1,13 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
-  cfg = config.services.clipcat;
-in {
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkPackageOption
+    ;
 
-  options.services.clipcat= {
-    enable = mkEnableOption (lib.mdDoc "Clipcat clipboard daemon");
+  cfg = config.services.clipcat;
+in
+{
+  options.services.clipcat = {
+    enable = mkEnableOption (mdDoc "Clipcat clipboard daemon");
 
     package = mkPackageOption pkgs "clipcat" { };
   };
