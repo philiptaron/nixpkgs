@@ -1,11 +1,29 @@
 { config, lib, pkgs, ... }:
-with lib;
 let
+  inherit (lib)
+    concatLists
+    concatStringsSep
+    escapeShellArg
+    escapeShellArgs
+    isBool
+    isList
+    maintainers
+    mapAttrsToList
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    optional
+    optionalString
+    types
+    ;
+
   cfg = config.services.freeciv;
   inherit (config.users) groups;
   rootDir = "/run/freeciv";
   argsFormat = {
-    type = with lib.types; let
+    type = with types; let
       valueType = nullOr (oneOf [
         bool int float str
         (listOf valueType)
@@ -25,9 +43,9 @@ in
 {
   options = {
     services.freeciv = {
-      enable = mkEnableOption (lib.mdDoc ''freeciv'');
+      enable = mkEnableOption (mdDoc ''freeciv'');
       settings = mkOption {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Parameters of freeciv-server.
         '';
         default = {};
@@ -36,9 +54,9 @@ in
           options.Announce = mkOption {
             type = types.enum ["IPv4" "IPv6" "none"];
             default = "none";
-            description = lib.mdDoc "Announce game in LAN using given protocol.";
+            description = mdDoc "Announce game in LAN using given protocol.";
           };
-          options.auth = mkEnableOption (lib.mdDoc "server authentication");
+          options.auth = mkEnableOption (mdDoc "server authentication");
           options.Database = mkOption {
             type = types.nullOr types.str;
             apply = pkgs.writeText "auth.conf";
@@ -47,25 +65,25 @@ in
                 backend="sqlite"
                 database="/var/lib/freeciv/auth.sqlite"
             '';
-            description = lib.mdDoc "Enable database connection with given configuration.";
+            description = mdDoc "Enable database connection with given configuration.";
           };
           options.debug = mkOption {
             type = types.ints.between 0 3;
             default = 0;
-            description = lib.mdDoc "Set debug log level.";
+            description = mdDoc "Set debug log level.";
           };
-          options.exit-on-end = mkEnableOption (lib.mdDoc "exit instead of restarting when a game ends");
-          options.Guests = mkEnableOption (lib.mdDoc "guests to login if auth is enabled");
-          options.Newusers = mkEnableOption (lib.mdDoc "new users to login if auth is enabled");
+          options.exit-on-end = mkEnableOption (mdDoc "exit instead of restarting when a game ends");
+          options.Guests = mkEnableOption (mdDoc "guests to login if auth is enabled");
+          options.Newusers = mkEnableOption (mdDoc "new users to login if auth is enabled");
           options.port = mkOption {
             type = types.port;
             default = 5556;
-            description = lib.mdDoc "Listen for clients on given port";
+            description = mdDoc "Listen for clients on given port";
           };
           options.quitidle = mkOption {
             type = types.nullOr types.int;
             default = null;
-            description = lib.mdDoc "Quit if no players for given time in seconds.";
+            description = mdDoc "Quit if no players for given time in seconds.";
           };
           options.read = mkOption {
             type = types.lines;
@@ -73,12 +91,12 @@ in
             default = ''
               /fcdb lua sqlite_createdb()
             '';
-            description = lib.mdDoc "Startup script.";
+            description = mdDoc "Startup script.";
           };
           options.saves = mkOption {
             type = types.nullOr types.str;
             default = "/var/lib/freeciv/saves/";
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Save games to given directory,
               a sub-directory named after the starting date of the service
               will me inserted to preserve older saves.
@@ -86,7 +104,7 @@ in
           };
         };
       };
-      openFirewall = mkEnableOption (lib.mdDoc "opening the firewall for the port listening for clients");
+      openFirewall = mkEnableOption (mdDoc "opening the firewall for the port listening for clients");
     };
   };
   config = mkIf cfg.enable {
@@ -183,5 +201,5 @@ in
     networking.firewall = mkIf cfg.openFirewall
       { allowedTCPPorts = [ cfg.settings.port ]; };
   };
-  meta.maintainers = with lib.maintainers; [ julm ];
+  meta.maintainers = with maintainers; [ julm ];
 }
