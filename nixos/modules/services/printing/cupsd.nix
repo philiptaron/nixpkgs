@@ -1,8 +1,30 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStrings
+    concatMapStringsSep
+    filter
+    getAttrFromPath
+    head
+    length
+    literalExpression
+    maintainers
+    mdDoc
+    mkChangedOptionModule
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRemovedOptionModule
+    optional
+    optionals
+    optionalString
+    removePrefix
+    replaceStrings
+    splitString
+    toInt
+    types
+    ;
 
   inherit (pkgs) cups-pk-helper cups-filters xdg-utils;
 
@@ -110,10 +132,10 @@ let
   getGutenprint = pkgs: head (filterGutenprint pkgs);
 
   parsePorts = addresses: let
-    splitAddress = addr: strings.splitString ":" addr;
+    splitAddress = addr: splitString ":" addr;
     extractPort = addr: builtins.foldl' (a: b: b) "" (splitAddress addr);
   in
-    builtins.map (address: strings.toInt (extractPort address)) addresses;
+    builtins.map (address: toInt (extractPort address)) addresses;
 
 in
 
@@ -136,17 +158,17 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable printing support through the CUPS daemon.
         '';
       };
 
-      package = lib.mkPackageOption pkgs "cups" {};
+      package = mkPackageOption pkgs "cups" {};
 
       stateless = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If set, all state directories relating to CUPS will be removed on
           startup of the service.
         '';
@@ -155,7 +177,7 @@ in
       startWhenNeeded = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If set, CUPS is socket-activated; that is,
           instead of having it permanently running as a daemon,
           systemd will start it on the first incoming connection.
@@ -166,7 +188,7 @@ in
         type = types.listOf types.str;
         default = [ "localhost:631" ];
         example = [ "*:631" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A list of addresses and ports on which to listen.
         '';
       };
@@ -176,7 +198,7 @@ in
         default = [ "localhost" ];
         example = [ "all" ];
         apply = concatMapStringsSep "\n" (x: "Allow ${x}");
-        description = lib.mdDoc ''
+        description = mdDoc ''
           From which hosts to allow unconditional access.
         '';
       };
@@ -194,7 +216,7 @@ in
         type = types.lines;
         internal = true;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Additional commands executed while creating the directory
           containing the CUPS server binaries.
         '';
@@ -203,7 +225,7 @@ in
       defaultShared = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Specifies whether local printers are shared by default.
         '';
       };
@@ -211,7 +233,7 @@ in
       browsing = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Specifies whether shared printers are advertised.
         '';
       };
@@ -219,7 +241,7 @@ in
       webInterface = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Specifies whether the web interface is enabled.
         '';
       };
@@ -228,7 +250,7 @@ in
         type = types.str;
         default = "info";
         example = "debug";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Specifies the cupsd logging verbosity.
         '';
       };
@@ -236,7 +258,7 @@ in
       extraFilesConf = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra contents of the configuration file of the CUPS daemon
           ({file}`cups-files.conf`).
         '';
@@ -250,7 +272,7 @@ in
             BrowsePoll cups.example.com
             MaxCopies 42
           '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra contents of the configuration file of the CUPS daemon
           ({file}`cupsd.conf`).
         '';
@@ -264,7 +286,7 @@ in
             ServerName server.example.com
             Encryption Never
           '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The contents of the client configuration.
           ({file}`client.conf`)
         '';
@@ -277,7 +299,7 @@ in
           ''
             BrowsePoll cups.example.com
           '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The contents of the configuration. file of the CUPS Browsed daemon
           ({file}`cups-browsed.conf`)
         '';
@@ -288,7 +310,7 @@ in
         default = ''
           Address @LOCAL
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The contents of {file}`/etc/cups/snmp.conf`. See "man
           cups-snmp.conf" for a complete description.
         '';
@@ -298,7 +320,7 @@ in
         type = types.listOf types.path;
         default = [];
         example = literalExpression "with pkgs; [ gutenprint hplip splix ]";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           CUPS drivers to use. Drivers provided by CUPS, cups-filters,
           Ghostscript and Samba are added unconditionally. If this list contains
           Gutenprint (i.e. a derivation with
@@ -312,7 +334,7 @@ in
         type = types.path;
         default = "/tmp";
         example = "/tmp/cups";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           CUPSd temporary directory.
         '';
       };
@@ -373,7 +395,7 @@ in
 
         path = [ cups.out ];
 
-        preStart = lib.optionalString cfg.stateless ''
+        preStart = optionalString cfg.stateless ''
           rm -rf /var/cache/cups /var/lib/cups /var/spool/cups
         '' + ''
             mkdir -m 0700 -p /var/cache/cups
@@ -490,6 +512,6 @@ in
 
   };
 
-  meta.maintainers = with lib.maintainers; [ matthewbauer ];
+  meta.maintainers = with maintainers; [ matthewbauer ];
 
 }
