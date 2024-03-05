@@ -1,8 +1,26 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    any
+    attrNames
+    attrValues
+    concatLists
+    concatMap
+    concatStringsSep
+    elem
+    filter
+    filterAttrs
+    flatten
+    mapAttrs
+    mapAttrsToList
+    mdDoc
+    mkIf
+    mkOption
+    optional
+    optionalString
+    types
+    ;
 
   dhcpcd = if !config.boot.isContainer then pkgs.dhcpcd else pkgs.dhcpcd.override { udev = null; };
 
@@ -119,7 +137,7 @@ in
     networking.dhcpcd.enable = mkOption {
       type = types.bool;
       default = true;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to enable dhcpcd for device configuration. This is mainly to
         explicitly disable dhcpcd (for example when using networkd).
       '';
@@ -128,7 +146,7 @@ in
     networking.dhcpcd.persistent = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
           Whenever to leave interfaces configured on dhcpcd daemon
           shutdown. Set to true if you have your root or store mounted
           over the network or this machine accepts SSH connections
@@ -140,7 +158,7 @@ in
     networking.dhcpcd.denyInterfaces = mkOption {
       type = types.listOf types.str;
       default = [];
-      description = lib.mdDoc ''
+      description = mdDoc ''
          Disable the DHCP client for any interface whose name matches
          any of the shell glob patterns in this list. The purpose of
          this option is to blacklist virtual interfaces such as those
@@ -151,7 +169,7 @@ in
     networking.dhcpcd.allowInterfaces = mkOption {
       type = types.nullOr (types.listOf types.str);
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
          Enable the DHCP client for any interface whose name matches
          any of the shell glob patterns in this list. Any interface not
          explicitly matched by this pattern will be denied. This pattern only
@@ -162,7 +180,7 @@ in
     networking.dhcpcd.extraConfig = mkOption {
       type = types.lines;
       default = "";
-      description = lib.mdDoc ''
+      description = mdDoc ''
          Literal string to append to the config file generated for dhcpcd.
       '';
     };
@@ -170,7 +188,7 @@ in
     networking.dhcpcd.IPv6rs = mkOption {
       type = types.nullOr types.bool;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Force enable or disable solicitation and receipt of IPv6 Router Advertisements.
         This is required, for example, when using a static unique local IPv6 address (ULA)
         and global IPv6 address auto-configuration with SLAAC.
@@ -181,7 +199,7 @@ in
       type = types.lines;
       default = "";
       example = "if [[ $reason =~ BOUND ]]; then echo $interface: Routers are $new_routers - were $old_routers; fi";
-      description = lib.mdDoc ''
+      description = mdDoc ''
          Shell code that will be run after all other hooks. See
          `man dhcpcd-run-hooks` for details on what is possible.
       '';
@@ -190,7 +208,7 @@ in
     networking.dhcpcd.wait = mkOption {
       type = types.enum [ "background" "any" "ipv4" "ipv6" "both" "if-carrier-up" ];
       default = "any";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         This option specifies when the dhcpcd service will fork to background.
         If set to "background", dhcpcd will fork to background immediately.
         If set to "ipv4" or "ipv6", dhcpcd will wait for the corresponding IP
