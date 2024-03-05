@@ -1,8 +1,13 @@
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.dmarc;
 
   json = builtins.toJSON {
@@ -24,28 +29,28 @@ in {
       host = mkOption {
         type = types.str;
         default = "localhost";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Hostname of IMAP server to connect to.
         '';
       };
       port = mkOption {
         type = types.port;
         default = 993;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Port of the IMAP server to connect to.
         '';
       };
       username = mkOption {
         type = types.str;
         example = "postmaster@example.org";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Login username for the IMAP connection.
         '';
       };
       passwordFile = mkOption {
         type = types.str;
         example = "/run/secrets/dovecot_pw";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           File containing the login password for the IMAP connection.
         '';
       };
@@ -54,21 +59,21 @@ in {
       inbox = mkOption {
         type = types.str;
         default = "INBOX";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           IMAP mailbox that is checked for incoming DMARC aggregate reports
         '';
       };
       done = mkOption {
         type = types.str;
         default = "Archive";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           IMAP mailbox that successfully processed reports are moved to.
         '';
       };
       error = mkOption {
         type = types.str;
         default = "Invalid";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           IMAP mailbox that emails are moved to that could not be processed.
         '';
       };
@@ -76,7 +81,7 @@ in {
     pollIntervalSeconds = mkOption {
       type = types.ints.unsigned;
       default = 60;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         How often to poll the IMAP server in seconds.
       '';
     };
@@ -84,7 +89,7 @@ in {
       type = types.ints.unsigned;
       default = 604800;
       defaultText = "7 days (in seconds)";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         How long individual report IDs will be remembered to avoid
         counting double delivered reports twice.
       '';
@@ -92,7 +97,7 @@ in {
     debug = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to declare enable `--debug`.
       '';
     };
