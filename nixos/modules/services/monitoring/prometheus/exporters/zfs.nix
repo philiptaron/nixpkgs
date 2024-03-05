@@ -1,8 +1,15 @@
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
+  inherit (lib)
+    collect
+    concatMapStringsSep
+    concatStringsSep
+    mdDoc
+    mkOption
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.zfs;
 in
 {
@@ -12,7 +19,7 @@ in
     telemetryPath = mkOption {
       type = types.str;
       default = "/metrics";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path under which to expose metrics.
       '';
     };
@@ -20,7 +27,7 @@ in
     pools = mkOption {
       type = with types; nullOr (listOf str);
       default = [ ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Name of the pool(s) to collect, repeat for multiple pools (default: all pools).
       '';
     };
