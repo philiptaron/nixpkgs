@@ -1,6 +1,17 @@
 { lib, config, pkgs, ... }:
-with lib;
+
 let
+  inherit (lib)
+    filterAttrs
+    getExe
+    mapAttrs
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.wgautomesh;
   settingsFormat = pkgs.formats.toml { };
   configFile =
