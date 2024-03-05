@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.ngircd;
 
   configFile = pkgs.stdenv.mkDerivation {
@@ -20,10 +27,10 @@ let
 in {
   options = {
     services.ngircd = {
-      enable = mkEnableOption (lib.mdDoc "the ngircd IRC server");
+      enable = mkEnableOption (mdDoc "the ngircd IRC server");
 
       config = mkOption {
-        description = lib.mdDoc "The ngircd configuration (see ngircd.conf(5)).";
+        description = mdDoc "The ngircd configuration (see ngircd.conf(5)).";
 
         type = types.lines;
       };
