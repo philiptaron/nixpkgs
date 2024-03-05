@@ -1,8 +1,27 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStringsSep
+    escapeShellArg
+    getBin
+    literalExpression
+    mdDoc
+    mkAfter
+    mkBefore
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    optional
+    optionals
+    optionalString
+    recursiveUpdate
+    teams
+    types
+    ;
+
   cfg = config.services.jitsi-meet;
 
   # The configuration files are JS of format "var <<string>> = <<JSON>>;". In order to
@@ -47,12 +66,12 @@ let
 in
 {
   options.services.jitsi-meet = with types; {
-    enable = mkEnableOption (lib.mdDoc "Jitsi Meet - Secure, Simple and Scalable Video Conferences");
+    enable = mkEnableOption (mdDoc "Jitsi Meet - Secure, Simple and Scalable Video Conferences");
 
     hostName = mkOption {
       type = str;
       example = "meet.example.org";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         FQDN of the Jitsi Meet instance.
       '';
     };
@@ -66,7 +85,7 @@ in
           defaultLang = "fi";
         }
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Client-side web application settings that override the defaults in {file}`config.js`.
 
         See <https://github.com/jitsi/jitsi-meet/blob/master/config.js> for default
@@ -77,7 +96,7 @@ in
     extraConfig = mkOption {
       type = lines;
       default = "";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Text to append to {file}`config.js` web application config file.
 
         Can be used to insert JavaScript logic to determine user's region in cascading bridges setup.
@@ -93,7 +112,7 @@ in
           SHOW_WATERMARK_FOR_GUESTS = false;
         }
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Client-side web-app interface settings that override the defaults in {file}`interface_config.js`.
 
         See <https://github.com/jitsi/jitsi-meet/blob/master/interface_config.js> for
@@ -105,7 +124,7 @@ in
       enable = mkOption {
         type = bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Jitsi Videobridge instance and configure it to connect to Prosody.
 
           Additional configuration is possible with {option}`services.jitsi-videobridge`
@@ -116,7 +135,7 @@ in
         type = nullOr str;
         default = null;
         example = "/run/keys/videobridge";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           File containing password to the Prosody account for videobridge.
 
           If `null`, a file with password will be generated automatically. Setting
@@ -128,7 +147,7 @@ in
     jicofo.enable = mkOption {
       type = bool;
       default = true;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to enable JiCoFo instance and configure it to connect to Prosody.
 
         Additional configuration is possible with {option}`services.jicofo`.
@@ -138,7 +157,7 @@ in
     jibri.enable = mkOption {
       type = bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to enable a Jibri instance and configure it to connect to Prosody.
 
         Additional configuration is possible with {option}`services.jibri`, and
@@ -159,7 +178,7 @@ in
     nginx.enable = mkOption {
       type = bool;
       default = true;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to enable nginx virtual host that will serve the javascript application and act as
         a proxy for the XMPP server. Further nginx configuration can be done by adapting
         {option}`services.nginx.virtualHosts.<hostName>`.
@@ -170,25 +189,25 @@ in
       '';
     };
 
-    caddy.enable = mkEnableOption (lib.mdDoc "Whether to enable caddy reverse proxy to expose jitsi-meet");
+    caddy.enable = mkEnableOption (mdDoc "Whether to enable caddy reverse proxy to expose jitsi-meet");
 
     prosody.enable = mkOption {
       type = bool;
       default = true;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to configure Prosody to relay XMPP messages between Jitsi Meet components. Turn this
         off if you want to configure it manually.
       '';
     };
 
-    excalidraw.enable = mkEnableOption (lib.mdDoc "Excalidraw collaboration backend for Jitsi");
+    excalidraw.enable = mkEnableOption (mdDoc "Excalidraw collaboration backend for Jitsi");
     excalidraw.port = mkOption {
       type = types.port;
       default = 3002;
-      description = lib.mdDoc ''The port which the Excalidraw backend for Jitsi should listen to.'';
+      description = mdDoc ''The port which the Excalidraw backend for Jitsi should listen to.'';
     };
 
-    secureDomain.enable = mkEnableOption (lib.mdDoc "Authenticated room creation");
+    secureDomain.enable = mkEnableOption (mdDoc "Authenticated room creation");
   };
 
   config = mkIf cfg.enable {
@@ -269,7 +288,7 @@ in
         "room_metadata"
       ];
       extraPluginPaths = [ "${pkgs.jitsi-meet-prosody}/share/prosody-plugins" ];
-      extraConfig = lib.mkMerge [
+      extraConfig = mkMerge [
         (mkAfter ''
           Component "focus.${cfg.hostName}" "client_proxy"
             target_address = "focus@auth.${cfg.hostName}"
@@ -562,13 +581,13 @@ in
         jicofo.xmpp.service.disable-certificate-verification = true;
         jicofo.xmpp.client.disable-certificate-verification = true;
       }
-        (lib.mkIf (config.services.jibri.enable || cfg.jibri.enable) {
+        (mkIf (config.services.jibri.enable || cfg.jibri.enable) {
           jicofo.jibri = {
             brewery-jid = "JibriBrewery@internal.auth.${cfg.hostName}";
             pending-timeout = "90";
           };
         })
-        (lib.mkIf cfg.secureDomain.enable {
+        (mkIf cfg.secureDomain.enable {
           jicofo = {
             authentication = {
               enabled = "true";
@@ -627,5 +646,5 @@ in
   };
 
   meta.doc = ./jitsi-meet.md;
-  meta.maintainers = lib.teams.jitsi.members;
+  meta.maintainers = teams.jitsi.members;
 }
