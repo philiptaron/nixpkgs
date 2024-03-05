@@ -1,6 +1,17 @@
 { config, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    concatStringsSep
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    optionalString
+    types
+    versionOlder
+    ;
+in
 
 {
 
@@ -11,7 +22,7 @@ with lib;
         default = !config.boot.isContainer;
         defaultText = literalExpression "!config.boot.isContainer";
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enables the systemd NTP client daemon.
         '';
       };
@@ -19,7 +30,7 @@ with lib;
         default = config.networking.timeServers;
         defaultText = literalExpression "config.networking.timeServers";
         type = types.listOf types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The set of NTP servers from which to synchronise.
         '';
       };
@@ -29,7 +40,7 @@ with lib;
         example = ''
           PollIntervalMaxSec=180
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra config options for systemd-timesyncd. See
           [
           timesyncd.conf(5)](https://www.freedesktop.org/software/systemd/man/timesyncd.conf.html) for available options.
@@ -68,7 +79,7 @@ with lib;
         # workaround an issue of systemd-timesyncd not starting due to upstream systemd reverting their dynamic users changes
         #  - https://github.com/NixOS/nixpkgs/pull/61321#issuecomment-492423742
         #  - https://github.com/systemd/systemd/issues/12131
-        (lib.optionalString (versionOlder config.system.stateVersion "19.09") ''
+        (optionalString (versionOlder config.system.stateVersion "19.09") ''
           if [ -L /var/lib/systemd/timesync ]; then
             rm /var/lib/systemd/timesync
             mv /var/lib/private/systemd/timesync /var/lib/systemd/timesync
