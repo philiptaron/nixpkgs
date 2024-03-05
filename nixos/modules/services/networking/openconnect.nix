@@ -1,6 +1,21 @@
 { config, lib, options, pkgs, ... }:
-with lib;
+
 let
+  inherit (lib)
+    concatStringsSep
+    filterAttrs
+    maintainers
+    mapAttrs'
+    mapAttrsToList
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    optional
+    optionalString
+    types
+    ;
+
   cfg = config.networking.openconnect;
   openconnect = cfg.package;
   pkcs11 = types.strMatching "pkcs11:.+" // {
@@ -11,25 +26,25 @@ let
     options = {
       autoStart = mkOption {
         default = true;
-        description = lib.mdDoc "Whether this VPN connection should be started automatically.";
+        description = mdDoc "Whether this VPN connection should be started automatically.";
         type = types.bool;
       };
 
       gateway = mkOption {
-        description = lib.mdDoc "Gateway server to connect to.";
+        description = mdDoc "Gateway server to connect to.";
         example = "gateway.example.com";
         type = types.str;
       };
 
       protocol = mkOption {
-        description = lib.mdDoc "Protocol to use.";
+        description = mdDoc "Protocol to use.";
         example = "anyconnect";
         type =
           types.enum [ "anyconnect" "array" "nc" "pulse" "gp" "f5" "fortinet" ];
       };
 
       user = mkOption {
-        description = lib.mdDoc "Username to authenticate with.";
+        description = mdDoc "Username to authenticate with.";
         example = "example-user";
         type = types.nullOr types.str;
         default = null;
@@ -39,7 +54,7 @@ let
       # set an authentication cookie, because they have to be requested
       # for every new connection and would only work once.
       passwordFile = mkOption {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           File containing the password to authenticate with. This
           is passed to `openconnect` via the
           `--passwd-on-stdin` option.
@@ -50,21 +65,21 @@ let
       };
 
       certificate = mkOption {
-        description = lib.mdDoc "Certificate to authenticate with.";
+        description = mdDoc "Certificate to authenticate with.";
         default = null;
         example = "/var/lib/secrets/openconnect_certificate.pem";
         type = with types; nullOr (either path pkcs11);
       };
 
       privateKey = mkOption {
-        description = lib.mdDoc "Private key to authenticate with.";
+        description = mdDoc "Private key to authenticate with.";
         example = "/var/lib/secrets/openconnect_private_key.pem";
         default = null;
         type = with types; nullOr (either path pkcs11);
       };
 
       extraOptions = mkOption {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra config to be appended to the interface config. It should
           contain long-format options as would be accepted on the command
           line by `openconnect`
@@ -84,9 +99,9 @@ let
     };
   };
   generateExtraConfig = extra_cfg:
-    strings.concatStringsSep "\n" (attrsets.mapAttrsToList
+    concatStringsSep "\n" (mapAttrsToList
       (name: value: if (value == true) then name else "${name}=${value}")
-      (attrsets.filterAttrs (_: value: value != false) extra_cfg));
+      (filterAttrs (_: value: value != false) extra_cfg));
   generateConfig = name: icfg:
     pkgs.writeText "config" ''
       interface=${name}
@@ -110,7 +125,7 @@ let
       ExecStart = "${openconnect}/bin/openconnect --config=${
           generateConfig name icfg
         } ${icfg.gateway}";
-      StandardInput = lib.mkIf (icfg.passwordFile != null) "file:${icfg.passwordFile}";
+      StandardInput = mkIf (icfg.passwordFile != null) "file:${icfg.passwordFile}";
 
       ProtectHome = true;
     };
@@ -120,7 +135,7 @@ in {
     package = mkPackageOption pkgs "openconnect" { };
 
     interfaces = mkOption {
-      description = lib.mdDoc "OpenConnect interfaces.";
+      description = mdDoc "OpenConnect interfaces.";
       default = { };
       example = {
         openconnect0 = {
