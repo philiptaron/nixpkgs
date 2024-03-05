@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.libreddit;
 
   args = concatStringsSep " " ([
@@ -13,7 +21,7 @@ in
 {
   options = {
     services.libreddit = {
-      enable = mkEnableOption (lib.mdDoc "Private front-end for Reddit");
+      enable = mkEnableOption (mdDoc "Private front-end for Reddit");
 
       package = mkPackageOption pkgs "libreddit" { };
 
@@ -21,20 +29,20 @@ in
         default = "0.0.0.0";
         example = "127.0.0.1";
         type =  types.str;
-        description = lib.mdDoc "The address to listen on";
+        description = mdDoc "The address to listen on";
       };
 
       port = mkOption {
         default = 8080;
         example = 8000;
         type = types.port;
-        description = lib.mdDoc "The port to listen on";
+        description = mdDoc "The port to listen on";
       };
 
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Open ports in the firewall for the libreddit web interface";
+        description = mdDoc "Open ports in the firewall for the libreddit web interface";
       };
 
     };
@@ -48,7 +56,7 @@ in
         serviceConfig = {
           DynamicUser = true;
           ExecStart = "${cfg.package}/bin/libreddit ${args}";
-          AmbientCapabilities = lib.mkIf (cfg.port < 1024) [ "CAP_NET_BIND_SERVICE" ];
+          AmbientCapabilities = mkIf (cfg.port < 1024) [ "CAP_NET_BIND_SERVICE" ];
           Restart = "on-failure";
           RestartSec = "2s";
           # Hardening
