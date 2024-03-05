@@ -1,8 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    getExe
+    literalExpression
+    maintainers
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.mchprs;
   settingsFormat = pkgs.formats.toml { };
 
@@ -251,7 +262,7 @@ in
       after = [ "network.target" ];
 
       serviceConfig = {
-        ExecStart = "${lib.getExe cfg.package}";
+        ExecStart = "${getExe cfg.package}";
         Restart = "always";
         RuntimeMaxSec = cfg.maxRuntime;
         User = "mchprs";
