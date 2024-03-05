@@ -1,10 +1,16 @@
 { pkgs, lib, config, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.services.ihaskell;
+
   ihaskell = pkgs.ihaskell.override {
     packages = cfg.extraPackages;
   };
@@ -17,7 +23,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Autostart an IHaskell notebook service.";
+        description = mdDoc "Autostart an IHaskell notebook service.";
       };
 
       extraPackages = mkOption {
@@ -30,7 +36,7 @@ in
             haskellPackages.lens
           ]
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra packages available to ghc when running ihaskell. The
           value must be a function which receives the attrset defined
           in {var}`haskellPackages` as the sole argument.
