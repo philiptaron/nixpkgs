@@ -1,17 +1,26 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    generators
+    literalExpression
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.replay-sorcery;
   configFile = generators.toKeyValue {} cfg.settings;
 in
 {
   options = with types; {
     services.replay-sorcery = {
-      enable = mkEnableOption (lib.mdDoc "the ReplaySorcery service for instant-replays");
+      enable = mkEnableOption (mdDoc "the ReplaySorcery service for instant-replays");
 
-      enableSysAdminCapability = mkEnableOption (lib.mdDoc ''
+      enableSysAdminCapability = mkEnableOption (mdDoc ''
         the system admin capability to support hardware accelerated
         video capture. This is equivalent to running ReplaySorcery as
         root, so use with caution'');
@@ -19,13 +28,13 @@ in
       autoStart = mkOption {
         type = bool;
         default = false;
-        description = lib.mdDoc "Automatically start ReplaySorcery when graphical-session.target starts.";
+        description = mdDoc "Automatically start ReplaySorcery when graphical-session.target starts.";
       };
 
       settings = mkOption {
         type = attrsOf (oneOf [ str int ]);
         default = {};
-        description = lib.mdDoc "System-wide configuration for ReplaySorcery (/etc/replay-sorcery.conf).";
+        description = mdDoc "System-wide configuration for ReplaySorcery (/etc/replay-sorcery.conf).";
         example = literalExpression ''
           {
             videoInput = "hwaccel"; # requires `services.replay-sorcery.enableSysAdminCapability = true`
