@@ -17,7 +17,12 @@
 , wrapGAppsHook
 }:
 
-with lib;
+let
+  inherit (lib)
+    licenses
+    maintainers
+    ;
+in
 
 python3Packages.buildPythonApplication rec {
   pname = "tryton";
