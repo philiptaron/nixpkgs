@@ -2,9 +2,16 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.yubikey-agent;
 in
 {
@@ -18,7 +25,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to start yubikey-agent when you log in.  Also sets
           SSH_AUTH_SOCK to point at yubikey-agent.
 
