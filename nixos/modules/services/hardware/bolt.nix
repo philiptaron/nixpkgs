@@ -1,8 +1,14 @@
 { config, lib, pkgs, ...}:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.hardware.bolt;
 in
 {
@@ -11,7 +17,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable Bolt, a userspace daemon to enable
           security levels for Thunderbolt 3 on GNU/Linux.
 
