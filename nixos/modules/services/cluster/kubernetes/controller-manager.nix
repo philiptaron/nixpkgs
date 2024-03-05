@@ -1,8 +1,22 @@
 { config, lib, options, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    boolToString
+    concatMapStringsSep
+    elem
+    literalExpression
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    optionalString
+    types
+    ;
+
   top = config.services.kubernetes;
   otop = options.services.kubernetes;
   cfg = top.controllerManager;
@@ -14,37 +28,37 @@ in
   ];
 
   ###### interface
-  options.services.kubernetes.controllerManager = with lib.types; {
+  options.services.kubernetes.controllerManager = with types; {
 
     allocateNodeCIDRs = mkOption {
-      description = lib.mdDoc "Whether to automatically allocate CIDR ranges for cluster nodes.";
+      description = mdDoc "Whether to automatically allocate CIDR ranges for cluster nodes.";
       default = true;
       type = bool;
     };
 
     bindAddress = mkOption {
-      description = lib.mdDoc "Kubernetes controller manager listening address.";
+      description = mdDoc "Kubernetes controller manager listening address.";
       default = "127.0.0.1";
       type = str;
     };
 
     clusterCidr = mkOption {
-      description = lib.mdDoc "Kubernetes CIDR Range for Pods in cluster.";
+      description = mdDoc "Kubernetes CIDR Range for Pods in cluster.";
       default = top.clusterCidr;
       defaultText = literalExpression "config.${otop.clusterCidr}";
       type = str;
     };
 
-    enable = mkEnableOption (lib.mdDoc "Kubernetes controller manager");
+    enable = mkEnableOption (mdDoc "Kubernetes controller manager");
 
     extraOpts = mkOption {
-      description = lib.mdDoc "Kubernetes controller manager extra command line options.";
+      description = mdDoc "Kubernetes controller manager extra command line options.";
       default = "";
       type = separatedString " ";
     };
 
     featureGates = mkOption {
-      description = lib.mdDoc "List set of feature gates";
+      description = mdDoc "List set of feature gates";
       default = top.featureGates;
       defaultText = literalExpression "config.${otop.featureGates}";
       type = listOf str;
@@ -53,13 +67,13 @@ in
     kubeconfig = top.lib.mkKubeConfigOptions "Kubernetes controller manager";
 
     leaderElect = mkOption {
-      description = lib.mdDoc "Whether to start leader election before executing main loop.";
+      description = mdDoc "Whether to start leader election before executing main loop.";
       type = bool;
       default = true;
     };
 
     rootCaFile = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Kubernetes controller manager certificate authority file included in
         service account's token secret.
       '';
@@ -69,13 +83,13 @@ in
     };
 
     securePort = mkOption {
-      description = lib.mdDoc "Kubernetes controller manager secure listening port.";
+      description = mdDoc "Kubernetes controller manager secure listening port.";
       default = 10252;
       type = int;
     };
 
     serviceAccountKeyFile = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Kubernetes controller manager PEM-encoded private RSA key file used to
         sign service account tokens
       '';
@@ -84,19 +98,19 @@ in
     };
 
     tlsCertFile = mkOption {
-      description = lib.mdDoc "Kubernetes controller-manager certificate file.";
+      description = mdDoc "Kubernetes controller-manager certificate file.";
       default = null;
       type = nullOr path;
     };
 
     tlsKeyFile = mkOption {
-      description = lib.mdDoc "Kubernetes controller-manager private key file.";
+      description = mdDoc "Kubernetes controller-manager private key file.";
       default = null;
       type = nullOr path;
     };
 
     verbosity = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Optional glog verbosity level for logging statements. See
         <https://github.com/kubernetes/community/blob/master/contributors/devel/logging.md>
       '';
