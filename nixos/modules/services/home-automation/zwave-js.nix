@@ -1,8 +1,19 @@
 {config, pkgs, lib, ...}:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    escapeShellArgs
+    head
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.zwave-js;
   mergedConfigFile = "/run/zwave-js/config.json";
   settingsFormat = pkgs.formats.json {};
@@ -63,7 +74,7 @@ in {
     };
 
     settings = mkOption {
-      type = lib.types.submodule {
+      type = types.submodule {
         freeformType = settingsFormat.type;
 
         options = {
@@ -72,7 +83,7 @@ in {
               type = types.path;
               default = "/var/cache/zwave-js";
               readOnly = true;
-              description = lib.mdDoc "Cache directory";
+              description = mdDoc "Cache directory";
             };
           };
         };
@@ -84,11 +95,11 @@ in {
       '';
     };
 
-    extraFlags = lib.mkOption {
-      type = with lib.types; listOf str;
+    extraFlags = mkOption {
+      type = with types; listOf str;
       default = [ ];
       example = [ "--mock-driver" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra flags to pass to command
       '';
     };
@@ -105,7 +116,7 @@ in {
         ExecStartPre = ''
           /bin/sh -c "${pkgs.jq}/bin/jq -s '.[0] * .[1]' ${configFile} ${cfg.secretsConfigFile} > ${mergedConfigFile}"
         '';
-        ExecStart = lib.concatStringsSep " " [
+        ExecStart = concatStringsSep " " [
           "${cfg.package}/bin/zwave-server"
           "--config ${mergedConfigFile}"
           "--port ${toString cfg.port}"
@@ -148,5 +159,5 @@ in {
     };
   };
 
-  meta.maintainers = with lib.maintainers; [ graham33 ];
+  meta.maintainers = with maintainers; [ graham33 ];
 }
