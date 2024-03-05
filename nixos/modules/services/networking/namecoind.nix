@@ -1,9 +1,18 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStrings
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
+
   cfg     = config.services.namecoind;
   dataDir = "/var/lib/namecoind";
   useSSL  = (cfg.rpc.certificate != null) && (cfg.rpc.key != null);
@@ -44,12 +53,12 @@ in
 
     services.namecoind = {
 
-      enable = mkEnableOption (lib.mdDoc "namecoind, Namecoin client");
+      enable = mkEnableOption (mdDoc "namecoind, Namecoin client");
 
       wallet = mkOption {
         type = types.path;
         default = "${dataDir}/wallet.dat";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Wallet file. The ownership of the file has to be
           namecoin:namecoin, and the permissions must be 0640.
         '';
@@ -58,7 +67,7 @@ in
       generate = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to generate (mine) Namecoins.
         '';
       };
@@ -66,7 +75,7 @@ in
       extraNodes = mkOption {
         type = types.listOf types.str;
         default = [ ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of additional peer IP addresses to connect to.
         '';
       };
@@ -74,7 +83,7 @@ in
       trustedNodes = mkOption {
         type = types.listOf types.str;
         default = [ ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of the only peer IP addresses to connect to. If specified
           no other connection will be made.
         '';
@@ -83,7 +92,7 @@ in
       rpc.user = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           User name for RPC connections.
         '';
       };
@@ -91,7 +100,7 @@ in
       rpc.password = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Password for RPC connections.
         '';
       };
@@ -99,7 +108,7 @@ in
       rpc.address = mkOption {
         type = types.str;
         default = "0.0.0.0";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           IP address the RPC server will bind to.
         '';
       };
@@ -107,7 +116,7 @@ in
       rpc.port = mkOption {
         type = types.port;
         default = 8332;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Port the RPC server will bind to.
         '';
       };
@@ -116,7 +125,7 @@ in
         type = types.nullOr types.path;
         default = null;
         example = "/var/lib/namecoind/server.cert";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Certificate file for securing RPC connections.
         '';
       };
@@ -125,7 +134,7 @@ in
         type = types.nullOr types.path;
         default = null;
         example = "/var/lib/namecoind/server.pem";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Key file for securing RPC connections.
         '';
       };
@@ -134,7 +143,7 @@ in
       rpc.allowFrom = mkOption {
         type = types.listOf types.str;
         default = [ "127.0.0.1" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of IP address ranges allowed to use the RPC API.
           Wiledcards (*) can be user to specify a range.
         '';
@@ -194,6 +203,6 @@ in
 
   };
 
-  meta.maintainers = with lib.maintainers; [ rnhmjoj ];
+  meta.maintainers = with maintainers; [ rnhmjoj ];
 
 }
