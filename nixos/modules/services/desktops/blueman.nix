@@ -1,15 +1,20 @@
 # blueman service
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.services.blueman;
-in {
+in
+{
   ###### interface
   options = {
     services.blueman = {
-      enable = mkEnableOption (lib.mdDoc "blueman");
+      enable = mkEnableOption (mdDoc "blueman");
     };
   };
 
