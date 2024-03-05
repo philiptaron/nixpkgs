@@ -1,18 +1,24 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    mkRenamedOptionModule
+    types
+    ;
+
   cfg = config.services.localtimed;
 in {
-  imports = [ (lib.mkRenamedOptionModule [ "services" "localtime" ] [ "services" "localtimed" ]) ];
+  imports = [ (mkRenamedOptionModule [ "services" "localtime" ] [ "services" "localtimed" ]) ];
 
   options = {
     services.localtimed = {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable `localtimed`, a simple daemon for keeping the
           system timezone up-to-date based on the current location. It uses
           geoclue2 to determine the current location.
