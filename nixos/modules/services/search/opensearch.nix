@@ -1,8 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    converge
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalAttrs
+    optionalString
+    removeSuffix
+    types
+    ;
+
   cfg = config.services.opensearch;
 
   settingsFormat = pkgs.formats.yaml {};
@@ -23,60 +34,60 @@ in
 {
 
   options.services.opensearch = {
-    enable = mkEnableOption (lib.mdDoc "OpenSearch");
+    enable = mkEnableOption (mdDoc "OpenSearch");
 
-    package = lib.mkPackageOption pkgs "OpenSearch" {
+    package = mkPackageOption pkgs "OpenSearch" {
       default = [ "opensearch" ];
     };
 
-    settings = lib.mkOption {
-      type = lib.types.submodule {
+    settings = mkOption {
+      type = types.submodule {
         freeformType = settingsFormat.type;
 
-        options."network.host" = lib.mkOption {
-          type = lib.types.str;
+        options."network.host" = mkOption {
+          type = types.str;
           default = "127.0.0.1";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Which port this service should listen on.
           '';
         };
 
-        options."cluster.name" = lib.mkOption {
-          type = lib.types.str;
+        options."cluster.name" = mkOption {
+          type = types.str;
           default = "opensearch";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The name of the cluster.
           '';
         };
 
-        options."discovery.type" = lib.mkOption {
-          type = lib.types.str;
+        options."discovery.type" = mkOption {
+          type = types.str;
           default = "single-node";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The type of discovery to use.
           '';
         };
 
-        options."http.port" = lib.mkOption {
-          type = lib.types.port;
+        options."http.port" = mkOption {
+          type = types.port;
           default = 9200;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The port to listen on for HTTP traffic.
           '';
         };
 
-        options."transport.port" = lib.mkOption {
-          type = lib.types.port;
+        options."transport.port" = mkOption {
+          type = types.port;
           default = 9300;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The port to listen on for transport traffic.
           '';
         };
 
-        options."plugins.security.disabled" = lib.mkOption {
-          type = lib.types.bool;
+        options."plugins.security.disabled" = mkOption {
+          type = types.bool;
           default = true;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Whether to enable the security plugin,
             `plugins.security.ssl.transport.keystore_filepath` or
             `plugins.security.ssl.transport.server.pemcert_filepath` and
@@ -88,13 +99,13 @@ in
 
       default = {};
 
-      description = lib.mdDoc ''
+      description = mdDoc ''
         OpenSearch configuration.
       '';
     };
 
-    logging = lib.mkOption {
-      description = lib.mdDoc "opensearch logging configuration.";
+    logging = mkOption {
+      description = mdDoc "opensearch logging configuration.";
 
       default = ''
         logger.action.name = org.opensearch.action
@@ -111,11 +122,11 @@ in
       type = types.str;
     };
 
-    dataDir = lib.mkOption {
-      type = lib.types.path;
+    dataDir = mkOption {
+      type = types.path;
       default = "/var/lib/opensearch";
       apply = converge (removeSuffix "/");
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Data directory for OpenSearch. If you change this, you need to
         manually create the directory. You also need to create the
         `opensearch` user and group, or change
@@ -125,40 +136,40 @@ in
       '';
     };
 
-    user = lib.mkOption {
-      type = lib.types.str;
+    user = mkOption {
+      type = types.str;
       default = "opensearch";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The user OpenSearch runs as. Should be left at default unless
         you have very specific needs.
       '';
     };
 
-    group = lib.mkOption {
-      type = lib.types.str;
+    group = mkOption {
+      type = types.str;
       default = "opensearch";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The group OpenSearch runs as. Should be left at default unless
         you have very specific needs.
       '';
     };
 
-    extraCmdLineOptions = lib.mkOption {
-      description = lib.mdDoc "Extra command line options for the OpenSearch launcher.";
+    extraCmdLineOptions = mkOption {
+      description = mdDoc "Extra command line options for the OpenSearch launcher.";
       default = [ ];
-      type = lib.types.listOf lib.types.str;
+      type = types.listOf types.str;
     };
 
-    extraJavaOptions = lib.mkOption {
-      description = lib.mdDoc "Extra command line options for Java.";
+    extraJavaOptions = mkOption {
+      description = mdDoc "Extra command line options for Java.";
       default = [ ];
-      type = lib.types.listOf lib.types.str;
+      type = types.listOf types.str;
       example = [ "-Djava.net.preferIPv4Stack=true" ];
     };
 
-    restartIfChanged = lib.mkOption {
-      type = lib.types.bool;
-      description = lib.mdDoc ''
+    restartIfChanged = mkOption {
+      type = types.bool;
+      description = mdDoc ''
         Automatically restart the service on config change.
         This can be set to false to defer restarts on a server or cluster.
         Please consider the security implications of inadvertently running an older version,
