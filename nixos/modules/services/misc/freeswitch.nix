@@ -1,8 +1,23 @@
 { config, lib, pkgs, ...}:
-with lib;
+
 let
+  inherit (lib)
+    concatStringsSep
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    mod
+    types
+    ;
+
   cfg = config.services.freeswitch;
+
   pkg = cfg.package;
+
   configDirectory = pkgs.runCommand "freeswitch-config-d" { } ''
     mkdir -p $out
     cp -rT ${cfg.configTemplate} $out
@@ -12,17 +27,19 @@ let
       cp ${filePath} $out/${fileName}
     '') cfg.configDir)}
   '';
+
   configPath = if cfg.enableReload
     then "/etc/freeswitch"
     else configDirectory;
-in {
+in
+{
   options = {
     services.freeswitch = {
-      enable = mkEnableOption (lib.mdDoc "FreeSWITCH");
+      enable = mkEnableOption (mdDoc "FreeSWITCH");
       enableReload = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Issue the `reloadxml` command to FreeSWITCH when configuration directory changes (instead of restart).
           See [FreeSWITCH documentation](https://freeswitch.org/confluence/display/FREESWITCH/Reloading) for more info.
           The configuration directory is exposed at {file}`/etc/freeswitch`.
@@ -34,7 +51,7 @@ in {
         default = "${config.services.freeswitch.package}/share/freeswitch/conf/vanilla";
         defaultText = literalExpression ''"''${config.services.freeswitch.package}/share/freeswitch/conf/vanilla"'';
         example = literalExpression ''"''${config.services.freeswitch.package}/share/freeswitch/conf/minimal"'';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration template to use.
           See available templates in [FreeSWITCH repository](https://github.com/signalwire/freeswitch/tree/master/conf).
           You can also set your own configuration directory.
@@ -51,7 +68,7 @@ in {
             ''';
           }
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Override file in FreeSWITCH config template directory.
           Each top-level attribute denotes a file path in the configuration directory, its value is the file path.
           See [FreeSWITCH documentation](https://freeswitch.org/confluence/display/FREESWITCH/Default+Configuration) for more info.
