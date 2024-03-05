@@ -1,6 +1,19 @@
 { config, lib, pkgs, ... }:
-with lib;
+
 let
+  inherit (lib)
+    literalExpression
+    maintainers
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionals
+    types
+    ;
+
   cfg = config.services.tmate-ssh-server;
 
   defaultKeysDir = "/etc/tmate-ssh-server-keys";
@@ -23,7 +36,7 @@ in
     host = mkOption {
       type = types.str;
       description = mdDoc "External host name";
-      defaultText = lib.literalExpression "config.networking.domain or config.networking.hostName";
+      defaultText = literalExpression "config.networking.domain or config.networking.hostName";
       default =
         if domain == null then
           config.networking.hostName
