@@ -1,7 +1,12 @@
 { config, lib, pkgs, options }:
 
-with lib;
 let
+  inherit (lib)
+    mdDoc
+    mkOption
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.idrac;
 
   configFile = if cfg.configurationPath != null
@@ -15,7 +20,7 @@ in
       type = with types; nullOr path;
       default = null;
       example = "/etc/prometheus-idrac-exporter/idrac.yml";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path to the service's config file. This path can either be a computed path in /nix/store or a path in the local filesystem.
 
         The config file should NOT be stored in /nix/store as it will contain passwords and/or keys in plain text.
@@ -27,7 +32,7 @@ in
     };
     configuration = mkOption {
       type = types.nullOr types.attrs;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Configuration for iDRAC exporter, as a nix attribute set.
 
         Configuration reference: https://github.com/mrlhansen/idrac_exporter/#configuration
