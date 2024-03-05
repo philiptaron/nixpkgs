@@ -1,8 +1,12 @@
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkOption
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.bitcoin;
 in
 {
@@ -11,14 +15,14 @@ in
     rpcUser = mkOption {
       type = types.str;
       default = "bitcoinrpc";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         RPC user name.
       '';
     };
 
     rpcPasswordFile = mkOption {
       type = types.path;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         File containing RPC password.
       '';
     };
@@ -26,7 +30,7 @@ in
     rpcScheme = mkOption {
       type = types.enum [ "http" "https" ];
       default = "http";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to connect to bitcoind over http or https.
       '';
     };
@@ -34,7 +38,7 @@ in
     rpcHost = mkOption {
       type = types.str;
       default = "localhost";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         RPC host.
       '';
     };
@@ -42,7 +46,7 @@ in
     rpcPort = mkOption {
       type = types.port;
       default = 8332;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         RPC port number.
       '';
     };
@@ -50,7 +54,7 @@ in
     refreshSeconds = mkOption {
       type = types.ints.unsigned;
       default = 300;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         How often to ask bitcoind for metrics.
       '';
     };
@@ -58,7 +62,7 @@ in
     extraEnv = mkOption {
       type = types.attrsOf types.str;
       default = {};
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra environment variables for the exporter.
       '';
     };
