@@ -1,14 +1,31 @@
 { pkgs, lib, config, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    literalMD
+    maintainers
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.mobilizon;
 
   user = "mobilizon";
   group = "mobilizon";
 
   settingsFormat = pkgs.formats.elixirConf { elixir = cfg.package.elixirPackage; };
+
+  inherit (settingsFormat.lib)
+    mkAtom
+    mkGetEnv
+    mkTuple
+    ;
 
   configFile = settingsFormat.generate "mobilizon-config.exs" cfg.settings;
 
@@ -60,12 +77,12 @@ in
   options = {
     services.mobilizon = {
       enable = mkEnableOption
-        (lib.mdDoc "Mobilizon federated organization and mobilization platform");
+        (mdDoc "Mobilizon federated organization and mobilization platform");
 
-      nginx.enable = lib.mkOption {
-        type = lib.types.bool;
+      nginx.enable = mkOption {
+        type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether an Nginx virtual host should be
           set up to serve Mobilizon.
         '';
@@ -87,10 +104,10 @@ in
                 "Mobilizon.Web.Endpoint" = {
                   url.host = mkOption {
                     type = elixirTypes.str;
-                    defaultText = lib.literalMD ''
+                    defaultText = literalMD ''
                       ''${settings.":mobilizon".":instance".hostname}
                     '';
-                    description = lib.mdDoc ''
+                    description = mdDoc ''
                       Your instance's hostname for generating URLs throughout the app
                     '';
                   };
@@ -99,14 +116,14 @@ in
                     port = mkOption {
                       type = elixirTypes.port;
                       default = 4000;
-                      description = lib.mdDoc ''
+                      description = mdDoc ''
                         The port to run the server
                       '';
                     };
                     ip = mkOption {
                       type = elixirTypes.tuple;
-                      default = settingsFormat.lib.mkTuple [ 0 0 0 0 0 0 0 1 ];
-                      description = lib.mdDoc ''
+                      default = mkTuple [ 0 0 0 0 0 0 0 1 ];
+                      description = mdDoc ''
                         The IP address to listen on. Defaults to [::1] notated as a byte tuple.
                       '';
                     };
@@ -115,7 +132,7 @@ in
                   has_reverse_proxy = mkOption {
                     type = elixirTypes.bool;
                     default = true;
-                    description = lib.mdDoc ''
+                    description = mdDoc ''
                       Whether you use a reverse proxy
                     '';
                   };
@@ -124,14 +141,14 @@ in
                 ":instance" = {
                   name = mkOption {
                     type = elixirTypes.str;
-                    description = lib.mdDoc ''
+                    description = mdDoc ''
                       The fallback instance name if not configured into the admin UI
                     '';
                   };
 
                   hostname = mkOption {
                     type = elixirTypes.str;
-                    description = lib.mdDoc ''
+                    description = mdDoc ''
                       Your instance's hostname
                     '';
                   };
@@ -141,7 +158,7 @@ in
                     defaultText = literalExpression ''
                       noreply@''${settings.":mobilizon".":instance".hostname}
                     '';
-                    description = lib.mdDoc ''
+                    description = mdDoc ''
                       The email for the From: header in emails
                     '';
                   };
@@ -151,7 +168,7 @@ in
                     defaultText = literalExpression ''
                       ''${email_from}
                     '';
-                    description = lib.mdDoc ''
+                    description = mdDoc ''
                       The email for the Reply-To: header in emails
                     '';
                   };
@@ -161,7 +178,7 @@ in
                   socket_dir = mkOption {
                     type = types.nullOr elixirTypes.str;
                     default = postgresqlSocketDir;
-                    description = lib.mdDoc ''
+                    description = mdDoc ''
                       Path to the postgres socket directory.
 
                       Set this to null if you want to connect to a remote database.
@@ -178,7 +195,7 @@ in
                   username = mkOption {
                     type = types.nullOr elixirTypes.str;
                     default = user;
-                    description = lib.mdDoc ''
+                    description = mdDoc ''
                       User used to connect to the database
                     '';
                   };
@@ -186,7 +203,7 @@ in
                   database = mkOption {
                     type = types.nullOr elixirTypes.str;
                     default = "mobilizon_prod";
-                    description = lib.mdDoc ''
+                    description = mdDoc ''
                       Name of the database
                     '';
                   };
@@ -196,7 +213,7 @@ in
           };
         default = { };
 
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Mobilizon Elixir documentation, see
           <https://docs.joinmobilizon.org/administration/configure/reference/>
           for supported values.
@@ -209,7 +226,7 @@ in
 
     assertions = [
       {
-        assertion = cfg.nginx.enable -> (cfg.settings.":mobilizon"."Mobilizon.Web.Endpoint".http.ip == settingsFormat.lib.mkTuple [ 0 0 0 0 0 0 0 1 ]);
+        assertion = cfg.nginx.enable -> (cfg.settings.":mobilizon"."Mobilizon.Web.Endpoint".http.ip == mkTuple [ 0 0 0 0 0 0 0 1 ]);
         message = "Setting the IP mobilizon listens on is only possible when the nginx config is not used, as it is hardcoded there.";
       }
     ];
@@ -219,12 +236,10 @@ in
         "Mobilizon.Web.Endpoint" = {
           server = true;
           url.host = mkDefault instanceSettings.hostname;
-          secret_key_base =
-            settingsFormat.lib.mkGetEnv { envVariable = "MOBILIZON_INSTANCE_SECRET"; };
+          secret_key_base = mkGetEnv { envVariable = "MOBILIZON_INSTANCE_SECRET"; };
         };
 
-        "Mobilizon.Web.Auth.Guardian".secret_key =
-          settingsFormat.lib.mkGetEnv { envVariable = "MOBILIZON_AUTH_SECRET"; };
+        "Mobilizon.Web.Auth.Guardian".secret_key = mkGetEnv { envVariable = "MOBILIZON_AUTH_SECRET"; };
 
         ":instance" = {
           registrations_open = mkDefault false;
@@ -235,7 +250,7 @@ in
 
         "Mobilizon.Storage.Repo" = {
           # Forced by upstream since it uses PostgreSQL-specific extensions
-          adapter = settingsFormat.lib.mkAtom "Ecto.Adapters.Postgres";
+          adapter = mkAtom "Ecto.Adapters.Postgres";
           pool_size = mkDefault 10;
         };
       };
@@ -394,11 +409,11 @@ in
         proxyPass = "http://[::1]:"
           + toString cfg.settings.":mobilizon"."Mobilizon.Web.Endpoint".http.port;
       in
-      lib.mkIf cfg.nginx.enable {
+      mkIf cfg.nginx.enable {
         enable = true;
         virtualHosts."${hostname}" = {
-          enableACME = lib.mkDefault true;
-          forceSSL = lib.mkDefault true;
+          enableACME = mkDefault true;
+          forceSSL = mkDefault true;
           extraConfig = ''
             proxy_http_version 1.1;
             proxy_set_header Upgrade $http_upgrade;
@@ -445,5 +460,5 @@ in
     environment.systemPackages = [ launchers ];
   };
 
-  meta.maintainers = with lib.maintainers; [ minijackson erictapen ];
+  meta.maintainers = with maintainers; [ minijackson erictapen ];
 }
