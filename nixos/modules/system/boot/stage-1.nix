@@ -5,9 +5,38 @@
 
 { config, options, lib, utils, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    all
+    any
+    attrValues
+    concatMap
+    concatMapStringsSep
+    concatStringsSep
+    elem
+    escapeShellArgs
+    filter
+    filterAttrs
+    forEach
+    getBin
+    getOutput
+    hasPrefix
+    hasSuffix
+    isPath
+    isString
+    literalExpression
+    literalMD
+    mapAttrsToList
+    mdDoc
+    mkIf
+    mkMerge
+    mkOption
+    mkRenamedOptionModule
+    optionals
+    optionalString
+    types
+    versionAtLeast
+    ;
 
   udev = config.systemd.package;
 
@@ -32,7 +61,7 @@ let
   fileSystems = filter utils.fsNeededForBoot config.system.build.fileSystems;
 
   # Determine whether zfs-mount(8) is needed.
-  zfsRequiresMountHelper = any (fs: lib.elem "zfsutil" fs.options) fileSystems;
+  zfsRequiresMountHelper = any (fs: elem "zfsutil" fs.options) fileSystems;
 
   # A utility for enumerating the shared-library dependencies of a program
   findLibs = pkgs.buildPackages.writeShellScriptBin "find-libs" ''
@@ -122,7 +151,7 @@ let
         # code, using default options and effectively ignore security relevant
         # ZFS properties such as `setuid=off` and `exec=off` (unless manually
         # duplicated in `fileSystems.*.options`, defeating "zfsutil"'s purpose).
-        copy_bin_and_libs ${lib.getOutput "mount" pkgs.util-linux}/bin/mount
+        copy_bin_and_libs ${getOutput "mount" pkgs.util-linux}/bin/mount
         copy_bin_and_libs ${config.boot.zfs.package}/bin/mount.zfs
       ''}
 
@@ -367,7 +396,7 @@ let
         { object = pkgs.kmod-debian-aliases;
           symlink = "/etc/modprobe.d/debian.conf";
         }
-      ] ++ lib.optionals config.services.multipath.enable [
+      ] ++ optionals config.services.multipath.enable [
         { object = pkgs.runCommand "multipath.conf" {
               src = config.environment.etc."multipath.conf".text;
               preferLocalBuild = true;
@@ -379,7 +408,7 @@ let
             '';
           symlink = "/etc/multipath.conf";
         }
-      ] ++ (lib.mapAttrsToList
+      ] ++ (mapAttrsToList
         (symlink: options:
           {
             inherit symlink;
@@ -411,7 +440,7 @@ let
           exit 0
         fi
 
-        ${lib.optionalString (config.boot.initrd.secrets == {})
+        ${optionalString (config.boot.initrd.secrets == {})
             "exit 0"}
 
         export PATH=${pkgs.coreutils}/bin:${pkgs.libarchive}/bin:${pkgs.gzip}/bin:${pkgs.findutils}/bin
@@ -425,7 +454,7 @@ let
 
         tmp=$(mktemp -d ''${TMPDIR:-/tmp}/initrd-secrets.XXXXXXXXXX)
 
-        ${lib.concatStringsSep "\n" (mapAttrsToList (dest: source:
+        ${concatStringsSep "\n" (mapAttrsToList (dest: source:
             let source' = if source == null then dest else toString source; in
               ''
                 mkdir -p $(dirname "$tmp/.initrd-secrets/${dest}")
@@ -436,7 +465,7 @@ let
 
         # mindepth 1 so that we don't change the mode of /
         (cd "$tmp" && find . -mindepth 1 | xargs touch -amt 197001010000 && find . -mindepth 1 -print0 | sort -z | bsdtar --uid 0 --gid 0 -cnf - -T - | bsdtar --null -cf - --format=newc @-) | \
-          ${compressorExe} ${lib.escapeShellArgs initialRamdisk.compressorArgs} >> "$1"
+          ${compressorExe} ${escapeShellArgs initialRamdisk.compressorArgs} >> "$1"
       '';
 
 in
@@ -448,7 +477,7 @@ in
       type = types.str;
       default = "";
       example = "/dev/sda3";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Device for manual resume attempt during boot. This should be used primarily
         if you want to resume from file. If left empty, the swap partitions are used.
         Specify here the device where the file resides.
@@ -461,7 +490,7 @@ in
       type = types.bool;
       default = !config.boot.isContainer;
       defaultText = literalExpression "!config.boot.isContainer";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to enable the NixOS initial RAM disk (initrd). This may be
         needed to perform some initialisation tasks (like mounting
         network/encrypted file systems) before continuing the boot process.
@@ -475,11 +504,11 @@ in
           options = {
             source = mkOption {
               type = types.package;
-              description = lib.mdDoc "The object to make available inside the initrd.";
+              description = mdDoc "The object to make available inside the initrd.";
             };
           };
         });
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra files to link and copy in to the initrd.
       '';
     };
@@ -487,7 +516,7 @@ in
     boot.initrd.prepend = mkOption {
       default = [ ];
       type = types.listOf types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Other initrd files to prepend to the final initrd we are building.
       '';
     };
@@ -495,7 +524,7 @@ in
     boot.initrd.checkJournalingFS = mkOption {
       default = true;
       type = types.bool;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to run {command}`fsck` on journaling filesystems such as ext3.
       '';
     };
@@ -503,7 +532,7 @@ in
     boot.initrd.preLVMCommands = mkOption {
       default = "";
       type = types.lines;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Shell commands to be executed immediately before LVM discovery.
       '';
     };
@@ -511,7 +540,7 @@ in
     boot.initrd.preDeviceCommands = mkOption {
       default = "";
       type = types.lines;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Shell commands to be executed before udev is started to create
         device nodes.
       '';
@@ -520,7 +549,7 @@ in
     boot.initrd.postDeviceCommands = mkOption {
       default = "";
       type = types.lines;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Shell commands to be executed immediately after stage 1 of the
         boot has loaded kernel modules and created device nodes in
         {file}`/dev`.
@@ -530,7 +559,7 @@ in
     boot.initrd.postResumeCommands = mkOption {
       default = "";
       type = types.lines;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Shell commands to be executed immediately after attempting to resume.
       '';
     };
@@ -538,7 +567,7 @@ in
     boot.initrd.postMountCommands = mkOption {
       default = "";
       type = types.lines;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Shell commands to be executed immediately after the stage 1
         filesystems have been mounted.
       '';
@@ -547,7 +576,7 @@ in
     boot.initrd.preFailCommands = mkOption {
       default = "";
       type = types.lines;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Shell commands to be executed before the failure prompt is shown.
       '';
     };
@@ -556,7 +585,7 @@ in
       internal = true;
       default = "";
       type = types.lines;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Shell commands to be executed in the builder of the
         extra-utils derivation.  This can be used to provide
         additional utilities in the initial ramdisk.
@@ -567,7 +596,7 @@ in
       internal = true;
       default = "";
       type = types.lines;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Shell commands to be executed in the builder of the
         extra-utils derivation after patchelf has done its
         job.  This can be used to test additional utilities
@@ -579,7 +608,7 @@ in
       internal = true;
       default = "";
       type = types.lines;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Shell commands to be executed in the builder of the
         udev-rules derivation.  This can be used to add
         additional udev rules in the initial ramdisk.
@@ -588,13 +617,13 @@ in
 
     boot.initrd.compressor = mkOption {
       default = (
-        if lib.versionAtLeast config.boot.kernelPackages.kernel.version "5.9"
+        if versionAtLeast config.boot.kernelPackages.kernel.version "5.9"
         then "zstd"
         else "gzip"
       );
       defaultText = literalMD "`zstd` if the kernel supports it (5.9+), `gzip` if not";
       type = types.either types.str (types.functionTo types.str);
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The compressor to use on the initrd image. May be any of:
 
         - The name of one of the predefined compressors, see {file}`pkgs/build-support/kernel/initrd-compressor-meta.nix` for the definitions.
@@ -609,14 +638,14 @@ in
     boot.initrd.compressorArgs = mkOption {
       default = null;
       type = types.nullOr (types.listOf types.str);
-      description = lib.mdDoc "Arguments to pass to the compressor for the initrd image, or null to use the compressor's defaults.";
+      description = mdDoc "Arguments to pass to the compressor for the initrd image, or null to use the compressor's defaults.";
     };
 
     boot.initrd.secrets = mkOption
       { default = {};
         type = types.attrsOf (types.nullOr types.path);
         description =
-          lib.mdDoc ''
+          mdDoc ''
             Secrets to append to the initrd. The attribute name is the
             path the secret should have inside the initrd, the value
             is the path it should be copied from (or null for the same
@@ -644,7 +673,7 @@ in
       default = true;
       type = types.bool;
       description =
-        lib.mdDoc ''
+        mdDoc ''
           Verbosity of the initrd. Please note that disabling verbosity removes
           only the mandatory messages generated by the NixOS scripts. For a
           completely silent boot, you might also want to set the two following
@@ -660,7 +689,7 @@ in
         default = false;
         type = types.bool;
         description =
-          lib.mdDoc ''
+          mdDoc ''
             Whether the bootloader setup runs append-initrd-secrets.
             If not, any needed secrets must be copied into the initrd
             and thus added to the store.
@@ -668,11 +697,11 @@ in
       };
 
     fileSystems = mkOption {
-      type = with lib.types; attrsOf (submodule {
+      type = with types; attrsOf (submodule {
         options.neededForBoot = mkOption {
           default = false;
           type = types.bool;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             If set, this file system will be mounted in the initial ramdisk.
             Note that the file system will always be mounted in the initial
             ramdisk if its mount point is one of the following:
