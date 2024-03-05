@@ -1,11 +1,20 @@
 { config, lib, options, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.languagetool;
+
   settingsFormat = pkgs.formats.javaProperties {};
-in {
+in
+{
   options.services.languagetool = {
     enable = mkEnableOption (mdDoc "the LanguageTool server");
 
@@ -31,7 +40,7 @@ in {
       '';
     };
 
-    settings = lib.mkOption {
+    settings = mkOption {
       type = types.submodule {
         freeformType = settingsFormat.type;
 
