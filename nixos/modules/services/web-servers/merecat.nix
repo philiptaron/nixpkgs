@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    generators
+    isBool
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    ;
+
   cfg = config.services.merecat;
   format = pkgs.formats.keyValue {
     mkKeyValue = generators.mkKeyValueDefault {
@@ -19,12 +26,12 @@ in {
 
   options.services.merecat = {
 
-    enable = mkEnableOption (lib.mdDoc "Merecat HTTP server");
+    enable = mkEnableOption (mdDoc "Merecat HTTP server");
 
     settings = mkOption {
       inherit (format) type;
       default = { };
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Merecat configuration. Refer to merecat(8) for details on supported values.
       '';
       example = {
@@ -46,7 +53,7 @@ in {
       serviceConfig = {
         DynamicUser = true;
         ExecStart = "${pkgs.merecat}/bin/merecat -n -f ${configFile}";
-        AmbientCapabilities = lib.mkIf ((cfg.settings.port or 80) < 1024) [ "CAP_NET_BIND_SERVICE" ];
+        AmbientCapabilities = mkIf ((cfg.settings.port or 80) < 1024) [ "CAP_NET_BIND_SERVICE" ];
       };
     };
 
