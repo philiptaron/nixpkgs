@@ -1,47 +1,61 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    escapeShellArg
+    escapeShellArgs
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkOverride
+    mkPackageOption
+    optional
+    optionals
+    types
+    ;
+
   cfg = config.services.tailscale;
   isNetworkd = config.networking.useNetworkd;
 in {
   meta.maintainers = with maintainers; [ danderson mbaillie twitchyliquid64 mfrw ];
 
   options.services.tailscale = {
-    enable = mkEnableOption (lib.mdDoc "Tailscale client daemon");
+    enable = mkEnableOption (mdDoc "Tailscale client daemon");
 
     port = mkOption {
       type = types.port;
       default = 41641;
-      description = lib.mdDoc "The port to listen on for tunnel traffic (0=autoselect).";
+      description = mdDoc "The port to listen on for tunnel traffic (0=autoselect).";
     };
 
     interfaceName = mkOption {
       type = types.str;
       default = "tailscale0";
-      description = lib.mdDoc ''The interface name for tunnel traffic. Use "userspace-networking" (beta) to not use TUN.'';
+      description = mdDoc ''The interface name for tunnel traffic. Use "userspace-networking" (beta) to not use TUN.'';
     };
 
     permitCertUid = mkOption {
       type = types.nullOr types.nonEmptyStr;
       default = null;
-      description = lib.mdDoc "Username or user ID of the user allowed to to fetch Tailscale TLS certificates for the node.";
+      description = mdDoc "Username or user ID of the user allowed to to fetch Tailscale TLS certificates for the node.";
     };
 
-    package = lib.mkPackageOption pkgs "tailscale" {};
+    package = mkPackageOption pkgs "tailscale" {};
 
     openFirewall = mkOption {
       default = false;
       type = types.bool;
-      description = lib.mdDoc "Whether to open the firewall for the specified port.";
+      description = mdDoc "Whether to open the firewall for the specified port.";
     };
 
     useRoutingFeatures = mkOption {
       type = types.enum [ "none" "client" "server" "both" ];
       default = "none";
       example = "server";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Enables settings required for Tailscale's routing features like subnet routers and exit nodes.
 
         To use these these features, you will still need to call `sudo tailscale up` with the relevant flags like `--advertise-exit-node` and `--exit-node`.
@@ -55,20 +69,20 @@ in {
       type = types.nullOr types.path;
       default = null;
       example = "/run/secrets/tailscale_key";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         A file containing the auth key.
       '';
     };
 
     extraUpFlags = mkOption {
-      description = lib.mdDoc "Extra flags to pass to {command}`tailscale up`.";
+      description = mdDoc "Extra flags to pass to {command}`tailscale up`.";
       type = types.listOf types.str;
       default = [];
       example = ["--ssh"];
     };
 
     extraDaemonFlags = mkOption {
-      description = lib.mdDoc "Extra flags to pass to {command}`tailscaled`.";
+      description = mdDoc "Extra flags to pass to {command}`tailscaled`.";
       type = types.listOf types.str;
       default = [];
       example = ["--no-logs-no-support"];
@@ -84,11 +98,11 @@ in {
         pkgs.procps     # for collecting running services (opt-in feature)
         pkgs.getent     # for `getent` to look up user shells
         pkgs.kmod       # required to pass tailscale's v6nat check
-      ] ++ lib.optional config.networking.resolvconf.enable config.networking.resolvconf.package;
+      ] ++ optional config.networking.resolvconf.enable config.networking.resolvconf.package;
       serviceConfig.Environment = [
         "PORT=${toString cfg.port}"
-        ''"FLAGS=--tun ${lib.escapeShellArg cfg.interfaceName} ${lib.concatStringsSep " " cfg.extraDaemonFlags}"''
-      ] ++ (lib.optionals (cfg.permitCertUid != null) [
+        ''"FLAGS=--tun ${escapeShellArg cfg.interfaceName} ${concatStringsSep " " cfg.extraDaemonFlags}"''
+      ] ++ (optionals (cfg.permitCertUid != null) [
         "TS_PERMIT_CERT_UID=${cfg.permitCertUid}"
       ]);
       # Restart tailscaled with a single `systemctl restart` at the
