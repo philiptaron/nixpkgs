@@ -1,20 +1,28 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.thermald;
 in
 {
   ###### interface
   options = {
     services.thermald = {
-      enable = mkEnableOption (lib.mdDoc "thermald, the temperature management daemon");
+      enable = mkEnableOption (mdDoc "thermald, the temperature management daemon");
 
       debug = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable debug logging.
         '';
       };
@@ -22,13 +30,13 @@ in
      ignoreCpuidCheck = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to ignore the cpuid check to allow running on unsupported platforms";
+        description = mdDoc "Whether to ignore the cpuid check to allow running on unsupported platforms";
       };
 
       configFile = mkOption {
         type = types.nullOr types.path;
         default = null;
-        description = lib.mdDoc "the thermald manual configuration file.";
+        description = mdDoc "the thermald manual configuration file.";
       };
 
       package = mkPackageOption pkgs "thermald" { };
