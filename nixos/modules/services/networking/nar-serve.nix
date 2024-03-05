@@ -1,7 +1,15 @@
 { config, pkgs, lib, ... }:
 
-with lib;
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.nar-serve;
 in
 {
@@ -10,12 +18,12 @@ in
   };
   options = {
     services.nar-serve = {
-      enable = mkEnableOption (lib.mdDoc "serving NAR file contents via HTTP");
+      enable = mkEnableOption (mdDoc "serving NAR file contents via HTTP");
 
       port = mkOption {
         type = types.port;
         default = 8383;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Port number where nar-serve will listen on.
         '';
       };
@@ -23,7 +31,7 @@ in
       cacheURL = mkOption {
         type = types.str;
         default = "https://cache.nixos.org/";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Binary cache URL to connect to.
 
           The URL format is compatible with the nix remote url style, such as:
