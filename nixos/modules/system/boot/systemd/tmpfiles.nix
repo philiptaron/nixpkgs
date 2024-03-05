@@ -1,8 +1,21 @@
 { config, lib, pkgs, utils, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStrings
+    concatStrings
+    concatStringsSep
+    getLib
+    hasPrefix
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkOption
+    optionalString
+    removePrefix
+    types
+    ;
+
   cfg = config.systemd.tmpfiles;
   systemd = config.systemd.package;
 in
@@ -12,7 +25,7 @@ in
       type = types.listOf types.str;
       default = [];
       example = [ "d /tmp 1777 root root 10d" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Rules for creation, deletion and cleaning of volatile and temporary files
         automatically. See
         {manpage}`tmpfiles.d(5)`
@@ -21,7 +34,7 @@ in
     };
 
     systemd.tmpfiles.settings = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Declare systemd-tmpfiles rules to create, delete, and clean up volatile
         and temporary files and directories.
 
@@ -43,7 +56,7 @@ in
           type = types.str;
           default = name;
           example = "d";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The type of operation to perform on the file.
 
             The type consists of a single letter and optionally one or more
@@ -58,7 +71,7 @@ in
           type = types.str;
           default = "-";
           example = "0755";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The file access mode to use when creating this file or directory.
           '';
         };
@@ -66,7 +79,7 @@ in
           type = types.str;
           default = "-";
           example = "root";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The user of the file.
 
             This may either be a numeric ID or a user/group name.
@@ -79,7 +92,7 @@ in
           type = types.str;
           default = "-";
           example = "root";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The group of the file.
 
             This may either be a numeric ID or a user/group name.
@@ -92,7 +105,7 @@ in
           type = types.str;
           default = "-";
           example = "10d";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Delete a file when it reaches a certain age.
 
             If a file or directory is older than the current time minus the age
@@ -105,7 +118,7 @@ in
           type = types.str;
           default = "";
           example = "";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             An argument whose meaning depends on the type of operation.
 
             Please see the upstream documentation for the meaning of this
@@ -121,7 +134,7 @@ in
       default = [];
       example = literalExpression "[ pkgs.lvm2 ]";
       apply = map getLib;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         List of packages containing {command}`systemd-tmpfiles` rules.
 
         All files ending in .conf found in
