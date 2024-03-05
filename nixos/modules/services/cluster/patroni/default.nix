@@ -1,6 +1,21 @@
 { config, lib, pkgs, ... }:
-with lib;
+
 let
+  inherit (lib)
+    attrValues
+    concatStringsSep
+    escapeShellArg
+    literalExpression
+    maintainers
+    mapAttrs
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    types
+    ;
+
   cfg = config.services.patroni;
   defaultUser = "patroni";
   defaultGroup = "patroni";
@@ -12,7 +27,7 @@ in
 {
   options.services.patroni = {
 
-    enable = mkEnableOption (lib.mdDoc "Patroni");
+    enable = mkEnableOption (mdDoc "Patroni");
 
     postgresqlPackage = mkOption {
       type = types.package;
