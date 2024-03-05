@@ -1,13 +1,23 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStringsSep
+    mapAttrs'
+    mdDoc
+    mkIf
+    mkOption
+    nameValuePair
+    types
+    ;
+
   cfg = config.services.errbot;
+
   pluginEnv = plugins: pkgs.buildEnv {
     name = "errbot-plugins";
     paths = plugins;
   };
+
   mkConfigDir = instanceCfg: dataDir: pkgs.writeTextDir "config.py" ''
     import logging
     BACKEND = '${instanceCfg.backend}'
@@ -23,52 +33,53 @@ let
 
     ${instanceCfg.extraConfig}
   '';
-in {
+in
+{
   options = {
     services.errbot.instances = mkOption {
       default = {};
-      description = lib.mdDoc "Errbot instance configs";
+      description = mdDoc "Errbot instance configs";
       type = types.attrsOf (types.submodule {
         options = {
           dataDir = mkOption {
             type = types.nullOr types.path;
             default = null;
-            description = lib.mdDoc "Data directory for errbot instance.";
+            description = mdDoc "Data directory for errbot instance.";
           };
 
           plugins = mkOption {
             type = types.listOf types.package;
             default = [];
-            description = lib.mdDoc "List of errbot plugin derivations.";
+            description = mdDoc "List of errbot plugin derivations.";
           };
 
           logLevel = mkOption {
             type = types.str;
             default = "INFO";
-            description = lib.mdDoc "Errbot log level";
+            description = mdDoc "Errbot log level";
           };
 
           admins = mkOption {
             type = types.listOf types.str;
             default = [];
-            description = lib.mdDoc "List of identifiers of errbot admins.";
+            description = mdDoc "List of identifiers of errbot admins.";
           };
 
           backend = mkOption {
             type = types.str;
             default = "XMPP";
-            description = lib.mdDoc "Errbot backend name.";
+            description = mdDoc "Errbot backend name.";
           };
 
           identity = mkOption {
             type = types.attrs;
-            description = lib.mdDoc "Errbot identity configuration";
+            description = mdDoc "Errbot identity configuration";
           };
 
           extraConfig = mkOption {
             type = types.lines;
             default = "";
-            description = lib.mdDoc "String to be appended to the config verbatim";
+            description = mdDoc "String to be appended to the config verbatim";
           };
         };
       });
