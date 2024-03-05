@@ -1,7 +1,11 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    ;
 
   cfg = config.virtualisation.azure.agent;
 
@@ -19,21 +23,21 @@ in
   options.virtualisation.azure.agent = {
     enable = mkOption {
       default = false;
-      description = lib.mdDoc "Whether to enable the Windows Azure Linux Agent.";
+      description = mdDoc "Whether to enable the Windows Azure Linux Agent.";
     };
     verboseLogging = mkOption {
       default = false;
-      description = lib.mdDoc "Whether to enable verbose logging.";
+      description = mdDoc "Whether to enable verbose logging.";
     };
     mountResourceDisk = mkOption {
       default = true;
-      description = lib.mdDoc "Whether the agent should format (ext4) and mount the resource disk to /mnt/resource.";
+      description = mdDoc "Whether the agent should format (ext4) and mount the resource disk to /mnt/resource.";
     };
   };
 
   ###### implementation
 
-  config = lib.mkIf cfg.enable {
+  config = mkIf cfg.enable {
     assertions = [{
       assertion = pkgs.stdenv.hostPlatform.isx86;
       message = "Azure not currently supported on ${pkgs.stdenv.hostPlatform.system}";
