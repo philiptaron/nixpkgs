@@ -2,10 +2,51 @@
 #
 # TODO: zfs tunables
 
-with utils;
-with lib;
-
 let
+  inherit (lib)
+    any
+    concatMapStrings
+    concatMapStringsSep
+    concatStringsSep
+    elem
+    elemAt
+    escapeShellArg
+    escapeShellArgs
+    filter
+    genAttrs
+    generators
+    getAttr
+    hasAttr
+    isBool
+    isInt
+    isList
+    isString
+    listToAttrs
+    literalExpression
+    literalMD
+    makeBinPath
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkRemovedOptionModule
+    nameValuePair
+    optional
+    optionals
+    optionalString
+    removeSuffix
+    splitString
+    types
+    unique
+    versionOlder
+    ;
+
+  inherit (utils)
+    escapeSystemdPath
+    fsNeededForBoot
+    ;
 
   cfgZfs = config.boot.zfs;
   optZfs = options.boot.zfs;
@@ -99,12 +140,12 @@ let
       # Remove the "/" suffix because even though most mountpoints
       # won't have it, the "/" mountpoint will, and we can't have the
       # trailing slash in "/sysroot/" in stage 1.
-      mountPoint = fs: escapeSystemdPath (prefix + (lib.removeSuffix "/" fs.mountPoint));
+      mountPoint = fs: escapeSystemdPath (prefix + (removeSuffix "/" fs.mountPoint));
 
-      hasUsr = lib.any (fs: fs.mountPoint == "/usr") poolFSes;
+      hasUsr = any (fs: fs.mountPoint == "/usr") poolFSes;
     in
       map (x: "${mountPoint x}.mount") poolFSes
-      ++ lib.optional hasUsr "sysusr-usr.mount";
+      ++ optional hasUsr "sysusr-usr.mount";
 
   getKeyLocations = pool: if isBool cfgZfs.requestEncryptionCredentials then {
     hasKeys = cfgZfs.requestEncryptionCredentials;
@@ -202,7 +243,7 @@ let
         else if true  ==   v then "1"
         else if false ==   v then "0"
         else if isList     v then "\"" + (concatStringsSep " " v) + "\""
-        else err "this value is" (toString v);
+        else throw "unsupported type ${builtins.typeOf v}: ${(generators.toPretty {}) v}";
     } "=";
   } cfgZED.settings;
 in
@@ -222,14 +263,14 @@ in
         type = types.package;
         default = pkgs.zfs;
         defaultText = literalExpression "pkgs.zfs";
-        description = lib.mdDoc "Configured ZFS userland tools package, use `pkgs.zfs_unstable` if you want to track the latest staging ZFS branch.";
+        description = mdDoc "Configured ZFS userland tools package, use `pkgs.zfs_unstable` if you want to track the latest staging ZFS branch.";
       };
 
       modulePackage = mkOption {
         internal = true; # It is supposed to be selected automatically, but can be overridden by expert users.
         default = selectModulePackage cfgZfs.package;
         type = types.package;
-        description = lib.mdDoc "Configured ZFS kernel module package.";
+        description = mdDoc "Configured ZFS kernel module package.";
       };
 
       enabled = mkOption {
@@ -237,13 +278,13 @@ in
         type = types.bool;
         default = inInitrd || inSystem;
         defaultText = literalMD "`true` if ZFS filesystem support is enabled";
-        description = lib.mdDoc "True if ZFS filesystem support is enabled";
+        description = mdDoc "True if ZFS filesystem support is enabled";
       };
 
       allowHibernation = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Allow hibernation support, this may be a unsafe option depending on your
           setup. Make sure to NOT use Swap on ZFS.
         '';
@@ -253,7 +294,7 @@ in
         type = types.listOf types.str;
         default = [];
         example = [ "tank" "data" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Name or GUID of extra ZFS pools that you wish to import during boot.
 
           Usually this is not necessary. Instead, you should set the mountpoint property
@@ -271,7 +312,7 @@ in
       devNodes = mkOption {
         type = types.path;
         default = "/dev/disk/by-id";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Name of directory from which to import ZFS devices.
 
           This should be a path under /dev containing stable names for all devices needed, as
@@ -282,7 +323,7 @@ in
       forceImportRoot = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Forcibly import the ZFS root pool(s) during early boot.
 
           This is enabled by default for backwards compatibility purposes, but it is highly
@@ -300,7 +341,7 @@ in
       forceImportAll = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Forcibly import all ZFS pool(s).
 
           If you set this option to `false` and NixOS subsequently fails to
@@ -314,7 +355,7 @@ in
         type = types.either types.bool (types.listOf types.str);
         default = true;
         example = [ "tank" "data" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If true on import encryption keys or passwords for all encrypted datasets
           are requested. To only decrypt selected datasets supply a list of dataset
           names instead. For root pools the encryption key can be supplied via both
@@ -325,14 +366,14 @@ in
       passwordTimeout = mkOption {
         type = types.int;
         default = 0;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Timeout in seconds to wait for password entry for decrypt at boot.
 
           Defaults to 0, which waits forever.
         '';
       };
 
-      removeLinuxDRM = lib.mkOption {
+      removeLinuxDRM = mkOption {
         type = types.bool;
         default = false;
         description = ''
@@ -349,7 +390,7 @@ in
       enable = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable the (OpenSolaris-compatible) ZFS auto-snapshotting service.
           Note that you must set the `com.sun:auto-snapshot`
           property to `true` on all datasets which you wish
@@ -365,7 +406,7 @@ in
         default = "-k -p";
         example = "-k -p --utc";
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Flags to pass to the zfs-auto-snapshot command.
 
           Run `zfs-auto-snapshot` (without any arguments) to
@@ -383,7 +424,7 @@ in
       frequent = mkOption {
         default = 4;
         type = types.int;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Number of frequent (15-minute) auto-snapshots that you wish to keep.
         '';
       };
@@ -391,7 +432,7 @@ in
       hourly = mkOption {
         default = 24;
         type = types.int;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Number of hourly auto-snapshots that you wish to keep.
         '';
       };
@@ -399,7 +440,7 @@ in
       daily = mkOption {
         default = 7;
         type = types.int;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Number of daily auto-snapshots that you wish to keep.
         '';
       };
@@ -407,7 +448,7 @@ in
       weekly = mkOption {
         default = 4;
         type = types.int;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Number of weekly auto-snapshots that you wish to keep.
         '';
       };
@@ -415,7 +456,7 @@ in
       monthly = mkOption {
         default = 12;
         type = types.int;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Number of monthly auto-snapshots that you wish to keep.
         '';
       };
@@ -423,7 +464,7 @@ in
 
     services.zfs.trim = {
       enable = mkOption {
-        description = lib.mdDoc "Whether to enable periodic TRIM on all ZFS pools.";
+        description = mdDoc "Whether to enable periodic TRIM on all ZFS pools.";
         default = true;
         example = false;
         type = types.bool;
@@ -433,7 +474,7 @@ in
         default = "weekly";
         type = types.str;
         example = "daily";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           How often we run trim. For most desktop and server systems
           a sufficient trimming frequency is once a week.
 
@@ -444,13 +485,13 @@ in
     };
 
     services.zfs.autoScrub = {
-      enable = mkEnableOption (lib.mdDoc "periodic scrubbing of ZFS pools");
+      enable = mkEnableOption (mdDoc "periodic scrubbing of ZFS pools");
 
       interval = mkOption {
         default = "Sun, 02:00";
         type = types.str;
         example = "daily";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Systemd calendar expression when to scrub ZFS pools. See
           {manpage}`systemd.time(7)`.
         '';
@@ -460,7 +501,7 @@ in
         default = [];
         type = types.listOf types.str;
         example = [ "tank" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of ZFS pools to periodically scrub. If empty, all pools
           will be scrubbed.
         '';
@@ -471,7 +512,7 @@ in
       type = types.either (types.enum [ "disabled" "all" ]) (types.listOf types.str);
       default = "disabled";
       example = [ "tank" "dozer" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         After importing, expand each device in the specified pools.
 
         Set the value to the plain string "all" to expand all pools on boot:
@@ -513,7 +554,7 @@ in
             ZED_SCRUB_AFTER_RESILVER = false;
           }
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           ZFS Event Daemon /etc/zfs/zed.d/zed.rc content
 
           See
@@ -561,7 +602,7 @@ in
         # https://github.com/openzfs/zfs/issues/260
         # https://github.com/openzfs/zfs/issues/12842
         # https://github.com/NixOS/nixpkgs/issues/106093
-        kernelParams = lib.optionals (!config.boot.zfs.allowHibernation) [ "nohibernate" ];
+        kernelParams = optionals (!config.boot.zfs.allowHibernation) [ "nohibernate" ];
 
         extraModulePackages = [
           cfgZfs.modulePackage
@@ -569,8 +610,7 @@ in
       };
 
       boot.initrd = mkIf inInitrd {
-        # spl has been removed in ≥ 2.2.0.
-        kernelModules = [ "zfs" ] ++ lib.optional (lib.versionOlder "2.2.0" version) "spl";
+        kernelModules = [ "zfs" ];
         extraUtilsCommands =
           mkIf (!config.boot.initrd.systemd.enable) ''
             copy_bin_and_libs ${cfgZfs.package}/sbin/zfs
@@ -654,7 +694,7 @@ in
         # subject in header for sendmail
         ZED_EMAIL_OPTS = mkIf cfgZED.enableMail (mkDefault "@ADDRESS@");
 
-        PATH = lib.makeBinPath [
+        PATH = makeBinPath [
           cfgZfs.package
           pkgs.coreutils
           pkgs.curl
@@ -772,7 +812,7 @@ in
           # just the specifically provided list of pools.
           poolListProvider = if cfgExpandOnBoot == "all"
             then "$(zpool list -H -o name)"
-            else lib.escapeShellArgs cfgExpandOnBoot;
+            else escapeShellArgs cfgExpandOnBoot;
         in
         {
           description = "Expand specified ZFS pools";
@@ -784,7 +824,7 @@ in
             RemainAfterExit = true;
           };
 
-          path = lib.optionals (cfgExpandOnBoot == "all") [ cfgZfs.package ];
+          path = optionals (cfgExpandOnBoot == "all") [ cfgZfs.package ];
 
           script = ''
             for pool in ${poolListProvider}; do
