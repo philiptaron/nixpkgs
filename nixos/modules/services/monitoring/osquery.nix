@@ -1,10 +1,22 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    concatStringsSep
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.osquery;
-  dirname = path: with lib.strings; with lib.lists; concatStringsSep "/"
-    (init (splitString "/" (normalizePath path)));
+
+  dirname = let
+    inherit (lib.lists) init;
+    inherit (lib.strings) normalizePath splitString;
+  in path: concatStringsSep "/" (init (splitString "/" (normalizePath path)));
 
   # conf is the osquery configuration file used when the --config_plugin=filesystem.
   # filesystem is the osquery default value for the config_plugin flag.
