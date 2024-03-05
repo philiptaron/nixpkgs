@@ -1,9 +1,50 @@
 { config, lib, options, pkgs, ... }:
 
-with builtins;
-with lib;
-
 let
+  inherit (builtins)
+    storeDir
+    ;
+
+  inherit (lib)
+    any
+    concatMap
+    concatStrings
+    concatStringsSep
+    elem
+    escapeShellArg
+    filter
+    filterAttrs
+    flatten
+    genAttrs
+    generators
+    getExe
+    imap0
+    isBool
+    isInt
+    isString
+    literalExpression
+    maintainers
+    mapAttrs
+    mapAttrsToList
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkForce
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    optional
+    optionalAttrs
+    optionals
+    optionalString
+    removeSuffix
+    toInt
+    types
+    ;
+
   cfg = config.services.tor;
   opt = options.services.tor;
   stateDir = "/var/lib/tor";
@@ -30,35 +71,35 @@ let
   optionBool = optionName: mkOption {
     type = with types; nullOr bool;
     default = null;
-    description = lib.mdDoc (descriptionGeneric optionName);
+    description = mdDoc (descriptionGeneric optionName);
   };
   optionInt = optionName: mkOption {
     type = with types; nullOr int;
     default = null;
-    description = lib.mdDoc (descriptionGeneric optionName);
+    description = mdDoc (descriptionGeneric optionName);
   };
   optionString = optionName: mkOption {
     type = with types; nullOr str;
     default = null;
-    description = lib.mdDoc (descriptionGeneric optionName);
+    description = mdDoc (descriptionGeneric optionName);
   };
   optionStrings = optionName: mkOption {
     type = with types; listOf str;
     default = [];
-    description = lib.mdDoc (descriptionGeneric optionName);
+    description = mdDoc (descriptionGeneric optionName);
   };
   optionAddress = mkOption {
     type = with types; nullOr str;
     default = null;
     example = "0.0.0.0";
-    description = lib.mdDoc ''
+    description = mdDoc ''
       IPv4 or IPv6 (if between brackets) address.
     '';
   };
   optionUnix = mkOption {
     type = with types; nullOr path;
     default = null;
-    description = lib.mdDoc ''
+    description = mdDoc ''
       Unix domain socket path to use.
     '';
   };
@@ -69,7 +110,7 @@ let
   optionPorts = optionName: mkOption {
     type = with types; listOf port;
     default = [];
-    description = lib.mdDoc (descriptionGeneric optionName);
+    description = mdDoc (descriptionGeneric optionName);
   };
   optionIsolablePort = with types; oneOf [
     port (enum ["auto"])
@@ -89,7 +130,7 @@ let
   optionIsolablePorts = optionName: mkOption {
     default = [];
     type = with types; either optionIsolablePort (listOf optionIsolablePort);
-    description = lib.mdDoc (descriptionGeneric optionName);
+    description = mdDoc (descriptionGeneric optionName);
   };
   isolateFlags = [
     "IsolateClientAddr"
@@ -144,17 +185,17 @@ let
         };
       }))
     ]))];
-    description = lib.mdDoc (descriptionGeneric optionName);
+    description = mdDoc (descriptionGeneric optionName);
   };
   optionBandwidth = optionName: mkOption {
     type = with types; nullOr (either int str);
     default = null;
-    description = lib.mdDoc (descriptionGeneric optionName);
+    description = mdDoc (descriptionGeneric optionName);
   };
   optionPath = optionName: mkOption {
     type = with types; nullOr path;
     default = null;
-    description = lib.mdDoc (descriptionGeneric optionName);
+    description = mdDoc (descriptionGeneric optionName);
   };
 
   mkValueString = k: v:
@@ -178,13 +219,13 @@ let
       listsAsDuplicateKeys = true;
       mkKeyValue = k: generators.mkKeyValueDefault { mkValueString = mkValueString k; } " " k;
     }
-    (lib.mapAttrs (k: v:
+    (mapAttrs (k: v:
       # Not necesssary, but prettier rendering
       if elem k [ "AutomapHostsSuffixes" "DirPolicy" "ExitPolicy" "SocksPolicy" ]
       && v != []
       then concatStringsSep "," v
       else v)
-    (lib.filterAttrs (k: v: !(v == null || v == ""))
+    (filterAttrs (k: v: !(v == null || v == ""))
     settings));
   torrc = pkgs.writeText "torrc" (
     genTorrc cfg.settings +
@@ -224,40 +265,40 @@ in
 
   options = {
     services.tor = {
-      enable = mkEnableOption (lib.mdDoc ''Tor daemon.
+      enable = mkEnableOption (mdDoc ''Tor daemon.
         By default, the daemon is run without
         relay, exit, bridge or client connectivity'');
 
-      openFirewall = mkEnableOption (lib.mdDoc "opening of the relay port(s) in the firewall");
+      openFirewall = mkEnableOption (mdDoc "opening of the relay port(s) in the firewall");
 
       package = mkPackageOption pkgs "tor" { };
 
-      enableGeoIP = mkEnableOption (lib.mdDoc ''use of GeoIP databases.
+      enableGeoIP = mkEnableOption (mdDoc ''use of GeoIP databases.
         Disabling this will disable by-country statistics for bridges and relays
         and some client and third-party software functionality'') // { default = true; };
 
-      controlSocket.enable = mkEnableOption (lib.mdDoc ''control socket,
+      controlSocket.enable = mkEnableOption (mdDoc ''control socket,
         created in `${runDir}/control`'');
 
       client = {
-        enable = mkEnableOption (lib.mdDoc ''the routing of application connections.
+        enable = mkEnableOption (mdDoc ''the routing of application connections.
           You might want to disable this if you plan running a dedicated Tor relay'');
 
-        transparentProxy.enable = mkEnableOption (lib.mdDoc "transparent proxy");
-        dns.enable = mkEnableOption (lib.mdDoc "DNS resolver");
+        transparentProxy.enable = mkEnableOption (mdDoc "transparent proxy");
+        dns.enable = mkEnableOption (mdDoc "DNS resolver");
 
         socksListenAddress = mkOption {
           type = optionSOCKSPort false;
           default = {addr = "127.0.0.1"; port = 9050; IsolateDestAddr = true;};
           example = {addr = "192.168.0.1"; port = 9090; IsolateDestAddr = true;};
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Bind to this address to listen for connections from
             Socks-speaking applications.
           '';
         };
 
         onionServices = mkOption {
-          description = lib.mdDoc (descriptionGeneric "HiddenServiceDir");
+          description = mdDoc (descriptionGeneric "HiddenServiceDir");
           default = {};
           example = {
             "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" = {
@@ -266,7 +307,7 @@ in
           };
           type = types.attrsOf (types.submodule ({name, config, ...}: {
             options.clientAuthorizations = mkOption {
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Clients' authorizations for a v3 onion service,
                 as a list of files containing each one private key, in the format:
                 ```
@@ -283,8 +324,8 @@ in
       };
 
       relay = {
-        enable = mkEnableOption (lib.mdDoc "tor relaying") // {
-          description = lib.mdDoc ''
+        enable = mkEnableOption (mdDoc "tor relaying") // {
+          description = mdDoc ''
             Whether to enable relaying of Tor traffic for others.
 
             See <https://www.torproject.org/docs/tor-doc-relay>
@@ -300,7 +341,7 @@ in
 
         role = mkOption {
           type = types.enum [ "exit" "relay" "bridge" "private-bridge" ];
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Your role in Tor network. There're several options:
 
             - `exit`:
@@ -385,7 +426,7 @@ in
         };
 
         onionServices = mkOption {
-          description = lib.mdDoc (descriptionGeneric "HiddenServiceDir");
+          description = mdDoc (descriptionGeneric "HiddenServiceDir");
           default = {};
           example = {
             "example.org/www" = {
@@ -398,7 +439,7 @@ in
           type = types.attrsOf (types.submodule ({name, config, ...}: {
             options.path = mkOption {
               type = types.path;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Path where to store the data files of the hidden service.
                 If the {option}`secretKey` is null
                 this defaults to `${stateDir}/onion/$onion`,
@@ -409,7 +450,7 @@ in
               type = with types; nullOr path;
               default = null;
               example = "/run/keys/tor/onion/expyuzz4wqqyqhjn/hs_ed25519_secret_key";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Secret key of the onion service.
                 If null, Tor reuses any preexisting secret key (in {option}`path`)
                 or generates a new one.
@@ -418,13 +459,13 @@ in
               '';
             };
             options.authorizeClient = mkOption {
-              description = lib.mdDoc (descriptionGeneric "HiddenServiceAuthorizeClient");
+              description = mdDoc (descriptionGeneric "HiddenServiceAuthorizeClient");
               default = null;
               type = types.nullOr (types.submodule ({...}: {
                 options = {
                   authType = mkOption {
                     type = types.enum [ "basic" "stealth" ];
-                    description = lib.mdDoc ''
+                    description = mdDoc ''
                       Either `"basic"` for a general-purpose authorization protocol
                       or `"stealth"` for a less scalable protocol
                       that also hides service activity from unauthorized clients.
@@ -432,7 +473,7 @@ in
                   };
                   clientNames = mkOption {
                     type = with types; nonEmptyListOf (strMatching "[A-Za-z0-9+-_]+");
-                    description = lib.mdDoc ''
+                    description = mdDoc ''
                       Only clients that are listed here are authorized to access the hidden service.
                       Generated authorization data can be found in {file}`${stateDir}/onion/$name/hostname`.
                       Clients need to put this authorization data in their configuration file using
@@ -443,7 +484,7 @@ in
               }));
             };
             options.authorizedClients = mkOption {
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Authorized clients for a v3 onion service,
                 as a list of public key, in the format:
                 ```
@@ -456,7 +497,7 @@ in
               example = ["descriptor:x25519:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"];
             };
             options.map = mkOption {
-              description = lib.mdDoc (descriptionGeneric "HiddenServicePort");
+              description = mdDoc (descriptionGeneric "HiddenServicePort");
               type = with types; listOf (oneOf [
                 port (submodule ({...}: {
                   options = {
@@ -477,12 +518,12 @@ in
               apply = map (v: if isInt v then {port=v; target=null;} else v);
             };
             options.version = mkOption {
-              description = lib.mdDoc (descriptionGeneric "HiddenServiceVersion");
+              description = mdDoc (descriptionGeneric "HiddenServiceVersion");
               type = with types; nullOr (enum [2 3]);
               default = null;
             };
             options.settings = mkOption {
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Settings of the onion service.
                 ${descriptionGeneric "_hidden_service_options"}
               '';
@@ -495,18 +536,18 @@ in
                 options.HiddenServiceAllowUnknownPorts = optionBool "HiddenServiceAllowUnknownPorts";
                 options.HiddenServiceDirGroupReadable = optionBool "HiddenServiceDirGroupReadable";
                 options.HiddenServiceExportCircuitID = mkOption {
-                  description = lib.mdDoc (descriptionGeneric "HiddenServiceExportCircuitID");
+                  description = mdDoc (descriptionGeneric "HiddenServiceExportCircuitID");
                   type = with types; nullOr (enum ["haproxy"]);
                   default = null;
                 };
                 options.HiddenServiceMaxStreams = mkOption {
-                  description = lib.mdDoc (descriptionGeneric "HiddenServiceMaxStreams");
+                  description = mdDoc (descriptionGeneric "HiddenServiceMaxStreams");
                   type = with types; nullOr (ints.between 0 65535);
                   default = null;
                 };
                 options.HiddenServiceMaxStreamsCloseCircuit = optionBool "HiddenServiceMaxStreamsCloseCircuit";
                 options.HiddenServiceNumIntroductionPoints = mkOption {
-                  description = lib.mdDoc (descriptionGeneric "HiddenServiceNumIntroductionPoints");
+                  description = mdDoc (descriptionGeneric "HiddenServiceNumIntroductionPoints");
                   type = with types; nullOr (ints.between 0 20);
                   default = null;
                 };
@@ -529,7 +570,7 @@ in
       };
 
       settings = mkOption {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           See [torrc manual](https://2019.www.torproject.org/docs/tor-manual.html.en)
           for documentation.
         '';
@@ -565,7 +606,7 @@ in
           options.ClientAutoIPv6ORPort = optionBool "ClientAutoIPv6ORPort";
           options.ClientDNSRejectInternalAddresses = optionBool "ClientDNSRejectInternalAddresses";
           options.ClientOnionAuthDir = mkOption {
-            description = lib.mdDoc (descriptionGeneric "ClientOnionAuthDir");
+            description = mdDoc (descriptionGeneric "ClientOnionAuthDir");
             default = null;
             type = with types; nullOr path;
           };
@@ -578,7 +619,7 @@ in
           options.ConstrainedSockets = optionBool "ConstrainedSockets";
           options.ContactInfo = optionString "ContactInfo";
           options.ControlPort = mkOption rec {
-            description = lib.mdDoc (descriptionGeneric "ControlPort");
+            description = mdDoc (descriptionGeneric "ControlPort");
             default = [];
             example = [{port = 9051;}];
             type = with types; oneOf [port (enum ["auto"]) (listOf (oneOf [
@@ -613,7 +654,7 @@ in
           options.DormantTimeoutDisabledByIdleStreams = optionBool "DormantTimeoutDisabledByIdleStreams";
           options.DirCache = optionBool "DirCache";
           options.DirPolicy = mkOption {
-            description = lib.mdDoc (descriptionGeneric "DirPolicy");
+            description = mdDoc (descriptionGeneric "DirPolicy");
             type = with types; listOf str;
             default = [];
             example = ["accept *:*"];
@@ -640,7 +681,7 @@ in
           options.ExitPortStatistics = optionBool "ExitPortStatistics";
           options.ExitRelay = optionBool "ExitRelay"; # default is null and like "auto"
           options.ExtORPort = mkOption {
-            description = lib.mdDoc (descriptionGeneric "ExtORPort");
+            description = mdDoc (descriptionGeneric "ExtORPort");
             default = null;
             type = with types; nullOr (oneOf [
               port (enum ["auto"]) (submodule ({...}: {
@@ -669,19 +710,19 @@ in
           options.GeoIPv6File = optionPath "GeoIPv6File";
           options.GuardfractionFile = optionPath "GuardfractionFile";
           options.HidServAuth = mkOption {
-            description = lib.mdDoc (descriptionGeneric "HidServAuth");
+            description = mdDoc (descriptionGeneric "HidServAuth");
             default = [];
             type = with types; listOf (oneOf [
               (submodule {
                 options = {
                   onion = mkOption {
                     type = strMatching "[a-z2-7]{16}\\.onion";
-                    description = lib.mdDoc "Onion address.";
+                    description = mdDoc "Onion address.";
                     example = "xxxxxxxxxxxxxxxx.onion";
                   };
                   auth = mkOption {
                     type = strMatching "[A-Za-z0-9+/]{22}";
-                    description = lib.mdDoc "Authentication cookie.";
+                    description = mdDoc "Authentication cookie.";
                   };
                 };
               })
@@ -720,7 +761,7 @@ in
           options.ProtocolWarnings = optionBool "ProtocolWarnings";
           options.PublishHidServDescriptors = optionBool "PublishHidServDescriptors";
           options.PublishServerDescriptor = mkOption {
-            description = lib.mdDoc (descriptionGeneric "PublishServerDescriptor");
+            description = mdDoc (descriptionGeneric "PublishServerDescriptor");
             type = with types; nullOr (enum [false true 0 1 "0" "1" "v3" "bridge"]);
             default = null;
           };
@@ -738,18 +779,18 @@ in
           options.ServerDNSResolvConfFile = optionPath "ServerDNSResolvConfFile";
           options.ServerDNSSearchDomains = optionBool "ServerDNSSearchDomains";
           options.ServerTransportPlugin = mkOption {
-            description = lib.mdDoc (descriptionGeneric "ServerTransportPlugin");
+            description = mdDoc (descriptionGeneric "ServerTransportPlugin");
             default = null;
             type = with types; nullOr (submodule ({...}: {
               options = {
                 transports = mkOption {
-                  description = lib.mdDoc "List of pluggable transports.";
+                  description = mdDoc "List of pluggable transports.";
                   type = listOf str;
                   example = ["obfs2" "obfs3" "obfs4" "scramblesuit"];
                 };
                 exec = mkOption {
                   type = types.str;
-                  description = lib.mdDoc "Command of pluggable transport.";
+                  description = mdDoc "Command of pluggable transport.";
                 };
               };
             }));
@@ -757,14 +798,14 @@ in
           options.ShutdownWaitLength = mkOption {
             type = types.int;
             default = 30;
-            description = lib.mdDoc (descriptionGeneric "ShutdownWaitLength");
+            description = mdDoc (descriptionGeneric "ShutdownWaitLength");
           };
           options.SocksPolicy = optionStrings "SocksPolicy" // {
             example = ["accept *:*"];
           };
           options.SOCKSPort = mkOption {
-            description = lib.mdDoc (descriptionGeneric "SOCKSPort");
-            default = lib.optionals cfg.settings.HiddenServiceNonAnonymousMode [{port = 0;}];
+            description = mdDoc (descriptionGeneric "SOCKSPort");
+            default = optionals cfg.settings.HiddenServiceNonAnonymousMode [{port = 0;}];
             defaultText = literalExpression ''
               if config.${opt.settings}.HiddenServiceNonAnonymousMode == true
               then [ { port = 0; } ]
@@ -776,7 +817,7 @@ in
           options.TestingTorNetwork = optionBool "TestingTorNetwork";
           options.TransPort = optionIsolablePorts "TransPort";
           options.TransProxyType = mkOption {
-            description = lib.mdDoc (descriptionGeneric "TransProxyType");
+            description = mdDoc (descriptionGeneric "TransProxyType");
             type = with types; nullOr (enum ["default" "TPROXY" "ipfw" "pf-divert"]);
             default = null;
           };
@@ -854,7 +895,7 @@ in
           BridgeRelay = true;
           ExtORPort.port = mkDefault "auto";
           ServerTransportPlugin.transports = mkDefault ["obfs4"];
-          ServerTransportPlugin.exec = mkDefault "${lib.getExe pkgs.obfs4} managed";
+          ServerTransportPlugin.exec = mkDefault "${getExe pkgs.obfs4} managed";
         } // optionalAttrs (cfg.relay.role == "private-bridge") {
           ExtraInfoStatistics = false;
           PublishServerDescriptor = false;
@@ -977,8 +1018,8 @@ in
             "/run/systemd/resolve/stub-resolv.conf"
             "/run/systemd/resolve/resolv.conf"
           ];
-        AmbientCapabilities   = [""] ++ lib.optional bindsPrivilegedPort "CAP_NET_BIND_SERVICE";
-        CapabilityBoundingSet = [""] ++ lib.optional bindsPrivilegedPort "CAP_NET_BIND_SERVICE";
+        AmbientCapabilities   = [""] ++ optional bindsPrivilegedPort "CAP_NET_BIND_SERVICE";
+        CapabilityBoundingSet = [""] ++ optional bindsPrivilegedPort "CAP_NET_BIND_SERVICE";
         # ProtectClock= adds DeviceAllow=char-rtc r
         DeviceAllow = "";
         LockPersonality = true;
@@ -1022,5 +1063,5 @@ in
     environment.systemPackages = [ cfg.package ];
   };
 
-  meta.maintainers = with lib.maintainers; [ julm ];
+  meta.maintainers = with maintainers; [ julm ];
 }
