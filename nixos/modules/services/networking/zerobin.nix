@@ -1,6 +1,14 @@
 { config, pkgs, lib, ... }:
-with lib;
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalAttrs
+    types
+    ;
+
   cfg = config.services.zerobin;
 
   zerobin_config = pkgs.writeText "zerobin-config.py" ''
@@ -12,12 +20,12 @@ in
   {
     options = {
       services.zerobin = {
-        enable = mkEnableOption (lib.mdDoc "0bin");
+        enable = mkEnableOption (mdDoc "0bin");
 
         dataDir = mkOption {
           type = types.str;
           default = "/var/lib/zerobin";
-          description = lib.mdDoc ''
+          description = mdDoc ''
           Path to the 0bin data directory
           '';
         };
@@ -25,7 +33,7 @@ in
         user = mkOption {
           type = types.str;
           default = "zerobin";
-          description = lib.mdDoc ''
+          description = mdDoc ''
           The user 0bin should run as
           '';
         };
@@ -33,7 +41,7 @@ in
         group = mkOption {
           type = types.str;
           default = "zerobin";
-          description = lib.mdDoc ''
+          description = mdDoc ''
           The group 0bin should run as
           '';
         };
@@ -42,7 +50,7 @@ in
           type = types.int;
           default = 8000;
           example = 1357;
-          description = lib.mdDoc ''
+          description = mdDoc ''
           The port zerobin should listen on
           '';
         };
@@ -51,7 +59,7 @@ in
           type = types.str;
           default = "localhost";
           example = "127.0.0.1";
-          description = lib.mdDoc ''
+          description = mdDoc ''
           The address zerobin should listen to
           '';
         };
@@ -65,7 +73,7 @@ in
           )
           COMPRESSED_STATIC_FILE = True
           '';
-          description = lib.mdDoc ''
+          description = mdDoc ''
           Extra configuration to be appended to the 0bin config file
           (see https://0bin.readthedocs.org/en/latest/en/options.html)
           '';
