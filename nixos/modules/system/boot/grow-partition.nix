@@ -4,7 +4,14 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkRenamedOptionModule
+    ;
+in
 
 {
   imports = [
@@ -12,7 +19,7 @@ with lib;
   ];
 
   options = {
-    boot.growPartition = mkEnableOption (lib.mdDoc "growing the root partition on boot");
+    boot.growPartition = mkEnableOption (mdDoc "growing the root partition on boot");
   };
 
   config = mkIf config.boot.growPartition {
