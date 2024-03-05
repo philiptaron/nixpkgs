@@ -1,9 +1,34 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-with types;
-
 let
+  inherit (lib)
+    all
+    attrValues
+    concatLists
+    concatStringsSep
+    filesystem
+    foldr
+    info
+    isList
+    lists
+    literalExpression
+    maintainers
+    mapAttrs
+    mapAttrs'
+    mapAttrsToList
+    mdDoc
+    min
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    nameValuePair
+    optional
+    optionalAttrs
+    optionalString
+    replaceStrings
+    types
+    ;
 
   planDescription = ''
       The znapzend backup plan to use for the source.
@@ -29,8 +54,8 @@ let
   planExample = "1h=>10min,1d=>1h,1w=>1d,1m=>1w,1y=>1m";
 
   # A type for a string of the form number{b|k|M|G}
-  mbufferSizeType = str // {
-    check = x: str.check x && builtins.isList (builtins.match "^[0-9]+[bkMG]$" x);
+  mbufferSizeType = types.str // {
+    check = x: types.str.check x && isList (builtins.match "^[0-9]+[bkMG]$" x);
     description = "string of the form number{b|k|M|G}";
   };
 
@@ -40,36 +65,36 @@ let
   # Note that these would need regex escaping.
   stringContainingStrings = list: let
     matching = s: map (str: builtins.match ".*${str}.*" s) list;
-  in str // {
-    check = x: str.check x && all isList (matching x);
+  in types.str // {
+    check = x: types.str.check x && all isList (matching x);
     description = "string containing all of the characters ${concatStringsSep ", " list}";
   };
 
   timestampType = stringContainingStrings [ "%Y" "%m" "%d" "%H" "%M" "%S" ];
 
-  destType = srcConfig: submodule ({ name, ... }: {
+  destType = srcConfig: types.submodule ({ name, ... }: {
     options = {
 
       label = mkOption {
-        type = str;
-        description = lib.mdDoc "Label for this destination. Defaults to the attribute name.";
+        type = types.str;
+        description = mdDoc "Label for this destination. Defaults to the attribute name.";
       };
 
       plan = mkOption {
-        type = str;
-        description = lib.mdDoc planDescription;
+        type = types.str;
+        description = mdDoc planDescription;
         example = planExample;
       };
 
       dataset = mkOption {
-        type = str;
-        description = lib.mdDoc "Dataset name to send snapshots to.";
+        type = types.str;
+        description = mdDoc "Dataset name to send snapshots to.";
         example = "tank/main";
       };
 
       host = mkOption {
-        type = nullOr str;
-        description = lib.mdDoc ''
+        type = types.nullOr types.str;
+        description = mdDoc ''
           Host to use for the destination dataset. Can be prefixed with
           `user@` to specify the ssh user.
         '';
@@ -78,8 +103,8 @@ let
       };
 
       presend = mkOption {
-        type = nullOr str;
-        description = lib.mdDoc ''
+        type = types.nullOr types.str;
+        description = mdDoc ''
           Command to run before sending the snapshot to the destination.
           Intended to run a remote script via {command}`ssh` on the
           destination, e.g. to bring up a backup disk or server or to put a
@@ -90,8 +115,8 @@ let
       };
 
       postsend = mkOption {
-        type = nullOr str;
-        description = lib.mdDoc ''
+        type = types.nullOr types.str;
+        description = mdDoc ''
           Command to run after sending the snapshot to the destination.
           Intended to run a remote script via {command}`ssh` on the
           destination, e.g. to bring up a backup disk or server or to put a
@@ -110,31 +135,31 @@ let
 
 
 
-  srcType = submodule ({ name, config, ... }: {
+  srcType = types.submodule ({ name, config, ... }: {
     options = {
 
       enable = mkOption {
-        type = bool;
-        description = lib.mdDoc "Whether to enable this source.";
+        type = types.bool;
+        description = mdDoc "Whether to enable this source.";
         default = true;
       };
 
       recursive = mkOption {
-        type = bool;
-        description = lib.mdDoc "Whether to do recursive snapshots.";
+        type = types.bool;
+        description = mdDoc "Whether to do recursive snapshots.";
         default = false;
       };
 
       mbuffer = {
         enable = mkOption {
-          type = bool;
-          description = lib.mdDoc "Whether to use {command}`mbuffer`.";
+          type = types.bool;
+          description = mdDoc "Whether to use {command}`mbuffer`.";
           default = false;
         };
 
         port = mkOption {
-          type = nullOr ints.u16;
-          description = lib.mdDoc ''
+          type = types.nullOr types.ints.u16;
+          description = mdDoc ''
               Port to use for {command}`mbuffer`.
 
               If this is null, it will run {command}`mbuffer` through
@@ -149,7 +174,7 @@ let
 
         size = mkOption {
           type = mbufferSizeType;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The size for {command}`mbuffer`.
             Supports the units b, k, M, G.
           '';
@@ -159,8 +184,8 @@ let
       };
 
       presnap = mkOption {
-        type = nullOr str;
-        description = lib.mdDoc ''
+        type = types.nullOr types.str;
+        description = mdDoc ''
           Command to run before snapshots are taken on the source dataset,
           e.g. for database locking/flushing. See also
           {option}`postsnap`.
@@ -172,8 +197,8 @@ let
       };
 
       postsnap = mkOption {
-        type = nullOr str;
-        description = lib.mdDoc ''
+        type = types.nullOr types.str;
+        description = mdDoc ''
           Command to run after snapshots are taken on the source dataset,
           e.g. for database unlocking. See also {option}`presnap`.
         '';
@@ -185,7 +210,7 @@ let
 
       timestampFormat = mkOption {
         type = timestampType;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The timestamp format to use for constructing snapshot names.
           The syntax is `strftime`-like. The string must
           consist of the mandatory `%Y %m %d %H %M %S`.
@@ -198,8 +223,8 @@ let
       };
 
       sendDelay = mkOption {
-        type = int;
-        description = lib.mdDoc ''
+        type = types.int;
+        description = mdDoc ''
           Specify delay (in seconds) before sending snaps to the destination.
           May be useful if you want to control sending time.
         '';
@@ -208,20 +233,20 @@ let
       };
 
       plan = mkOption {
-        type = str;
-        description = lib.mdDoc planDescription;
+        type = types.str;
+        description = mdDoc planDescription;
         example = planExample;
       };
 
       dataset = mkOption {
-        type = str;
-        description = lib.mdDoc "The dataset to use for this source.";
+        type = types.str;
+        description = mdDoc "The dataset to use for this source.";
         example = "tank/home";
       };
 
       destinations = mkOption {
-        type = attrsOf (destType config);
-        description = lib.mdDoc "Additional destinations.";
+        type = types.attrsOf (destType config);
+        description = mdDoc "Additional destinations.";
         default = {};
         example = literalExpression ''
           {
@@ -253,7 +278,7 @@ let
   nullOff = b: if b == null then "off" else toString b;
   stripSlashes = replaceStrings [ "/" ] [ "." ];
 
-  attrsToFile = config: concatStringsSep "\n" (builtins.attrValues (
+  attrsToFile = config: concatStringsSep "\n" (attrValues (
     mapAttrs (n: v: "${n}=${v}") config));
 
   mkDestAttrs = dst: with dst;
@@ -280,7 +305,7 @@ let
     tsformat = timestampFormat;
     zend_delay = toString sendDelay;
   } // foldr (a: b: a // b) {} (
-    map mkDestAttrs (builtins.attrValues destinations)
+    map mkDestAttrs (attrValues destinations)
   );
 
   files = mapAttrs' (n: srcCfg: let
@@ -294,42 +319,42 @@ in
 {
   options = {
     services.znapzend = {
-      enable = mkEnableOption (lib.mdDoc "ZnapZend ZFS backup daemon");
+      enable = mkEnableOption (mdDoc "ZnapZend ZFS backup daemon");
 
       logLevel = mkOption {
         default = "debug";
         example = "warning";
-        type = enum ["debug" "info" "warning" "err" "alert"];
-        description = lib.mdDoc ''
+        type = types.enum ["debug" "info" "warning" "err" "alert"];
+        description = mdDoc ''
           The log level when logging to file. Any of debug, info, warning, err,
           alert. Default in daemonized form is debug.
         '';
       };
 
       logTo = mkOption {
-        type = str;
+        type = types.str;
         default = "syslog::daemon";
         example = "/var/log/znapzend.log";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Where to log to (syslog::\<facility\> or \<filepath\>).
         '';
       };
 
       noDestroy = mkOption {
-        type = bool;
+        type = types.bool;
         default = false;
-        description = lib.mdDoc "Does all changes to the filesystem except destroy.";
+        description = mdDoc "Does all changes to the filesystem except destroy.";
       };
 
       autoCreation = mkOption {
-        type = bool;
+        type = types.bool;
         default = false;
-        description = lib.mdDoc "Automatically create the destination dataset if it does not exist.";
+        description = mdDoc "Automatically create the destination dataset if it does not exist.";
       };
 
       zetup = mkOption {
-        type = attrsOf srcType;
-        description = lib.mdDoc "Znapzend configuration.";
+        type = types.attrsOf srcType;
+        description = mdDoc "Znapzend configuration.";
         default = {};
         example = literalExpression ''
           {
@@ -349,8 +374,8 @@ in
       };
 
       pure = mkOption {
-        type = bool;
-        description = lib.mdDoc ''
+        type = types.bool;
+        description = mdDoc ''
           Do not persist any stateful znapzend setups. If this option is
           enabled, your previously set znapzend setups will be cleared and only
           the ones defined with this module will be applied.
@@ -358,17 +383,17 @@ in
         default = false;
       };
 
-      features.oracleMode = mkEnableOption (lib.mdDoc ''
+      features.oracleMode = mkEnableOption (mdDoc ''
         destroying snapshots one by one instead of using one long argument list.
         If source and destination are out of sync for a long time, you may have
         so many snapshots to destroy that the argument gets is too long and the
         command fails
       '');
-      features.recvu = mkEnableOption (lib.mdDoc ''
+      features.recvu = mkEnableOption (mdDoc ''
         recvu feature which uses `-u` on the receiving end to keep the destination
         filesystem unmounted
       '');
-      features.compressed = mkEnableOption (lib.mdDoc ''
+      features.compressed = mkEnableOption (mdDoc ''
         compressed feature which adds the options `-Lce` to
         the {command}`zfs send` command. When this is enabled, make
         sure that both the sending and receiving pool have the same relevant
@@ -379,7 +404,7 @@ in
         and {manpage}`zfs(8)`
         for more info
       '');
-      features.sendRaw = mkEnableOption (lib.mdDoc ''
+      features.sendRaw = mkEnableOption (mdDoc ''
         sendRaw feature which adds the options `-w` to the
         {command}`zfs send` command. For encrypted source datasets this
         instructs zfs not to decrypt before sending which results in a remote
@@ -388,7 +413,7 @@ in
         option must be used consistently, raw incrementals cannot be based on
         non-raw snapshots and vice versa
       '');
-      features.skipIntermediates = mkEnableOption (lib.mdDoc ''
+      features.skipIntermediates = mkEnableOption (mdDoc ''
         the skipIntermediates feature to send a single increment
         between latest common snapshot and the newly made one. It may skip
         several source snaps if the destination was offline for some time, and
@@ -396,14 +421,14 @@ in
         destinations, the new snapshot is sent as soon as it is created on the
         source, so there are no automatic increments to skip
       '');
-      features.lowmemRecurse = mkEnableOption (lib.mdDoc ''
+      features.lowmemRecurse = mkEnableOption (mdDoc ''
         use lowmemRecurse on systems where you have too many datasets, so a
         recursive listing of attributes to find backup plans exhausts the
         memory available to {command}`znapzend`: instead, go the slower
         way to first list all impacted dataset names, and then query their
         configs one by one
       '');
-      features.zfsGetType = mkEnableOption (lib.mdDoc ''
+      features.zfsGetType = mkEnableOption (mdDoc ''
         using zfsGetType if your {command}`zfs get` supports a
         `-t` argument for filtering by dataset type at all AND
         lists properties for snapshots by default when recursing, so that there
