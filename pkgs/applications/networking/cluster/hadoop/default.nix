@@ -23,11 +23,25 @@
 , callPackage
 }:
 
-with lib;
-
-assert elem stdenv.system [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
+assert builtins.elem stdenv.system [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
 
 let
+  inherit (lib)
+    attrByPath
+    attrNames
+    getLib
+    licenses
+    maintainers
+    makeBinPath
+    makeLibraryPath
+    optionals
+    optionalString
+    platforms
+    recursiveUpdate
+    sourceTypes
+    versionAtLeast
+    ;
+
   common = { pname, platformAttrs, jdk, tests }:
     stdenv.mkDerivation (finalAttrs: {
       inherit pname jdk;
