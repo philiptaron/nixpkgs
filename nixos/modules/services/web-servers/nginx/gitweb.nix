@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkIf
+    mkOption
+    optionalAttrs
+    types
+    ;
+
   cfg = config.services.nginx.gitweb;
   gitwebConfig = config.services.gitweb;
   package = pkgs.gitweb.override (optionalAttrs gitwebConfig.gitwebTheme {
@@ -17,7 +24,7 @@ in
     enable = mkOption {
       default = false;
       type = types.bool;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         If true, enable gitweb in nginx.
       '';
     };
@@ -25,7 +32,7 @@ in
     location = mkOption {
       default = "/gitweb";
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Location to serve gitweb on.
       '';
     };
@@ -33,7 +40,7 @@ in
     user = mkOption {
       default = "nginx";
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Existing user that the CGI process will belong to. (Default almost surely will do.)
       '';
     };
@@ -41,7 +48,7 @@ in
     group = mkOption {
       default = "nginx";
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Group that the CGI process will belong to. (Set to `config.services.gitolite.group` if you are using gitolite.)
       '';
     };
@@ -49,7 +56,7 @@ in
     virtualHost = mkOption {
       default = "_";
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         VirtualHost to serve gitweb on. Default is catch-all.
       '';
     };
