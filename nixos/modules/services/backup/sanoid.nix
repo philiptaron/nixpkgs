@@ -1,8 +1,28 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrNames
+    concatStringsSep
+    escapeShellArgs
+    generators
+    id
+    isList
+    maintainers
+    mapAttrs
+    mapAttrs'
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    modules
+    nameValuePair
+    types
+    unique
+    ;
+
   cfg = config.services.sanoid;
 
   datasetSettingsType = with types;
@@ -12,37 +32,37 @@ let
 
   commonOptions = {
     hourly = mkOption {
-      description = lib.mdDoc "Number of hourly snapshots.";
+      description = mdDoc "Number of hourly snapshots.";
       type = with types; nullOr ints.unsigned;
       default = null;
     };
 
     daily = mkOption {
-      description = lib.mdDoc "Number of daily snapshots.";
+      description = mdDoc "Number of daily snapshots.";
       type = with types; nullOr ints.unsigned;
       default = null;
     };
 
     monthly = mkOption {
-      description = lib.mdDoc "Number of monthly snapshots.";
+      description = mdDoc "Number of monthly snapshots.";
       type = with types; nullOr ints.unsigned;
       default = null;
     };
 
     yearly = mkOption {
-      description = lib.mdDoc "Number of yearly snapshots.";
+      description = mdDoc "Number of yearly snapshots.";
       type = with types; nullOr ints.unsigned;
       default = null;
     };
 
     autoprune = mkOption {
-      description = lib.mdDoc "Whether to automatically prune old snapshots.";
+      description = mdDoc "Whether to automatically prune old snapshots.";
       type = with types; nullOr bool;
       default = null;
     };
 
     autosnap = mkOption {
-      description = lib.mdDoc "Whether to automatically take snapshots.";
+      description = mdDoc "Whether to automatically take snapshots.";
       type = with types; nullOr bool;
       default = null;
     };
@@ -50,7 +70,7 @@ let
 
   datasetOptions = rec {
     use_template = mkOption {
-      description = lib.mdDoc "Names of the templates to use for this dataset.";
+      description = mdDoc "Names of the templates to use for this dataset.";
       type = types.listOf (types.str // {
         check = (types.enum (attrNames cfg.templates)).check;
         description = "configured template name";
@@ -60,7 +80,7 @@ let
     useTemplate = use_template;
 
     recursive = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to recursively snapshot dataset children.
         You can also set this to `"zfs"` to handle datasets
         recursively in an atomic way without the possibility to
@@ -71,7 +91,7 @@ let
     };
 
     process_children_only = mkOption {
-      description = lib.mdDoc "Whether to only snapshot child datasets if recursing.";
+      description = mdDoc "Whether to only snapshot child datasets if recursing.";
       type = types.bool;
       default = false;
     };
@@ -83,7 +103,7 @@ let
 
   # Function to build "zfs allow" and "zfs unallow" commands for the
   # filesystems we've delegated permissions to.
-  buildAllowCommand = zfsAction: permissions: dataset: lib.escapeShellArgs [
+  buildAllowCommand = zfsAction: permissions: dataset: escapeShellArgs [
     # Here we explicitly use the booted system to guarantee the stable API needed by ZFS
     "-+/run/booted-system/sw/bin/zfs"
     zfsAction
@@ -112,15 +132,15 @@ in
   # Interface
 
   options.services.sanoid = {
-    enable = mkEnableOption (lib.mdDoc "Sanoid ZFS snapshotting service");
+    enable = mkEnableOption (mdDoc "Sanoid ZFS snapshotting service");
 
-    package = lib.mkPackageOption pkgs "sanoid" {};
+    package = mkPackageOption pkgs "sanoid" {};
 
     interval = mkOption {
       type = types.str;
       default = "hourly";
       example = "daily";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Run sanoid at this interval. The default is to run hourly.
 
         The format is described in
@@ -136,7 +156,7 @@ in
         config.process_children_only = modules.mkAliasAndWrapDefsWithPriority id (options.processChildrenOnly or { });
       }));
       default = { };
-      description = lib.mdDoc "Datasets to snapshot.";
+      description = mdDoc "Datasets to snapshot.";
     };
 
     templates = mkOption {
@@ -145,12 +165,12 @@ in
         options = commonOptions;
       });
       default = { };
-      description = lib.mdDoc "Templates for datasets.";
+      description = mdDoc "Templates for datasets.";
     };
 
     settings = mkOption {
       type = types.attrsOf datasetSettingsType;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Free-form settings written directly to the config file. See
         <https://github.com/jimsalterjrs/sanoid/blob/master/sanoid.defaults.conf>
         for allowed values.
@@ -161,7 +181,7 @@ in
       type = types.listOf types.str;
       default = [ ];
       example = [ "--verbose" "--readonly" "--debug" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra arguments to pass to sanoid. See
         <https://github.com/jimsalterjrs/sanoid/#sanoid-command-line-options>
         for allowed options.
@@ -182,7 +202,7 @@ in
       serviceConfig = {
         ExecStartPre = (map (buildAllowCommand "allow" [ "snapshot" "mount" "destroy" ]) datasets);
         ExecStopPost = (map (buildAllowCommand "unallow" [ "snapshot" "mount" "destroy" ]) datasets);
-        ExecStart = lib.escapeShellArgs ([
+        ExecStart = escapeShellArgs ([
           "${cfg.package}/bin/sanoid"
           "--cron"
           "--configdir"
