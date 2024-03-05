@@ -1,13 +1,21 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   xcfg = config.services.xserver;
   cfg = xcfg.desktopManager.cde;
 in {
   options.services.xserver.desktopManager.cde = {
-    enable = mkEnableOption (lib.mdDoc "Common Desktop Environment");
+    enable = mkEnableOption (mdDoc "Common Desktop Environment");
 
     extraPackages = mkOption {
       type = with types; listOf package;
@@ -19,7 +27,7 @@ in {
           xclock bitmap xlsfonts xfd xrefresh xload xwininfo xdpyinfo xwd xwud
         ]
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra packages to be installed system wide.
       '';
     };
