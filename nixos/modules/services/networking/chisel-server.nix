@@ -1,8 +1,17 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optional
+    types
+    ;
+
   cfg = config.services.chisel-server;
 
 in {
