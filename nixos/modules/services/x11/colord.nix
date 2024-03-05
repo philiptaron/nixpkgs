@@ -1,8 +1,11 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
 
   cfg = config.services.colord;
 
@@ -11,7 +14,7 @@ in {
   options = {
 
     services.colord = {
-      enable = mkEnableOption (lib.mdDoc "colord, the color management daemon");
+      enable = mkEnableOption (mdDoc "colord, the color management daemon");
     };
 
   };
