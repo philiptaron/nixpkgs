@@ -1,8 +1,22 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStringsSep
+    concatStringsSep
+    isAttrs
+    isBool
+    isInt
+    isList
+    isString
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalAttrs
+    types
+    ;
 
   cfg = config.services.mtprotoproxy;
 
@@ -10,7 +24,7 @@ let
     PORT = cfg.port;
     USERS = cfg.users;
     SECURE_ONLY = cfg.secureOnly;
-  } // lib.optionalAttrs (cfg.adTag != null) { AD_TAG = cfg.adTag; }
+  } // optionalAttrs (cfg.adTag != null) { AD_TAG = cfg.adTag; }
     // cfg.extraConfig;
 
   convertOption = opt:
@@ -37,12 +51,12 @@ in
 
     services.mtprotoproxy = {
 
-      enable = mkEnableOption (lib.mdDoc "mtprotoproxy");
+      enable = mkEnableOption (mdDoc "mtprotoproxy");
 
       port = mkOption {
         type = types.port;
         default = 3256;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           TCP port to accept mtproto connections on.
         '';
       };
@@ -53,7 +67,7 @@ in
           tg = "00000000000000000000000000000000";
           tg2 = "0123456789abcdef0123456789abcdef";
         };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Allowed users and their secrets. A secret is a 32 characters long hex string.
         '';
       };
@@ -61,7 +75,7 @@ in
       secureOnly = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Don't allow users to connect in non-secure mode (without random padding).
         '';
       };
@@ -71,7 +85,7 @@ in
         default = null;
         # Taken from mtproxyproto's repo.
         example = "3c09c680b76ee91a4c25ad51f742267d";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Tag for advertising that can be obtained from @MTProxybot.
         '';
       };
@@ -82,7 +96,7 @@ in
         example = {
           STATS_PRINT_PERIOD = 600;
         };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra configuration options for mtprotoproxy.
         '';
       };
