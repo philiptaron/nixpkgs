@@ -1,16 +1,25 @@
 { config, pkgs, lib, ... }:
-with lib;
 let
+  inherit (lib)
+    escapeShellArgs
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.vmagent;
   settingsFormat = pkgs.formats.json { };
 in {
   options.services.vmagent = {
-    enable = mkEnableOption (lib.mdDoc "vmagent");
+    enable = mkEnableOption (mdDoc "vmagent");
 
     user = mkOption {
       default = "vmagent";
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         User account under which vmagent runs.
       '';
     };
@@ -18,7 +27,7 @@ in {
     group = mkOption {
       type = types.str;
       default = "vmagent";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Group under which vmagent runs.
       '';
     };
@@ -28,7 +37,7 @@ in {
     dataDir = mkOption {
       type = types.str;
       default = "/var/lib/vmagent";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The directory where vmagent stores its data files.
       '';
     };
@@ -36,14 +45,14 @@ in {
     remoteWriteUrl = mkOption {
       default = "http://localhost:8428/api/v1/write";
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The storage endpoint such as VictoriaMetrics
       '';
     };
 
     prometheusConfig = mkOption {
-      type = lib.types.submodule { freeformType = settingsFormat.type; };
-      description = lib.mdDoc ''
+      type = types.submodule { freeformType = settingsFormat.type; };
+      description = mdDoc ''
         Config for prometheus style metrics
       '';
     };
@@ -51,7 +60,7 @@ in {
     openFirewall = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to open the firewall for the default ports.
       '';
     };
@@ -59,7 +68,7 @@ in {
     extraArgs = mkOption {
       type = types.listOf types.str;
       default = [];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra args to pass to `vmagent`. See the docs:
         <https://docs.victoriametrics.com/vmagent.html#advanced-usage>
         or {command}`vmagent -help` for more information.
