@@ -1,9 +1,45 @@
 { config, lib, utils, pkgs, ... }:
 
-with utils;
-with lib;
-
 let
+  inherit (lib)
+    all
+    any
+    attrNames
+    attrValues
+    concatLists
+    concatMap
+    concatMapStrings
+    concatStrings
+    concatStringsSep
+    elem
+    filter
+    filterAttrs
+    flatten
+    flip
+    forEach
+    head
+    id
+    listToAttrs
+    mapAttrs
+    mapAttrs'
+    mapAttrsToList
+    mkDefault
+    mkForce
+    mkIf
+    mkMerge
+    mkOverride
+    nameValuePair
+    optional
+    optionalAttrs
+    optionals
+    optionalString
+    seq
+    splitString
+    ;
+
+  inherit (utils)
+    escapeSystemdPath
+    ;
 
   cfg = config.networking;
   interfaces = attrValues cfg.interfaces;
