@@ -1,8 +1,13 @@
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    mdDoc
+    mkOption
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.tor;
 in
 {
@@ -11,7 +16,7 @@ in
     torControlAddress = mkOption {
       type = types.str;
       default = "127.0.0.1";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Tor control IP address or hostname.
       '';
     };
@@ -19,7 +24,7 @@ in
     torControlPort = mkOption {
       type = types.port;
       default = 9051;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Tor control port.
       '';
     };
