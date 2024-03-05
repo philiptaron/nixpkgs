@@ -1,8 +1,15 @@
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    mdDoc
+    mkForce
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.postgres;
 in
 {
@@ -11,7 +18,7 @@ in
     telemetryPath = mkOption {
       type = types.str;
       default = "/metrics";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path under which to expose metrics.
       '';
     };
@@ -19,14 +26,14 @@ in
       type = types.str;
       default = "user=postgres database=postgres host=/run/postgresql sslmode=disable";
       example = "postgresql://username:password@localhost:5432/postgres?sslmode=disable";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Accepts PostgreSQL URI form and key=value form arguments.
       '';
     };
     runAsLocalSuperUser = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to run the exporter as the local 'postgres' super user.
       '';
     };
@@ -36,7 +43,7 @@ in
       type = types.nullOr types.path;
       default = null;
       example = "/root/prometheus-postgres-exporter.env";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Environment file as defined in {manpage}`systemd.exec(5)`.
 
         Secrets may be passed to the service without adding them to the
