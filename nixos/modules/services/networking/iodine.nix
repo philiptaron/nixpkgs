@@ -2,9 +2,22 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    hasPrefix
+    listToAttrs
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkIf
+    mkOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    nameValuePair
+    optionalString
+    types
+    ;
+
   cfg = config.services.iodine;
 
   iodinedUser = "iodined";
@@ -28,7 +41,7 @@ in
     services.iodine = {
       clients = mkOption {
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Each attribute of this option defines a systemd service that
           runs iodine. Many or none may be defined.
           The name of each service is
@@ -52,28 +65,28 @@ in
                 server = mkOption {
                   type = types.str;
                   default = "";
-                  description = lib.mdDoc "Hostname of server running iodined";
+                  description = mdDoc "Hostname of server running iodined";
                   example = "tunnel.mydomain.com";
                 };
 
                 relay = mkOption {
                   type = types.str;
                   default = "";
-                  description = lib.mdDoc "DNS server to use as an intermediate relay to the iodined server";
+                  description = mdDoc "DNS server to use as an intermediate relay to the iodined server";
                   example = "8.8.8.8";
                 };
 
                 extraConfig = mkOption {
                   type = types.str;
                   default = "";
-                  description = lib.mdDoc "Additional command line parameters";
+                  description = mdDoc "Additional command line parameters";
                   example = "-l 192.168.1.10 -p 23";
                 };
 
                 passwordFile = mkOption {
                   type = types.str;
                   default = "";
-                  description = lib.mdDoc "Path to a file containing the password.";
+                  description = mdDoc "Path to a file containing the password.";
                 };
               };
             }
@@ -85,34 +98,34 @@ in
         enable = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc "enable iodined server";
+          description = mdDoc "enable iodined server";
         };
 
         ip = mkOption {
           type = types.str;
           default = "";
-          description = lib.mdDoc "The assigned ip address or ip range";
+          description = mdDoc "The assigned ip address or ip range";
           example = "172.16.10.1/24";
         };
 
         domain = mkOption {
           type = types.str;
           default = "";
-          description = lib.mdDoc "Domain or subdomain of which nameservers point to us";
+          description = mdDoc "Domain or subdomain of which nameservers point to us";
           example = "tunnel.mydomain.com";
         };
 
         extraConfig = mkOption {
           type = types.str;
           default = "";
-          description = lib.mdDoc "Additional command line parameters";
+          description = mdDoc "Additional command line parameters";
           example = "-l 192.168.1.10 -p 23";
         };
 
         passwordFile = mkOption {
           type = types.str;
           default = "";
-          description = lib.mdDoc "File that contains password";
+          description = mdDoc "File that contains password";
         };
       };
 
