@@ -1,8 +1,21 @@
 { config, lib, options, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    lists
+    literalExpression
+    mapNullable
+    mdDoc
+    mkDefault
+    mkIf
+    mkMerge
+    mkOption
+    mkRemovedOptionModule
+    optionalString
+    types
+    ;
+
   cfg = config.services.graphite;
   opt = options.services.graphite;
   writeTextOrNull = f: t: mapNullable (pkgs.writeTextDir f) t;
@@ -73,26 +86,26 @@ in {
     dataDir = mkOption {
       type = types.path;
       default = "/var/db/graphite";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Data directory for graphite.
       '';
     };
 
     web = {
       enable = mkOption {
-        description = lib.mdDoc "Whether to enable graphite web frontend.";
+        description = mdDoc "Whether to enable graphite web frontend.";
         default = false;
         type = types.bool;
       };
 
       listenAddress = mkOption {
-        description = lib.mdDoc "Graphite web frontend listen address.";
+        description = mdDoc "Graphite web frontend listen address.";
         default = "127.0.0.1";
         type = types.str;
       };
 
       port = mkOption {
-        description = lib.mdDoc "Graphite web frontend port.";
+        description = mdDoc "Graphite web frontend port.";
         default = 8080;
         type = types.port;
       };
@@ -100,7 +113,7 @@ in {
       extraConfig = mkOption {
         type = types.str;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Graphite webapp settings. See:
           <https://graphite.readthedocs.io/en/latest/config-local-settings.html>
         '';
@@ -109,7 +122,7 @@ in {
 
     carbon = {
       config = mkOption {
-        description = lib.mdDoc "Content of carbon configuration file.";
+        description = mdDoc "Content of carbon configuration file.";
         default = ''
           [cache]
           # Listen on localhost by default for security reasons
@@ -125,13 +138,13 @@ in {
       };
 
       enableCache = mkOption {
-        description = lib.mdDoc "Whether to enable carbon cache, the graphite storage daemon.";
+        description = mdDoc "Whether to enable carbon cache, the graphite storage daemon.";
         default = false;
         type = types.bool;
       };
 
       storageAggregation = mkOption {
-        description = lib.mdDoc "Defines how to aggregate data to lower-precision retentions.";
+        description = mdDoc "Defines how to aggregate data to lower-precision retentions.";
         default = null;
         type = types.nullOr types.str;
         example = ''
@@ -143,7 +156,7 @@ in {
       };
 
       storageSchemas = mkOption {
-        description = lib.mdDoc "Defines retention rates for storing metrics.";
+        description = mdDoc "Defines retention rates for storing metrics.";
         default = "";
         type = types.nullOr types.str;
         example = ''
@@ -154,21 +167,21 @@ in {
       };
 
       blacklist = mkOption {
-        description = lib.mdDoc "Any metrics received which match one of the expressions will be dropped.";
+        description = mdDoc "Any metrics received which match one of the expressions will be dropped.";
         default = null;
         type = types.nullOr types.str;
         example = "^some\\.noisy\\.metric\\.prefix\\..*";
       };
 
       whitelist = mkOption {
-        description = lib.mdDoc "Only metrics received which match one of the expressions will be persisted.";
+        description = mdDoc "Only metrics received which match one of the expressions will be persisted.";
         default = null;
         type = types.nullOr types.str;
         example = ".*";
       };
 
       rewriteRules = mkOption {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Regular expression patterns that can be used to rewrite metric names
           in a search and replace fashion.
         '';
@@ -182,13 +195,13 @@ in {
       };
 
       enableRelay = mkOption {
-        description = lib.mdDoc "Whether to enable carbon relay, the carbon replication and sharding service.";
+        description = mdDoc "Whether to enable carbon relay, the carbon replication and sharding service.";
         default = false;
         type = types.bool;
       };
 
       relayRules = mkOption {
-        description = lib.mdDoc "Relay rules are used to send certain metrics to a certain backend.";
+        description = mdDoc "Relay rules are used to send certain metrics to a certain backend.";
         default = null;
         type = types.nullOr types.str;
         example = ''
@@ -199,13 +212,13 @@ in {
       };
 
       enableAggregator = mkOption {
-        description = lib.mdDoc "Whether to enable carbon aggregator, the carbon buffering service.";
+        description = mdDoc "Whether to enable carbon aggregator, the carbon buffering service.";
         default = false;
         type = types.bool;
       };
 
       aggregationRules = mkOption {
-        description = lib.mdDoc "Defines if and how received metrics will be aggregated.";
+        description = mdDoc "Defines if and how received metrics will be aggregated.";
         default = null;
         type = types.nullOr types.str;
         example = ''
@@ -217,13 +230,13 @@ in {
 
     seyren = {
       enable = mkOption {
-        description = lib.mdDoc "Whether to enable seyren service.";
+        description = mdDoc "Whether to enable seyren service.";
         default = false;
         type = types.bool;
       };
 
       port = mkOption {
-        description = lib.mdDoc "Seyren listening port.";
+        description = mdDoc "Seyren listening port.";
         default = 8081;
         type = types.port;
       };
@@ -231,27 +244,27 @@ in {
       seyrenUrl = mkOption {
         default = "http://localhost:${toString cfg.seyren.port}/";
         defaultText = literalExpression ''"http://localhost:''${toString config.${opt.seyren.port}}/"'';
-        description = lib.mdDoc "Host where seyren is accessible.";
+        description = mdDoc "Host where seyren is accessible.";
         type = types.str;
       };
 
       graphiteUrl = mkOption {
         default = "http://${cfg.web.listenAddress}:${toString cfg.web.port}";
         defaultText = literalExpression ''"http://''${config.${opt.web.listenAddress}}:''${toString config.${opt.web.port}}"'';
-        description = lib.mdDoc "Host where graphite service runs.";
+        description = mdDoc "Host where graphite service runs.";
         type = types.str;
       };
 
       mongoUrl = mkOption {
         default = "mongodb://${config.services.mongodb.bind_ip}:27017/seyren";
         defaultText = literalExpression ''"mongodb://''${config.services.mongodb.bind_ip}:27017/seyren"'';
-        description = lib.mdDoc "Mongodb connection string.";
+        description = mdDoc "Mongodb connection string.";
         type = types.str;
       };
 
       extraConfig = mkOption {
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra seyren configuration. See
           <https://github.com/scobal/seyren#config>
         '';
