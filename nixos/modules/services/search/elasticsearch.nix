@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.elasticsearch;
 
   es7 = builtins.compareVersions cfg.package.version "7" >= 0;
@@ -10,8 +18,8 @@ let
   esConfig = ''
     network.host: ${cfg.listenAddress}
     cluster.name: ${cfg.cluster_name}
-    ${lib.optionalString cfg.single_node "discovery.type: single-node"}
-    ${lib.optionalString (cfg.single_node && es7) "gateway.auto_import_dangling_indices: true"}
+    ${optionalString cfg.single_node "discovery.type: single-node"}
+    ${optionalString (cfg.single_node && es7) "gateway.auto_import_dangling_indices: true"}
 
     http.port: ${toString cfg.port}
     transport.port: ${toString cfg.tcp_port}
@@ -45,7 +53,7 @@ in
 
   options.services.elasticsearch = {
     enable = mkOption {
-      description = lib.mdDoc "Whether to enable elasticsearch.";
+      description = mdDoc "Whether to enable elasticsearch.";
       default = false;
       type = types.bool;
     };
@@ -53,37 +61,37 @@ in
     package = mkPackageOption pkgs "elasticsearch" { };
 
     listenAddress = mkOption {
-      description = lib.mdDoc "Elasticsearch listen address.";
+      description = mdDoc "Elasticsearch listen address.";
       default = "127.0.0.1";
       type = types.str;
     };
 
     port = mkOption {
-      description = lib.mdDoc "Elasticsearch port to listen for HTTP traffic.";
+      description = mdDoc "Elasticsearch port to listen for HTTP traffic.";
       default = 9200;
       type = types.port;
     };
 
     tcp_port = mkOption {
-      description = lib.mdDoc "Elasticsearch port for the node to node communication.";
+      description = mdDoc "Elasticsearch port for the node to node communication.";
       default = 9300;
       type = types.int;
     };
 
     cluster_name = mkOption {
-      description = lib.mdDoc "Elasticsearch name that identifies your cluster for auto-discovery.";
+      description = mdDoc "Elasticsearch name that identifies your cluster for auto-discovery.";
       default = "elasticsearch";
       type = types.str;
     };
 
     single_node = mkOption {
-      description = lib.mdDoc "Start a single-node cluster";
+      description = mdDoc "Start a single-node cluster";
       default = true;
       type = types.bool;
     };
 
     extraConf = mkOption {
-      description = lib.mdDoc "Extra configuration for elasticsearch.";
+      description = mdDoc "Extra configuration for elasticsearch.";
       default = "";
       type = types.str;
       example = ''
@@ -94,7 +102,7 @@ in
     };
 
     logging = mkOption {
-      description = lib.mdDoc "Elasticsearch logging configuration.";
+      description = mdDoc "Elasticsearch logging configuration.";
       default = ''
         logger.action.name = org.elasticsearch.action
         logger.action.level = info
@@ -113,34 +121,34 @@ in
     dataDir = mkOption {
       type = types.path;
       default = "/var/lib/elasticsearch";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Data directory for elasticsearch.
       '';
     };
 
     extraCmdLineOptions = mkOption {
-      description = lib.mdDoc "Extra command line options for the elasticsearch launcher.";
+      description = mdDoc "Extra command line options for the elasticsearch launcher.";
       default = [ ];
       type = types.listOf types.str;
     };
 
     extraJavaOptions = mkOption {
-      description = lib.mdDoc "Extra command line options for Java.";
+      description = mdDoc "Extra command line options for Java.";
       default = [ ];
       type = types.listOf types.str;
       example = [ "-Djava.net.preferIPv4Stack=true" ];
     };
 
     plugins = mkOption {
-      description = lib.mdDoc "Extra elasticsearch plugins";
+      description = mdDoc "Extra elasticsearch plugins";
       default = [ ];
       type = types.listOf types.package;
-      example = lib.literalExpression "[ pkgs.elasticsearchPlugins.discovery-ec2 ]";
+      example = literalExpression "[ pkgs.elasticsearchPlugins.discovery-ec2 ]";
     };
 
     restartIfChanged  = mkOption {
       type = types.bool;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Automatically restart the service on config change.
         This can be set to false to defer restarts on a server or cluster.
         Please consider the security implications of inadvertently running an older version,
