@@ -1,12 +1,31 @@
 # Udisks daemon.
 { config, lib, pkgs, ... }:
-with lib;
 
 let
+  inherit (lib)
+    concatMapStringsSep
+    generators
+    literalExpression
+    mapAttrs
+    mapAttrs'
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    nameValuePair
+    optional
+    optionalString
+    recursiveUpdate
+    types
+    versions
+    ;
+
   cfg = config.services.udisks2;
+
   settingsFormat = pkgs.formats.ini {
     listToValue = concatMapStringsSep "," (generators.mkValueStringDefault {});
   };
+
   configFiles = mapAttrs (name: value: (settingsFormat.generate name value)) (mapAttrs' (name: value: nameValuePair name value ) config.services.udisks2.settings);
 in
 
