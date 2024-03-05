@@ -1,8 +1,13 @@
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    mdDoc
+    mkOption
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.modemmanager;
 in
 {
@@ -11,7 +16,7 @@ in
     refreshRate = mkOption {
       type = types.str;
       default = "5s";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         How frequently ModemManager will refresh the extended signal quality
         information for each modem. The duration should be specified in seconds
         ("5s"), minutes ("1m"), or hours ("1h").
