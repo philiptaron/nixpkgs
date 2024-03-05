@@ -1,10 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
 
-let cfg = config.services.hardware.pommed;
-    defaultConf = "${pkgs.pommed_light}/etc/pommed.conf.mactel";
-in {
+  cfg = config.services.hardware.pommed;
+
+  defaultConf = "${pkgs.pommed_light}/etc/pommed.conf.mactel";
+in
+{
 
   options = {
 
@@ -13,7 +21,7 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to use the pommed tool to handle Apple laptop
           keyboard hotkeys.
         '';
@@ -22,7 +30,7 @@ in {
       configFile = mkOption {
         type = types.nullOr types.path;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The path to the {file}`pommed.conf` file. Leave
           to null to use the default config file
           ({file}`/etc/pommed.conf.mactel`). See the
