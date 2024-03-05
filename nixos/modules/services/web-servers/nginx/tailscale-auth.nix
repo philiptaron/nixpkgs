@@ -1,33 +1,44 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    genAttrs
+    getExe
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOptionMD
+    optionalString
+    types
+    ;
+
   cfg = config.services.nginx.tailscaleAuth;
 in
 {
   options.services.nginx.tailscaleAuth = {
-    enable = mkEnableOption (lib.mdDoc "Enable tailscale.nginx-auth, to authenticate nginx users via tailscale.");
+    enable = mkEnableOption (mdDoc "Enable tailscale.nginx-auth, to authenticate nginx users via tailscale.");
 
-    package = lib.mkPackageOptionMD pkgs "tailscale-nginx-auth" {};
+    package = mkPackageOptionMD pkgs "tailscale-nginx-auth" {};
 
     user = mkOption {
       type = types.str;
       default = "tailscale-nginx-auth";
-      description = lib.mdDoc "User which runs tailscale-nginx-auth";
+      description = mdDoc "User which runs tailscale-nginx-auth";
     };
 
     group = mkOption {
       type = types.str;
       default = "tailscale-nginx-auth";
-      description = lib.mdDoc "Group which runs tailscale-nginx-auth";
+      description = mdDoc "Group which runs tailscale-nginx-auth";
     };
 
     expectedTailnet = mkOption {
       default = "";
       type = types.nullOr types.str;
       example = "tailnet012345.ts.net";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         If you want to prevent node sharing from allowing users to access services
         across tailnets, declare your expected tailnets domain here.
       '';
@@ -36,7 +47,7 @@ in
     socketPath = mkOption {
       default = "/run/tailscale-nginx-auth/tailscale-nginx-auth.sock";
       type = types.path;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path of the socket listening to nginx authorization requests.
       '';
     };
@@ -44,7 +55,7 @@ in
     virtualHosts = mkOption {
       type = types.listOf types.str;
       default = [];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         A list of nginx virtual hosts to put behind tailscale.nginx-auth
       '';
     };
@@ -80,7 +91,7 @@ in
       requires = [ "tailscale-nginx-auth.socket" ];
 
       serviceConfig = {
-        ExecStart = "${lib.getExe cfg.package}";
+        ExecStart = "${getExe cfg.package}";
         RuntimeDirectory = "tailscale-nginx-auth";
         User = cfg.user;
         Group = cfg.group;
@@ -148,7 +159,7 @@ in
           proxy_set_header X-Webauth-Tailnet "$auth_tailnet";
           proxy_set_header X-Webauth-Profile-Picture "$auth_profile_picture";
 
-          ${lib.optionalString (cfg.expectedTailnet != "") ''proxy_set_header Expected-Tailnet "${cfg.expectedTailnet}";''}
+          ${optionalString (cfg.expectedTailnet != "") ''proxy_set_header Expected-Tailnet "${cfg.expectedTailnet}";''}
         '';
       });
   };
