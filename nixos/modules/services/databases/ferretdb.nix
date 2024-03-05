@@ -1,13 +1,21 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    maintainers
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.ferretdb;
 in
 {
 
-  meta.maintainers = with lib.maintainers; [ julienmalka camillemndn ];
+  meta.maintainers = with maintainers; [ julienmalka camillemndn ];
 
   options = {
     services.ferretdb = {
@@ -21,9 +29,9 @@ in
         description = "FerretDB package to use.";
       };
 
-      settings = lib.mkOption {
+      settings = mkOption {
         type =
-          lib.types.submodule { freeformType = with lib.types; attrsOf str; };
+          types.submodule { freeformType = with types; attrsOf str; };
         example = {
           FERRETDB_LOG_LEVEL = "warn";
           FERRETDB_MODE = "normal";
@@ -41,8 +49,8 @@ in
     {
 
       services.ferretdb.settings = {
-        FERRETDB_HANDLER = lib.mkDefault "sqlite";
-        FERRETDB_SQLITE_URL = lib.mkDefault "file:/var/lib/ferretdb/";
+        FERRETDB_HANDLER = mkDefault "sqlite";
+        FERRETDB_SQLITE_URL = mkDefault "file:/var/lib/ferretdb/";
       };
 
       systemd.services.ferretdb = {
