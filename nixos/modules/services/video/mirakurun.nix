@@ -1,8 +1,17 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    optional
+    types
+    ;
+
   cfg = config.services.mirakurun;
   mirakurun = pkgs.mirakurun;
   username = config.users.users.mirakurun.name;
@@ -24,12 +33,12 @@ in
   {
     options = {
       services.mirakurun = {
-        enable = mkEnableOption (lib.mdDoc "the Mirakurun DVR Tuner Server");
+        enable = mkEnableOption (mdDoc "the Mirakurun DVR Tuner Server");
 
         port = mkOption {
           type = with types; nullOr port;
           default = 40772;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Port to listen on. If `null`, it won't listen on
             any port.
           '';
@@ -38,7 +47,7 @@ in
         openFirewall = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Open ports in the firewall for Mirakurun.
 
             ::: {.warning}
@@ -52,7 +61,7 @@ in
         unixSocket = mkOption {
           type = with types; nullOr path;
           default = "/var/run/mirakurun/mirakurun.sock";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Path to unix socket to listen on. If `null`, it
             won't listen on any unix sockets.
           '';
@@ -61,7 +70,7 @@ in
         allowSmartCardAccess = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Install polkit rules to allow Mirakurun to access smart card readers
             which is commonly used along with tuner devices.
           '';
@@ -76,7 +85,7 @@ in
               overflowTimeLimit = 30000;
             };
           '';
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Options for server.yml.
 
             Documentation:
@@ -96,7 +105,7 @@ in
               }
             ];
           '';
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Options which are added to tuners.yml. If none is specified, it will
             automatically be generated at runtime.
 
@@ -117,7 +126,7 @@ in
               }
             ];
           '';
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Options which are added to channels.yml. If none is specified, it
             will automatically be generated at runtime.
 
