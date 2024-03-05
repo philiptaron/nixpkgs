@@ -1,8 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkDefault
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.services.xserver.displayManager.startx;
 
@@ -17,7 +22,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the dummy "startx" pseudo-display manager,
           which allows users to start X manually via the "startx" command
           from a vt shell. The X server runs under the user's id, not as root.
