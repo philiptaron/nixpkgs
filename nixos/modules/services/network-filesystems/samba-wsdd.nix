@@ -1,14 +1,22 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    escapeShellArgs
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.samba-wsdd;
 
 in {
   options = {
     services.samba-wsdd = {
-      enable = mkEnableOption (lib.mdDoc ''
+      enable = mkEnableOption (mdDoc ''
         Web Services Dynamic Discovery host daemon. This enables (Samba) hosts, like your local NAS device,
         to be found by Web Service Discovery Clients like Windows.
       '');
@@ -16,53 +24,53 @@ in {
         type = types.nullOr types.str;
         default = null;
         example = "eth0";
-        description = lib.mdDoc "Interface or address to use.";
+        description = mdDoc "Interface or address to use.";
       };
       hoplimit = mkOption {
         type = types.nullOr types.int;
         default = null;
         example = 2;
-        description = lib.mdDoc "Hop limit for multicast packets (default = 1).";
+        description = mdDoc "Hop limit for multicast packets (default = 1).";
       };
       openFirewall = mkOption {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to open the required firewall ports in the firewall.
         '';
         default = false;
-        type = lib.types.bool;
+        type = types.bool;
       };
       workgroup = mkOption {
         type = types.nullOr types.str;
         default = null;
         example = "HOME";
-        description = lib.mdDoc "Set workgroup name (default WORKGROUP).";
+        description = mdDoc "Set workgroup name (default WORKGROUP).";
       };
       hostname = mkOption {
         type = types.nullOr types.str;
         default = null;
         example = "FILESERVER";
-        description = lib.mdDoc "Override (NetBIOS) hostname to be used (default hostname).";
+        description = mdDoc "Override (NetBIOS) hostname to be used (default hostname).";
       };
       domain = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc "Set domain name (disables workgroup).";
+        description = mdDoc "Set domain name (disables workgroup).";
       };
       discovery = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Enable discovery operation mode.";
+        description = mdDoc "Enable discovery operation mode.";
       };
       listen = mkOption {
         type = types.str;
         default = "/run/wsdd/wsdd.sock";
-        description = lib.mdDoc "Listen on path or localhost port in discovery mode.";
+        description = mdDoc "Listen on path or localhost port in discovery mode.";
       };
       extraOptions = mkOption {
         type = types.listOf types.str;
         default = [ "--shortlog" ];
         example = [ "--verbose" "--no-http" "--ipv4only" "--no-host" ];
-        description = lib.mdDoc "Additional wsdd options.";
+        description = mdDoc "Additional wsdd options.";
       };
     };
   };
