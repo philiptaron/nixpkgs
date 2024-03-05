@@ -2,9 +2,15 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    generators
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
 
   cfg = config.services.upower;
 
@@ -21,7 +27,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable Upower, a DBus service that provides power
           management support to applications.
         '';
@@ -32,7 +38,7 @@ in
       enableWattsUpPro = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable the Watts Up Pro device.
 
           The Watts Up Pro contains a generic FTDI USB device without a specific
@@ -50,7 +56,7 @@ in
       noPollBatteries = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Don't poll the kernel for battery level changes.
 
           Some hardware will send us battery level changes through
@@ -62,7 +68,7 @@ in
       ignoreLid = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Do we ignore the lid state
 
           Some laptops are broken. The lid state is either inverted, or stuck
@@ -76,7 +82,7 @@ in
       usePercentageForPolicy = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Policy for warnings and action based on battery levels
 
           Whether battery percentage based policy should be used. The default
@@ -90,7 +96,7 @@ in
       percentageLow = mkOption {
         type = types.ints.unsigned;
         default = 10;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           When `usePercentageForPolicy` is
           `true`, the levels at which UPower will consider the
           battery low.
@@ -108,7 +114,7 @@ in
       percentageCritical = mkOption {
         type = types.ints.unsigned;
         default = 3;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           When `usePercentageForPolicy` is
           `true`, the levels at which UPower will consider the
           battery critical.
@@ -126,7 +132,7 @@ in
       percentageAction = mkOption {
         type = types.ints.unsigned;
         default = 2;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           When `usePercentageForPolicy` is
           `true`, the levels at which UPower will take action
           for the critical battery level.
@@ -144,7 +150,7 @@ in
       timeLow = mkOption {
         type = types.ints.unsigned;
         default = 1200;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           When `usePercentageForPolicy` is
           `false`, the time remaining in seconds at which
           UPower will consider the battery low.
@@ -158,7 +164,7 @@ in
       timeCritical = mkOption {
         type = types.ints.unsigned;
         default = 300;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           When `usePercentageForPolicy` is
           `false`, the time remaining in seconds at which
           UPower will consider the battery critical.
@@ -172,7 +178,7 @@ in
       timeAction = mkOption {
         type = types.ints.unsigned;
         default = 120;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           When `usePercentageForPolicy` is
           `false`, the time remaining in seconds at which
           UPower will take action for the critical battery level.
@@ -186,7 +192,7 @@ in
       criticalPowerAction = mkOption {
         type = types.enum [ "PowerOff" "Hibernate" "HybridSleep" ];
         default = "HybridSleep";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The action to take when `timeAction` or
           `percentageAction` has been reached for the batteries
           (UPS or laptop batteries) supplying the computer
