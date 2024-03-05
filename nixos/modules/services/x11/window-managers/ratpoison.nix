@@ -1,14 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    singleton
+    ;
+
   cfg = config.services.xserver.windowManager.ratpoison;
 in
 {
   ###### interface
   options = {
-    services.xserver.windowManager.ratpoison.enable = mkEnableOption (lib.mdDoc "ratpoison");
+    services.xserver.windowManager.ratpoison.enable = mkEnableOption (mdDoc "ratpoison");
   };
 
   ###### implementation
