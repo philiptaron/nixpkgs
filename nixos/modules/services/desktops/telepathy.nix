@@ -2,7 +2,15 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    teams
+    types
+    ;
+in
 
 {
 
@@ -19,7 +27,7 @@ with lib;
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable Telepathy service, a communications framework
           that enables real-time communication via pluggable protocol backends.
         '';
