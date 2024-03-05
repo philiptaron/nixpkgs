@@ -1,16 +1,26 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    escapeShellArgs
+    literalExpression
+    maintainers
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.cage;
 in {
-  options.services.cage.enable = mkEnableOption (lib.mdDoc "cage kiosk service");
+  options.services.cage.enable = mkEnableOption (mdDoc "cage kiosk service");
 
   options.services.cage.user = mkOption {
     type = types.str;
     default = "demo";
-    description = lib.mdDoc ''
+    description = mdDoc ''
       User to log-in as.
     '';
   };
@@ -19,7 +29,7 @@ in {
     type = types.listOf types.str;
     default = [];
     defaultText = literalExpression "[]";
-    description = lib.mdDoc "Additional command line arguments to pass to Cage.";
+    description = mdDoc "Additional command line arguments to pass to Cage.";
     example = ["-d"];
   };
 
@@ -29,14 +39,14 @@ in {
     example = {
       WLR_LIBINPUT_NO_DEVICES = "1";
     };
-    description = lib.mdDoc "Additional environment variables to pass to Cage.";
+    description = mdDoc "Additional environment variables to pass to Cage.";
   };
 
   options.services.cage.program = mkOption {
     type = types.path;
     default = "${pkgs.xterm}/bin/xterm";
     defaultText = literalExpression ''"''${pkgs.xterm}/bin/xterm"'';
-    description = lib.mdDoc ''
+    description = mdDoc ''
       Program to run in cage.
     '';
   };
@@ -108,6 +118,6 @@ in {
     systemd.defaultUnit = "graphical.target";
   };
 
-  meta.maintainers = with lib.maintainers; [ matthewbauer ];
+  meta.maintainers = with maintainers; [ matthewbauer ];
 
 }
