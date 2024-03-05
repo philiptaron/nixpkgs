@@ -3,9 +3,18 @@
 
 { options, config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOverride
+    optionalAttrs
+    trivial
+    ;
+
   cfg = config.testing;
 
   qemu-common = import ../../lib/qemu-common.nix { inherit lib pkgs; };
@@ -54,7 +63,7 @@ in
 
   options.testing = {
 
-    initrdBackdoor = lib.mkEnableOption (lib.mdDoc ''
+    initrdBackdoor = mkEnableOption (mdDoc ''
       enable backdoor.service in initrd. Requires
       boot.initrd.systemd.enable to be enabled. Boot will pause in
       stage 1 at initrd.target, and will listen for commands from the
@@ -76,14 +85,14 @@ in
       }
     ];
 
-    systemd.services.backdoor = lib.mkMerge [
+    systemd.services.backdoor = mkMerge [
       backdoorService
       {
         wantedBy = [ "multi-user.target" ];
       }
     ];
 
-    boot.initrd.systemd = lib.mkMerge [
+    boot.initrd.systemd = mkMerge [
       {
         contents."/etc/systemd/journald.conf".text = ''
           [Journal]
@@ -94,7 +103,7 @@ in
         extraConfig = config.systemd.extraConfig;
       }
 
-      (lib.mkIf cfg.initrdBackdoor {
+      (mkIf cfg.initrdBackdoor {
         # Implemented in machine.switch_root(). Suppress the unit by
         # making it a noop without removing it, which would break
         # initrd-parse-etc.service
@@ -105,7 +114,7 @@ in
           "/bin/true"
         ];
 
-        services.backdoor = lib.mkMerge [
+        services.backdoor = mkMerge [
           backdoorService
           {
             # TODO: Both stage 1 and stage 2 should use these same
@@ -135,7 +144,7 @@ in
     # that do not specify any nodes, or an empty attr set as nodes) will not
     # have the QEMU module loaded and thuse these options can't and should not
     # be set.
-    virtualisation = lib.optionalAttrs (options ? virtualisation.qemu) {
+    virtualisation = optionalAttrs (options ? virtualisation.qemu) {
       qemu = {
         # Only use a serial console, no TTY.
         # NOTE: optionalAttrs
@@ -144,7 +153,7 @@ in
         # TODO: refactor such that test-instrumentation can import qemu-vm
         #       or declare virtualisation.qemu.console option in a module that's always imported
         consoles = [ qemu-common.qemuSerialDevice ];
-        package  = lib.mkDefault pkgs.qemu_test;
+        package  = mkDefault pkgs.qemu_test;
       };
     };
 
@@ -153,7 +162,7 @@ in
       # Panic on out-of-memory conditions rather than letting the
       # OOM killer randomly get rid of processes, since this leads
       # to failures that are hard to diagnose.
-      "vm.panic_on_oom" = lib.mkDefault 2;
+      "vm.panic_on_oom" = mkDefault 2;
     };
 
     boot.kernelParams = [
@@ -198,7 +207,7 @@ in
     networking.defaultGateway = mkOverride 150 null;
     networking.nameservers = mkOverride 150 [ ];
 
-    system.requiredKernelConfig = with config.lib.kernelConfig; [
+    system.requiredKernelConfig = with config.kernelConfig; [
       (isYes "SERIAL_8250_CONSOLE")
       (isYes "SERIAL_8250")
       (isEnabled "VIRTIO_CONSOLE")
@@ -219,7 +228,7 @@ in
     services.qemuGuest.package = pkgs.qemu_test.ga;
 
     # Squelch warning about unset system.stateVersion
-    system.stateVersion = lib.mkDefault lib.trivial.release;
+    system.stateVersion = mkDefault trivial.release;
   };
 
 }
