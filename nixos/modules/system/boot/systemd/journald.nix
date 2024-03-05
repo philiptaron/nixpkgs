@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkOption
+    mkRenamedOptionModule
+    optional
+    optionalString
+    types
+    ;
+
   cfg = config.services.journald;
 in {
   imports = [
@@ -13,13 +21,13 @@ in {
     services.journald.console = mkOption {
       default = "";
       type = types.str;
-      description = lib.mdDoc "If non-empty, write log messages to the specified TTY device.";
+      description = mdDoc "If non-empty, write log messages to the specified TTY device.";
     };
 
     services.journald.rateLimitInterval = mkOption {
       default = "30s";
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Configures the rate limiting interval that is applied to all
         messages generated on the system. This rate limiting is applied
         per-service, so that two services which log do not interfere with
@@ -44,7 +52,7 @@ in {
     services.journald.rateLimitBurst = mkOption {
       default = 10000;
       type = types.int;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Configures the rate limiting burst limit (number of messages per
         interval) that is applied to all messages generated on the system.
         This rate limiting is applied per-service, so that two services
@@ -71,7 +79,7 @@ in {
       default = "";
       type = types.lines;
       example = "Storage=volatile";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra config options for systemd-journald. See man journald.conf
         for available options.
       '';
@@ -81,7 +89,7 @@ in {
       default = config.services.rsyslogd.enable || config.services.syslog-ng.enable;
       defaultText = literalExpression "services.rsyslogd.enable || services.syslog-ng.enable";
       type = types.bool;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to forward log messages to syslog.
       '';
     };
