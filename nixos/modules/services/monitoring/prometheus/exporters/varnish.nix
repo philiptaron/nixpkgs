@@ -1,8 +1,17 @@
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    escapeShellArg
+    literalExpression
+    mdDoc
+    mkDefault
+    mkOption
+    optional
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.varnish;
 in
 {
@@ -11,57 +20,57 @@ in
     noExit = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Do not exit server on Varnish scrape errors.
       '';
     };
     withGoMetrics = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Export go runtime and http handler metrics.
       '';
     };
     verbose = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Enable verbose logging.
       '';
     };
     raw = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Enable raw stdout logging without timestamps.
       '';
     };
     varnishStatPath = mkOption {
       type = types.str;
       default = "varnishstat";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path to varnishstat.
       '';
     };
     instance = mkOption {
       type = types.nullOr types.str;
       default = config.services.varnish.stateDir;
-      defaultText = lib.literalExpression "config.services.varnish.stateDir";
-      description = lib.mdDoc ''
+      defaultText = literalExpression "config.services.varnish.stateDir";
+      description = mdDoc ''
         varnishstat -n value.
       '';
     };
     healthPath = mkOption {
       type = types.nullOr types.str;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path under which to expose healthcheck. Disabled unless configured.
       '';
     };
     telemetryPath = mkOption {
       type = types.str;
       default = "/metrics";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path under which to expose metrics.
       '';
     };
