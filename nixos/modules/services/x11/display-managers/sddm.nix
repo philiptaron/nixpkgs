@@ -1,7 +1,25 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    attrNames
+    concatMapStrings
+    concatStringsSep
+    getAttr
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    optional
+    optionalAttrs
+    optionalString
+    recursiveUpdate
+    types
+    ;
+
   xcfg = config.services.xserver;
   dmcfg = xcfg.displayManager;
   cfg = dmcfg.sddm;
@@ -67,9 +85,9 @@ let
     Wayland = {
       EnableHiDPI = cfg.enableHidpi;
       SessionDir = "${dmcfg.sessionData.desktops}/share/wayland-sessions";
-      CompositorCommand = lib.optionalString cfg.wayland.enable cfg.wayland.compositorCommand;
+      CompositorCommand = optionalString cfg.wayland.enable cfg.wayland.compositorCommand;
     };
-  } // lib.optionalAttrs dmcfg.autoLogin.enable {
+  } // optionalAttrs dmcfg.autoLogin.enable {
     Autologin = {
       User = dmcfg.autoLogin.user;
       Session = autoLoginSessionName;
@@ -78,7 +96,7 @@ let
   };
 
   cfgFile =
-    iniFmt.generate "sddm.conf" (lib.recursiveUpdate defaultConfig cfg.settings);
+    iniFmt.generate "sddm.conf" (recursiveUpdate defaultConfig cfg.settings);
 
   autoLoginSessionName =
     "${dmcfg.sessionData.autologinSession}.desktop";
@@ -106,7 +124,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable sddm as the display manager.
         '';
       };
@@ -116,7 +134,7 @@ in
       enableHidpi = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable automatic HiDPI mode.
         '';
       };
@@ -130,7 +148,7 @@ in
             Session = "plasma.desktop";
           };
         };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra settings merged in and overwriting defaults in sddm.conf.
         '';
       };
@@ -138,7 +156,7 @@ in
       theme = mkOption {
         type = types.str;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Greeter theme to use.
         '';
       };
@@ -147,7 +165,7 @@ in
         type = types.listOf types.package;
         default = [];
         defaultText = "[]";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra Qt plugins / QML libraries to add to the environment.
         '';
       };
@@ -155,7 +173,7 @@ in
       autoNumlock = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable numlock at login.
         '';
       };
@@ -168,7 +186,7 @@ in
           xrandr --setprovideroutputsource modesetting NVIDIA-0
           xrandr --auto
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A script to execute when starting the display server. DEPRECATED, please
           use {option}`services.xserver.displayManager.setupCommands`.
         '';
@@ -177,7 +195,7 @@ in
       stopScript = mkOption {
         type = types.str;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A script to execute when stopping the display server.
         '';
       };
@@ -187,7 +205,7 @@ in
         relogin = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             If true automatic login will kick in again on session exit (logout), otherwise it
             will only log in automatically when the display-manager is started.
           '';
@@ -196,7 +214,7 @@ in
         minimumUid = mkOption {
           type = types.ints.u16;
           default = 1000;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Minimum user ID for auto-login user.
           '';
         };
@@ -224,7 +242,7 @@ in
                 keymap_options = xcfg.xkb.options;
               };
             }; in "${pkgs.weston}/bin/weston --shell=kiosk -c ${westonIni}";
-          description = lib.mdDoc "Command used to start the selected compositor";
+          description = mdDoc "Command used to start the selected compositor";
         };
       };
     };
