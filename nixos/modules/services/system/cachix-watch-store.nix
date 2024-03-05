@@ -1,31 +1,43 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    escapeShellArgs
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optional
+    optionals
+    optionalString
+    types
+    ;
+
   cfg = config.services.cachix-watch-store;
 in
 {
-  meta.maintainers = [ lib.maintainers.jfroche lib.maintainers.domenkozar ];
+  meta.maintainers = [ maintainers.jfroche maintainers.domenkozar ];
 
   options.services.cachix-watch-store = {
-    enable = mkEnableOption (lib.mdDoc "Cachix Watch Store: https://docs.cachix.org");
+    enable = mkEnableOption (mdDoc "Cachix Watch Store: https://docs.cachix.org");
 
     cacheName = mkOption {
       type = types.str;
-      description = lib.mdDoc "Cachix binary cache name";
+      description = mdDoc "Cachix binary cache name";
     };
 
     cachixTokenFile = mkOption {
       type = types.path;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Required file that needs to contain the cachix auth token.
       '';
     };
 
     signingKeyFile = mkOption {
       type = types.nullOr types.path;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Optional file containing a self-managed signing key to sign uploaded store paths.
       '';
       default = null;
@@ -33,25 +45,25 @@ in
 
     compressionLevel = mkOption {
       type = types.nullOr types.int;
-      description = lib.mdDoc "The compression level for ZSTD compression (between 0 and 16)";
+      description = mdDoc "The compression level for ZSTD compression (between 0 and 16)";
       default = null;
     };
 
     jobs = mkOption {
       type = types.nullOr types.int;
-      description = lib.mdDoc "Number of threads used for pushing store paths";
+      description = mdDoc "Number of threads used for pushing store paths";
       default = null;
     };
 
     host = mkOption {
       type = types.nullOr types.str;
       default = null;
-      description = lib.mdDoc "Cachix host to connect to";
+      description = mdDoc "Cachix host to connect to";
     };
 
     verbose = mkOption {
       type = types.bool;
-      description = lib.mdDoc "Enable verbose output";
+      description = mdDoc "Enable verbose output";
       default = false;
     };
 
@@ -79,19 +91,19 @@ in
         LoadCredential = [
           "cachix-token:${toString cfg.cachixTokenFile}"
         ]
-        ++ lib.optional (cfg.signingKeyFile != null) "signing-key:${toString cfg.signingKeyFile}";
+        ++ optional (cfg.signingKeyFile != null) "signing-key:${toString cfg.signingKeyFile}";
       };
       script =
         let
           command = [ "${cfg.package}/bin/cachix" ]
-            ++ (lib.optional cfg.verbose "--verbose") ++ (lib.optionals (cfg.host != null) [ "--host" cfg.host ])
-            ++ [ "watch-store" ] ++ (lib.optionals (cfg.compressionLevel != null) [ "--compression-level" (toString cfg.compressionLevel) ])
-            ++ (lib.optionals (cfg.jobs != null) [ "--jobs" (toString cfg.jobs) ]) ++ [ cfg.cacheName ];
+            ++ (optional cfg.verbose "--verbose") ++ (optionals (cfg.host != null) [ "--host" cfg.host ])
+            ++ [ "watch-store" ] ++ (optionals (cfg.compressionLevel != null) [ "--compression-level" (toString cfg.compressionLevel) ])
+            ++ (optionals (cfg.jobs != null) [ "--jobs" (toString cfg.jobs) ]) ++ [ cfg.cacheName ];
         in
         ''
           export CACHIX_AUTH_TOKEN="$(<"$CREDENTIALS_DIRECTORY/cachix-token")"
-          ${lib.optionalString (cfg.signingKeyFile != null) ''export CACHIX_SIGNING_KEY="$(<"$CREDENTIALS_DIRECTORY/signing-key")"''}
-          ${lib.escapeShellArgs command}
+          ${optionalString (cfg.signingKeyFile != null) ''export CACHIX_SIGNING_KEY="$(<"$CREDENTIALS_DIRECTORY/signing-key")"''}
+          ${escapeShellArgs command}
         '';
     };
   };
