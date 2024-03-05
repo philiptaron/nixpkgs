@@ -1,8 +1,17 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStringsSep
+    foldl
+    hasAttrByPath
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
 
   cfg = config.services.statsd;
 
@@ -56,34 +65,34 @@ in
 
   options.services.statsd = {
 
-    enable = mkEnableOption (lib.mdDoc "statsd");
+    enable = mkEnableOption (mdDoc "statsd");
 
     listenAddress = mkOption {
-      description = lib.mdDoc "Address that statsd listens on over UDP";
+      description = mdDoc "Address that statsd listens on over UDP";
       default = "127.0.0.1";
       type = types.str;
     };
 
     port = mkOption {
-      description = lib.mdDoc "Port that stats listens for messages on over UDP";
+      description = mdDoc "Port that stats listens for messages on over UDP";
       default = 8125;
       type = types.int;
     };
 
     mgmt_address = mkOption {
-      description = lib.mdDoc "Address to run management TCP interface on";
+      description = mdDoc "Address to run management TCP interface on";
       default = "127.0.0.1";
       type = types.str;
     };
 
     mgmt_port = mkOption {
-      description = lib.mdDoc "Port to run the management TCP interface on";
+      description = mdDoc "Port to run the management TCP interface on";
       default = 8126;
       type = types.int;
     };
 
     backends = mkOption {
-      description = lib.mdDoc "List of backends statsd will use for data persistence";
+      description = mdDoc "List of backends statsd will use for data persistence";
       default = [];
       example = [
         "graphite"
@@ -97,19 +106,19 @@ in
     };
 
     graphiteHost = mkOption {
-      description = lib.mdDoc "Hostname or IP of Graphite server";
+      description = mdDoc "Hostname or IP of Graphite server";
       default = null;
       type = types.nullOr types.str;
     };
 
     graphitePort = mkOption {
-      description = lib.mdDoc "Port of Graphite server (i.e. carbon-cache).";
+      description = mdDoc "Port of Graphite server (i.e. carbon-cache).";
       default = null;
       type = types.nullOr types.int;
     };
 
     extraConfig = mkOption {
-      description = lib.mdDoc "Extra configuration options for statsd";
+      description = mdDoc "Extra configuration options for statsd";
       default = "";
       type = types.nullOr types.str;
     };
