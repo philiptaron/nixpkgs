@@ -4,20 +4,33 @@
 , ...
 }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    escapeShellArgs
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOptionMD
+    types
+    ;
+
   cfg = config.services.matter-server;
+
   storageDir = "matter-server";
+
   storagePath = "/var/lib/${storageDir}";
+
   vendorId = "4939"; # home-assistant vendor ID
 in
 
 {
-  meta.maintainers = with lib.maintainers; [ leonm1 ];
+  meta.maintainers = with maintainers; [ leonm1 ];
 
   options.services.matter-server = with types; {
-    enable = mkEnableOption (lib.mdDoc "Matter-server");
+    enable = mkEnableOption (mdDoc "Matter-server");
 
     package = mkPackageOptionMD pkgs "python-matter-server" { };
 
