@@ -1,8 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.brltty;
 
   targets = [
@@ -18,14 +23,15 @@ let
     fi
   '';
 
-in {
+in
+{
 
   options = {
 
     services.brltty.enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc "Whether to enable the BRLTTY daemon.";
+      description = mdDoc "Whether to enable the BRLTTY daemon.";
     };
 
   };
