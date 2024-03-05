@@ -1,19 +1,28 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.shiori;
 in {
   options = {
     services.shiori = {
-      enable = mkEnableOption (lib.mdDoc "Shiori simple bookmarks manager");
+      enable = mkEnableOption (mdDoc "Shiori simple bookmarks manager");
 
       package = mkPackageOption pkgs "shiori" { };
 
       address = mkOption {
         type = types.str;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The IP address on which Shiori will listen.
           If empty, listens on all interfaces.
         '';
@@ -22,14 +31,14 @@ in {
       port = mkOption {
         type = types.port;
         default = 8080;
-        description = lib.mdDoc "The port of the Shiori web application";
+        description = mdDoc "The port of the Shiori web application";
       };
 
       webRoot = mkOption {
         type = types.str;
         default = "/";
         example = "/shiori";
-        description = lib.mdDoc "The root of the Shiori web application";
+        description = mdDoc "The root of the Shiori web application";
       };
     };
   };
