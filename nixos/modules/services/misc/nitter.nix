@@ -1,24 +1,39 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    escape
+    generators
+    isString
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRemovedOptionModule
+    recursiveUpdate
+    types
+    ;
+
   cfg = config.services.nitter;
+
   configFile = pkgs.writeText "nitter.conf" ''
     ${generators.toINI {
       # String values need to be quoted
       mkKeyValue = generators.mkKeyValueDefault {
         mkValueString = v:
-          if isString v then "\"" + (strings.escape ["\""] (toString v)) + "\""
+          if isString v then "\"" + (escape ["\""] (toString v)) + "\""
           else generators.mkValueStringDefault {} v;
       } " = ";
-    } (lib.recursiveUpdate {
+    } (recursiveUpdate {
       Server = cfg.server;
       Cache = cfg.cache;
       Config = cfg.config // { hmacKey = "@hmac@"; };
       Preferences = cfg.preferences;
     } cfg.settings)}
   '';
+
   # `hmac` is a secret used for cryptographic signing of video URLs.
   # Generate it on first launch, then copy configuration and replace
   # `@hmac@` with this value.
@@ -52,7 +67,7 @@ in
 
   options = {
     services.nitter = {
-      enable = mkEnableOption (lib.mdDoc "Nitter");
+      enable = mkEnableOption (mdDoc "Nitter");
 
       package = mkPackageOption pkgs "nitter" { };
 
@@ -61,46 +76,46 @@ in
           type =  types.str;
           default = "0.0.0.0";
           example = "127.0.0.1";
-          description = lib.mdDoc "The address to listen on.";
+          description = mdDoc "The address to listen on.";
         };
 
         port = mkOption {
           type = types.port;
           default = 8080;
           example = 8000;
-          description = lib.mdDoc "The port to listen on.";
+          description = mdDoc "The port to listen on.";
         };
 
         https = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc "Set secure attribute on cookies. Keep it disabled to enable cookies when not using HTTPS.";
+          description = mdDoc "Set secure attribute on cookies. Keep it disabled to enable cookies when not using HTTPS.";
         };
 
         httpMaxConnections = mkOption {
           type = types.int;
           default = 100;
-          description = lib.mdDoc "Maximum number of HTTP connections.";
+          description = mdDoc "Maximum number of HTTP connections.";
         };
 
         staticDir = mkOption {
           type = types.path;
           default = "${cfg.package}/share/nitter/public";
           defaultText = literalExpression ''"''${config.services.nitter.package}/share/nitter/public"'';
-          description = lib.mdDoc "Path to the static files directory.";
+          description = mdDoc "Path to the static files directory.";
         };
 
         title = mkOption {
           type = types.str;
           default = "nitter";
-          description = lib.mdDoc "Title of the instance.";
+          description = mdDoc "Title of the instance.";
         };
 
         hostname = mkOption {
           type = types.str;
           default = "localhost";
           example = "nitter.net";
-          description = lib.mdDoc "Hostname of the instance.";
+          description = mdDoc "Hostname of the instance.";
         };
       };
 
@@ -108,37 +123,37 @@ in
         listMinutes = mkOption {
           type = types.int;
           default = 240;
-          description = lib.mdDoc "How long to cache list info (not the tweets, so keep it high).";
+          description = mdDoc "How long to cache list info (not the tweets, so keep it high).";
         };
 
         rssMinutes = mkOption {
           type = types.int;
           default = 10;
-          description = lib.mdDoc "How long to cache RSS queries.";
+          description = mdDoc "How long to cache RSS queries.";
         };
 
         redisHost = mkOption {
           type = types.str;
           default = "localhost";
-          description = lib.mdDoc "Redis host.";
+          description = mdDoc "Redis host.";
         };
 
         redisPort = mkOption {
           type = types.port;
           default = 6379;
-          description = lib.mdDoc "Redis port.";
+          description = mdDoc "Redis port.";
         };
 
         redisConnections = mkOption {
           type = types.int;
           default = 20;
-          description = lib.mdDoc "Redis connection pool size.";
+          description = mdDoc "Redis connection pool size.";
         };
 
         redisMaxConnections = mkOption {
           type = types.int;
           default = 30;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Maximum number of connections to Redis.
 
             New connections are opened when none are available, but if the
@@ -152,29 +167,29 @@ in
         base64Media = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc "Use base64 encoding for proxied media URLs.";
+          description = mdDoc "Use base64 encoding for proxied media URLs.";
         };
 
-        enableRSS = mkEnableOption (lib.mdDoc "RSS feeds") // { default = true; };
+        enableRSS = mkEnableOption (mdDoc "RSS feeds") // { default = true; };
 
-        enableDebug = mkEnableOption (lib.mdDoc "request logs and debug endpoints");
+        enableDebug = mkEnableOption (mdDoc "request logs and debug endpoints");
 
         proxy = mkOption {
           type = types.str;
           default = "";
-          description = lib.mdDoc "URL to a HTTP/HTTPS proxy.";
+          description = mdDoc "URL to a HTTP/HTTPS proxy.";
         };
 
         proxyAuth = mkOption {
           type = types.str;
           default = "";
-          description = lib.mdDoc "Credentials for proxy.";
+          description = mdDoc "Credentials for proxy.";
         };
 
         tokenCount = mkOption {
           type = types.int;
           default = 10;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Minimum amount of usable tokens.
 
             Tokens are used to authorize API requests, but they expire after
@@ -191,112 +206,112 @@ in
           type = types.str;
           default = "";
           example = "nitter.net";
-          description = lib.mdDoc "Replace Twitter links with links to this instance (blank to disable).";
+          description = mdDoc "Replace Twitter links with links to this instance (blank to disable).";
         };
 
         replaceYouTube = mkOption {
           type = types.str;
           default = "";
           example = "piped.kavin.rocks";
-          description = lib.mdDoc "Replace YouTube links with links to this instance (blank to disable).";
+          description = mdDoc "Replace YouTube links with links to this instance (blank to disable).";
         };
 
         replaceReddit = mkOption {
           type = types.str;
           default = "";
           example = "teddit.net";
-          description = lib.mdDoc "Replace Reddit links with links to this instance (blank to disable).";
+          description = mdDoc "Replace Reddit links with links to this instance (blank to disable).";
         };
 
         mp4Playback = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc "Enable MP4 video playback.";
+          description = mdDoc "Enable MP4 video playback.";
         };
 
         hlsPlayback = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc "Enable HLS video streaming (requires JavaScript).";
+          description = mdDoc "Enable HLS video streaming (requires JavaScript).";
         };
 
         proxyVideos = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc "Proxy video streaming through the server (might be slow).";
+          description = mdDoc "Proxy video streaming through the server (might be slow).";
         };
 
         muteVideos = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc "Mute videos by default.";
+          description = mdDoc "Mute videos by default.";
         };
 
         autoplayGifs = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc "Autoplay GIFs.";
+          description = mdDoc "Autoplay GIFs.";
         };
 
         theme = mkOption {
           type = types.str;
           default = "Nitter";
-          description = lib.mdDoc "Instance theme.";
+          description = mdDoc "Instance theme.";
         };
 
         infiniteScroll = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc "Infinite scrolling (requires JavaScript, experimental!).";
+          description = mdDoc "Infinite scrolling (requires JavaScript, experimental!).";
         };
 
         stickyProfile = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc "Make profile sidebar stick to top.";
+          description = mdDoc "Make profile sidebar stick to top.";
         };
 
         bidiSupport = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc "Support bidirectional text (makes clicking on tweets harder).";
+          description = mdDoc "Support bidirectional text (makes clicking on tweets harder).";
         };
 
         hideTweetStats = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc "Hide tweet stats (replies, retweets, likes).";
+          description = mdDoc "Hide tweet stats (replies, retweets, likes).";
         };
 
         hideBanner = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc "Hide profile banner.";
+          description = mdDoc "Hide profile banner.";
         };
 
         hidePins = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc "Hide pinned tweets.";
+          description = mdDoc "Hide pinned tweets.";
         };
 
         hideReplies = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc "Hide tweet replies.";
+          description = mdDoc "Hide tweet replies.";
         };
 
         squareAvatars = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc "Square profile pictures.";
+          description = mdDoc "Square profile pictures.";
         };
       };
 
       settings = mkOption {
         type = types.attrs;
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Add settings here to override NixOS module generated settings.
 
           Check the official repository for the available settings:
@@ -307,7 +322,7 @@ in
       guestAccounts = mkOption {
         type = types.path;
         default = "/var/lib/nitter/guest_accounts.jsonl";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Path to the guest accounts file.
 
           This file contains a list of guest accounts that can be used to
@@ -324,13 +339,13 @@ in
       redisCreateLocally = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc "Configure local Redis server for Nitter.";
+        description = mdDoc "Configure local Redis server for Nitter.";
       };
 
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Open ports in the firewall for Nitter web interface.";
+        description = mdDoc "Open ports in the firewall for Nitter web interface.";
       };
     };
   };
@@ -361,7 +376,7 @@ in
           WorkingDirectory = "${cfg.package}/share/nitter";
           ExecStart = "${cfg.package}/bin/nitter";
           ExecStartPre = "${preStart}";
-          AmbientCapabilities = lib.mkIf (cfg.server.port < 1024) [ "CAP_NET_BIND_SERVICE" ];
+          AmbientCapabilities = mkIf (cfg.server.port < 1024) [ "CAP_NET_BIND_SERVICE" ];
           Restart = "on-failure";
           RestartSec = "5s";
           # Hardening
@@ -392,7 +407,7 @@ in
         };
     };
 
-    services.redis.servers.nitter = lib.mkIf (cfg.redisCreateLocally) {
+    services.redis.servers.nitter = mkIf (cfg.redisCreateLocally) {
       enable = true;
       port = cfg.cache.redisPort;
     };
