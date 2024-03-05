@@ -1,21 +1,28 @@
 { config, lib, pkgs, ...}:
-with lib;
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.gateone;
 in
 {
 options = {
     services.gateone = {
-      enable = mkEnableOption (lib.mdDoc "GateOne server");
+      enable = mkEnableOption (mdDoc "GateOne server");
       pidDir = mkOption {
         default = "/run/gateone";
         type = types.path;
-        description = lib.mdDoc "Path of pid files for GateOne.";
+        description = mdDoc "Path of pid files for GateOne.";
       };
       settingsDir = mkOption {
         default = "/var/lib/gateone";
         type = types.path;
-        description = lib.mdDoc "Path of configuration files for GateOne.";
+        description = mdDoc "Path of configuration files for GateOne.";
       };
     };
 };
