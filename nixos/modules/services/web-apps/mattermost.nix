@@ -1,8 +1,20 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    escapeShellArg
+    escapeShellArgs
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    optionalAttrs
+    optionalString
+    recursiveUpdate
+    types
+    ;
 
   cfg = config.services.mattermost;
 
@@ -18,10 +30,10 @@ let
     useSudo ? true
   }: ''
     if ! test -e ${escapeShellArg "${statePath}/.db-created"}; then
-      ${lib.optionalString useSudo "${pkgs.sudo}/bin/sudo -u ${escapeShellArg config.services.postgresql.superUser} \\"}
+      ${optionalString useSudo "${pkgs.sudo}/bin/sudo -u ${escapeShellArg config.services.postgresql.superUser} \\"}
         ${postgresPackage}/bin/psql postgres -c \
           "CREATE ROLE ${localDatabaseUser} WITH LOGIN NOCREATEDB NOCREATEROLE ENCRYPTED PASSWORD '${localDatabasePassword}'"
-      ${lib.optionalString useSudo "${pkgs.sudo}/bin/sudo -u ${escapeShellArg config.services.postgresql.superUser} \\"}
+      ${optionalString useSudo "${pkgs.sudo}/bin/sudo -u ${escapeShellArg config.services.postgresql.superUser} \\"}
         ${postgresPackage}/bin/createdb \
           --owner ${escapeShellArg localDatabaseUser} ${escapeShellArg localDatabaseName}
       touch ${escapeShellArg "${statePath}/.db-created"}
@@ -86,7 +98,7 @@ let
   mattermostConf = recursiveUpdate
     mattermostConfWithoutPlugins
     (
-      lib.optionalAttrs (mattermostPlugins != null) {
+      optionalAttrs (mattermostPlugins != null) {
         PluginSettings = {
           Enable = true;
         };
@@ -100,20 +112,20 @@ in
 {
   options = {
     services.mattermost = {
-      enable = mkEnableOption (lib.mdDoc "Mattermost chat server");
+      enable = mkEnableOption (mdDoc "Mattermost chat server");
 
       package = mkPackageOption pkgs "mattermost" { };
 
       statePath = mkOption {
         type = types.str;
         default = "/var/lib/mattermost";
-        description = lib.mdDoc "Mattermost working directory";
+        description = mdDoc "Mattermost working directory";
       };
 
       siteUrl = mkOption {
         type = types.str;
         example = "https://chat.example.com";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           URL this Mattermost instance is reachable under, without trailing slash.
         '';
       };
@@ -121,14 +133,14 @@ in
       siteName = mkOption {
         type = types.str;
         default = "Mattermost";
-        description = lib.mdDoc "Name of this Mattermost site.";
+        description = mdDoc "Name of this Mattermost site.";
       };
 
       listenAddress = mkOption {
         type = types.str;
         default = ":8065";
         example = "[::1]:8065";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Address and port this Mattermost instance listens to.
         '';
       };
@@ -136,7 +148,7 @@ in
       mutableConfig = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether the Mattermost config.json is writeable by Mattermost.
 
           Most of the settings can be edited in the system console of
@@ -153,7 +165,7 @@ in
       preferNixConfig = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If both mutableConfig and this option are set, the Nix configuration
           will take precedence over any settings configured in the server
           console.
@@ -163,7 +175,7 @@ in
       extraConfig = mkOption {
         type = types.attrs;
         default = { };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Additional configuration options as Nix attribute set in config.json schema.
         '';
       };
@@ -172,7 +184,7 @@ in
         type = types.listOf (types.oneOf [types.path types.package]);
         default = [];
         example = "[ ./com.github.moussetc.mattermost.plugin.giphy-2.0.0.tar.gz ]";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Plugins to add to the configuration. Overrides any installed if non-null.
           This is a list of paths to .tar.gz files or derivations evaluating to
           .tar.gz files.
@@ -181,7 +193,7 @@ in
       environmentFile = mkOption {
         type = types.nullOr types.path;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Environment file (see {manpage}`systemd.exec(5)`
           "EnvironmentFile=" section for the syntax) which sets config options
           for mattermost (see [the mattermost documentation](https://docs.mattermost.com/configure/configuration-settings.html#environment-variables)).
@@ -198,7 +210,7 @@ in
       localDatabaseCreate = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Create a local PostgreSQL database for Mattermost automatically.
         '';
       };
@@ -206,7 +218,7 @@ in
       localDatabaseName = mkOption {
         type = types.str;
         default = "mattermost";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Local Mattermost database name.
         '';
       };
@@ -214,7 +226,7 @@ in
       localDatabaseUser = mkOption {
         type = types.str;
         default = "mattermost";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Local Mattermost database username.
         '';
       };
@@ -222,7 +234,7 @@ in
       localDatabasePassword = mkOption {
         type = types.str;
         default = "mmpgsecret";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Password for local Mattermost database user.
         '';
       };
@@ -230,7 +242,7 @@ in
       user = mkOption {
         type = types.str;
         default = "mattermost";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           User which runs the Mattermost service.
         '';
       };
@@ -238,19 +250,19 @@ in
       group = mkOption {
         type = types.str;
         default = "mattermost";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Group which runs the Mattermost service.
         '';
       };
 
       matterircd = {
-        enable = mkEnableOption (lib.mdDoc "Mattermost IRC bridge");
+        enable = mkEnableOption (mdDoc "Mattermost IRC bridge");
         package = mkPackageOption pkgs "matterircd" { };
         parameters = mkOption {
           type = types.listOf types.str;
           default = [ ];
           example = [ "-mmserver chat.example.com" "-bind [::]:6667" ];
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Set commandline parameters to pass to matterircd. See
             https://github.com/42wim/matterircd#usage for more information.
           '';
@@ -288,24 +300,24 @@ in
           mkdir -p "${cfg.statePath}"/{data,config,logs,plugins}
           mkdir -p "${cfg.statePath}/plugins"/{client,server}
           ln -sf ${cfg.package}/{bin,fonts,i18n,templates,client} "${cfg.statePath}"
-        '' + lib.optionalString (mattermostPlugins != null) ''
+        '' + optionalString (mattermostPlugins != null) ''
           rm -rf "${cfg.statePath}/data/plugins"
           ln -sf ${mattermostPlugins}/data/plugins "${cfg.statePath}/data"
-        '' + lib.optionalString (!cfg.mutableConfig) ''
+        '' + optionalString (!cfg.mutableConfig) ''
           rm -f "${cfg.statePath}/config/config.json"
           ${pkgs.jq}/bin/jq -s '.[0] * .[1]' ${cfg.package}/config/config.json ${mattermostConfJSON} > "${cfg.statePath}/config/config.json"
-        '' + lib.optionalString cfg.mutableConfig ''
+        '' + optionalString cfg.mutableConfig ''
           if ! test -e "${cfg.statePath}/config/.initial-created"; then
             rm -f ${cfg.statePath}/config/config.json
             ${pkgs.jq}/bin/jq -s '.[0] * .[1]' ${cfg.package}/config/config.json ${mattermostConfJSON} > "${cfg.statePath}/config/config.json"
             touch "${cfg.statePath}/config/.initial-created"
           fi
-        '' + lib.optionalString (cfg.mutableConfig && cfg.preferNixConfig) ''
+        '' + optionalString (cfg.mutableConfig && cfg.preferNixConfig) ''
           new_config="$(${pkgs.jq}/bin/jq -s '.[0] * .[1]' "${cfg.statePath}/config/config.json" ${mattermostConfJSON})"
 
           rm -f "${cfg.statePath}/config/config.json"
           echo "$new_config" > "${cfg.statePath}/config/config.json"
-        '' + lib.optionalString cfg.localDatabaseCreate (createDb {}) + ''
+        '' + optionalString cfg.localDatabaseCreate (createDb {}) + ''
           # Don't change permissions recursively on the data, current, and symlinked directories (see ln -sf command above).
           # This dramatically decreases startup times for installations with a lot of files.
           find . -maxdepth 1 -not -name data -not -name client -not -name templates -not -name i18n -not -name fonts -not -name bin -not -name . \
