@@ -1,8 +1,36 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    any
+    attrValues
+    boolToString
+    concatMapStringsSep
+    concatStrings
+    concatStringsSep
+    escapeShellArg
+    flatten
+    generators
+    isBool
+    isInt
+    isList
+    isString
+    literalExpression
+    mapAttrs'
+    mapAttrsToList
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    nameValuePair
+    optional
+    optionalString
+    strings
+    types
+    ;
+
   cfg = config.services.invoiceplane;
   eachSite = cfg.sites;
   user = "invoiceplane";
@@ -31,10 +59,10 @@ let
   mkPhpValue = v:
     if isString v then escapeShellArg v
     # NOTE: If any value contains a , (comma) this will not get escaped
-    else if isList v && any lib.strings.isCoercibleToString v then escapeShellArg (concatMapStringsSep "," toString v)
+    else if isList v && any strings.isCoercibleToString v then escapeShellArg (concatMapStringsSep "," toString v)
     else if isInt v then toString v
     else if isBool v then boolToString v
-    else abort "The Invoiceplane config value ${lib.generators.toPretty {} v} can not be encoded."
+    else abort "The Invoiceplane config value ${generators.toPretty {} v} can not be encoded."
   ;
 
   extraConfig = hostName: cfg: let
@@ -80,12 +108,12 @@ let
     {
       options = {
 
-        enable = mkEnableOption (lib.mdDoc "InvoicePlane web application");
+        enable = mkEnableOption (mdDoc "InvoicePlane web application");
 
         stateDir = mkOption {
           type = types.path;
           default = "/var/lib/invoiceplane/${name}";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             This directory is used for uploads of attachments and cache.
             The directory passed here is automatically created and permissions
             adjusted as required.
@@ -96,32 +124,32 @@ let
           host = mkOption {
             type = types.str;
             default = "localhost";
-            description = lib.mdDoc "Database host address.";
+            description = mdDoc "Database host address.";
           };
 
           port = mkOption {
             type = types.port;
             default = 3306;
-            description = lib.mdDoc "Database host port.";
+            description = mdDoc "Database host port.";
           };
 
           name = mkOption {
             type = types.str;
             default = "invoiceplane";
-            description = lib.mdDoc "Database name.";
+            description = mdDoc "Database name.";
           };
 
           user = mkOption {
             type = types.str;
             default = "invoiceplane";
-            description = lib.mdDoc "Database user.";
+            description = mdDoc "Database user.";
           };
 
           passwordFile = mkOption {
             type = types.nullOr types.path;
             default = null;
             example = "/run/keys/invoiceplane-dbpassword";
-            description = lib.mdDoc ''
+            description = mdDoc ''
               A file containing the password corresponding to
               {option}`database.user`.
             '';
@@ -130,14 +158,14 @@ let
           createLocally = mkOption {
             type = types.bool;
             default = true;
-            description = lib.mdDoc "Create the database and database user locally.";
+            description = mdDoc "Create the database and database user locally.";
           };
         };
 
         invoiceTemplates = mkOption {
           type = types.listOf types.path;
           default = [];
-          description = lib.mdDoc ''
+          description = mdDoc ''
             List of path(s) to respective template(s) which are copied from the 'invoice_templates/pdf' directory.
 
             ::: {.note}
@@ -176,7 +204,7 @@ let
             "pm.max_spare_servers" = 4;
             "pm.max_requests" = 500;
           };
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Options for the InvoicePlane PHP pool. See the documentation on `php-fpm.conf`
             for details on configuration directives.
           '';
@@ -190,7 +218,7 @@ let
             DISABLE_SETUP=true
             IP_URL=https://invoice.example.com
           '';
-          description = lib.mdDoc ''
+          description = mdDoc ''
             InvoicePlane configuration. Refer to
             <https://github.com/InvoicePlane/InvoicePlane/blob/master/ipconfig.php.example>
             for details on supported values.
@@ -204,7 +232,7 @@ let
         settings = mkOption {
           type = types.attrsOf types.anything;
           default = {};
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Structural InvoicePlane configuration. Refer to
             <https://github.com/InvoicePlane/InvoicePlane/blob/master/ipconfig.php.example>
             for details and supported values.
@@ -222,7 +250,7 @@ let
           enable = mkOption {
             type = types.bool;
             default = false;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Enable cron service which periodically runs Invoiceplane tasks.
               Requires key taken from the administration page. Refer to
               <https://wiki.invoiceplane.com/en/1.0/modules/recurring-invoices>
@@ -231,7 +259,7 @@ let
           };
           key = mkOption {
             type = types.str;
-            description = lib.mdDoc "Cron key taken from the administration page.";
+            description = mdDoc "Cron key taken from the administration page.";
           };
         };
 
@@ -248,20 +276,20 @@ in
         options.sites = mkOption {
           type = types.attrsOf (types.submodule siteOpts);
           default = {};
-          description = lib.mdDoc "Specification of one or more WordPress sites to serve";
+          description = mdDoc "Specification of one or more WordPress sites to serve";
         };
 
         options.webserver = mkOption {
           type = types.enum [ "caddy" "nginx" ];
           default = "caddy";
           example = "nginx";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Which webserver to use for virtual host management.
           '';
         };
       };
       default = {};
-      description = lib.mdDoc "InvoicePlane configuration.";
+      description = mdDoc "InvoicePlane configuration.";
     };
 
   };
