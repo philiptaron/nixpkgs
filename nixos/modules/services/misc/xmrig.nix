@@ -1,19 +1,29 @@
 { config, pkgs, lib, ... }:
 
-
 let
+  inherit (lib)
+    getExe
+    literalExpression
+    maintainers
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    ;
+
   cfg = config.services.xmrig;
 
   json = pkgs.formats.json { };
+
   configFile = json.generate "config.json" cfg.settings;
 in
-
-with lib;
 
 {
   options = {
     services.xmrig = {
-      enable = mkEnableOption (lib.mdDoc "XMRig Mining Software");
+      enable = mkEnableOption (mdDoc "XMRig Mining Software");
 
       package = mkPackageOption pkgs "xmrig" {
         example = "xmrig-mo";
@@ -38,7 +48,7 @@ with lib;
             ]
           }
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           XMRig configuration. Refer to
           <https://xmrig.com/docs/miner/config>
           for details on supported values.
@@ -55,18 +65,18 @@ with lib;
       after = [ "network.target" ];
       description = "XMRig Mining Software Service";
       serviceConfig = {
-        ExecStartPre = "${lib.getExe cfg.package} --config=${configFile} --dry-run";
-        ExecStart = "${lib.getExe cfg.package} --config=${configFile}";
+        ExecStartPre = "${getExe cfg.package} --config=${configFile} --dry-run";
+        ExecStart = "${getExe cfg.package} --config=${configFile}";
         # https://xmrig.com/docs/miner/randomx-optimization-guide/msr
         # If you use recent XMRig with root privileges (Linux) or admin
         # privileges (Windows) the miner configure all MSR registers
         # automatically.
-        DynamicUser = lib.mkDefault false;
+        DynamicUser = mkDefault false;
       };
     };
   };
 
-  meta = with lib; {
+  meta = {
     maintainers = with maintainers; [ ratsclub ];
   };
 }
