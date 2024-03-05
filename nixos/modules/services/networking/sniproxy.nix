@@ -1,8 +1,14 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRemovedOptionModule
+    types
+    ;
 
   cfg = config.services.sniproxy;
 
@@ -18,24 +24,24 @@ in
 
   options = {
     services.sniproxy = {
-      enable = mkEnableOption (lib.mdDoc "sniproxy server");
+      enable = mkEnableOption (mdDoc "sniproxy server");
 
       user = mkOption {
         type = types.str;
         default = "sniproxy";
-        description = lib.mdDoc "User account under which sniproxy runs.";
+        description = mdDoc "User account under which sniproxy runs.";
       };
 
       group = mkOption {
         type = types.str;
         default = "sniproxy";
-        description = lib.mdDoc "Group under which sniproxy runs.";
+        description = mdDoc "Group under which sniproxy runs.";
       };
 
       config = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc "sniproxy.conf configuration excluding the daemon username and pid file.";
+        description = mdDoc "sniproxy.conf configuration excluding the daemon username and pid file.";
         example = ''
           error_log {
             filename /var/log/sniproxy/error.log
