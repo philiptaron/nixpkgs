@@ -1,8 +1,31 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMap
+    concatStrings
+    escapeShellArg
+    getExe
+    hasInfix
+    hasPrefix
+    hasSuffix
+    literalExpression
+    maintainers
+    mapAttrsToList
+    mdDoc
+    mkChangedOptionModule
+    mkDefault
+    mkIf
+    mkMerge
+    mkOption
+    mkRenamedOptionModule
+    optionalString
+    removeSuffix
+    strings
+    toLower
+    types
+    ;
+
   cfg = config.boot.loader.systemd-boot;
 
   efi = config.boot.loader.efi;
@@ -46,7 +69,7 @@ let
         exit 1
       }
       ${pkgs.util-linuxMinimal}/bin/findmnt ${efiSysMountPoint} > /dev/null || fail efiSysMountPoint ${efiSysMountPoint}
-      ${lib.optionalString
+      ${optionalString
         (cfg.xbootldrMountPoint != null)
         "${pkgs.util-linuxMinimal}/bin/findmnt ${cfg.xbootldrMountPoint} > /dev/null || fail xbootldrMountPoint ${cfg.xbootldrMountPoint}"}
     '';
@@ -69,7 +92,7 @@ let
   checkedSystemdBootBuilder = pkgs.runCommand "systemd-boot" { } ''
     mkdir -p $out/bin
     install -m755 ${systemdBootBuilder} $out/bin/systemd-boot-builder
-    ${lib.getExe pkgs.buildPackages.mypy} \
+    ${getExe pkgs.buildPackages.mypy} \
       --no-implicit-optional \
       --disallow-untyped-calls \
       --disallow-untyped-defs \
@@ -83,19 +106,19 @@ let
   '';
 in {
 
-  meta.maintainers = with lib.maintainers; [ julienmalka ];
+  meta.maintainers = with maintainers; [ julienmalka ];
 
   imports =
     [ (mkRenamedOptionModule [ "boot" "loader" "gummiboot" "enable" ] [ "boot" "loader" "systemd-boot" "enable" ])
-      (lib.mkChangedOptionModule
+      (mkChangedOptionModule
         [ "boot" "loader" "systemd-boot" "memtest86" "entryFilename" ]
         [ "boot" "loader" "systemd-boot" "memtest86" "sortKey" ]
-        (config: lib.strings.removeSuffix ".conf" config.boot.loader.systemd-boot.memtest86.entryFilename)
+        (config: removeSuffix ".conf" config.boot.loader.systemd-boot.memtest86.entryFilename)
       )
-      (lib.mkChangedOptionModule
+      (mkChangedOptionModule
         [ "boot" "loader" "systemd-boot" "netbootxyz" "entryFilename" ]
         [ "boot" "loader" "systemd-boot" "netbootxyz" "sortKey" ]
-        (config: lib.strings.removeSuffix ".conf" config.boot.loader.systemd-boot.netbootxyz.entryFilename)
+        (config: removeSuffix ".conf" config.boot.loader.systemd-boot.netbootxyz.entryFilename)
       )
     ];
 
@@ -105,7 +128,7 @@ in {
 
       type = types.bool;
 
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to enable the systemd-boot (formerly gummiboot) EFI boot manager.
         For more information about systemd-boot:
         https://www.freedesktop.org/wiki/Software/systemd/systemd-boot/
@@ -114,7 +137,7 @@ in {
 
     sortKey = mkOption {
       default = "nixos";
-      type = lib.types.str;
+      type = types.str;
       description = ''
         The sort key used for the NixOS bootloader entries.
         This key determines sorting relative to non-NixOS entries.
@@ -146,7 +169,7 @@ in {
 
       type = types.bool;
 
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to allow editing the kernel command-line before
         boot. It is recommended to set this to false, as it allows
         gaining root access by passing init=/bin/sh as a kernel
@@ -158,7 +181,7 @@ in {
     xbootldrMountPoint = mkOption {
       default = null;
       type = types.nullOr types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Where the XBOOTLDR partition is mounted.
 
         If set, this partition will be used as $BOOT to store boot loader entries and extra files
@@ -171,7 +194,7 @@ in {
       default = null;
       example = 120;
       type = types.nullOr types.int;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Maximum number of latest generations in the boot menu.
         Useful to prevent boot partition running out of disk space.
 
@@ -188,7 +211,7 @@ in {
         sed -i "s|@INIT@|$init_value|g" /boot/custom/config_with_placeholder.conf
       '';
       type = types.lines;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Additional shell commands inserted in the bootloader installer
         script after generating menu entries. It can be used to expand
         on extra boot entries that cannot incorporate certain pieces of
@@ -201,7 +224,7 @@ in {
 
       type = types.enum [ "0" "1" "2" "auto" "max" "keep" ];
 
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The resolution of the console. The following values are valid:
 
         - `"0"`: Standard UEFI 80x25 mode
@@ -217,7 +240,7 @@ in {
       enable = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Make Memtest86+ available from the systemd-boot menu. Memtest86+ is a
           program for testing memory.
         '';
@@ -226,7 +249,7 @@ in {
       sortKey = mkOption {
         default = "o_memtest86";
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           `systemd-boot` orders the menu entries by their sort keys,
           so if you want something to appear after all the NixOS entries,
           it should start with {file}`o` or onwards.
@@ -240,7 +263,7 @@ in {
       enable = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Make `netboot.xyz` available from the
           `systemd-boot` menu. `netboot.xyz`
           is a menu system that allows you to boot OS installers and
@@ -251,7 +274,7 @@ in {
       sortKey = mkOption {
         default = "o_netbootxyz";
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           `systemd-boot` orders the menu entries by their sort keys,
           so if you want something to appear after all the NixOS entries,
           it should start with {file}`o` or onwards.
@@ -271,7 +294,7 @@ in {
           sort-key z_memtest
         '''; }
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Any additional entries you want added to the `systemd-boot` menu.
         These entries will be copied to {file}`$BOOT/loader/entries`.
         Each attribute name denotes the destination file name,
@@ -290,7 +313,7 @@ in {
       example = literalExpression ''
         { "efi/memtest86/memtest.efi" = "''${pkgs.memtest86plus}/memtest.efi"; }
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         A set of files to be copied to {file}`$BOOT`.
         Each attribute name denotes the destination file name in
         {file}`$BOOT`, while the corresponding
@@ -303,7 +326,7 @@ in {
 
       type = types.bool;
 
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Invoke `bootctl install` with the `--graceful` option,
         which ignores errors when EFI variables cannot be written or when the EFI System Partition
         cannot be found. Currently only applies to random seed operations.
@@ -336,25 +359,25 @@ in {
     ] ++ concatMap (filename: [
       {
         assertion = !(hasInfix "/" filename);
-        message = "boot.loader.systemd-boot.extraEntries.${lib.strings.escapeNixIdentifier filename} is invalid: entries within folders are not supported";
+        message = "boot.loader.systemd-boot.extraEntries.${strings.escapeNixIdentifier filename} is invalid: entries within folders are not supported";
       }
       {
         assertion = hasSuffix ".conf" filename;
-        message = "boot.loader.systemd-boot.extraEntries.${lib.strings.escapeNixIdentifier filename} is invalid: entries must have a .conf file extension";
+        message = "boot.loader.systemd-boot.extraEntries.${strings.escapeNixIdentifier filename} is invalid: entries must have a .conf file extension";
       }
     ]) (builtins.attrNames cfg.extraEntries)
       ++ concatMap (filename: [
         {
           assertion = !(hasPrefix "/" filename);
-          message = "boot.loader.systemd-boot.extraFiles.${lib.strings.escapeNixIdentifier filename} is invalid: paths must not begin with a slash";
+          message = "boot.loader.systemd-boot.extraFiles.${strings.escapeNixIdentifier filename} is invalid: paths must not begin with a slash";
         }
         {
           assertion = !(hasInfix ".." filename);
-          message = "boot.loader.systemd-boot.extraFiles.${lib.strings.escapeNixIdentifier filename} is invalid: paths must not reference the parent directory";
+          message = "boot.loader.systemd-boot.extraFiles.${strings.escapeNixIdentifier filename} is invalid: paths must not reference the parent directory";
         }
         {
           assertion = !(hasInfix "nixos/.extra-files" (toLower filename));
-          message = "boot.loader.systemd-boot.extraFiles.${lib.strings.escapeNixIdentifier filename} is invalid: files cannot be placed in the nixos/.extra-files directory";
+          message = "boot.loader.systemd-boot.extraFiles.${strings.escapeNixIdentifier filename} is invalid: files cannot be placed in the nixos/.extra-files directory";
         }
       ]) (builtins.attrNames cfg.extraFiles);
 
@@ -397,7 +420,7 @@ in {
 
       boot.loader.id = "systemd-boot";
 
-      requiredKernelConfig = with config.lib.kernelConfig; [
+      requiredKernelConfig = with config.kernelConfig; [
         (isYes "EFI_STUB")
       ];
     };
