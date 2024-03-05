@@ -1,8 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalAttrs
+    types
+    ;
+
   cfg = config.services.ntfy-sh;
 
   settingsFormat = pkgs.formats.yaml { };
@@ -17,13 +27,13 @@ in
     user = mkOption {
       default = "ntfy-sh";
       type = types.str;
-      description = lib.mdDoc "User the ntfy-sh server runs under.";
+      description = mdDoc "User the ntfy-sh server runs under.";
     };
 
     group = mkOption {
       default = "ntfy-sh";
       type = types.str;
-      description = lib.mdDoc "Primary group of ntfy-sh user.";
+      description = mdDoc "Primary group of ntfy-sh user.";
     };
 
     settings = mkOption {
@@ -33,7 +43,7 @@ in
           base-url = mkOption {
             type = types.str;
             example = "https://ntfy.example";
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Public facing base URL of the service
 
               This setting is required for any of the following features:
