@@ -1,8 +1,26 @@
 { lib, pkgs, config, generators, ... }:
-with lib;
+
 let
+  inherit (lib)
+    escapeShellArgs
+    generators
+    getExe
+    literalExpression
+    maintainers
+    mapAttrsToList
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.grafana-agent;
+
   settingsFormat = pkgs.formats.yaml { };
+
   configFile = settingsFormat.generate "grafana-agent.yaml" cfg.settings;
 in
 {
@@ -11,12 +29,12 @@ in
   };
 
   options.services.grafana-agent = {
-    enable = mkEnableOption (lib.mdDoc "grafana-agent");
+    enable = mkEnableOption (mdDoc "grafana-agent");
 
     package = mkPackageOption pkgs "grafana-agent" { };
 
     credentials = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Credentials to load at service startup. Keys that are UPPER_SNAKE will be loaded as env vars. Values are absolute paths to the credentials.
       '';
       type = types.attrsOf types.str;
@@ -36,7 +54,7 @@ in
       type = with types; listOf str;
       default = [ ];
       example = [ "-enable-features=integrations-next" "-disable-reporting" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra command-line flags passed to {command}`grafana-agent`.
 
         See <https://grafana.com/docs/agent/latest/static/configuration/flags/>
@@ -44,7 +62,7 @@ in
     };
 
     settings = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Configuration for {command}`grafana-agent`.
 
         See <https://grafana.com/docs/agent/latest/configuration/>
@@ -55,7 +73,7 @@ in
       };
 
       default = { };
-      defaultText = lib.literalExpression ''
+      defaultText = literalExpression ''
         {
           metrics = {
             wal_directory = "\''${STATE_DIRECTORY}";
@@ -144,7 +162,7 @@ in
         # We can't use Environment=HOSTNAME=%H, as it doesn't include the domain part.
         export HOSTNAME=$(< /proc/sys/kernel/hostname)
 
-        exec ${lib.getExe cfg.package} -config.expand-env -config.file ${configFile} ${escapeShellArgs cfg.extraFlags}
+        exec ${getExe cfg.package} -config.expand-env -config.file ${configFile} ${escapeShellArgs cfg.extraFlags}
       '';
       serviceConfig = {
         Restart = "always";
@@ -155,7 +173,7 @@ in
           "systemd-journal"
         ];
         StateDirectory = "grafana-agent";
-        LoadCredential = lib.mapAttrsToList (key: value: "${key}:${value}") cfg.credentials;
+        LoadCredential = mapAttrsToList (key: value: "${key}:${value}") cfg.credentials;
         Type = "simple";
       };
     };
