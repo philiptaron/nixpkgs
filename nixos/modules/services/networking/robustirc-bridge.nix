@@ -1,19 +1,26 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.robustirc-bridge;
 in
 {
   options = {
     services.robustirc-bridge = {
-      enable = mkEnableOption (lib.mdDoc "RobustIRC bridge");
+      enable = mkEnableOption (mdDoc "RobustIRC bridge");
 
       extraFlags = mkOption {
         type = types.listOf types.str;
         default = [];
-        description = lib.mdDoc ''Extra flags passed to the {command}`robustirc-bridge` command. See [RobustIRC Documentation](https://robustirc.net/docs/adminguide.html#_bridge) or robustirc-bridge(1) for details.'';
+        description = mdDoc ''Extra flags passed to the {command}`robustirc-bridge` command. See [RobustIRC Documentation](https://robustirc.net/docs/adminguide.html#_bridge) or robustirc-bridge(1) for details.'';
         example = [
           "-network robustirc.net"
         ];
