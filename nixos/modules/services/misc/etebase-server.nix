@@ -1,8 +1,18 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    escapeShellArg
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    optionalAttrs
+    types
+    ;
+
   cfg = config.services.etebase-server;
 
   iniFmt = pkgs.formats.ini {};
@@ -33,7 +43,7 @@ in
         type = types.bool;
         default = false;
         example = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the Etebase server.
 
           Once enabled you need to create an admin user by invoking the
@@ -53,19 +63,19 @@ in
       dataDir = mkOption {
         type = types.str;
         default = "/var/lib/etebase-server";
-        description = lib.mdDoc "Directory to store the Etebase server data.";
+        description = mdDoc "Directory to store the Etebase server data.";
       };
 
       port = mkOption {
         type = with types; nullOr port;
         default = 8001;
-        description = lib.mdDoc "Port to listen on.";
+        description = mdDoc "Port to listen on.";
       };
 
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to open ports in the firewall for the server.
         '';
       };
@@ -73,12 +83,12 @@ in
       unixSocket = mkOption {
         type = with types; nullOr str;
         default = null;
-        description = lib.mdDoc "The path to the socket to bind to.";
+        description = mdDoc "The path to the socket to bind to.";
         example = "/run/etebase-server/etebase-server.sock";
       };
 
       settings = mkOption {
-        type = lib.types.submodule {
+        type = types.submodule {
           freeformType = iniFmt.type;
 
           options = {
@@ -86,14 +96,14 @@ in
               debug = mkOption {
                 type = types.bool;
                 default = false;
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Whether to set django's DEBUG flag.
                 '';
               };
               secret_file = mkOption {
                 type = with types; nullOr str;
                 default = null;
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   The path to a file containing the secret
                   used as django's SECRET_KEY.
                 '';
@@ -102,13 +112,13 @@ in
                 type = types.str;
                 default = "${cfg.dataDir}/static";
                 defaultText = literalExpression ''"''${config.services.etebase-server.dataDir}/static"'';
-                description = lib.mdDoc "The directory for static files.";
+                description = mdDoc "The directory for static files.";
               };
               media_root = mkOption {
                 type = types.str;
                 default = "${cfg.dataDir}/media";
                 defaultText = literalExpression ''"''${config.services.etebase-server.dataDir}/media"'';
-                description = lib.mdDoc "The media directory.";
+                description = mdDoc "The media directory.";
               };
             };
             allowed_hosts = {
@@ -116,7 +126,7 @@ in
                 type = types.str;
                 default = "0.0.0.0";
                 example = "localhost";
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   The main host that is allowed access.
                 '';
               };
@@ -125,19 +135,19 @@ in
               engine = mkOption {
                 type = types.enum [ "django.db.backends.sqlite3" "django.db.backends.postgresql" ];
                 default = "django.db.backends.sqlite3";
-                description = lib.mdDoc "The database engine to use.";
+                description = mdDoc "The database engine to use.";
               };
               name = mkOption {
                 type = types.str;
                 default = "${cfg.dataDir}/db.sqlite3";
                 defaultText = literalExpression ''"''${config.services.etebase-server.dataDir}/db.sqlite3"'';
-                description = lib.mdDoc "The database name.";
+                description = mdDoc "The database name.";
               };
             };
           };
         };
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration for `etebase-server`. Refer to
           <https://github.com/etesync/server/blob/master/etebase-server.ini.example>
           and <https://github.com/etesync/server/wiki>
@@ -157,7 +167,7 @@ in
       user = mkOption {
         type = types.str;
         default = defaultUser;
-        description = lib.mdDoc "User under which Etebase server runs.";
+        description = mdDoc "User under which Etebase server runs.";
       };
     };
   };
