@@ -1,7 +1,18 @@
 { config, lib, pkgs, ... }:
-with lib;
 
 let
+  inherit (lib)
+    any
+    attrValues
+    escapeShellArgs
+    hasAttr
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   nncpCfgFile = "/run/nncp.hjson";
   programCfg = config.programs.nncp;
   callerCfg = config.services.nncp.caller;
@@ -39,7 +50,7 @@ in {
           '';
           listenStreams = mkOption {
             type = with types; listOf str;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               TCP sockets to bind to.
               See [](#opt-systemd.sockets._name_.listenStreams).
             '';
@@ -64,7 +75,7 @@ in {
         let
           callerCongfigured =
             let neigh = config.programs.nncp.settings.neigh or { };
-            in lib.lists.any (x: hasAttr "calls" x && x.calls != [ ])
+            in any (x: hasAttr "calls" x && x.calls != [ ])
             (attrValues neigh);
         in !callerCfg.enable || callerCongfigured;
       message = "NNCP caller enabled but call configuration is missing";
@@ -79,7 +90,7 @@ in {
       serviceConfig = {
         ExecStart = ''
           ${pkg}/bin/nncp-caller -noprogress -cfg "${nncpCfgFile}" ${
-            lib.strings.escapeShellArgs callerCfg.extraArgs
+            escapeShellArgs callerCfg.extraArgs
           }'';
         Group = "uucp";
         UMask = "0002";
@@ -95,7 +106,7 @@ in {
       serviceConfig = {
         ExecStart = ''
           ${pkg}/bin/nncp-daemon -noprogress -cfg "${nncpCfgFile}" ${
-            lib.strings.escapeShellArgs daemonCfg.extraArgs
+            escapeShellArgs daemonCfg.extraArgs
           }'';
         Restart = "on-failure";
         Group = "uucp";
@@ -110,7 +121,7 @@ in {
       serviceConfig = {
         ExecStart = ''
           ${pkg}/bin/nncp-daemon -noprogress -ucspi -cfg "${nncpCfgFile}" ${
-            lib.strings.escapeShellArgs daemonCfg.extraArgs
+            escapeShellArgs daemonCfg.extraArgs
           }'';
         Group = "uucp";
         UMask = "0002";
