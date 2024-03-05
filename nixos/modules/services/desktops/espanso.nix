@@ -1,12 +1,20 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-let cfg = config.services.espanso;
-in {
-  meta = { maintainers = with lib.maintainers; [ numkem ]; };
+let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
+  cfg = config.services.espanso;
+in
+{
+  meta = { maintainers = with maintainers; [ numkem ]; };
 
   options = {
-    services.espanso = { enable = options.mkEnableOption (lib.mdDoc "Espanso"); };
+    services.espanso = { enable = mkEnableOption (mdDoc "Espanso"); };
   };
 
   config = mkIf cfg.enable {
