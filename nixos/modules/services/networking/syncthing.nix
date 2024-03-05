@@ -1,8 +1,34 @@
 { config, lib, options, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    converge
+    escapeShellArg
+    escapeShellArgs
+    filterAttrs
+    filterAttrsRecursive
+    isString
+    literalExpression
+    literalMD
+    mapAttrs
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    optionalString
+    pipe
+    substring
+    subtractLists
+    throwIf
+    types
+    versionAtLeast
+    ;
+
   cfg = config.services.syncthing;
   opt = options.services.syncthing;
   defaultUser = "syncthing";
@@ -67,9 +93,9 @@ let
   '' +
 
   /* Syncthing's rest API for the folders and devices is almost identical.
-  Hence we iterate them using lib.pipe and generate shell commands for both at
+  Hence we iterate them using pipe and generate shell commands for both at
   the sime time. */
-  (lib.pipe {
+  (pipe {
     # The attributes below are the only ones that are different for devices /
     # folders.
     devs = {
@@ -92,7 +118,7 @@ let
     (mapAttrs (conf_type: s:
       # We iterate the `conf` list now, and run a curl -X POST command for each, that
       # should update that device/folder only.
-      lib.pipe s.conf [
+      pipe s.conf [
         # Quoting https://docs.syncthing.net/rest/config.html:
         #
         # > PUT takes an array and POST a single object. In both cases if a
@@ -104,17 +130,17 @@ let
         # only if s.override == true then we DELETE the relevant folders
         # afterwards.
         (map (new_cfg: ''
-          curl -d ${lib.escapeShellArg (builtins.toJSON new_cfg)} -X POST ${s.baseAddress}
+          curl -d ${escapeShellArg (builtins.toJSON new_cfg)} -X POST ${s.baseAddress}
         ''))
-        (lib.concatStringsSep "\n")
+        (concatStringsSep "\n")
       ]
       /* If we need to override devices/folders, we iterate all currently configured
       IDs, via another `curl -X GET`, and we delete all IDs that are not part of
       the Nix configured list of IDs
       */
-      + lib.optionalString s.override ''
+      + optionalString s.override ''
         stale_${conf_type}_ids="$(curl -X GET ${s.baseAddress} | ${jq} \
-          --argjson new_ids ${lib.escapeShellArg (builtins.toJSON s.new_conf_IDs)} \
+          --argjson new_ids ${escapeShellArg (builtins.toJSON s.new_conf_IDs)} \
           --raw-output \
           '[.[].${s.GET_IdAttrName}] - $new_ids | .[]'
         )"
@@ -124,17 +150,17 @@ let
       ''
     ))
     builtins.attrValues
-    (lib.concatStringsSep "\n")
+    (concatStringsSep "\n")
   ]) +
   /* Now we update the other settings defined in cleanedConfig which are not
   "folders" or "devices". */
-  (lib.pipe cleanedConfig [
+  (pipe cleanedConfig [
     builtins.attrNames
-    (lib.subtractLists ["folders" "devices"])
+    (subtractLists ["folders" "devices"])
     (map (subOption: ''
-      curl -X PUT -d ${lib.escapeShellArg (builtins.toJSON cleanedConfig.${subOption})} ${curlAddressArgs "/rest/config/${subOption}"}
+      curl -X PUT -d ${escapeShellArg (builtins.toJSON cleanedConfig.${subOption})} ${curlAddressArgs "/rest/config/${subOption}"}
     ''))
-    (lib.concatStringsSep "\n")
+    (concatStringsSep "\n")
   ]) + ''
     # restart Syncthing if required
     if curl ${curlAddressArgs "/rest/config/restart-required"} |
@@ -148,7 +174,7 @@ in {
     services.syncthing = {
 
       enable = mkEnableOption
-        (lib.mdDoc "Syncthing, a self-hosted open-source alternative to Dropbox and Bittorrent Sync");
+        (mdDoc "Syncthing, a self-hosted open-source alternative to Dropbox and Bittorrent Sync");
 
       cert = mkOption {
         type = types.nullOr types.str;
@@ -206,7 +232,7 @@ in {
                   localAnnounceEnabled = mkOption {
                     type = types.nullOr types.bool;
                     default = null;
-                    description = lib.mdDoc ''
+                    description = mdDoc ''
                       Whether to send announcements to the local LAN, also use such announcements to find other devices.
                     '';
                   };
@@ -214,7 +240,7 @@ in {
                   localAnnouncePort = mkOption {
                     type = types.nullOr types.int;
                     default = null;
-                    description = lib.mdDoc ''
+                    description = mdDoc ''
                       The port on which to listen and send IPv4 broadcast announcements to.
                     '';
                   };
@@ -222,7 +248,7 @@ in {
                   relaysEnabled = mkOption {
                     type = types.nullOr types.bool;
                     default = null;
-                    description = lib.mdDoc ''
+                    description = mdDoc ''
                       When true, relays will be connected to and potentially used for device to device connections.
                     '';
                   };
@@ -230,7 +256,7 @@ in {
                   urAccepted = mkOption {
                     type = types.nullOr types.int;
                     default = null;
-                    description = lib.mdDoc ''
+                    description = mdDoc ''
                       Whether the user has accepted to submit anonymous usage data.
                       The default, 0, mean the user has not made a choice, and Syncthing will ask at some point in the future.
                       "-1" means no, a number above zero means that that version of usage reporting has been accepted.
@@ -240,7 +266,7 @@ in {
                   limitBandwidthInLan = mkOption {
                     type = types.nullOr types.bool;
                     default = null;
-                    description = lib.mdDoc ''
+                    description = mdDoc ''
                       Whether to apply bandwidth limits to devices in the same broadcast domain as the local device.
                     '';
                   };
@@ -248,7 +274,7 @@ in {
                   maxFolderConcurrency = mkOption {
                     type = types.nullOr types.int;
                     default = null;
-                    description = lib.mdDoc ''
+                    description = mdDoc ''
                       This option controls how many folders may concurrently be in I/O-intensive operations such as syncing or scanning.
                       The mechanism is described in detail in a [separate chapter](https://docs.syncthing.net/advanced/option-max-concurrency.html).
                     '';
@@ -280,7 +306,7 @@ in {
                   name = mkOption {
                     type = types.str;
                     default = name;
-                    description = lib.mdDoc ''
+                    description = mdDoc ''
                       The name of the device.
                     '';
                   };
@@ -330,7 +356,7 @@ in {
                   enable = mkOption {
                     type = types.bool;
                     default = true;
-                    description = lib.mdDoc ''
+                    description = mdDoc ''
                       Whether to share this folder.
                       This option is useful when you want to define all folders
                       in one place, but not every machine should share all folders.
@@ -345,7 +371,7 @@ in {
                       description = types.str.description + " starting with / or ~/";
                     };
                     default = name;
-                    description = lib.mdDoc ''
+                    description = mdDoc ''
                       The path to the folder which should be shared.
                       Only absolute paths (starting with `/`) and paths relative to
                       the [user](#opt-services.syncthing.user)'s home directory
@@ -356,7 +382,7 @@ in {
                   id = mkOption {
                     type = types.str;
                     default = name;
-                    description = lib.mdDoc ''
+                    description = mdDoc ''
                       The ID of the folder. Must be the same on all devices.
                     '';
                   };
@@ -364,7 +390,7 @@ in {
                   label = mkOption {
                     type = types.str;
                     default = name;
-                    description = lib.mdDoc ''
+                    description = mdDoc ''
                       The label of the folder.
                     '';
                   };
@@ -486,7 +512,7 @@ in {
       guiAddress = mkOption {
         type = types.str;
         default = "127.0.0.1:8384";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The address to serve the web interface at.
         '';
       };
@@ -494,7 +520,7 @@ in {
       systemService = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to auto-launch Syncthing as a system service.
         '';
       };
@@ -536,7 +562,7 @@ in {
         type = types.path;
         default = "/var/lib/syncthing";
         example = "/home/yourUser";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The path where synchronised directories will exist.
         '';
       };
@@ -545,7 +571,7 @@ in {
         cond = versionAtLeast config.system.stateVersion "19.03";
       in mkOption {
         type = types.path;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The path where the settings and keys will exist.
         '';
         default = cfg.dataDir + optionalString cond "/.config/syncthing";
@@ -561,7 +587,7 @@ in {
 
       databaseDir = mkOption {
         type = types.path;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The directory containing the database and logs.
         '';
         default = cfg.configDir;
@@ -572,7 +598,7 @@ in {
         type = types.listOf types.str;
         default = [];
         example = [ "--reset-deltas" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra flags passed to the syncthing command in the service definition.
         '';
       };
@@ -581,7 +607,7 @@ in {
         type = types.bool;
         default = false;
         example = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to open the default ports in the firewall: TCP/UDP 22000 for transfers
           and UDP 21027 for discovery.
 
