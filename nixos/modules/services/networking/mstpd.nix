@@ -1,15 +1,21 @@
 { config, lib, pkgs, ... }:
 let
   cfg = config.services.mstpd;
+
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
 in
-with lib;
 {
   options.services.mstpd = {
 
     enable = mkOption {
       default = false;
       type = types.bool;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to enable the multiple spanning tree protocol daemon.
       '';
     };
