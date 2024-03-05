@@ -1,18 +1,27 @@
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    escapeShellArg
+    isStorePath
+    literalExpression
+    mdDoc
+    mkOption
+    types
+    warn
+    ;
+
   logPrefix = "services.prometheus.exporters.snmp";
   cfg = config.services.prometheus.exporters.snmp;
 
   # This ensures that we can deal with string paths, path types and
   # store-path strings with context.
   coerceConfigFile = file:
-    if (builtins.isPath file) || (lib.isStorePath file) then
+    if (builtins.isPath file) || (isStorePath file) then
       file
     else
-      (lib.warn ''
+      (warn ''
         ${logPrefix}: configuration file "${file}" is being copied to the nix-store.
         If you would like to avoid that, please set enableConfigCheck to false.
         '' /. + file);
@@ -31,7 +40,7 @@ in
     configurationPath = mkOption {
       type = types.nullOr types.path;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path to a snmp exporter configuration file. Mutually exclusive with 'configuration' option.
       '';
       example = literalExpression "./snmp.yml";
@@ -40,7 +49,7 @@ in
     configuration = mkOption {
       type = types.nullOr types.attrs;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Snmp exporter configuration as nix attribute set. Mutually exclusive with 'configurationPath' option.
       '';
       example = {
@@ -54,7 +63,7 @@ in
     enableConfigCheck = mkOption {
       type = types.bool;
       default = true;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to run a correctness check for the configuration file. This depends
         on the configuration file residing in the nix-store. Paths passed as string will
         be copied to the store.
@@ -64,7 +73,7 @@ in
     logFormat = mkOption {
       type = types.enum ["logfmt" "json"];
       default = "logfmt";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Output format of log messages.
       '';
     };
@@ -72,7 +81,7 @@ in
     logLevel = mkOption {
       type = types.enum ["debug" "info" "warn" "error"];
       default = "info";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Only log messages with the given severity or above.
       '';
     };
