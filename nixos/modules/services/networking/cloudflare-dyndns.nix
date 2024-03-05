@@ -1,19 +1,26 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optional
+    types
+    ;
+
   cfg = config.services.cloudflare-dyndns;
 in
 {
   options = {
     services.cloudflare-dyndns = {
-      enable = mkEnableOption (lib.mdDoc "Cloudflare Dynamic DNS Client");
+      enable = mkEnableOption (mdDoc "Cloudflare Dynamic DNS Client");
 
       apiTokenFile = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The path to a file containing the CloudFlare API token.
 
           The file must have the form `CLOUDFLARE_API_TOKEN=...`
@@ -23,7 +30,7 @@ in
       domains = mkOption {
         type = types.listOf types.str;
         default = [ ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of domain names to update records for.
         '';
       };
@@ -31,7 +38,7 @@ in
       proxied = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether this is a DNS-only record, or also being proxied through CloudFlare.
         '';
       };
@@ -39,7 +46,7 @@ in
       ipv4 = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable setting IPv4 A records.
         '';
       };
@@ -47,7 +54,7 @@ in
       ipv6 = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable setting IPv6 AAAA records.
         '';
       };
@@ -55,7 +62,7 @@ in
       deleteMissing = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to delete the record when no IP address is found.
         '';
       };
