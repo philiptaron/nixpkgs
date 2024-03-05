@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStringsSep
+    concatStringsSep
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    singleton
+    types
+    ;
 
   cfg = config.services.actkbd;
 
@@ -20,25 +28,25 @@ let
 
       keys = mkOption {
         type = types.listOf types.int;
-        description = lib.mdDoc "List of keycodes to match.";
+        description = mdDoc "List of keycodes to match.";
       };
 
       events = mkOption {
         type = types.listOf (types.enum ["key" "rep" "rel"]);
         default = [ "key" ];
-        description = lib.mdDoc "List of events to match.";
+        description = mdDoc "List of events to match.";
       };
 
       attributes = mkOption {
         type = types.listOf types.str;
         default = [ "exec" ];
-        description = lib.mdDoc "List of attributes.";
+        description = mdDoc "List of attributes.";
       };
 
       command = mkOption {
         type = types.str;
         default = "";
-        description = lib.mdDoc "What to run.";
+        description = mdDoc "What to run.";
       };
 
     };
@@ -57,7 +65,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the {command}`actkbd` key mapping daemon.
 
           Turning this on will start an {command}`actkbd`
@@ -74,11 +82,11 @@ in
       bindings = mkOption {
         type = types.listOf (types.submodule bindingCfg);
         default = [];
-        example = lib.literalExpression ''
+        example = literalExpression ''
           [ { keys = [ 113 ]; events = [ "key" ]; command = "''${pkgs.alsa-utils}/bin/amixer -q set Master toggle"; }
           ]
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Key bindings for {command}`actkbd`.
 
           See {command}`actkbd` {file}`README` for documentation.
@@ -90,7 +98,7 @@ in
       extraConfig = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Literal contents to append to the end of actkbd configuration file.
         '';
       };
@@ -104,7 +112,7 @@ in
 
   config = mkIf cfg.enable {
 
-    services.udev.packages = lib.singleton (pkgs.writeTextFile {
+    services.udev.packages = singleton (pkgs.writeTextFile {
       name = "actkbd-udev-rules";
       destination = "/etc/udev/rules.d/61-actkbd.rules";
       text = ''
