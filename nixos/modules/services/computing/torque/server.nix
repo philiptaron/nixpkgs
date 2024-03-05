@@ -1,8 +1,12 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.services.torque.server;
   torque = pkgs.torque;
 in
@@ -11,7 +15,7 @@ in
 
     services.torque.server = {
 
-      enable = mkEnableOption (lib.mdDoc "torque server");
+      enable = mkEnableOption (mdDoc "torque server");
 
     };
 
