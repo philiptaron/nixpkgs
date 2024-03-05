@@ -1,8 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkDefault
+    mkIf
+    mkOption
+    teams
+    types
+    ;
 
   dmcfg = config.services.xserver.displayManager;
   ldmcfg = dmcfg.lightdm;
@@ -10,8 +16,8 @@ let
 
 in
 {
-  meta = with lib; {
-    maintainers = with maintainers; [ ] ++ teams.pantheon.members;
+  meta = {
+    maintainers = teams.pantheon.members;
   };
 
   options = {
@@ -21,7 +27,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable elementary-greeter as the lightdm greeter.
         '';
       };
