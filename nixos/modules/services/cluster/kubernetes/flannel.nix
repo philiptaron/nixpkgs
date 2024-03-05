@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    elem
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   top = config.services.kubernetes;
   cfg = top.flannel;
 
@@ -12,10 +20,10 @@ in
 {
   ###### interface
   options.services.kubernetes.flannel = {
-    enable = mkEnableOption (lib.mdDoc "flannel networking");
+    enable = mkEnableOption (mdDoc "flannel networking");
 
     openFirewallPorts = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to open the Flannel UDP ports in the firewall on all interfaces.'';
       type = types.bool;
       default = true;
