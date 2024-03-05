@@ -1,17 +1,22 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
-  cfg = config.hardware.tuxedo-rs;
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    ;
 
+  cfg = config.hardware.tuxedo-rs;
 in
 {
   options = {
     hardware.tuxedo-rs = {
-      enable = mkEnableOption (lib.mdDoc "Rust utilities for interacting with hardware from TUXEDO Computers");
+      enable = mkEnableOption (mdDoc "Rust utilities for interacting with hardware from TUXEDO Computers");
 
-      tailor-gui.enable = mkEnableOption (lib.mdDoc "tailor-gui, an alternative to TUXEDO Control Center, written in Rust");
+      tailor-gui.enable = mkEnableOption (mdDoc "tailor-gui, an alternative to TUXEDO Control Center, written in Rust");
     };
   };
 
