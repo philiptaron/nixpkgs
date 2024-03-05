@@ -2,9 +2,14 @@
 
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkRemovedOptionModule
+    teams
+    ;
 
   cfg = config.services.tumbler;
 
@@ -18,8 +23,8 @@ in
       "")
   ];
 
-  meta = with lib; {
-    maintainers = with maintainers; [ ] ++ teams.pantheon.members;
+  meta = {
+    maintainers = teams.pantheon.members;
   };
 
   ###### interface
@@ -28,7 +33,7 @@ in
 
     services.tumbler = {
 
-      enable = mkEnableOption (lib.mdDoc "Tumbler, A D-Bus thumbnailer service");
+      enable = mkEnableOption (mdDoc "Tumbler, A D-Bus thumbnailer service");
 
     };
 
