@@ -1,8 +1,29 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStrings
+    concatStringsSep
+    flip
+    literalExpression
+    mapAttrs
+    mapAttrs'
+    mapAttrsToList
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRemovedOptionModule
+    nameValuePair
+    optionalAttrs
+    recursiveUpdate
+    replaceStrings
+    stringAsChars
+    teams
+    types
+    ;
+
   cfg = config.services.jitsi-videobridge;
   attrsToArgs = a: concatStringsSep " " (mapAttrsToList (k: v: "${k}=${toString v}") a);
 
@@ -29,7 +50,7 @@ let
         hostname = xmppConfig.hostName;
         domain = xmppConfig.domain;
         username = xmppConfig.userName;
-        password = format.lib.mkSubstitution (toVarName name);
+        password = format.mkSubstitution (toVarName name);
         muc_jids = xmppConfig.mucJids;
         muc_nickname = xmppConfig.mucNickname;
         disable_certificate_verification = xmppConfig.disableCertificateVerification;
@@ -48,7 +69,7 @@ in
     )
   ];
   options.services.jitsi-videobridge = with types; {
-    enable = mkEnableOption (lib.mdDoc "Jitsi Videobridge, a WebRTC compatible video router");
+    enable = mkEnableOption (mdDoc "Jitsi Videobridge, a WebRTC compatible video router");
 
     config = mkOption {
       type = attrs;
@@ -64,7 +85,7 @@ in
           };
         }
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Videobridge configuration.
 
         See <https://github.com/jitsi/jitsi-videobridge/blob/master/jvb/src/main/resources/reference.conf>
@@ -73,7 +94,7 @@ in
     };
 
     xmppConfigs = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         XMPP servers to connect to.
 
         See <https://github.com/jitsi/jitsi-videobridge/blob/master/doc/muc.md> for more information.
@@ -95,7 +116,7 @@ in
           hostName = mkOption {
             type = str;
             example = "xmpp.example.org";
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Hostname of the XMPP server to connect to. Name of the attribute set is used by default.
             '';
           };
@@ -103,35 +124,35 @@ in
             type = nullOr str;
             default = null;
             example = "auth.xmpp.example.org";
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Domain part of JID of the XMPP user, if it is different from hostName.
             '';
           };
           userName = mkOption {
             type = str;
             default = "jvb";
-            description = lib.mdDoc ''
+            description = mdDoc ''
               User part of the JID.
             '';
           };
           passwordFile = mkOption {
             type = str;
             example = "/run/keys/jitsi-videobridge-xmpp1";
-            description = lib.mdDoc ''
+            description = mdDoc ''
               File containing the password for the user.
             '';
           };
           mucJids = mkOption {
             type = str;
             example = "jvbbrewery@internal.xmpp.example.org";
-            description = lib.mdDoc ''
+            description = mdDoc ''
               JID of the MUC to join. JiCoFo needs to be configured to join the same MUC.
             '';
           };
           mucNickname = mkOption {
             # Upstream DEBs use UUID, let's use hostname instead.
             type = str;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Videobridges use the same XMPP account and need to be distinguished by the
               nickname (aka resource part of the JID). By default, system hostname is used.
             '';
@@ -139,7 +160,7 @@ in
           disableCertificateVerification = mkOption {
             type = bool;
             default = false;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Whether to skip validation of the server's certificate.
             '';
           };
@@ -158,7 +179,7 @@ in
         type = nullOr str;
         default = null;
         example = "192.168.1.42";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Local address when running behind NAT.
         '';
       };
@@ -167,7 +188,7 @@ in
         type = nullOr str;
         default = null;
         example = "1.2.3.4";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Public address when running behind NAT.
         '';
       };
@@ -176,7 +197,7 @@ in
     extraProperties = mkOption {
       type = attrsOf str;
       default = { };
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Additional Java properties passed to jitsi-videobridge.
       '';
     };
@@ -184,14 +205,14 @@ in
     openFirewall = mkOption {
       type = bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to open ports in the firewall for the videobridge.
       '';
     };
 
     colibriRestApi = mkOption {
       type = bool;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to enable the private rest API for the COLIBRI control interface.
         Needed for monitoring jitsi, enabling scraping of the /colibri/stats endpoint.
       '';
@@ -280,5 +301,5 @@ in
     }];
   };
 
-  meta.maintainers = lib.teams.jitsi.members;
+  meta.maintainers = teams.jitsi.members;
 }
