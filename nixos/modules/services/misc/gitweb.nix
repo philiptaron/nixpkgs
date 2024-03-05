@@ -1,8 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalMD
+    mdDoc
+    mkOption
+    types
+    ;
+
   cfg = config.services.gitweb;
 
 in
@@ -13,7 +18,7 @@ in
     projectroot = mkOption {
       default = "/srv/git";
       type = types.path;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path to git projects (bare repositories) that should be served by
         gitweb. Must not end with a slash.
       '';
@@ -22,7 +27,7 @@ in
     extraConfig = mkOption {
       default = "";
       type = types.lines;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Verbatim configuration text appended to the generated gitweb.conf file.
       '';
       example = ''
@@ -35,7 +40,7 @@ in
     gitwebTheme = mkOption {
       default = false;
       type = types.bool;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Use an alternative theme for gitweb, strongly inspired by GitHub.
       '';
     };
@@ -54,7 +59,4 @@ in
     };
 
   };
-
-  meta.maintainers = with maintainers; [ ];
-
 }
