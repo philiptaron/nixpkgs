@@ -1,7 +1,18 @@
 { config, pkgs, lib, ... }:
-with lib;
 
 let
+  inherit (lib)
+    concatStringsSep
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.kthxbye;
 in
 
