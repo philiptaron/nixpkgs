@@ -1,13 +1,18 @@
 { config, pkgs, lib, ... }:
 
-with lib;
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.services.spice-vdagentd;
 in
 {
   options = {
     services.spice-vdagentd = {
-      enable = mkEnableOption (lib.mdDoc "Spice guest vdagent daemon");
+      enable = mkEnableOption (mdDoc "Spice guest vdagent daemon");
     };
   };
 
