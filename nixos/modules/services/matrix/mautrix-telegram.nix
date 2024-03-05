@@ -1,19 +1,35 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optional
+    optionalString
+    recursiveUpdate
+    types
+    ;
+
   dataDir = "/var/lib/mautrix-telegram";
+
   registrationFile = "${dataDir}/telegram-registration.yaml";
+
   cfg = config.services.mautrix-telegram;
+
   settingsFormat = pkgs.formats.json {};
+
   settingsFile =
     settingsFormat.generate "mautrix-telegram-config.json" cfg.settings;
 
-in {
+in
+{
   options = {
     services.mautrix-telegram = {
-      enable = mkEnableOption (lib.mdDoc "Mautrix-Telegram, a Matrix-Telegram hybrid puppeting/relaybot bridge");
+      enable = mkEnableOption (mdDoc "Mautrix-Telegram, a Matrix-Telegram hybrid puppeting/relaybot bridge");
 
       settings = mkOption rec {
         apply = recursiveUpdate default;
@@ -85,7 +101,7 @@ in {
             };
           }
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           {file}`config.yaml` configuration as a Nix attribute set.
           Configuration options should match those described in
           [example-config.yaml](https://github.com/mautrix/telegram/blob/master/mautrix_telegram/example-config.yaml).
@@ -98,7 +114,7 @@ in {
       environmentFile = mkOption {
         type = types.nullOr types.path;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           File containing environment variables to be passed to the mautrix-telegram service,
           in which secret tokens can be specified securely by defining values for e.g.
           `MAUTRIX_TELEGRAM_APPSERVICE_AS_TOKEN`,
@@ -126,7 +142,7 @@ in {
         defaultText = literalExpression ''
           optional config.services.matrix-synapse.enable config.services.matrix-synapse.serviceUnit
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of Systemd services to require and wait for when starting the application service.
         '';
       };
@@ -146,7 +162,7 @@ in {
       # the running user if using a postgresql database:
       #
       #  File "python3.10/site-packages/asyncpg/connect_utils.py", line 257, in _dot_postgre>
-      #    return (pathlib.Path.home() / '.postgresql' / filename).resolve()
+      #    return (pathPath.home() / '.postgresql' / filename).resolve()
       #  File "python3.10/pathlib.py", line 1000, in home
       #    return cls("~").expanduser()
       #  File "python3.10/pathlib.py", line 1440, in expanduser
@@ -162,7 +178,7 @@ in {
             --config='${settingsFile}' \
             --registration='${registrationFile}'
         fi
-      '' + lib.optionalString (pkgs.mautrix-telegram ? alembic) ''
+      '' + optionalString (pkgs.mautrix-telegram ? alembic) ''
         # run automatic database init and migration scripts
         ${pkgs.mautrix-telegram.alembic}/bin/alembic -x config='${settingsFile}' upgrade head
       '';
