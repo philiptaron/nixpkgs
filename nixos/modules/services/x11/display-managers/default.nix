@@ -9,9 +9,32 @@
 
 { config, lib, options, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    all
+    assertMsg
+    cartesianProductOfSets
+    concatLists
+    concatMap
+    concatMapStrings
+    concatStringsSep
+    elem
+    filter
+    getBin
+    head
+    isString
+    literalExpression
+    literalMD
+    mdDoc
+    mkIf
+    mkOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    optional
+    optionalString
+    types
+    unique
+    ;
 
   cfg = config.services.xserver;
   opt = options.services.xserver;
@@ -176,25 +199,25 @@ in
         internal = true;
         default = "${xorg.xauth}/bin/xauth";
         defaultText = literalExpression ''"''${pkgs.xorg.xauth}/bin/xauth"'';
-        description = lib.mdDoc "Path to the {command}`xauth` program used by display managers.";
+        description = mdDoc "Path to the {command}`xauth` program used by display managers.";
       };
 
       xserverBin = mkOption {
         type = types.path;
-        description = lib.mdDoc "Path to the X server used by display managers.";
+        description = mdDoc "Path to the X server used by display managers.";
       };
 
       xserverArgs = mkOption {
         type = types.listOf types.str;
         default = [];
         example = [ "-ac" "-logverbose" "-verbose" "-nolisten tcp" ];
-        description = lib.mdDoc "List of arguments for the X server.";
+        description = mdDoc "List of arguments for the X server.";
       };
 
       setupCommands = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Shell commands executed just after the X server has started.
 
           This option is only effective for display managers for which this feature
@@ -209,7 +232,7 @@ in
           ''
             xmessage "Hello World!" &
           '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Shell commands executed just before the window or desktop manager is
           started. These commands are not currently sourced for Wayland sessions.
         '';
@@ -218,7 +241,7 @@ in
       hiddenUsers = mkOption {
         type = types.listOf types.str;
         default = [ "nobody" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A list of users which will not be shown in the display manager.
         '';
       };
@@ -239,7 +262,7 @@ in
            '';
         });
         default = [];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A list of packages containing x11 or wayland session files to be passed to the display manager.
         '';
       };
@@ -258,7 +281,7 @@ in
               }
             ]
           '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of sessions supported with the command used to start each
           session.  Each session script can set the
           {var}`waitPID` shell variable to make this script
@@ -275,7 +298,7 @@ in
       };
 
       sessionData = mkOption {
-        description = lib.mdDoc "Data exported for display managers’ convenience";
+        description = mdDoc "Data exported for display managers’ convenience";
         internal = true;
         default = {};
         apply = val: {
@@ -312,7 +335,7 @@ in
           Taken from display manager settings or window manager settings, if either is set.
         '';
         example = "gnome";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Graphical session to pre-select in the session chooser (only effective for GDM, LightDM and SDDM).
 
           On GDM, LightDM and SDDM, it will also be used as a session for auto-login.
@@ -322,7 +345,7 @@ in
       importedVariables = mkOption {
         type = types.listOf (types.strMatching "[a-zA-Z_][a-zA-Z0-9_]*");
         visible = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Environment variables to import into the systemd user environment.
         '';
       };
@@ -333,25 +356,25 @@ in
           type = types.lines;
           default = "";
           example = "rm -f /var/log/my-display-manager.log";
-          description = lib.mdDoc "Script executed before the display manager is started.";
+          description = mdDoc "Script executed before the display manager is started.";
         };
 
         execCmd = mkOption {
           type = types.str;
           example = literalExpression ''"''${pkgs.lightdm}/bin/lightdm"'';
-          description = lib.mdDoc "Command to start the display manager.";
+          description = mdDoc "Command to start the display manager.";
         };
 
         environment = mkOption {
           type = types.attrsOf types.unspecified;
           default = {};
-          description = lib.mdDoc "Additional environment variables needed by the display manager.";
+          description = mdDoc "Additional environment variables needed by the display manager.";
         };
 
         logToFile = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Whether the display manager redirects the output of the
             session script to {file}`~/.xsession-errors`.
           '';
@@ -360,7 +383,7 @@ in
         logToJournal = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Whether the display manager redirects the output of the
             session script to the systemd journal.
           '';
@@ -376,7 +399,7 @@ in
               type = types.bool;
               default = config.user != null;
               defaultText = literalExpression "config.${options.user} != null";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Automatically log in as {option}`autoLogin.user`.
               '';
             };
@@ -384,7 +407,7 @@ in
             user = mkOption {
               type = types.nullOr types.str;
               default = null;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 User to be used for the automatic login.
               '';
             };
@@ -392,7 +415,7 @@ in
         });
 
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Auto login configuration attrset.
         '';
       };
@@ -469,7 +492,7 @@ in
           ${dm.start}
 
           ${optionalString cfg.updateDbusEnvironment ''
-            ${lib.getBin pkgs.dbus}/bin/dbus-update-activation-environment --systemd --all
+            ${getBin pkgs.dbus}/bin/dbus-update-activation-environment --systemd --all
           ''}
 
           test -n "$waitPID" && wait "$waitPID"
@@ -514,7 +537,7 @@ in
 
     # Make xsessions and wayland sessions available in XDG_DATA_DIRS
     # as some programs have behavior that depends on them being present
-    environment.sessionVariables.XDG_DATA_DIRS = lib.mkIf (cfg.displayManager.sessionPackages != [ ]) [
+    environment.sessionVariables.XDG_DATA_DIRS = mkIf (cfg.displayManager.sessionPackages != [ ]) [
       "${cfg.displayManager.sessionData.desktops}/share"
     ];
   };
