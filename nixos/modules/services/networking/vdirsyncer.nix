@@ -1,8 +1,23 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    filterAttrs
+    foldr
+    generators
+    literalExpression
+    mapAttrs'
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    nameValuePair
+    optional
+    optionalAttrs
+    recursiveUpdate
+    types
+    ;
 
   cfg = config.services.vdirsyncer;
 
