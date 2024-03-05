@@ -1,6 +1,18 @@
 { config, lib, pkgs, ... }:
-with lib;
 let
+  inherit (lib)
+    concatStringsSep
+    generators
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRemovedOptionModule
+    optionals
+    types
+    ;
+
   clamavUser = "clamav";
   stateDir = "/var/lib/clamav";
   clamavGroup = clamavUser;
@@ -15,7 +27,7 @@ let
   clamdConfigFile = pkgs.writeText "clamd.conf" (toKeyValue cfg.daemon.settings);
   freshclamConfigFile = pkgs.writeText "freshclam.conf" (toKeyValue cfg.updater.settings);
   fangfrischConfigFile = pkgs.writeText "fangfrisch.conf" ''
-    ${lib.generators.toINI {} cfg.fangfrisch.settings}
+    ${generators.toINI {} cfg.fangfrisch.settings}
   '';
 in
 {
@@ -28,24 +40,24 @@ in
   options = {
     services.clamav = {
       daemon = {
-        enable = mkEnableOption (lib.mdDoc "ClamAV clamd daemon");
+        enable = mkEnableOption (mdDoc "ClamAV clamd daemon");
 
         settings = mkOption {
           type = with types; attrsOf (oneOf [ bool int str (listOf str) ]);
           default = { };
-          description = lib.mdDoc ''
+          description = mdDoc ''
             ClamAV configuration. Refer to <https://linux.die.net/man/5/clamd.conf>,
             for details on supported values.
           '';
         };
       };
       updater = {
-        enable = mkEnableOption (lib.mdDoc "ClamAV freshclam updater");
+        enable = mkEnableOption (mdDoc "ClamAV freshclam updater");
 
         frequency = mkOption {
           type = types.int;
           default = 12;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Number of database checks per day.
           '';
         };
@@ -53,7 +65,7 @@ in
         interval = mkOption {
           type = types.str;
           default = "hourly";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             How often freshclam is invoked. See systemd.time(7) for more
             information about the format.
           '';
@@ -62,26 +74,26 @@ in
         settings = mkOption {
           type = with types; attrsOf (oneOf [ bool int str (listOf str) ]);
           default = { };
-          description = lib.mdDoc ''
+          description = mdDoc ''
             freshclam configuration. Refer to <https://linux.die.net/man/5/freshclam.conf>,
             for details on supported values.
           '';
         };
       };
       fangfrisch = {
-        enable = mkEnableOption (lib.mdDoc "ClamAV fangfrisch updater");
+        enable = mkEnableOption (mdDoc "ClamAV fangfrisch updater");
 
         interval = mkOption {
           type = types.str;
           default = "hourly";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             How often freshclam is invoked. See systemd.time(7) for more
             information about the format.
           '';
         };
 
         settings = mkOption {
-          type = lib.types.submodule {
+          type = types.submodule {
             freeformType = with types; attrsOf (attrsOf (oneOf [ str int bool ]));
           };
           default = { };
@@ -91,7 +103,7 @@ in
               customer_id = "your customer_id";
             };
           };
-          description = lib.mdDoc ''
+          description = mdDoc ''
             fangfrisch configuration. Refer to <https://rseichter.github.io/fangfrisch/#_configuration>,
             for details on supported values.
             Note that by default urlhaus and sanesecurity are enabled.
@@ -100,12 +112,12 @@ in
       };
 
       scanner = {
-        enable = mkEnableOption (lib.mdDoc "ClamAV scanner");
+        enable = mkEnableOption (mdDoc "ClamAV scanner");
 
         interval = mkOption {
           type = types.str;
           default = "*-*-* 04:00:00";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             How often clamdscan is invoked. See systemd.time(7) for more
             information about the format.
             By default this runs using 10 cores at most, be sure to run it at a time of low traffic.
@@ -115,7 +127,7 @@ in
         scanDirectories = mkOption {
           type = with types; listOf str;
           default = [ "/home" "/var/lib" "/tmp" "/etc" "/var/tmp" ];
-          description = lib.mdDoc ''
+          description = mdDoc ''
             List of directories to scan.
             The default includes everything I could think of that is valid for nixos. Feel free to contribute a PR to add to the default if you see something missing.
           '';
@@ -274,7 +286,7 @@ in
 
       serviceConfig = {
         Type = "oneshot";
-        ExecStart = "${pkg}/bin/clamdscan --multiscan --fdpass --infected --allmatch ${lib.concatStringsSep " " cfg.scanner.scanDirectories}";
+        ExecStart = "${pkg}/bin/clamdscan --multiscan --fdpass --infected --allmatch ${concatStringsSep " " cfg.scanner.scanDirectories}";
       };
     };
   };
