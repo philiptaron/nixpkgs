@@ -1,12 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    makeBinPath
+    mdDoc
+    mkForce
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.services.bloop;
 
-in {
+in
+{
 
   options.services.bloop = {
     extraOptions = mkOption {
@@ -17,7 +24,7 @@ in {
         "-J-XX:MaxInlineLevel=20"
         "-J-XX:+UseParallelGC"
       ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Specifies additional command line argument to pass to bloop
         java process.
       '';
@@ -26,7 +33,7 @@ in {
     install = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to install a user service for the Bloop server.
 
         The service must be manually started for each user with
