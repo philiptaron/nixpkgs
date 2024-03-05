@@ -1,8 +1,25 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStrings
+    concatStrings
+    concatStringsSep
+    escapeShellArg
+    flip
+    isString
+    listToAttrs
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    mkRemovedOptionModule
+    nameValuePair
+    optional
+    stringLength
+    substring
+    types
+    ;
 
   cfg = config.boot.initrd.network.ssh;
   shell = if cfg.shell == null then "/bin/ash" else cfg.shell;
@@ -18,7 +35,7 @@ in
     enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Start SSH service during initrd boot. It can be used to debug failing
         boot on a remote server, enter pasphrase for an encrypted partition etc.
         Service is killed when stage-1 boot is finished.
@@ -31,7 +48,7 @@ in
     port = mkOption {
       type = types.port;
       default = 22;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Port on which SSH initrd service should listen.
       '';
     };
@@ -40,7 +57,7 @@ in
       type = types.nullOr types.str;
       default = null;
       defaultText = ''"/bin/ash"'';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Login shell of the remote user. Can be used to limit actions user can do.
       '';
     };
@@ -52,7 +69,7 @@ in
         "/etc/secrets/initrd/ssh_host_rsa_key"
         "/etc/secrets/initrd/ssh_host_ed25519_key"
       ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Specify SSH host keys to import into the initrd.
 
         To generate keys, use
@@ -81,7 +98,7 @@ in
     ignoreEmptyHostKeys = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Allow leaving {option}`config.boot.initrd.network.ssh` empty,
         to deploy ssh host keys out of band.
       '';
@@ -91,7 +108,7 @@ in
       type = types.listOf types.str;
       default = config.users.users.root.openssh.authorizedKeys.keys;
       defaultText = literalExpression "config.users.users.root.openssh.authorizedKeys.keys";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Authorized keys for the root user on initrd.
       '';
     };
@@ -99,7 +116,7 @@ in
     extraConfig = mkOption {
       type = types.lines;
       default = "";
-      description = lib.mdDoc "Verbatim contents of {file}`sshd_config`.";
+      description = mdDoc "Verbatim contents of {file}`sshd_config`.";
     };
   };
 
@@ -166,7 +183,7 @@ in
       }
     ];
 
-    warnings = lib.optional (config.boot.initrd.systemd.enable && cfg.shell != null) ''
+    warnings = optional (config.boot.initrd.systemd.enable && cfg.shell != null) ''
       Please set 'boot.initrd.systemd.users.root.shell' instead of 'boot.initrd.network.ssh.shell'
     '';
 
