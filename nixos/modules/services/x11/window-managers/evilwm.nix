@@ -1,14 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    singleton
+    ;
+
   cfg = config.services.xserver.windowManager.evilwm;
 in
 {
   ###### interface
   options = {
-    services.xserver.windowManager.evilwm.enable = mkEnableOption (lib.mdDoc "evilwm");
+    services.xserver.windowManager.evilwm.enable = mkEnableOption (mdDoc "evilwm");
   };
 
   ###### implementation
