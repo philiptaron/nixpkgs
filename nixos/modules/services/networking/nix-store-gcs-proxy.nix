@@ -1,37 +1,45 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    filterAttrs
+    maintainers
+    mapAttrsToList
+    mdDoc
+    mkMerge
+    mkOption
+    types
+    ;
+
   opts = { name, config, ... }: {
     options = {
       enable = mkOption {
         default = true;
         type = types.bool;
         example = true;
-        description = lib.mdDoc "Whether to enable proxy for this bucket";
+        description = mdDoc "Whether to enable proxy for this bucket";
       };
       bucketName = mkOption {
         type = types.str;
         default = name;
         example = "my-bucket-name";
-        description = lib.mdDoc "Name of Google storage bucket";
+        description = mdDoc "Name of Google storage bucket";
       };
       address = mkOption {
         type = types.str;
         example = "localhost:3000";
-        description = lib.mdDoc "The address of the proxy.";
+        description = mdDoc "The address of the proxy.";
       };
     };
   };
-  enabledProxies = lib.filterAttrs (n: v: v.enable) config.services.nix-store-gcs-proxy;
-  mapProxies = function: lib.mkMerge (lib.mapAttrsToList function enabledProxies);
+  enabledProxies = filterAttrs (n: v: v.enable) config.services.nix-store-gcs-proxy;
+  mapProxies = function: mkMerge (mapAttrsToList function enabledProxies);
 in
 {
   options.services.nix-store-gcs-proxy = mkOption {
     type = types.attrsOf (types.submodule opts);
     default = {};
-    description = lib.mdDoc ''
+    description = mdDoc ''
       An attribute set describing an HTTP to GCS proxy that allows us to use GCS
       bucket via HTTP protocol.
     '';
