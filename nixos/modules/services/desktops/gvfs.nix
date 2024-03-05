@@ -2,9 +2,15 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkPackageOption
+    mkRenamedOptionModule
+    teams
+    ;
 
   cfg = config.services.gvfs;
 
@@ -29,7 +35,7 @@ in
 
     services.gvfs = {
 
-      enable = mkEnableOption (lib.mdDoc "GVfs, a userspace virtual filesystem");
+      enable = mkEnableOption (mdDoc "GVfs, a userspace virtual filesystem");
 
       # gvfs can be built with multiple configurations
       package = mkPackageOption pkgs [ "gnome" "gvfs" ] { };
