@@ -1,23 +1,32 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.fluentd;
 
   pluginArgs = concatStringsSep " " (map (x: "-p ${x}") cfg.plugins);
-in {
+in
+{
   ###### interface
 
   options = {
 
     services.fluentd = {
-      enable = mkEnableOption (lib.mdDoc "fluentd");
+      enable = mkEnableOption (mdDoc "fluentd");
 
       config = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc "Fluentd config.";
+        description = mdDoc "Fluentd config.";
       };
 
       package = mkPackageOption pkgs "fluentd" { };
@@ -25,7 +34,7 @@ in {
       plugins = mkOption {
         type = types.listOf types.path;
         default = [];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A list of plugin paths to pass into fluentd. It will make plugins defined in ruby files
           there available in your config.
         '';
