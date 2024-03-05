@@ -1,7 +1,16 @@
 { config, pkgs, lib, ... }:
 
-with lib;
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRenamedOptionModule
+    types
+    ;
+
   cfg = config.services.amazon-ssm-agent;
 
   # The SSM agent doesn't pay attention to our /etc/os-release yet, and the lsb-release tool
@@ -20,18 +29,19 @@ let
     users = [ "ssm-user" ];
     commands = [ { command = "ALL"; options = [ "NOPASSWD" ]; } ];
   };
-in {
+in
+{
   imports = [
     (mkRenamedOptionModule [ "services" "ssm-agent" "enable" ] [ "services" "amazon-ssm-agent" "enable" ])
     (mkRenamedOptionModule [ "services" "ssm-agent" "package" ] [ "services" "amazon-ssm-agent" "package" ])
   ];
 
   options.services.amazon-ssm-agent = {
-    enable = mkEnableOption (lib.mdDoc "Amazon SSM agent");
+    enable = mkEnableOption (mdDoc "Amazon SSM agent");
 
     package = mkOption {
       type = types.path;
-      description = lib.mdDoc "The Amazon SSM agent package to use";
+      description = mdDoc "The Amazon SSM agent package to use";
       default = pkgs.amazon-ssm-agent.override { overrideEtc = false; };
       defaultText = literalExpression "pkgs.amazon-ssm-agent.override { overrideEtc = false; }";
     };
