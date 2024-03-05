@@ -1,18 +1,26 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    generators
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.create_ap;
   configFile = pkgs.writeText "create_ap.conf" (generators.toKeyValue { } cfg.settings);
 in {
   options = {
     services.create_ap = {
-      enable = mkEnableOption (lib.mdDoc "setting up wifi hotspots using create_ap");
+      enable = mkEnableOption (mdDoc "setting up wifi hotspots using create_ap");
       settings = mkOption {
         type = with types; attrsOf (oneOf [ int bool str ]);
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration for `create_ap`.
           See [upstream example configuration](https://raw.githubusercontent.com/lakinduakash/linux-wifi-hotspot/master/src/scripts/create_ap.conf)
           for supported values.
@@ -45,6 +53,6 @@ in {
 
   };
 
-  meta.maintainers = with lib.maintainers; [ onny ];
+  meta.maintainers = with maintainers; [ onny ];
 
 }
