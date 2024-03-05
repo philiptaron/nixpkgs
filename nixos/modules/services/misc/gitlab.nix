@@ -1,12 +1,54 @@
 { config, lib, options, pkgs, utils, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrValues
+    boolToString
+    catAttrs
+    collect
+    concatMapStrings
+    concatStrings
+    concatStringsSep
+    escape
+    escapeShellArgs
+    filterAttrs
+    flip
+    generators
+    getVersion
+    isAttrs
+    isInt
+    isString
+    literalExpression
+    makeBinPath
+    mapAttrs
+    mapAttrsToList
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    optional
+    optionalAttrs
+    optionalString
+    recursiveUpdate
+    replaceStrings
+    singleton
+    stringLength
+    teams
+    types
+    versionAtLeast
+    versionOlder
+    ;
+
   cfg = config.services.gitlab;
+
   opt = options.services.gitlab;
 
   toml = pkgs.formats.toml {};
+
   yaml = pkgs.formats.yaml {};
 
   postgresqlPackage = if config.services.postgresql.enable then
@@ -27,7 +69,7 @@ let
       encoding = "utf8";
       pool = cfg.databasePool;
     } // cfg.extraDatabaseConfig;
-  in if lib.versionAtLeast (lib.getVersion cfg.packages.gitlab) "15.0" then {
+  in if versionAtLeast (getVersion cfg.packages.gitlab) "15.0" then {
     production.main = val;
   } else {
     production = val;
@@ -37,7 +79,7 @@ let
   databaseActuallyCreateLocally = cfg.databaseCreateLocally && cfg.databaseHost == "";
 
   gitalyToml = pkgs.writeText "gitaly.toml" ''
-    socket_path = "${lib.escape ["\""] gitalySocket}"
+    socket_path = "${escape ["\""] gitalySocket}"
     runtime_dir = "/run/gitaly"
     bin_dir = "${cfg.packages.gitaly}/bin"
     prometheus_listen_addr = "localhost:9236"
@@ -60,8 +102,8 @@ let
 
     ${concatStringsSep "\n" (attrValues (mapAttrs (k: v: ''
     [[storage]]
-    name = "${lib.escape ["\""] k}"
-    path = "${lib.escape ["\""] v.path}"
+    name = "${escape ["\""] k}"
+    path = "${escape ["\""] v.path}"
     '') gitlabConfig.production.repositories.storages))}
   '';
 
@@ -144,7 +186,7 @@ let
           port = 3807;
         };
       };
-      registry = lib.optionalAttrs cfg.registry.enable {
+      registry = optionalAttrs cfg.registry.enable {
         enabled = true;
         host = cfg.registry.externalAddress;
         port = cfg.registry.externalPort;
@@ -196,7 +238,7 @@ let
       mkdir -p $out/bin
       makeWrapper ${cfg.packages.gitlab.rubyEnv}/bin/rake $out/bin/gitlab-rake \
           ${concatStrings (mapAttrsToList (name: value: "--set ${name} '${value}' ") gitlabEnv)} \
-          --set PATH '${lib.makeBinPath runtimeDeps}:$PATH' \
+          --set PATH '${makeBinPath runtimeDeps}:$PATH' \
           --set RAKEOPT '-f ${cfg.packages.gitlab}/share/gitlab/Rakefile' \
           --chdir '${cfg.packages.gitlab}/share/gitlab'
      '';
@@ -211,7 +253,7 @@ let
       mkdir -p $out/bin
       makeWrapper ${cfg.packages.gitlab.rubyEnv}/bin/rails $out/bin/gitlab-rails \
           ${concatStrings (mapAttrsToList (name: value: "--set ${name} '${value}' ") gitlabEnv)} \
-          --set PATH '${lib.makeBinPath runtimeDeps}:$PATH' \
+          --set PATH '${makeBinPath runtimeDeps}:$PATH' \
           --chdir '${cfg.packages.gitlab}/share/gitlab'
      '';
   };
@@ -238,7 +280,8 @@ let
     end
   '';
 
-in {
+in
+{
 
   imports = [
     (mkRenamedOptionModule [ "services" "gitlab" "stateDir" ] [ "services" "gitlab" "statePath" ])
@@ -253,7 +296,7 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable the gitlab service.
         '';
       };
@@ -273,7 +316,7 @@ in {
       statePath = mkOption {
         type = types.str;
         default = "/var/gitlab/state";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           GitLab state directory. Configuration, repositories and
           logs, among other things, are stored here.
 
@@ -287,7 +330,7 @@ in {
       extraEnv = mkOption {
         type = types.attrsOf types.str;
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Additional environment variables for the GitLab environment.
         '';
       };
@@ -296,7 +339,7 @@ in {
         type = with types; either str (listOf str);
         default = [];
         example = "03:00";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The time(s) to run automatic backup of GitLab
           state. Specified in systemd's time format; see
           {manpage}`systemd.time(7)`.
@@ -307,7 +350,7 @@ in {
         type = types.str;
         default = cfg.statePath + "/backup";
         defaultText = literalExpression ''config.${opt.statePath} + "/backup"'';
-        description = lib.mdDoc "GitLab path for backups.";
+        description = mdDoc "GitLab path for backups.";
       };
 
       backup.keepTime = mkOption {
@@ -315,7 +358,7 @@ in {
         default = 0;
         example = 48;
         apply = x: x * 60 * 60;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           How long to keep the backups around, in
           hours. `0` means “keep forever”.
         '';
@@ -339,7 +382,7 @@ in {
         default = [];
         example = [ "artifacts" "lfs" ];
         apply = x: if isString x then x else concatStringsSep "," x;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Directories to exclude from the backup. The example excludes
           CI artifacts and LFS objects from the backups. The
           `tar` option skips the creation of a tar
@@ -378,7 +421,7 @@ in {
             storage_class = "STANDARD";
           };
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           GitLab automatic upload specification. Tells GitLab to
           upload the backup to a remote location when done.
 
@@ -391,7 +434,7 @@ in {
       databaseHost = mkOption {
         type = types.str;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           GitLab database hostname. An empty string means
           “use local unix socket connection”.
         '';
@@ -400,7 +443,7 @@ in {
       databasePasswordFile = mkOption {
         type = with types; nullOr path;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           File containing the GitLab database user password.
 
           This should be a string, not a nix path, since nix paths are
@@ -411,7 +454,7 @@ in {
       databaseCreateLocally = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether a database should be automatically created on the
           local host. Set this to `false` if you plan
           on provisioning a local database yourself. This has no effect
@@ -422,32 +465,32 @@ in {
       databaseName = mkOption {
         type = types.str;
         default = "gitlab";
-        description = lib.mdDoc "GitLab database name.";
+        description = mdDoc "GitLab database name.";
       };
 
       databaseUsername = mkOption {
         type = types.str;
         default = "gitlab";
-        description = lib.mdDoc "GitLab database user.";
+        description = mdDoc "GitLab database user.";
       };
 
       databasePool = mkOption {
         type = types.int;
         default = 5;
-        description = lib.mdDoc "Database connection pool size.";
+        description = mdDoc "Database connection pool size.";
       };
 
       extraDatabaseConfig = mkOption {
         type = types.attrs;
         default = {};
-        description = lib.mdDoc "Extra configuration in config/database.yml.";
+        description = mdDoc "Extra configuration in config/database.yml.";
       };
 
       redisUrl = mkOption {
         type = types.str;
         default = "unix:/run/gitlab/redis.sock";
         example = "redis://localhost:6379/";
-        description = lib.mdDoc "Redis URL for all GitLab services.";
+        description = mdDoc "Redis URL for all GitLab services.";
       };
 
       extraGitlabRb = mkOption {
@@ -463,7 +506,7 @@ in {
             }
           end
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra configuration to be placed in config/extra-gitlab.rb. This can
           be used to add configuration not otherwise exposed through this module's
           options.
@@ -474,13 +517,13 @@ in {
         type = types.str;
         default = config.networking.hostName;
         defaultText = literalExpression "config.networking.hostName";
-        description = lib.mdDoc "GitLab host name. Used e.g. for copy-paste URLs.";
+        description = mdDoc "GitLab host name. Used e.g. for copy-paste URLs.";
       };
 
       port = mkOption {
         type = types.port;
         default = 8080;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           GitLab server port for copy-paste URLs, e.g. 80 or 443 if you're
           service over https.
         '';
@@ -489,25 +532,25 @@ in {
       https = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether gitlab prints URLs with https as scheme.";
+        description = mdDoc "Whether gitlab prints URLs with https as scheme.";
       };
 
       user = mkOption {
         type = types.str;
         default = "gitlab";
-        description = lib.mdDoc "User to run gitlab and all related services.";
+        description = mdDoc "User to run gitlab and all related services.";
       };
 
       group = mkOption {
         type = types.str;
         default = "gitlab";
-        description = lib.mdDoc "Group to run gitlab and all related services.";
+        description = mdDoc "Group to run gitlab and all related services.";
       };
 
       initialRootEmail = mkOption {
         type = types.str;
         default = "admin@local.host";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Initial email address of the root account if this is a new install.
         '';
       };
@@ -515,7 +558,7 @@ in {
       initialRootPasswordFile = mkOption {
         type = with types; nullOr path;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           File containing the initial password of the root account if
           this is a new install.
 
@@ -528,7 +571,7 @@ in {
         enable = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc "Enable GitLab container registry.";
+          description = mdDoc "Enable GitLab container registry.";
         };
         package = mkOption {
           type = types.package;
@@ -537,7 +580,7 @@ in {
             then pkgs.gitlab-container-registry
             else pkgs.docker-distribution;
           defaultText = literalExpression "pkgs.docker-distribution";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Container registry package to use.
 
             External container registries such as `pkgs.docker-distribution` are not supported
@@ -548,45 +591,45 @@ in {
           type = types.str;
           default = config.services.gitlab.host;
           defaultText = literalExpression "config.services.gitlab.host";
-          description = lib.mdDoc "GitLab container registry host name.";
+          description = mdDoc "GitLab container registry host name.";
         };
         port = mkOption {
           type = types.port;
           default = 4567;
-          description = lib.mdDoc "GitLab container registry port.";
+          description = mdDoc "GitLab container registry port.";
         };
         certFile = mkOption {
           type = types.path;
-          description = lib.mdDoc "Path to GitLab container registry certificate.";
+          description = mdDoc "Path to GitLab container registry certificate.";
         };
         keyFile = mkOption {
           type = types.path;
-          description = lib.mdDoc "Path to GitLab container registry certificate-key.";
+          description = mdDoc "Path to GitLab container registry certificate-key.";
         };
         defaultForProjects = mkOption {
           type = types.bool;
           default = cfg.registry.enable;
           defaultText = literalExpression "config.${opt.registry.enable}";
-          description = lib.mdDoc "If GitLab container registry should be enabled by default for projects.";
+          description = mdDoc "If GitLab container registry should be enabled by default for projects.";
         };
         issuer = mkOption {
           type = types.str;
           default = "gitlab-issuer";
-          description = lib.mdDoc "GitLab container registry issuer.";
+          description = mdDoc "GitLab container registry issuer.";
         };
         serviceName = mkOption {
           type = types.str;
           default = "container_registry";
-          description = lib.mdDoc "GitLab container registry service name.";
+          description = mdDoc "GitLab container registry service name.";
         };
         externalAddress = mkOption {
           type = types.str;
           default = "";
-          description = lib.mdDoc "External address used to access registry from the internet";
+          description = mdDoc "External address used to access registry from the internet";
         };
         externalPort = mkOption {
           type = types.int;
-          description = lib.mdDoc "External port used to access registry from the internet";
+          description = mdDoc "External port used to access registry from the internet";
         };
       };
 
@@ -594,31 +637,31 @@ in {
         enable = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc "Enable gitlab mail delivery over SMTP.";
+          description = mdDoc "Enable gitlab mail delivery over SMTP.";
         };
 
         address = mkOption {
           type = types.str;
           default = "localhost";
-          description = lib.mdDoc "Address of the SMTP server for GitLab.";
+          description = mdDoc "Address of the SMTP server for GitLab.";
         };
 
         port = mkOption {
           type = types.port;
           default = 25;
-          description = lib.mdDoc "Port of the SMTP server for GitLab.";
+          description = mdDoc "Port of the SMTP server for GitLab.";
         };
 
         username = mkOption {
           type = with types; nullOr str;
           default = null;
-          description = lib.mdDoc "Username of the SMTP server for GitLab.";
+          description = mdDoc "Username of the SMTP server for GitLab.";
         };
 
         passwordFile = mkOption {
           type = types.nullOr types.path;
           default = null;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             File containing the password of the SMTP server for GitLab.
 
             This should be a string, not a nix path, since nix paths
@@ -629,35 +672,35 @@ in {
         domain = mkOption {
           type = types.str;
           default = "localhost";
-          description = lib.mdDoc "HELO domain to use for outgoing mail.";
+          description = mdDoc "HELO domain to use for outgoing mail.";
         };
 
         authentication = mkOption {
           type = with types; nullOr str;
           default = null;
-          description = lib.mdDoc "Authentication type to use, see http://api.rubyonrails.org/classes/ActionMailer/Base.html";
+          description = mdDoc "Authentication type to use, see http://api.rubyonrails.org/classes/ActionMailer/Base.html";
         };
 
         enableStartTLSAuto = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc "Whether to try to use StartTLS.";
+          description = mdDoc "Whether to try to use StartTLS.";
         };
 
         tls = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc "Whether to use TLS wrapper-mode.";
+          description = mdDoc "Whether to use TLS wrapper-mode.";
         };
 
         opensslVerifyMode = mkOption {
           type = types.str;
           default = "peer";
-          description = lib.mdDoc "How OpenSSL checks the certificate, see http://api.rubyonrails.org/classes/ActionMailer/Base.html";
+          description = mdDoc "How OpenSSL checks the certificate, see http://api.rubyonrails.org/classes/ActionMailer/Base.html";
         };
       };
 
-      pages.enable = mkEnableOption (lib.mdDoc "the GitLab Pages service");
+      pages.enable = mkEnableOption (mdDoc "the GitLab Pages service");
 
       pages.settings = mkOption {
         example = literalExpression ''
@@ -671,7 +714,7 @@ in {
           }
         '';
 
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration options to set in the GitLab Pages config
           file.
 
@@ -691,27 +734,27 @@ in {
           options = {
             listen-http = mkOption {
               type = with types; listOf str;
-              apply = x: if x == [] then null else lib.concatStringsSep "," x;
+              apply = x: if x == [] then null else concatStringsSep "," x;
               default = [];
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The address(es) to listen on for HTTP requests.
               '';
             };
 
             listen-https = mkOption {
               type = with types; listOf str;
-              apply = x: if x == [] then null else lib.concatStringsSep "," x;
+              apply = x: if x == [] then null else concatStringsSep "," x;
               default = [];
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The address(es) to listen on for HTTPS requests.
               '';
             };
 
             listen-proxy = mkOption {
               type = with types; listOf str;
-              apply = x: if x == [] then null else lib.concatStringsSep "," x;
+              apply = x: if x == [] then null else concatStringsSep "," x;
               default = [ "127.0.0.1:8090" ];
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The address(es) to listen on for proxy requests.
               '';
             };
@@ -721,7 +764,7 @@ in {
               default = "http${optionalString cfg.https "s"}://${cfg.host}/api/v4";
               defaultText = "http(s)://<services.gitlab.host>/api/v4";
               example = "https://gitlab.example.com/api/v4";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 API URL to proxy artifact requests to.
               '';
             };
@@ -731,7 +774,7 @@ in {
               default = "http${optionalString cfg.https "s"}://${cfg.host}";
               defaultText = "http(s)://<services.gitlab.host>";
               example = "https://gitlab.example.com";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Public GitLab server URL.
               '';
             };
@@ -741,7 +784,7 @@ in {
               default = null;
               defaultText = "http(s)://<services.gitlab.host>";
               example = "https://gitlab.example.internal";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Internal GitLab server used for API requests, useful
                 if you want to send that traffic over an internal load
                 balancer. By default, the value of
@@ -754,7 +797,7 @@ in {
               type = with types; nullOr str;
               default = "${cfg.statePath}/gitlab_pages_secret";
               internal = true;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 File with secret key used to authenticate with the
                 GitLab API.
               '';
@@ -763,7 +806,7 @@ in {
             pages-domain = mkOption {
               type = with types; nullOr str;
               example = "example.com";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The domain to serve static pages on.
               '';
             };
@@ -772,7 +815,7 @@ in {
               type = types.str;
               default = "${gitlabConfig.production.shared.path}/pages";
               defaultText = literalExpression ''config.${opt.extraConfig}.production.shared.path + "/pages"'';
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The directory where pages are stored.
               '';
             };
@@ -783,7 +826,7 @@ in {
       secrets.secretFile = mkOption {
         type = with types; nullOr path;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A file containing the secret used to encrypt variables in
           the DB. If you change or lose this key you will be unable to
           access variables stored in database.
@@ -799,7 +842,7 @@ in {
       secrets.dbFile = mkOption {
         type = with types; nullOr path;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A file containing the secret used to encrypt variables in
           the DB. If you change or lose this key you will be unable to
           access variables stored in database.
@@ -815,7 +858,7 @@ in {
       secrets.otpFile = mkOption {
         type = with types; nullOr path;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A file containing the secret used to encrypt secrets for OTP
           tokens. If you change or lose this key, users which have 2FA
           enabled for login won't be able to login anymore.
@@ -831,7 +874,7 @@ in {
       secrets.jwsFile = mkOption {
         type = with types; nullOr path;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A file containing the secret used to encrypt session
           keys. If you change or lose this key, users will be
           disconnected.
@@ -849,14 +892,14 @@ in {
       extraShellConfig = mkOption {
         type = types.attrs;
         default = {};
-        description = lib.mdDoc "Extra configuration to merge into shell-config.yml";
+        description = mdDoc "Extra configuration to merge into shell-config.yml";
       };
 
       puma.workers = mkOption {
         type = types.int;
         default = 2;
         apply = x: builtins.toString x;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The number of worker processes Puma should spawn. This
           controls the amount of parallel Ruby code can be
           executed. GitLab recommends `Number of CPU cores - 1`, but at least two.
@@ -872,7 +915,7 @@ in {
         type = types.int;
         default = 0;
         apply = x: builtins.toString x;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The minimum number of threads Puma should use per
           worker.
 
@@ -887,7 +930,7 @@ in {
         type = types.int;
         default = 4;
         apply = x: builtins.toString x;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The maximum number of threads Puma should use per
           worker. This limits how many threads Puma will automatically
           spawn in response to requests. In contrast to workers,
@@ -904,7 +947,7 @@ in {
       sidekiq.memoryKiller.enable = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether the Sidekiq MemoryKiller should be turned
           on. MemoryKiller kills Sidekiq when its memory consumption
           exceeds a certain limit.
@@ -918,7 +961,7 @@ in {
         type = types.int;
         default = 2000;
         apply = x: builtins.toString (x * 1024);
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The maximum amount of memory, in MiB, a Sidekiq worker is
           allowed to consume before being killed.
         '';
@@ -928,7 +971,7 @@ in {
         type = types.int;
         default = 900;
         apply = x: builtins.toString x;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The time MemoryKiller waits after noticing excessive memory
           consumption before killing Sidekiq.
         '';
@@ -938,7 +981,7 @@ in {
         type = types.int;
         default = 30;
         apply = x: builtins.toString x;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The time allowed for all jobs to finish before Sidekiq is
           killed forcefully.
         '';
@@ -948,7 +991,7 @@ in {
         enable = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Enable rotation of log files.
           '';
         };
@@ -956,13 +999,13 @@ in {
         frequency = mkOption {
           type = types.str;
           default = "daily";
-          description = lib.mdDoc "How often to rotate the logs.";
+          description = mdDoc "How often to rotate the logs.";
         };
 
         keep = mkOption {
           type = types.int;
           default = 30;
-          description = lib.mdDoc "How many rotations to keep.";
+          description = mdDoc "How many rotations to keep.";
         };
       };
 
@@ -978,7 +1021,7 @@ in {
             };
           };
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration options to add to Workhorse's configuration
           file.
 
@@ -1037,7 +1080,7 @@ in {
             };
           };
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra options to be added under
           `production` in
           {file}`config/gitlab.yml`, as a nix attribute
@@ -1348,7 +1391,7 @@ in {
                 fi
 
                 jq <${pkgs.writeText "database.yml" (builtins.toJSON databaseConfig)} \
-                   '.${if lib.versionAtLeast (lib.getVersion cfg.packages.gitlab) "15.0" then "production.main" else "production"}.password = $ENV.db_password' \
+                   '.${if versionAtLeast (getVersion cfg.packages.gitlab) "15.0" then "production.main" else "production"}.password = $ENV.db_password' \
                    >'${cfg.statePath}/config/database.yml'
               ''
               else ''
@@ -1487,22 +1530,22 @@ in {
       let
         filteredConfig = filterAttrs (_: v: v != null) cfg.pages.settings;
         isSecret = v: isAttrs v && v ? _secret && isString v._secret;
-        mkPagesKeyValue = lib.generators.toKeyValue {
-          mkKeyValue = lib.flip lib.generators.mkKeyValueDefault "=" rec {
+        mkPagesKeyValue = generators.toKeyValue {
+          mkKeyValue = flip generators.mkKeyValueDefault "=" rec {
             mkValueString = v:
               if isInt           v then toString v
               else if isString   v then v
               else if true  ==   v then "true"
               else if false ==   v then "false"
               else if isSecret   v then builtins.hashString "sha256" v._secret
-              else throw "unsupported type ${builtins.typeOf v}: ${(lib.generators.toPretty {}) v}";
+              else throw "unsupported type ${builtins.typeOf v}: ${(generators.toPretty {}) v}";
           };
         };
-        secretPaths = lib.catAttrs "_secret" (lib.collect isSecret filteredConfig);
+        secretPaths = catAttrs "_secret" (collect isSecret filteredConfig);
         mkSecretReplacement = file: ''
-          replace-secret ${lib.escapeShellArgs [ (builtins.hashString "sha256" file) file "/run/gitlab-pages/gitlab-pages.conf" ]}
+          replace-secret ${escapeShellArgs [ (builtins.hashString "sha256" file) file "/run/gitlab-pages/gitlab-pages.conf" ]}
         '';
-        secretReplacements = lib.concatMapStrings mkSecretReplacement secretPaths;
+        secretReplacements = concatMapStrings mkSecretReplacement secretPaths;
         configFile = pkgs.writeText "gitlab-pages.conf" (mkPagesKeyValue filteredConfig);
       in
         mkIf cfg.pages.enable {
