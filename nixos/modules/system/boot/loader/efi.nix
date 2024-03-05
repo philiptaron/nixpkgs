@@ -1,6 +1,12 @@
 { lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkOption
+    types
+    ;
+in
 
 {
   options.boot.loader.efi = {
@@ -8,13 +14,13 @@ with lib;
     canTouchEfiVariables = mkOption {
       default = false;
       type = types.bool;
-      description = lib.mdDoc "Whether the installation process is allowed to modify EFI boot variables.";
+      description = mdDoc "Whether the installation process is allowed to modify EFI boot variables.";
     };
 
     efiSysMountPoint = mkOption {
       default = "/boot";
       type = types.str;
-      description = lib.mdDoc "Where the EFI System Partition is mounted.";
+      description = mdDoc "Where the EFI System Partition is mounted.";
     };
   };
 }
