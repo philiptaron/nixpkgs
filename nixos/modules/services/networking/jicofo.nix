@@ -1,8 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    teams
+    types
+    ;
+
   cfg = config.services.jicofo;
 
   format = pkgs.formats.hocon { };
@@ -11,12 +22,12 @@ let
 in
 {
   options.services.jicofo = with types; {
-    enable = mkEnableOption (lib.mdDoc "Jitsi Conference Focus - component of Jitsi Meet");
+    enable = mkEnableOption (mdDoc "Jitsi Conference Focus - component of Jitsi Meet");
 
     xmppHost = mkOption {
       type = str;
       example = "localhost";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Hostname of the XMPP server to connect to.
       '';
     };
@@ -24,7 +35,7 @@ in
     xmppDomain = mkOption {
       type = nullOr str;
       example = "meet.example.org";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Domain name of the XMMP server to which to connect as a component.
 
         If null, {option}`xmppHost` is used.
@@ -34,7 +45,7 @@ in
     componentPasswordFile = mkOption {
       type = str;
       example = "/run/keys/jicofo-component";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path to file containing component secret.
       '';
     };
@@ -42,7 +53,7 @@ in
     userName = mkOption {
       type = str;
       default = "focus";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         User part of the JID for XMPP user connection.
       '';
     };
@@ -50,7 +61,7 @@ in
     userDomain = mkOption {
       type = str;
       example = "auth.meet.example.org";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Domain part of the JID for XMPP user connection.
       '';
     };
@@ -58,7 +69,7 @@ in
     userPasswordFile = mkOption {
       type = str;
       example = "/run/keys/jicofo-user";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path to file containing password for XMPP user connection.
       '';
     };
@@ -66,7 +77,7 @@ in
     bridgeMuc = mkOption {
       type = str;
       example = "jvbbrewery@internal.meet.example.org";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         JID of the internal MUC used to communicate with Videobridges.
       '';
     };
@@ -79,7 +90,7 @@ in
           jicofo.bridge.max-bridge-participants = 42;
         }
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Contents of the {file}`jicofo.conf` configuration file.
       '';
     };
@@ -94,7 +105,7 @@ in
             hostname = cfg.xmppHost;
             username = cfg.userName;
             domain = cfg.userDomain;
-            password = format.lib.mkSubstitution "JICOFO_AUTH_PASS";
+            password = format.mkSubstitution "JICOFO_AUTH_PASS";
             xmpp-domain = if cfg.xmppDomain == null then cfg.xmppHost else cfg.xmppDomain;
           };
           service = client;
@@ -157,5 +168,5 @@ in
       mkDefault "${pkgs.jicofo}/etc/jitsi/jicofo/logging.properties-journal";
   };
 
-  meta.maintainers = lib.teams.jitsi.members;
+  meta.maintainers = teams.jitsi.members;
 }
