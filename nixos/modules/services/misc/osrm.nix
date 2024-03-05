@@ -1,8 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.osrm;
 in
 
@@ -11,44 +16,44 @@ in
     enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc "Enable the OSRM service.";
+      description = mdDoc "Enable the OSRM service.";
     };
 
     address = mkOption {
       type = types.str;
       default = "0.0.0.0";
-      description = lib.mdDoc "IP address on which the web server will listen.";
+      description = mdDoc "IP address on which the web server will listen.";
     };
 
     port = mkOption {
       type = types.port;
       default = 5000;
-      description = lib.mdDoc "Port on which the web server will run.";
+      description = mdDoc "Port on which the web server will run.";
     };
 
     threads = mkOption {
       type = types.int;
       default = 4;
-      description = lib.mdDoc "Number of threads to use.";
+      description = mdDoc "Number of threads to use.";
     };
 
     algorithm = mkOption {
       type = types.enum [ "CH" "CoreCH" "MLD" ];
       default = "MLD";
-      description = lib.mdDoc "Algorithm to use for the data. Must be one of CH, CoreCH, MLD";
+      description = mdDoc "Algorithm to use for the data. Must be one of CH, CoreCH, MLD";
     };
 
     extraFlags = mkOption {
       type = types.listOf types.str;
       default = [];
       example = [ "--max-table-size 1000" "--max-matching-size 1000" ];
-      description = lib.mdDoc "Extra command line arguments passed to osrm-routed";
+      description = mdDoc "Extra command line arguments passed to osrm-routed";
     };
 
     dataFile = mkOption {
       type = types.path;
       example = "/var/lib/osrm/berlin-latest.osrm";
-      description = lib.mdDoc "Data file location";
+      description = mdDoc "Data file location";
     };
 
   };
