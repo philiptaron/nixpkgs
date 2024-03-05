@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.services.networkd-dispatcher;
 
@@ -19,7 +26,7 @@ in {
 
       rules = mkOption {
         default = {};
-        example = lib.literalExpression ''
+        example = literalExpression ''
           { "restart-tor" = {
               onState = ["routable" "off"];
               script = '''
@@ -33,7 +40,7 @@ in {
             };
           };
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Declarative configuration of networkd-dispatcher rules. See
           [https://gitlab.com/craftyguy/networkd-dispatcher](upstream instructions)
           for an introduction and example scripts.
@@ -46,7 +53,7 @@ in {
                 "configuring" "configured"
               ]);
               default = null;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 List of names of the systemd-networkd operational states which
                 should trigger the script. See <https://www.freedesktop.org/software/systemd/man/networkctl.html>
                 for a description of the specific state type.
@@ -54,7 +61,7 @@ in {
             };
             script = mkOption {
               type = types.lines;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Shell commands executed on specified operational states.
               '';
             };
@@ -75,7 +82,7 @@ in {
         serviceConfig.ExecStart = let
           scriptDir = pkgs.symlinkJoin {
             name = "networkd-dispatcher-script-dir";
-            paths = lib.mapAttrsToList (name: cfg:
+            paths = mapAttrsToList (name: cfg:
               (map(state:
                 pkgs.writeTextFile {
                   inherit name;
