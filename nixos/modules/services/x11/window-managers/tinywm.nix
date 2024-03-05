@@ -1,14 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    singleton
+    ;
+
   cfg = config.services.xserver.windowManager.tinywm;
 in
 {
   ###### interface
   options = {
-    services.xserver.windowManager.tinywm.enable = mkEnableOption (lib.mdDoc "tinywm");
+    services.xserver.windowManager.tinywm.enable = mkEnableOption (mdDoc "tinywm");
   };
 
   ###### implementation
