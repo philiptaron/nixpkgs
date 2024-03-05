@@ -1,14 +1,18 @@
 { pkgs, config, lib, ... }:
 
-with lib;
-
 let
-  cfg = config.services.devmon;
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
 
-in {
+  cfg = config.services.devmon;
+in
+{
   options = {
     services.devmon = {
-      enable = mkEnableOption (lib.mdDoc "devmon, an automatic device mounting daemon");
+      enable = mkEnableOption (mdDoc "devmon, an automatic device mounting daemon");
     };
   };
 
