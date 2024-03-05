@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optional
+    optionals
+    types
+    ;
+
   inherit (pkgs) glusterfs rsync;
 
   tlsCmd = if (cfg.tlsSettings != null) then
@@ -33,17 +41,17 @@ in
 
     services.glusterfs = {
 
-      enable = mkEnableOption (lib.mdDoc "GlusterFS Daemon");
+      enable = mkEnableOption (mdDoc "GlusterFS Daemon");
 
       logLevel = mkOption {
         type = types.enum ["DEBUG" "INFO" "WARNING" "ERROR" "CRITICAL" "TRACE" "NONE"];
-        description = lib.mdDoc "Log level used by the GlusterFS daemon";
+        description = mdDoc "Log level used by the GlusterFS daemon";
         default = "INFO";
       };
 
       useRpcbind = mkOption {
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable use of rpcbind. This is required for Gluster's NFS functionality.
 
           You may want to turn it off to reduce the attack surface for DDoS reflection attacks.
@@ -56,13 +64,13 @@ in
 
       enableGlustereventsd = mkOption {
         type = types.bool;
-        description = lib.mdDoc "Whether to enable the GlusterFS Events Daemon";
+        description = mdDoc "Whether to enable the GlusterFS Events Daemon";
         default = true;
       };
 
       killMode = mkOption {
         type = types.enum ["control-group" "process" "mixed" "none"];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The systemd KillMode to use for glusterd.
 
           glusterd spawns other daemons like gsyncd.
@@ -79,7 +87,7 @@ in
 
       stopKillTimeout = mkOption {
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The systemd TimeoutStopSec to use.
 
           After this time after having been asked to shut down, glusterd
@@ -94,12 +102,12 @@ in
 
       extraFlags = mkOption {
         type = types.listOf types.str;
-        description = lib.mdDoc "Extra flags passed to the GlusterFS daemon";
+        description = mdDoc "Extra flags passed to the GlusterFS daemon";
         default = [];
       };
 
       tlsSettings = mkOption {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Make the server communicate via TLS.
           This means it will only connect to other gluster
           servers having certificates signed by the same CA.
@@ -114,17 +122,17 @@ in
           options = {
             tlsKeyPath = mkOption {
               type = types.str;
-              description = lib.mdDoc "Path to the private key used for TLS.";
+              description = mdDoc "Path to the private key used for TLS.";
             };
 
             tlsPem = mkOption {
               type = types.path;
-              description = lib.mdDoc "Path to the certificate used for TLS.";
+              description = mdDoc "Path to the certificate used for TLS.";
             };
 
             caCert = mkOption {
               type = types.path;
-              description = lib.mdDoc "Path certificate authority used to sign the cluster certificates.";
+              description = mdDoc "Path certificate authority used to sign the cluster certificates.";
             };
           };
         });
@@ -152,8 +160,8 @@ in
 
       wantedBy = [ "multi-user.target" ];
 
-      requires = lib.optional cfg.useRpcbind "rpcbind.service";
-      after = [ "network.target" ] ++ lib.optional cfg.useRpcbind "rpcbind.service";
+      requires = optional cfg.useRpcbind "rpcbind.service";
+      after = [ "network.target" ] ++ optional cfg.useRpcbind "rpcbind.service";
 
       preStart = ''
         install -m 0755 -d /var/log/glusterfs
