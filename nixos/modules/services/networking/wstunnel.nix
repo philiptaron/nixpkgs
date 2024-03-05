@@ -1,6 +1,25 @@
 { config, lib, options, pkgs, utils, ... }:
-with lib;
+
 let
+  inherit (lib)
+    any
+    concatStringsSep
+    filterAttrs
+    literalExpression
+    maintainers
+    mapAttrs'
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optional
+    optionals
+    optionalString
+    types
+    ;
+
   cfg = config.services.wstunnel;
   attrsToArgs = attrs: utils.escapeSystemdExecArgs (
     mapAttrsToList
