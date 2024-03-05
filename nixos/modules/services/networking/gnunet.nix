@@ -1,8 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
 
   cfg = config.services.gnunet;
 
@@ -47,7 +52,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to run the GNUnet daemon.  GNUnet is GNU's anonymous
           peer-to-peer communication and file sharing framework.
         '';
@@ -57,7 +62,7 @@ in
         quota = mkOption {
           type = types.int;
           default = 1024;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Maximum file system usage (in MiB) for file sharing.
           '';
         };
@@ -67,7 +72,7 @@ in
         port = mkOption {
           type = types.port;
           default = 2086;  # assigned by IANA
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The UDP port for use by GNUnet.
           '';
         };
@@ -77,7 +82,7 @@ in
         port = mkOption {
           type = types.port;
           default = 2086;  # assigned by IANA
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The TCP port for use by GNUnet.
           '';
         };
@@ -87,7 +92,7 @@ in
         maxNetDownBandwidth = mkOption {
           type = types.int;
           default = 50000;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Maximum bandwidth usage (in bits per second) for GNUnet
             when downloading data.
           '';
@@ -96,7 +101,7 @@ in
         maxNetUpBandwidth = mkOption {
           type = types.int;
           default = 50000;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Maximum bandwidth usage (in bits per second) for GNUnet
             when downloading data.
           '';
@@ -105,7 +110,7 @@ in
         hardNetUpBandwidth = mkOption {
           type = types.int;
           default = 0;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Hard bandwidth limit (in bits per second) when uploading
             data.
           '';
@@ -119,7 +124,7 @@ in
       extraOptions = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Additional options that will be copied verbatim in `gnunet.conf`.
           See {manpage}`gnunet.conf(5)` for details.
         '';
