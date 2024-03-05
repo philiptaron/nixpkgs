@@ -1,8 +1,12 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    singleton
+    ;
 
   cfg = config.services.xserver.windowManager."2bwm";
 
@@ -13,7 +17,7 @@ in
   ###### interface
 
   options = {
-    services.xserver.windowManager."2bwm".enable = mkEnableOption (lib.mdDoc "2bwm");
+    services.xserver.windowManager."2bwm".enable = mkEnableOption (mdDoc "2bwm");
   };
 
 
