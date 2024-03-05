@@ -19,9 +19,15 @@
 # Eg superserver is said to be most efficiently using resources according to
 # https://www.firebirdsql.org/manual/qsg25-classic-or-super.html
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
 
   cfg = config.services.firebird;
 
@@ -40,7 +46,7 @@ in
 
     services.firebird = {
 
-      enable = mkEnableOption (lib.mdDoc "the Firebird super server");
+      enable = mkEnableOption (mdDoc "the Firebird super server");
 
       package = mkPackageOption pkgs "firebird" {
         example = "firebird_3";
@@ -52,7 +58,7 @@ in
       port = mkOption {
         default = 3050;
         type = types.port;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Port Firebird uses.
         '';
       };
@@ -60,7 +66,7 @@ in
       user = mkOption {
         default = "firebird";
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           User account under which firebird runs.
         '';
       };
@@ -68,7 +74,7 @@ in
       baseDir = mkOption {
         default = "/var/lib/firebird";
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Location containing data/ and system/ directories.
           data/ stores the databases, system/ stores the password database security2.fdb.
         '';
