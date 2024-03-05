@@ -1,8 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    mdDoc
+    mkOption
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.openldap;
 in {
   port = 9330;
@@ -10,7 +15,7 @@ in {
     ldapCredentialFile = mkOption {
       type = types.path;
       example = "/run/keys/ldap_pass";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Environment file to contain the credentials to authenticate against
         `openldap`.
 
@@ -26,21 +31,21 @@ in {
       default = "tcp";
       example = "udp";
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Which protocol to use to connect against `openldap`.
       '';
     };
     ldapAddr = mkOption {
       default = "localhost:389";
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Address of the `openldap`-instance.
       '';
     };
     metricsPath = mkOption {
       default = "/metrics";
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         URL path where metrics should be exposed.
       '';
     };
@@ -48,7 +53,7 @@ in {
       default = "30s";
       type = types.str;
       example = "1m";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Scrape interval of the exporter.
       '';
     };
