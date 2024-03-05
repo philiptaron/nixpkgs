@@ -1,11 +1,21 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    id
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optional
+    optionals
+    types
+    ;
+
   cfg = config.services.matrix-appservice-irc;
 
   pkg = pkgs.matrix-appservice-irc;
+
   bin = "${pkg}/bin/matrix-appservice-irc";
 
   jsonType = (pkgs.formats.json {}).type;
@@ -23,33 +33,35 @@ let
     python -m jsonschema config.schema.json -i $configPath
     cp "$configPath" "$out"
   '';
+
   registrationFile = "/var/lib/matrix-appservice-irc/registration.yml";
-in {
+in
+{
   options.services.matrix-appservice-irc = with types; {
-    enable = mkEnableOption (lib.mdDoc "the Matrix/IRC bridge");
+    enable = mkEnableOption (mdDoc "the Matrix/IRC bridge");
 
     port = mkOption {
       type = port;
-      description = lib.mdDoc "The port to listen on";
+      description = mdDoc "The port to listen on";
       default = 8009;
     };
 
     needBindingCap = mkOption {
       type = bool;
-      description = lib.mdDoc "Whether the daemon needs to bind to ports below 1024 (e.g. for the ident service)";
+      description = mdDoc "Whether the daemon needs to bind to ports below 1024 (e.g. for the ident service)";
       default = false;
     };
 
     passwordEncryptionKeyLength = mkOption {
       type = ints.unsigned;
-      description = lib.mdDoc "Length of the key to encrypt IRC passwords with";
+      description = mdDoc "Length of the key to encrypt IRC passwords with";
       default = 4096;
       example = 8192;
     };
 
     registrationUrl = mkOption {
       type = str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The URL where the application service is listening for homeserver requests,
         from the Matrix homeserver perspective.
       '';
@@ -58,12 +70,12 @@ in {
 
     localpart = mkOption {
       type = str;
-      description = lib.mdDoc "The user_id localpart to assign to the appservice";
+      description = mdDoc "The user_id localpart to assign to the appservice";
       default = "appservice-irc";
     };
 
     settings = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Configuration for the appservice, see
         <https://github.com/matrix-org/matrix-appservice-irc/blob/${pkgs.matrix-appservice-irc.version}/config.sample.yaml>
         for supported values
@@ -74,7 +86,7 @@ in {
 
         options = {
           homeserver = mkOption {
-            description = lib.mdDoc "Homeserver configuration";
+            description = mdDoc "Homeserver configuration";
             default = {};
             type = submodule {
               freeformType = jsonType;
@@ -82,12 +94,12 @@ in {
               options = {
                 url = mkOption {
                   type = str;
-                  description = lib.mdDoc "The URL to the home server for client-server API calls";
+                  description = mdDoc "The URL to the home server for client-server API calls";
                 };
 
                 domain = mkOption {
                   type = str;
-                  description = lib.mdDoc ''
+                  description = mdDoc ''
                     The 'domain' part for user IDs on this home server. Usually
                     (but not always) is the "domain name" part of the homeserver URL.
                   '';
@@ -98,21 +110,21 @@ in {
 
           database = mkOption {
             default = {};
-            description = lib.mdDoc "Configuration for the database";
+            description = mdDoc "Configuration for the database";
             type = submodule {
               freeformType = jsonType;
 
               options = {
                 engine = mkOption {
                   type = str;
-                  description = lib.mdDoc "Which database engine to use";
+                  description = mdDoc "Which database engine to use";
                   default = "nedb";
                   example = "postgres";
                 };
 
                 connectionString = mkOption {
                   type = str;
-                  description = lib.mdDoc "The database connection string";
+                  description = mdDoc "The database connection string";
                   default = "nedb://var/lib/matrix-appservice-irc/data";
                   example = "postgres://username:password@host:port/databasename";
                 };
@@ -122,14 +134,14 @@ in {
 
           ircService = mkOption {
             default = {};
-            description = lib.mdDoc "IRC bridge configuration";
+            description = mdDoc "IRC bridge configuration";
             type = submodule {
               freeformType = jsonType;
 
               options = {
                 passwordEncryptionKeyPath = mkOption {
                   type = str;
-                  description = lib.mdDoc ''
+                  description = mdDoc ''
                     Location of the key with which IRC passwords are encrypted
                     for storage. Will be generated on first run if not present.
                   '';
@@ -138,7 +150,7 @@ in {
 
                 servers = mkOption {
                   type = submodule { freeformType = jsonType; };
-                  description = lib.mdDoc "IRC servers to connect to";
+                  description = mdDoc "IRC servers to connect to";
                 };
               };
             };
@@ -151,7 +163,7 @@ in {
     systemd.services.matrix-appservice-irc = {
       description = "Matrix-IRC bridge";
       before = [ "matrix-synapse.service" ]; # So the registration can be used by Synapse
-      after = lib.optionals (cfg.settings.database.engine == "postgres") [
+      after = optionals (cfg.settings.database.engine == "postgres") [
         "postgresql.service"
       ];
       wantedBy = [ "multi-user.target" ];
