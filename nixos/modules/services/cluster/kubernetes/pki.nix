@@ -1,8 +1,26 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    head
+    id
+    length
+    literalExpression
+    mapAttrs
+    mapAttrsToList
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    optionalAttrs
+    optionalString
+    singleton
+    types
+    ;
+
   top = config.services.kubernetes;
   cfg = top.pki;
 
@@ -39,18 +57,18 @@ let
 in
 {
   ###### interface
-  options.services.kubernetes.pki = with lib.types; {
+  options.services.kubernetes.pki = with types; {
 
-    enable = mkEnableOption (lib.mdDoc "easyCert issuer service");
+    enable = mkEnableOption (mdDoc "easyCert issuer service");
 
     certs = mkOption {
-      description = lib.mdDoc "List of certificate specs to feed to cert generator.";
+      description = mdDoc "List of certificate specs to feed to cert generator.";
       default = {};
       type = attrs;
     };
 
     genCfsslCACert = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to automatically generate cfssl CA certificate and key,
         if they don't exist.
       '';
@@ -59,7 +77,7 @@ in
     };
 
     genCfsslAPICerts = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to automatically generate cfssl API webserver TLS cert and key,
         if they don't exist.
       '';
@@ -68,7 +86,7 @@ in
     };
 
     cfsslAPIExtraSANs = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra x509 Subject Alternative Names to be added to the cfssl API webserver TLS cert.
       '';
       default = [];
@@ -77,7 +95,7 @@ in
     };
 
     genCfsslAPIToken = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to automatically generate cfssl API-token secret,
         if they doesn't exist.
       '';
@@ -86,13 +104,13 @@ in
     };
 
     pkiTrustOnBootstrap = mkOption {
-      description = lib.mdDoc "Whether to always trust remote cfssl server upon initial PKI bootstrap.";
+      description = mdDoc "Whether to always trust remote cfssl server upon initial PKI bootstrap.";
       default = true;
       type = bool;
     };
 
     caCertPathPrefix = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path-prefrix for the CA-certificate to be used for cfssl signing.
         Suffixes ".pem" and "-key.pem" will be automatically appended for
         the public and private keys respectively.
@@ -103,7 +121,7 @@ in
     };
 
     caSpec = mkOption {
-      description = lib.mdDoc "Certificate specification for the auto-generated CAcert.";
+      description = mdDoc "Certificate specification for the auto-generated CAcert.";
       default = {
         CN = "kubernetes-cluster-ca";
         O = "NixOS";
@@ -114,7 +132,7 @@ in
     };
 
     etcClusterAdminKubeconfig = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Symlink a kubeconfig with cluster-admin privileges to environment path
         (/etc/\<path\>).
       '';
