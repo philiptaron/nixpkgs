@@ -1,8 +1,17 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    types
+    ;
 
   cfg = config.services.jupyter;
 
@@ -20,16 +29,17 @@ let
     c.NotebookApp.password = ${cfg.password}
   '';
 
-in {
+in
+{
   meta.maintainers = with maintainers; [ aborsu ];
 
   options.services.jupyter = {
-    enable = mkEnableOption (lib.mdDoc "Jupyter development server");
+    enable = mkEnableOption (mdDoc "Jupyter development server");
 
     ip = mkOption {
       type = types.str;
       default = "localhost";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         IP address Jupyter will be listening on.
       '';
     };
@@ -43,7 +53,7 @@ in {
       type = types.str;
       default = "jupyter-notebook";
       example = "jupyter-lab";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Which command the service runs. Note that not all jupyter packages
         have all commands, e.g. jupyter-lab isn't present in the default package.
        '';
@@ -52,7 +62,7 @@ in {
     port = mkOption {
       type = types.port;
       default = 8888;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Port number Jupyter will be listening on.
       '';
     };
@@ -60,7 +70,7 @@ in {
     notebookDir = mkOption {
       type = types.str;
       default = "~/";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Root directory for notebooks.
       '';
     };
@@ -68,7 +78,7 @@ in {
     user = mkOption {
       type = types.str;
       default = "jupyter";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Name of the user used to run the jupyter service.
         For security reason, jupyter should really not be run as root.
         If not set (jupyter), the service will create a jupyter user with appropriate settings.
@@ -79,7 +89,7 @@ in {
     group = mkOption {
       type = types.str;
       default = "jupyter";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Name of the group used to run the jupyter service.
         Use this if you want to create a group of users that are able to view the notebook directory's content.
       '';
@@ -88,7 +98,7 @@ in {
 
     password = mkOption {
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Password to use with notebook.
         Can be generated using:
           In [1]: from notebook.auth import passwd
@@ -105,7 +115,7 @@ in {
     notebookConfig = mkOption {
       type = types.lines;
       default = "";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Raw jupyter config.
       '';
     };
@@ -142,7 +152,7 @@ in {
           };
         }
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Declarative kernel config.
 
         Kernels can be declared in any language that supports and has the required
