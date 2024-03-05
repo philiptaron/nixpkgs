@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.kapacitor;
 
   kapacitorConf = pkgs.writeTextFile {
@@ -57,29 +64,29 @@ let
 in
 {
   options.services.kapacitor = {
-    enable = mkEnableOption (lib.mdDoc "kapacitor");
+    enable = mkEnableOption (mdDoc "kapacitor");
 
     dataDir = mkOption {
       type = types.path;
       default = "/var/lib/kapacitor";
-      description = lib.mdDoc "Location where Kapacitor stores its state";
+      description = mdDoc "Location where Kapacitor stores its state";
     };
 
     port = mkOption {
       type = types.port;
       default = 9092;
-      description = lib.mdDoc "Port of Kapacitor";
+      description = mdDoc "Port of Kapacitor";
     };
 
     bind = mkOption {
       type = types.str;
       default = "";
       example = "0.0.0.0";
-      description = lib.mdDoc "Address to bind to. The default is to bind to all addresses";
+      description = mdDoc "Address to bind to. The default is to bind to all addresses";
     };
 
     extraConfig = mkOption {
-      description = lib.mdDoc "These lines go into kapacitord.conf verbatim.";
+      description = mdDoc "These lines go into kapacitord.conf verbatim.";
       default = "";
       type = types.lines;
     };
@@ -87,70 +94,70 @@ in
     user = mkOption {
       type = types.str;
       default = "kapacitor";
-      description = lib.mdDoc "User account under which Kapacitor runs";
+      description = mdDoc "User account under which Kapacitor runs";
     };
 
     group = mkOption {
       type = types.str;
       default = "kapacitor";
-      description = lib.mdDoc "Group under which Kapacitor runs";
+      description = mdDoc "Group under which Kapacitor runs";
     };
 
     taskSnapshotInterval = mkOption {
       type = types.str;
-      description = lib.mdDoc "Specifies how often to snapshot the task state  (in InfluxDB time units)";
+      description = mdDoc "Specifies how often to snapshot the task state  (in InfluxDB time units)";
       default = "1m0s";
     };
 
     loadDirectory = mkOption {
       type = types.nullOr types.path;
-      description = lib.mdDoc "Directory where to load services from, such as tasks, templates and handlers (or null to disable service loading on startup)";
+      description = mdDoc "Directory where to load services from, such as tasks, templates and handlers (or null to disable service loading on startup)";
       default = null;
     };
 
     defaultDatabase = {
-      enable = mkEnableOption (lib.mdDoc "kapacitor.defaultDatabase");
+      enable = mkEnableOption (mdDoc "kapacitor.defaultDatabase");
 
       url = mkOption {
-        description = lib.mdDoc "The URL to an InfluxDB server that serves as the default database";
+        description = mdDoc "The URL to an InfluxDB server that serves as the default database";
         example = "http://localhost:8086";
         type = types.str;
       };
 
       username = mkOption {
-        description = lib.mdDoc "The username to connect to the remote InfluxDB server";
+        description = mdDoc "The username to connect to the remote InfluxDB server";
         type = types.str;
       };
 
       password = mkOption {
-        description = lib.mdDoc "The password to connect to the remote InfluxDB server";
+        description = mdDoc "The password to connect to the remote InfluxDB server";
         type = types.str;
       };
     };
 
     alerta = {
-      enable = mkEnableOption (lib.mdDoc "kapacitor alerta integration");
+      enable = mkEnableOption (mdDoc "kapacitor alerta integration");
 
       url = mkOption {
-        description = lib.mdDoc "The URL to the Alerta REST API";
+        description = mdDoc "The URL to the Alerta REST API";
         default = "http://localhost:5000";
         type = types.str;
       };
 
       token = mkOption {
-        description = lib.mdDoc "Default Alerta authentication token";
+        description = mdDoc "Default Alerta authentication token";
         type = types.str;
         default = "";
       };
 
       environment = mkOption {
-        description = lib.mdDoc "Default Alerta environment";
+        description = mdDoc "Default Alerta environment";
         type = types.str;
         default = "Production";
       };
 
       origin = mkOption {
-        description = lib.mdDoc "Default origin of alert";
+        description = mdDoc "Default origin of alert";
         type = types.str;
         default = "kapacitor";
       };
