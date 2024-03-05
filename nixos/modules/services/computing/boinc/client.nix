@@ -1,9 +1,19 @@
 {config, lib, pkgs, ...}:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    maintainers
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.boinc;
+
   allowRemoteGuiRpcFlag = optionalString cfg.allowRemoteGuiRpc "--allow_remote_gui_rpc";
 
   fhsEnv = pkgs.buildFHSEnv {
@@ -19,7 +29,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the BOINC distributed computing client. If this
           option is set to true, the boinc_client daemon will be run as a
           background service. The boinccmd command can be used to control the
@@ -34,7 +44,7 @@ in
       dataDir = mkOption {
         type = types.path;
         default = "/var/lib/boinc";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The directory in which to store BOINC's configuration and data files.
         '';
       };
@@ -42,7 +52,7 @@ in
       allowRemoteGuiRpc = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If set to true, any remote host can connect to and control this BOINC
           client (subject to password authentication). If instead set to false,
           only the hosts listed in {var}`dataDir`/remote_hosts.cfg will be allowed to
@@ -56,7 +66,7 @@ in
         type = types.listOf types.package;
         default = [];
         example = literalExpression "[ pkgs.virtualbox ]";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Additional packages to make available in the environment in which
           BOINC will run. Common choices are:
 
@@ -108,6 +118,6 @@ in
     };
 
     meta = {
-      maintainers = with lib.maintainers; [kierdavis];
+      maintainers = with maintainers; [kierdavis];
     };
   }
