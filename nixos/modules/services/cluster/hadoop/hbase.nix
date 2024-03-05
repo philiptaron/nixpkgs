@@ -1,10 +1,32 @@
 { config, lib, pkgs, ...}:
 
-with lib;
 let
+  inherit (lib)
+    concatStringsSep
+    filter
+    hasAttr
+    literalExpression
+    mapAttrs
+    mapAttrsToList
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkForce
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    optional
+    toLower
+    types
+    ;
+
   cfg = config.services.hadoop;
+
   hadoopConf = "${import ./conf.nix { inherit cfg pkgs lib; }}/";
+
   mkIfNotNull = x: mkIf (x != null) x;
+
   # generic hbase role options
   hbaseRoleOption = name: extraOpts: {
     enable = mkEnableOption (mdDoc "HBase ${name}");
