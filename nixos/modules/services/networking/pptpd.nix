@@ -1,39 +1,47 @@
 { config, pkgs, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+in
 
 {
   options = {
     services.pptpd = {
-      enable = mkEnableOption (lib.mdDoc "pptpd, the Point-to-Point Tunneling Protocol daemon");
+      enable = mkEnableOption (mdDoc "pptpd, the Point-to-Point Tunneling Protocol daemon");
 
       serverIp = mkOption {
         type        = types.str;
-        description = lib.mdDoc "The server-side IP address.";
+        description = mdDoc "The server-side IP address.";
         default     = "10.124.124.1";
       };
 
       clientIpRange = mkOption {
         type        = types.str;
-        description = lib.mdDoc "The range from which client IPs are drawn.";
+        description = mdDoc "The range from which client IPs are drawn.";
         default     = "10.124.124.2-11";
       };
 
       maxClients = mkOption {
         type        = types.int;
-        description = lib.mdDoc "The maximum number of simultaneous connections.";
+        description = mdDoc "The maximum number of simultaneous connections.";
         default     = 10;
       };
 
       extraPptpdOptions = mkOption {
         type        = types.lines;
-        description = lib.mdDoc "Adds extra lines to the pptpd configuration file.";
+        description = mdDoc "Adds extra lines to the pptpd configuration file.";
         default     = "";
       };
 
       extraPppdOptions = mkOption {
         type        = types.lines;
-        description = lib.mdDoc "Adds extra lines to the pppd options file.";
+        description = mdDoc "Adds extra lines to the pppd options file.";
         default     = "";
         example     = ''
           ms-dns 8.8.8.8
