@@ -1,8 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    getBin
+    literalExpression
+    maintainers
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.corerad;
   settingsFormat = pkgs.formats.toml {};
 
@@ -10,7 +21,7 @@ in {
   meta.maintainers = with maintainers; [ mdlayher ];
 
   options.services.corerad = {
-    enable = mkEnableOption (lib.mdDoc "CoreRAD IPv6 NDP RA daemon");
+    enable = mkEnableOption (mdDoc "CoreRAD IPv6 NDP RA daemon");
 
     settings = mkOption {
       type = settingsFormat.type;
@@ -36,7 +47,7 @@ in {
           };
         }
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Configuration for CoreRAD, see <https://github.com/mdlayher/corerad/blob/main/internal/config/reference.toml>
         for supported values. Ignored if configFile is set.
       '';
@@ -45,7 +56,7 @@ in {
     configFile = mkOption {
       type = types.path;
       example = literalExpression ''"''${pkgs.corerad}/etc/corerad/corerad.toml"'';
-      description = lib.mdDoc "Path to CoreRAD TOML configuration file.";
+      description = mdDoc "Path to CoreRAD TOML configuration file.";
     };
 
     package = mkPackageOption pkgs "corerad" { };
