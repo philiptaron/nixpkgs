@@ -2,7 +2,16 @@
 
 { config, pkgs, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkRenamedOptionModule
+    modules
+    teams
+    ;
+in
 
 {
 
@@ -24,7 +33,7 @@ with lib;
 
     services.gnome.glib-networking = {
 
-      enable = mkEnableOption (lib.mdDoc "network extensions for GLib");
+      enable = mkEnableOption (mdDoc "network extensions for GLib");
 
     };
 
