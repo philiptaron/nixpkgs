@@ -1,8 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStrings
+    escapeShellArgs
+    literalExpression
+    maintainers
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.magnetico;
 
   dataDir = "/var/lib/magnetico";
@@ -43,13 +54,13 @@ in {
   ###### interface
 
   options.services.magnetico = {
-    enable = mkEnableOption (lib.mdDoc "Magnetico, Bittorrent DHT crawler");
+    enable = mkEnableOption (mdDoc "Magnetico, Bittorrent DHT crawler");
 
     crawler.address = mkOption {
       type = types.str;
       default = "0.0.0.0";
       example = "1.2.3.4";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Address to be used for indexing DHT nodes.
       '';
     };
@@ -57,7 +68,7 @@ in {
     crawler.port = mkOption {
       type = types.port;
       default = 0;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Port to be used for indexing DHT nodes.
         This port should be added to
         {option}`networking.firewall.allowedTCPPorts`.
@@ -67,7 +78,7 @@ in {
     crawler.maxNeighbors = mkOption {
       type = types.ints.positive;
       default = 1000;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Maximum number of simultaneous neighbors of an indexer.
         Be careful changing this number: high values can very
         easily cause your network to be congested or even crash
@@ -78,7 +89,7 @@ in {
     crawler.maxLeeches = mkOption {
       type = types.ints.positive;
       default = 200;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Maximum number of simultaneous leeches.
       '';
     };
@@ -86,7 +97,7 @@ in {
     crawler.extraOptions = mkOption {
       type = types.listOf types.str;
       default = [];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra command line arguments to pass to magneticod.
       '';
     };
@@ -95,7 +106,7 @@ in {
       type = types.str;
       default = "localhost";
       example = "1.2.3.4";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Address the web interface will listen to.
       '';
     };
@@ -103,7 +114,7 @@ in {
     web.port = mkOption {
       type = types.port;
       default = 8080;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Port the web interface will listen to.
       '';
     };
@@ -111,12 +122,12 @@ in {
     web.credentials = mkOption {
       type = types.attrsOf types.str;
       default = {};
-      example = lib.literalExpression ''
+      example = literalExpression ''
         {
           myuser = "$2y$12$YE01LZ8jrbQbx6c0s2hdZO71dSjn2p/O9XsYJpz.5968yCysUgiaG";
         }
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The credentials to access the web interface, in case authentication is
         enabled, in the format `username:hash`. If unset no
         authentication will be required.
@@ -139,7 +150,7 @@ in {
     web.credentialsFile = mkOption {
       type = types.nullOr types.path;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The path to the file holding the credentials to access the web
         interface. If unset no authentication will be required.
 
@@ -157,7 +168,7 @@ in {
     web.extraOptions = mkOption {
       type = types.listOf types.str;
       default = [];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra command line arguments to pass to magneticow.
       '';
     };
@@ -213,6 +224,6 @@ in {
 
   };
 
-  meta.maintainers = with lib.maintainers; [ rnhmjoj ];
+  meta.maintainers = with maintainers; [ rnhmjoj ];
 
 }
