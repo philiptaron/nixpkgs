@@ -1,8 +1,25 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrNames
+    boolToString
+    concatMapStrings
+    concatStrings
+    escapeShellArgs
+    mapAttrsToList
+    mdDoc
+    mkAfter
+    mkBefore
+    mkEnableOption
+    mkIf
+    mkOption
+    mkOrder
+    mkPackageOption
+    optionalAttrs
+    types
+    ;
+
   cfg = config.services.collectd;
 
   baseDirLine = ''BaseDir "${cfg.dataDir}"'';
@@ -13,7 +30,7 @@ let
       echo testing ${unvalidated_conf}
       cp ${unvalidated_conf} collectd.conf
       # collectd -t fails if BaseDir does not exist.
-      substituteInPlace collectd.conf --replace ${lib.escapeShellArgs [ baseDirLine ]} 'BaseDir "."'
+      substituteInPlace collectd.conf --replace ${escapeShellArgs [ baseDirLine ]} 'BaseDir "."'
       ${package}/bin/collectd -t -C collectd.conf
       cp ${unvalidated_conf} $out
     '' else unvalidated_conf;
@@ -29,11 +46,11 @@ let
 
 in {
   options.services.collectd = with types; {
-    enable = mkEnableOption (lib.mdDoc "collectd agent");
+    enable = mkEnableOption (mdDoc "collectd agent");
 
     validateConfig = mkOption {
       default = true;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Validate the syntax of collectd configuration file at build time.
         Disable this if you use the Include directive on files unavailable in
         the build sandbox, or when cross-compiling.
@@ -45,7 +62,7 @@ in {
 
     buildMinimalPackage = mkOption {
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Build a minimal collectd package with only the configured `services.collectd.plugins`
       '';
       type = bool;
@@ -53,7 +70,7 @@ in {
 
     user = mkOption {
       default = "collectd";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         User under which to run collectd.
       '';
       type = nullOr str;
@@ -61,7 +78,7 @@ in {
 
     dataDir = mkOption {
       default = "/var/lib/collectd";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Data directory for collectd agent.
       '';
       type = path;
@@ -69,7 +86,7 @@ in {
 
     autoLoadPlugin = mkOption {
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Enable plugin autoloading.
       '';
       type = bool;
@@ -77,7 +94,7 @@ in {
 
     include = mkOption {
       default = [];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Additional paths to load config from.
       '';
       type = listOf str;
@@ -86,7 +103,7 @@ in {
     plugins = mkOption {
       default = {};
       example = { cpu = ""; memory = ""; network = "Server 192.168.1.1 25826"; };
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Attribute set of plugin names to plugin config segments
       '';
       type = attrsOf lines;
@@ -94,7 +111,7 @@ in {
 
     extraConfig = mkOption {
       default = "";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra configuration for collectd. Use mkBefore to add lines before the
         default config, and mkAfter to add them below.
       '';
@@ -105,7 +122,7 @@ in {
 
   config = mkIf cfg.enable {
     # 1200 is after the default (1000) but before mkAfter (1500).
-    services.collectd.extraConfig = lib.mkOrder 1200 ''
+    services.collectd.extraConfig = mkOrder 1200 ''
       ${baseDirLine}
       AutoLoadPlugin ${boolToString cfg.autoLoadPlugin}
       Hostname "${config.networking.hostName}"
