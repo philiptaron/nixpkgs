@@ -1,8 +1,14 @@
 { config, lib, options, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.amule;
   opt = options.services.amule;
   user = if cfg.user != null then cfg.user else "amule";
@@ -19,7 +25,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to run the AMule daemon. You need to manually run "amuled --ec-config" to configure the service for the first time.
         '';
       };
@@ -30,7 +36,7 @@ in
         defaultText = literalExpression ''
           "/home/''${config.${opt.user}}/"
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The directory holding configuration, incoming and temporary files.
         '';
       };
@@ -38,7 +44,7 @@ in
       user = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The user the AMule daemon should run as.
         '';
       };
