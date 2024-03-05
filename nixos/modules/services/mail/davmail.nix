@@ -1,8 +1,22 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrNames
+    boolToString
+    concatMap
+    concatStringsSep
+    isAttrs
+    isBool
+    literalExpression
+    mapAttrs
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.services.davmail;
 
@@ -25,18 +39,18 @@ in
 
   {
     options.services.davmail = {
-      enable = mkEnableOption (lib.mdDoc "davmail, an MS Exchange gateway");
+      enable = mkEnableOption (mdDoc "davmail, an MS Exchange gateway");
 
       url = mkOption {
         type = types.str;
-        description = lib.mdDoc "Outlook Web Access URL to access the exchange server, i.e. the base webmail URL.";
+        description = mdDoc "Outlook Web Access URL to access the exchange server, i.e. the base webmail URL.";
         example = "https://outlook.office365.com/EWS/Exchange.asmx";
       };
 
       config = mkOption {
         type = configType;
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Davmail configuration. Refer to
           <http://davmail.sourceforge.net/serversetup.html>
           and <http://davmail.sourceforge.net/advanced.html>
