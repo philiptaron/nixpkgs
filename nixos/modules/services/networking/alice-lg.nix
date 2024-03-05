@@ -1,22 +1,29 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    ;
+
   cfg = config.services.alice-lg;
   settingsFormat = pkgs.formats.ini { };
 in
 {
   options = {
     services.alice-lg = {
-      enable = mkEnableOption (lib.mdDoc "Alice Looking Glass");
+      enable = mkEnableOption (mdDoc "Alice Looking Glass");
 
       package = mkPackageOption pkgs "alice-lg" { };
 
       settings = mkOption {
         type = settingsFormat.type;
         default = { };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           alice-lg configuration, for configuration options see the example on [github](https://github.com/alice-lg/alice-lg/blob/main/etc/alice-lg/alice.example.conf)
         '';
         example = literalExpression ''
@@ -48,7 +55,7 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable {
+  config = mkIf cfg.enable {
     environment = {
       etc."alice-lg/alice.conf".source = settingsFormat.generate "alice-lg.conf" cfg.settings;
     };
