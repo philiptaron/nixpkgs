@@ -1,19 +1,26 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.komga;
 
 in {
   options = {
     services.komga = {
-      enable = mkEnableOption (lib.mdDoc "Komga, a free and open source comics/mangas media server");
+      enable = mkEnableOption (mdDoc "Komga, a free and open source comics/mangas media server");
 
       port = mkOption {
         type = types.port;
         default = 8080;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The port that Komga will listen on.
         '';
       };
@@ -21,7 +28,7 @@ in {
       user = mkOption {
         type = types.str;
         default = "komga";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           User account under which Komga runs.
         '';
       };
@@ -29,7 +36,7 @@ in {
       group = mkOption {
         type = types.str;
         default = "komga";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Group under which Komga runs.
         '';
       };
@@ -37,7 +44,7 @@ in {
       stateDir = mkOption {
         type = types.str;
         default = "/var/lib/komga";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           State and configuration directory Komga will use.
         '';
       };
@@ -45,7 +52,7 @@ in {
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to open the firewall for the port in {option}`services.komga.port`.
         '';
       };
