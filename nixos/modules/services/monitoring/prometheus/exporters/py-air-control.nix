@@ -1,8 +1,12 @@
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkOption
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.py-air-control;
 
   workingDir = "/var/lib/${cfg.stateDir}";
@@ -14,14 +18,14 @@ in
     deviceHostname = mkOption {
       type = types.str;
       example = "192.168.1.123";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The hostname of the air purification device from which to scrape the metrics.
       '';
     };
     protocol = mkOption {
       type = types.str;
       default = "http";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The protocol to use when communicating with the air purification device.
         Available: [http, coap, plain_coap]
       '';
@@ -29,7 +33,7 @@ in
     stateDir = mkOption {
       type = types.str;
       default = "prometheus-py-air-control-exporter";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Directory below `/var/lib` to store runtime data.
         This directory will be created automatically using systemd's StateDirectory mechanism.
       '';
