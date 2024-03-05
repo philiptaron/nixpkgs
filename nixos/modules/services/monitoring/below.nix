@@ -1,6 +1,20 @@
 { config, lib, pkgs, ... }:
-with lib;
+
 let
+  inherit (lib)
+    concatStringsSep
+    filterAttrs
+    getExe
+    maintainers
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optional
+    types
+    ;
+
   cfg = config.services.below;
   cfgContents = concatStringsSep "\n" (
     mapAttrsToList (n: v: ''${n} = "${v}"'') (filterAttrs (_k: v: v != null) {
@@ -23,7 +37,8 @@ let
   optionalPath = optionalType types.path;
   optionalStr = optionalType types.str;
   optionalInt = optionalType types.int;
-in {
+in
+{
   options = {
     services.below = {
       enable = mkEnableOption (mdDoc "'below' resource monitor");
@@ -90,7 +105,7 @@ in {
 
         serviceConfig.ExecStart = [
           ""
-          ("${lib.getExe pkgs.below} record " + (concatStringsSep " " (
+          ("${getExe pkgs.below} record " + (concatStringsSep " " (
             optional (!cfg.collect.diskStats) "--disable-disk-stat" ++
             optional   cfg.collect.ioStats    "--collect-io-stat"   ++
             optional (!cfg.collect.exitStats) "--disable-exitstats" ++
@@ -104,5 +119,5 @@ in {
     };
   };
 
-  meta.maintainers = with lib.maintainers; [ nicoo ];
+  meta.maintainers = with maintainers; [ nicoo ];
 }
