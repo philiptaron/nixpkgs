@@ -1,8 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStrings
+    literalExpression
+    mdDoc
+    mkDefault
+    mkIf
+    mkMerge
+    mkOption
+    optional
+    optionalString
+    types
+    ;
 
   # Put all the system cronjobs together.
   systemCronJobsFile = pkgs.writeText "system-crontab"
@@ -13,7 +23,7 @@ let
         MAILTO="${config.services.cron.mailto}"
       ''}
       NIX_CONF_DIR=/etc/nix
-      ${lib.concatStrings (map (job: job + "\n") config.services.cron.systemCronJobs)}
+      ${concatStrings (map (job: job + "\n") config.services.cron.systemCronJobs)}
     '';
 
   # Vixie cron requires build-time configuration for the sendmail path.
@@ -40,13 +50,13 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to enable the Vixie cron daemon.";
+        description = mdDoc "Whether to enable the Vixie cron daemon.";
       };
 
       mailto = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc "Email address to which job output will be mailed.";
+        description = mdDoc "Email address to which job output will be mailed.";
       };
 
       systemCronJobs = mkOption {
@@ -57,7 +67,7 @@ in
             "* * * * *  eelco  echo Hello World > /home/eelco/cronout"
           ]
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A list of Cron jobs to be appended to the system-wide
           crontab.  See the manual page for crontab for the expected
           format. If you want to get the results mailed you must setuid
@@ -76,7 +86,7 @@ in
       cronFiles = mkOption {
         type = types.listOf types.path;
         default = [];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A list of extra crontab files that will be read and appended to the main
           crontab file when the cron service starts.
         '';
