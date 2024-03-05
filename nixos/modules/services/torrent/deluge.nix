@@ -1,8 +1,24 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    elemAt
+    literalExpression
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    optionalAttrs
+    optionalString
+    singleton
+    types
+    versionAtLeast
+    versionOlder
+    ;
+
   cfg = config.services.deluge;
   cfg_web = config.services.deluge.web;
   isDeluge1 = versionOlder cfg.package.version "2.0.0";
@@ -37,12 +53,12 @@ in {
   options = {
     services = {
       deluge = {
-        enable = mkEnableOption (lib.mdDoc "Deluge daemon");
+        enable = mkEnableOption (mdDoc "Deluge daemon");
 
         openFilesLimit = mkOption {
           default = openFilesLimit;
           type = types.either types.int types.str;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Number of files to allow deluged to open.
           '';
         };
@@ -60,7 +76,7 @@ in {
               listen_ports = [ ${toString listenPortsDefault} ];
             }
           '';
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Deluge core configuration for the core.conf file. Only has an effect
             when {option}`services.deluge.declarative` is set to
             `true`. String values must be quoted, integer and
@@ -73,7 +89,7 @@ in {
         declarative = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Whether to use a declarative deluge configuration.
             Only if set to `true`, the options
             {option}`services.deluge.config`,
@@ -86,7 +102,7 @@ in {
         openFirewall = mkOption {
           default = false;
           type = types.bool;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Whether to open the firewall for the ports in
             {option}`services.deluge.config.listen_ports`. It only takes effet if
             {option}`services.deluge.declarative` is set to
@@ -102,7 +118,7 @@ in {
         dataDir = mkOption {
           type = types.path;
           default = "/var/lib/deluge";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The directory where deluge will create files.
           '';
         };
@@ -110,7 +126,7 @@ in {
         authFile = mkOption {
           type = types.path;
           example = "/run/keys/deluge-auth";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The file managing the authentication for deluge, the format of this
             file is straightforward, each line contains a
             username:password:level tuple in plaintext. It only has an effect
@@ -124,7 +140,7 @@ in {
         user = mkOption {
           type = types.str;
           default = "deluge";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             User account under which deluge runs.
           '';
         };
@@ -132,7 +148,7 @@ in {
         group = mkOption {
           type = types.str;
           default = "deluge";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Group under which deluge runs.
           '';
         };
@@ -140,7 +156,7 @@ in {
         extraPackages = mkOption {
           type = types.listOf types.package;
           default = [];
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Extra packages available at runtime to enable Deluge's plugins. For example,
             extraction utilities are required for the built-in "Extractor" plugin.
             This always contains unzip, gnutar, xz and bzip2.
@@ -151,12 +167,12 @@ in {
       };
 
       deluge.web = {
-        enable = mkEnableOption (lib.mdDoc "Deluge Web daemon");
+        enable = mkEnableOption (mdDoc "Deluge Web daemon");
 
         port = mkOption {
           type = types.port;
           default = 8112;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Deluge web UI port.
           '';
         };
@@ -164,7 +180,7 @@ in {
         openFirewall = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Open ports in the firewall for deluge web daemon
           '';
         };
