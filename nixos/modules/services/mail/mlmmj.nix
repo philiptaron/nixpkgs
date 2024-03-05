@@ -1,10 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    mdDoc
+    mkIf
+    mkOption
+    pipe
+    types
+    ;
 
-  concatMapLines = f: l: lib.concatStringsSep "\n" (map f l);
+  concatMapLines = f: l: concatStringsSep "\n" (map f l);
 
   cfg = config.services.mlmmj;
   stateDir = "/var/lib/mlmmj";
@@ -37,7 +43,7 @@ let
       ${pkgs.coreutils}/bin/mkdir -p ${ctlDir}
       echo ${listAddress d l} > '${ctlDir}/listaddress'
       [ ! -e ${ctlDir}/customheaders ] && \
-          echo "${lib.concatStringsSep "\n" (customHeaders d l)}" > '${ctlDir}/customheaders'
+          echo "${concatStringsSep "\n" (customHeaders d l)}" > '${ctlDir}/customheaders'
       [ ! -e ${ctlDir}/footer ] && \
           echo ${footer d l} > '${ctlDir}/footer'
       [ ! -e ${ctlDir}/prefix ] && \
@@ -56,37 +62,37 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Enable mlmmj";
+        description = mdDoc "Enable mlmmj";
       };
 
       user = mkOption {
         type = types.str;
         default = "mlmmj";
-        description = lib.mdDoc "mailinglist local user";
+        description = mdDoc "mailinglist local user";
       };
 
       group = mkOption {
         type = types.str;
         default = "mlmmj";
-        description = lib.mdDoc "mailinglist local group";
+        description = mdDoc "mailinglist local group";
       };
 
       listDomain = mkOption {
         type = types.str;
         default = "localhost";
-        description = lib.mdDoc "Set the mailing list domain";
+        description = mdDoc "Set the mailing list domain";
       };
 
       mailLists = mkOption {
         type = types.listOf types.str;
         default = [];
-        description = lib.mdDoc "The collection of hosted maillists";
+        description = mdDoc "The collection of hosted maillists";
       };
 
       maintInterval = mkOption {
         type = types.str;
         default = "20min";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Time interval between mlmmj-maintd runs, see
           {manpage}`systemd.time(7)` for format information.
         '';
