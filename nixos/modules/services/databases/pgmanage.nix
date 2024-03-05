@@ -1,8 +1,18 @@
 { lib, pkgs, config, ... } :
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.pgmanage;
 
   confFile = pkgs.writeTextFile {
@@ -44,7 +54,7 @@ let
 in {
 
   options.services.pgmanage = {
-    enable = mkEnableOption (lib.mdDoc "PostgreSQL Administration for the web");
+    enable = mkEnableOption (mdDoc "PostgreSQL Administration for the web");
 
     package = mkPackageOption pkgs "pgmanage" { };
 
@@ -55,7 +65,7 @@ in {
         nuc-server  = "hostaddr=192.168.0.100 port=5432 dbname=postgres";
         mini-server = "hostaddr=127.0.0.1 port=5432 dbname=postgres sslmode=require";
       };
-      description = lib.mdDoc ''
+      description = mdDoc ''
         pgmanage requires at least one PostgreSQL server be defined.
 
         Detailed information about PostgreSQL connection strings is available at:
@@ -71,7 +81,7 @@ in {
     allowCustomConnections = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         This tells pgmanage whether or not to allow anyone to use a custom
         connection from the login screen.
       '';
@@ -80,7 +90,7 @@ in {
     port = mkOption {
       type = types.port;
       default = 8080;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         This tells pgmanage what port to listen on for browser requests.
       '';
     };
@@ -88,7 +98,7 @@ in {
     localOnly = mkOption {
       type = types.bool;
       default = true;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         This tells pgmanage whether or not to set the listening socket to local
         addresses only.
       '';
@@ -97,7 +107,7 @@ in {
     superOnly = mkOption {
       type = types.bool;
       default = true;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         This tells pgmanage whether or not to only allow super users to
         login. The recommended value is true and will restrict users who are not
         super users from logging in to any PostgreSQL instance through
@@ -109,7 +119,7 @@ in {
     loginGroup = mkOption {
       type = types.nullOr types.str;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         This tells pgmanage to only allow users in a certain PostgreSQL group to
         login to pgmanage. Note that a connection will be made to PostgreSQL in
         order to test if the user is a member of the login group.
@@ -119,7 +129,7 @@ in {
     loginTimeout = mkOption {
       type = types.int;
       default = 3600;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Number of seconds of inactivity before user is automatically logged
         out.
       '';
@@ -128,7 +138,7 @@ in {
     sqlRoot = mkOption {
       type = types.str;
       default = "/var/lib/pgmanage";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         This tells pgmanage where to put the SQL file history. All tabs are saved
         to this location so that if you get disconnected from pgmanage you
         don't lose your work.
@@ -140,16 +150,16 @@ in {
         options = {
           cert = mkOption {
             type = types.str;
-            description = lib.mdDoc "TLS certificate";
+            description = mdDoc "TLS certificate";
           };
           key = mkOption {
             type = types.str;
-            description = lib.mdDoc "TLS key";
+            description = mdDoc "TLS key";
           };
         };
       });
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         These options tell pgmanage where the TLS Certificate and Key files
         reside. If you use these options then you'll only be able to access
         pgmanage through a secure TLS connection. These options are only
@@ -165,7 +175,7 @@ in {
     logLevel = mkOption {
       type = types.enum ["error" "warn" "notice" "info"];
       default = "error";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Verbosity of logs
       '';
     };
