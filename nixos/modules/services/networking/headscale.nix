@@ -4,7 +4,24 @@
   pkgs,
   ...
 }:
-with lib; let
+
+let
+  inherit (lib)
+    escapeShellArg
+    maintainers
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    optional
+    optionalString
+    types
+    ;
+
   cfg = config.services.headscale;
 
   dataDir = "/var/lib/headscale";
@@ -15,14 +32,14 @@ with lib; let
 in {
   options = {
     services.headscale = {
-      enable = mkEnableOption (lib.mdDoc "headscale, Open Source coordination server for Tailscale");
+      enable = mkEnableOption (mdDoc "headscale, Open Source coordination server for Tailscale");
 
       package = mkPackageOption pkgs "headscale" { };
 
       user = mkOption {
         default = "headscale";
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           User account under which headscale runs.
 
           ::: {.note}
@@ -36,7 +53,7 @@ in {
       group = mkOption {
         default = "headscale";
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Group under which headscale runs.
 
           ::: {.note}
@@ -50,7 +67,7 @@ in {
       address = mkOption {
         type = types.str;
         default = "127.0.0.1";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Listening address of headscale.
         '';
         example = "0.0.0.0";
@@ -59,14 +76,14 @@ in {
       port = mkOption {
         type = types.port;
         default = 8080;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Listening port of headscale.
         '';
         example = 443;
       };
 
       settings = mkOption {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Overrides to {file}`config.yaml` as a Nix attribute set.
           Check the [example config](https://github.com/juanfont/headscale/blob/main/config-example.yaml)
           for possible options.
@@ -78,7 +95,7 @@ in {
             server_url = mkOption {
               type = types.str;
               default = "http://127.0.0.1:8080";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The url clients will connect to.
               '';
               example = "https://myheadscale.example.com:443";
@@ -87,7 +104,7 @@ in {
             private_key_path = mkOption {
               type = types.path;
               default = "${dataDir}/private.key";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Path to private key file, generated automatically if it does not exist.
               '';
             };
@@ -95,7 +112,7 @@ in {
             noise.private_key_path = mkOption {
               type = types.path;
               default = "${dataDir}/noise_private.key";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Path to noise private key file, generated automatically if it does not exist.
               '';
             };
@@ -104,7 +121,7 @@ in {
               urls = mkOption {
                 type = types.listOf types.str;
                 default = ["https://controlplane.tailscale.com/derpmap/default"];
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   List of urls containing DERP maps.
                   See [How Tailscale works](https://tailscale.com/blog/how-tailscale-works/) for more information on DERP maps.
                 '';
@@ -113,7 +130,7 @@ in {
               paths = mkOption {
                 type = types.listOf types.path;
                 default = [];
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   List of file paths containing DERP maps.
                   See [How Tailscale works](https://tailscale.com/blog/how-tailscale-works/) for more information on DERP maps.
                 '';
@@ -122,7 +139,7 @@ in {
               auto_update_enable = mkOption {
                 type = types.bool;
                 default = true;
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Whether to automatically update DERP maps on a set frequency.
                 '';
                 example = false;
@@ -131,7 +148,7 @@ in {
               update_frequency = mkOption {
                 type = types.str;
                 default = "24h";
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Frequency to update DERP maps.
                 '';
                 example = "5m";
@@ -141,7 +158,7 @@ in {
             ephemeral_node_inactivity_timeout = mkOption {
               type = types.str;
               default = "30m";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Time before an inactive ephemeral node is deleted.
               '';
               example = "5m";
@@ -151,42 +168,42 @@ in {
               type = types.enum ["sqlite3" "postgres"];
               example = "postgres";
               default = "sqlite3";
-              description = lib.mdDoc "Database engine to use.";
+              description = mdDoc "Database engine to use.";
             };
 
             db_host = mkOption {
               type = types.nullOr types.str;
               default = null;
               example = "127.0.0.1";
-              description = lib.mdDoc "Database host address.";
+              description = mdDoc "Database host address.";
             };
 
             db_port = mkOption {
               type = types.nullOr types.port;
               default = null;
               example = 3306;
-              description = lib.mdDoc "Database host port.";
+              description = mdDoc "Database host port.";
             };
 
             db_name = mkOption {
               type = types.nullOr types.str;
               default = null;
               example = "headscale";
-              description = lib.mdDoc "Database name.";
+              description = mdDoc "Database name.";
             };
 
             db_user = mkOption {
               type = types.nullOr types.str;
               default = null;
               example = "headscale";
-              description = lib.mdDoc "Database user.";
+              description = mdDoc "Database user.";
             };
 
             db_password_file = mkOption {
               type = types.nullOr types.path;
               default = null;
               example = "/run/keys/headscale-dbpassword";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 A file containing the password corresponding to
                 {option}`database.user`.
               '';
@@ -195,13 +212,13 @@ in {
             db_path = mkOption {
               type = types.nullOr types.str;
               default = "${dataDir}/db.sqlite";
-              description = lib.mdDoc "Path to the sqlite3 database file.";
+              description = mdDoc "Path to the sqlite3 database file.";
             };
 
             log.level = mkOption {
               type = types.str;
               default = "info";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 headscale log level.
               '';
               example = "debug";
@@ -210,7 +227,7 @@ in {
             log.format = mkOption {
               type = types.str;
               default = "text";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 headscale log format.
               '';
               example = "json";
@@ -220,7 +237,7 @@ in {
               nameservers = mkOption {
                 type = types.listOf types.str;
                 default = ["1.1.1.1"];
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   List of nameservers to pass to Tailscale clients.
                 '';
               };
@@ -228,7 +245,7 @@ in {
               override_local_dns = mkOption {
                 type = types.bool;
                 default = false;
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Whether to use [Override local DNS](https://tailscale.com/kb/1054/dns/).
                 '';
                 example = true;
@@ -237,7 +254,7 @@ in {
               domains = mkOption {
                 type = types.listOf types.str;
                 default = [];
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Search domains to inject to Tailscale clients.
                 '';
                 example = ["mydomain.internal"];
@@ -246,7 +263,7 @@ in {
               magic_dns = mkOption {
                 type = types.bool;
                 default = true;
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Whether to use [MagicDNS](https://tailscale.com/kb/1081/magicdns/).
                   Only works if there is at least a nameserver defined.
                 '';
@@ -256,7 +273,7 @@ in {
               base_domain = mkOption {
                 type = types.str;
                 default = "";
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Defines the base domain to create the hostnames for MagicDNS.
                   {option}`baseDomain` must be a FQDNs, without the trailing dot.
                   The FQDN of the hosts will be
@@ -270,7 +287,7 @@ in {
               issuer = mkOption {
                 type = types.str;
                 default = "";
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   URL to OpenID issuer.
                 '';
                 example = "https://openid.example.com";
@@ -279,7 +296,7 @@ in {
               client_id = mkOption {
                 type = types.str;
                 default = "";
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   OpenID Connect client ID.
                 '';
               };
@@ -287,7 +304,7 @@ in {
               client_secret_path = mkOption {
                 type = types.nullOr types.str;
                 default = null;
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Path to OpenID Connect client secret file. Expands environment variables in format ''${VAR}.
                 '';
               };
@@ -295,7 +312,7 @@ in {
               scope = mkOption {
                 type = types.listOf types.str;
                 default = ["openid" "profile" "email"];
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Scopes used in the OIDC flow.
                 '';
               };
@@ -303,7 +320,7 @@ in {
               extra_params = mkOption {
                 type = types.attrsOf types.str;
                 default = { };
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Custom query parameters to send with the Authorize Endpoint request.
                 '';
                 example = {
@@ -314,7 +331,7 @@ in {
               allowed_domains = mkOption {
                 type = types.listOf types.str;
                 default = [ ];
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Allowed principal domains. if an authenticated user's domain
                   is not in this list authentication request will be rejected.
                 '';
@@ -324,7 +341,7 @@ in {
               allowed_users = mkOption {
                 type = types.listOf types.str;
                 default = [ ];
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Users allowed to authenticate even if not in allowedDomains.
                 '';
                 example = [ "alice@example.com" ];
@@ -333,7 +350,7 @@ in {
               strip_email_domain = mkOption {
                 type = types.bool;
                 default = true;
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Whether the domain part of the email address should be removed when generating namespaces.
                 '';
               };
@@ -342,7 +359,7 @@ in {
             tls_letsencrypt_hostname = mkOption {
               type = types.nullOr types.str;
               default = "";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Domain name to request a TLS certificate for.
               '';
             };
@@ -350,7 +367,7 @@ in {
             tls_letsencrypt_challenge_type = mkOption {
               type = types.enum ["TLS-ALPN-01" "HTTP-01"];
               default = "HTTP-01";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Type of ACME challenge to use, currently supported types:
                 `HTTP-01` or `TLS-ALPN-01`.
               '';
@@ -359,7 +376,7 @@ in {
             tls_letsencrypt_listen = mkOption {
               type = types.nullOr types.str;
               default = ":http";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 When HTTP-01 challenge is chosen, letsencrypt must set up a
                 verification endpoint, and it will be listening on:
                 `:http = port 80`.
@@ -369,7 +386,7 @@ in {
             tls_cert_path = mkOption {
               type = types.nullOr types.path;
               default = null;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Path to already created certificate.
               '';
             };
@@ -377,7 +394,7 @@ in {
             tls_key_path = mkOption {
               type = types.nullOr types.path;
               default = null;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Path to key for already created certificate.
               '';
             };
@@ -385,7 +402,7 @@ in {
             acl_policy_path = mkOption {
               type = types.nullOr types.path;
               default = null;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Path to a file containing ACL policies.
               '';
             };
