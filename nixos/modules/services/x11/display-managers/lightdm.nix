@@ -1,8 +1,22 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrNames
+    concatMapStrings
+    concatStringsSep
+    getAttr
+    literalExpression
+    mdDoc
+    mkDefault
+    mkIf
+    mkOption
+    mkRenamedOptionModule
+    optional
+    optionalString
+    teams
+    types
+    ;
 
   xcfg = config.services.xserver;
   dmcfg = xcfg.displayManager;
@@ -69,8 +83,8 @@ let
 
 in
 {
-  meta = with lib; {
-    maintainers = with maintainers; [ ] ++ teams.pantheon.members;
+  meta = {
+    maintainers = teams.pantheon.members;
   };
 
   # Note: the order in which lightdm greeter modules are imported
@@ -107,7 +121,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable lightdm as the display manager.
         '';
       };
@@ -116,14 +130,14 @@ in
         enable = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             If set to false, run lightdm in greeterless mode. This only works if autologin
             is enabled and autoLogin.timeout is zero.
           '';
         };
         package = mkOption {
           type = types.package;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The LightDM greeter to login via. The package should be a directory
             containing a .desktop file matching the name in the 'name' option.
           '';
@@ -131,7 +145,7 @@ in
         };
         name = mkOption {
           type = types.str;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The name of a .desktop file in the directory specified
             in the 'package' option.
           '';
@@ -144,14 +158,14 @@ in
         example = ''
           user-authority-in-system-dir = true
         '';
-        description = lib.mdDoc "Extra lines to append to LightDM section.";
+        description = mdDoc "Extra lines to append to LightDM section.";
       };
 
       background = mkOption {
         type = types.either types.path (types.strMatching "^#[0-9]\{6\}$");
         # Manual cannot depend on packages, we are actually setting the default in config below.
         defaultText = literalExpression "pkgs.nixos-artwork.wallpapers.simple-dark-gray-bottom.gnomeFilePath";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The background image or color to use.
         '';
       };
@@ -162,14 +176,14 @@ in
         example = ''
           greeter-show-manual-login=true
         '';
-        description = lib.mdDoc "Extra lines to append to SeatDefaults section.";
+        description = mdDoc "Extra lines to append to SeatDefaults section.";
       };
 
       # Configuration for automatic login specific to LightDM
       autoLogin.timeout = mkOption {
         type = types.int;
         default = 0;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Show the greeter for this many seconds before automatic login occurs.
         '';
       };
