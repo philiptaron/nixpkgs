@@ -1,6 +1,19 @@
 { config, lib, pkgs, ... }:
-with lib;
 let
+  inherit (lib)
+    escapeShellArgs
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRenamedOptionModule
+    optional
+    optionalString
+    types
+    ;
+
   keysPath = "/var/lib/yggdrasil/keys.json";
 
   cfg = config.services.yggdrasil;
@@ -18,7 +31,7 @@ in
 
   options = with types; {
     services.yggdrasil = {
-      enable = mkEnableOption (lib.mdDoc "the yggdrasil system service");
+      enable = mkEnableOption (mdDoc "the yggdrasil system service");
 
       settings = mkOption {
         type = format.type;
@@ -32,7 +45,7 @@ in
             "tcp://0.0.0.0:xxxxx"
           ];
         };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration for yggdrasil, as a Nix attribute set.
 
           Warning: this is stored in the WORLD-READABLE Nix store!
@@ -61,7 +74,7 @@ in
         type = nullOr path;
         default = null;
         example = "/run/keys/yggdrasil.conf";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A file which contains JSON or HJSON configuration for yggdrasil. See
           the {option}`settings` option for more information.
 
@@ -76,13 +89,13 @@ in
         type = types.nullOr types.str;
         default = null;
         example = "wheel";
-        description = lib.mdDoc "Group to grant access to the Yggdrasil control socket. If `null`, only root can access the socket.";
+        description = mdDoc "Group to grant access to the Yggdrasil control socket. If `null`, only root can access the socket.";
       };
 
       openMulticastPort = mkOption {
         type = bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to open the UDP port used for multicast peer discovery. The
           NixOS firewall blocks link-local communication, so in order to make
           incoming local peering work you will also need to configure
@@ -98,7 +111,7 @@ in
         type = listOf str;
         default = [ ];
         example = [ "tap*" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Disable the DHCP client for any interface whose name matches
           any of the shell glob patterns in this list.  Use this
           option to prevent the DHCP client from broadcasting requests
@@ -110,7 +123,7 @@ in
 
       package = mkPackageOption pkgs "yggdrasil" { };
 
-      persistentKeys = mkEnableOption (lib.mdDoc ''
+      persistentKeys = mkEnableOption (mdDoc ''
         persistent keys. If enabled then keys will be generated once and Yggdrasil
         will retain the same IPv6 address when the service is
         restarted. Keys are stored at ${keysPath}
@@ -120,7 +133,7 @@ in
         type = listOf str;
         default = [ ];
         example = [ "-loglevel" "info" ];
-        description = lib.mdDoc "Extra command line arguments.";
+        description = mdDoc "Extra command line arguments.";
       };
 
     };
@@ -139,7 +152,7 @@ in
 
       # This needs to be a separate service. The yggdrasil service fails if
       # this is put into its preStart.
-      systemd.services.yggdrasil-persistent-keys = lib.mkIf cfg.persistentKeys {
+      systemd.services.yggdrasil-persistent-keys = mkIf cfg.persistentKeys {
         wantedBy = [ "multi-user.target" ];
         before = [ "yggdrasil.service" ];
         serviceConfig.Type = "oneshot";
@@ -181,17 +194,17 @@ in
           ${(if settingsProvided || configFileProvided || cfg.persistentKeys then
             "echo "
 
-            + (lib.optionalString settingsProvided
+            + (optionalString settingsProvided
               "'${builtins.toJSON cfg.settings}'")
-            + (lib.optionalString configFileProvided
+            + (optionalString configFileProvided
               "$(${binHjson} -c \"$CREDENTIALS_DIRECTORY/yggdrasil.conf\")")
-            + (lib.optionalString cfg.persistentKeys "$(cat ${keysPath})")
+            + (optionalString cfg.persistentKeys "$(cat ${keysPath})")
             + " | ${pkgs.jq}/bin/jq -s add | ${binYggdrasil} -normaliseconf -useconf"
           else
             "${binYggdrasil} -genconf") + " > /run/yggdrasil/yggdrasil.conf"}
 
           # start yggdrasil
-          ${binYggdrasil} -useconffile /run/yggdrasil/yggdrasil.conf ${lib.strings.escapeShellArgs cfg.extraArgs}
+          ${binYggdrasil} -useconffile /run/yggdrasil/yggdrasil.conf ${escapeShellArgs cfg.extraArgs}
         '';
 
         serviceConfig = {
@@ -202,7 +215,7 @@ in
           StateDirectory = "yggdrasil";
           RuntimeDirectory = "yggdrasil";
           RuntimeDirectoryMode = "0750";
-          BindReadOnlyPaths = lib.optional cfg.persistentKeys keysPath;
+          BindReadOnlyPaths = optional cfg.persistentKeys keysPath;
           LoadCredential =
             mkIf configFileProvided "yggdrasil.conf:${cfg.configFile}";
 
@@ -232,6 +245,6 @@ in
   );
   meta = {
     doc = ./yggdrasil.md;
-    maintainers = with lib.maintainers; [ gazally ehmry ];
+    maintainers = with maintainers; [ gazally ehmry ];
   };
 }
