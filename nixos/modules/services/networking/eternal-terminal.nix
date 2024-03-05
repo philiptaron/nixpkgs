@@ -1,8 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    range
+    types
+    ;
 
   cfg = config.services.eternal-terminal;
 
@@ -16,12 +22,12 @@ in
 
     services.eternal-terminal = {
 
-      enable = mkEnableOption (lib.mdDoc "Eternal Terminal server");
+      enable = mkEnableOption (mdDoc "Eternal Terminal server");
 
       port = mkOption {
         default = 2022;
         type = types.port;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The port the server should listen on. Will use the server's default (2022) if not specified.
 
           Make sure to open this port in the firewall if necessary.
@@ -30,8 +36,8 @@ in
 
       verbosity = mkOption {
         default = 0;
-        type = types.enum (lib.range 0 9);
-        description = lib.mdDoc ''
+        type = types.enum (range 0 9);
+        description = mdDoc ''
           The verbosity level (0-9).
         '';
       };
@@ -39,7 +45,7 @@ in
       silent = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If enabled, disables all logging.
         '';
       };
@@ -47,7 +53,7 @@ in
       logSize = mkOption {
         default = 20971520;
         type = types.int;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The maximum log size.
         '';
       };
@@ -87,9 +93,5 @@ in
         };
       };
     };
-  };
-
-  meta = {
-    maintainers = with lib.maintainers; [ ];
   };
 }
