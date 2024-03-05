@@ -2,7 +2,13 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+in
 
 {
 
@@ -12,7 +18,7 @@ with lib;
 
     services.malcontent = {
 
-      enable = mkEnableOption (lib.mdDoc "Malcontent, parental control support for applications");
+      enable = mkEnableOption (mdDoc "Malcontent, parental control support for applications");
 
     };
 
