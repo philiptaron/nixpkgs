@@ -1,8 +1,11 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
 
   cfg = config.services.teamviewer;
 
@@ -14,7 +17,7 @@ in
 
   options = {
 
-    services.teamviewer.enable = mkEnableOption (lib.mdDoc "TeamViewer daemon");
+    services.teamviewer.enable = mkEnableOption (mdDoc "TeamViewer daemon");
 
   };
 
