@@ -1,6 +1,19 @@
 { config, lib, options, pkgs, utils, ... }:
-with lib;
 let
+  inherit (lib)
+    literalExpression
+    maintainers
+    mdDoc
+    mkIf
+    mkOption
+    mkOptionDefault
+    mkPackageOption
+    mkRenamedOptionModule
+    optional
+    removeSuffix
+    types
+    ;
+
   cfg = config.services.unifi-video;
   opt = options.services.unifi-video;
   mainClass = "com.ubnt.airvision.Main";
@@ -98,7 +111,7 @@ in
     enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether or not to enable the unifi-video service.
       '';
     };
@@ -114,7 +127,7 @@ in
     logDir = mkOption {
       type = types.str;
       default = "${stateDir}/logs";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Where to store the logs.
       '';
     };
@@ -122,7 +135,7 @@ in
     dataDir = mkOption {
       type = types.str;
       default = "${stateDir}/data";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Where to store the database and other data.
       '';
     };
@@ -130,7 +143,7 @@ in
     openFirewall = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether or not to open the required ports on the firewall.
       '';
     };
@@ -139,7 +152,7 @@ in
       type = types.nullOr types.int;
       default = 1024;
       example = 4096;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Set the maximum heap size for the JVM in MB.
       '';
     };
@@ -148,7 +161,7 @@ in
       type = types.path;
       default = "${cfg.dataDir}/unifi-video.pid";
       defaultText = literalExpression ''"''${config.${opt.dataDir}}/unifi-video.pid"'';
-      description = lib.mdDoc "Location of unifi-video pid file.";
+      description = mdDoc "Location of unifi-video pid file.";
     };
 
   };
@@ -248,5 +261,5 @@ in
     (mkRenamedOptionModule [ "services" "unifi-video" "openPorts" ] [ "services" "unifi-video" "openFirewall" ])
   ];
 
-  meta.maintainers = with lib.maintainers; [ rsynnest ];
+  meta.maintainers = with maintainers; [ rsynnest ];
 }
