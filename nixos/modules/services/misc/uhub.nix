@@ -1,13 +1,21 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrsets
+    concatStringsSep
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkOption
+    types
+    ;
+
   settingsFormat = {
-    type = with lib.types; attrsOf (oneOf [ bool int str ]);
+    type = with types; attrsOf (oneOf [ bool int str ]);
     generate = name: attrs:
-      pkgs.writeText name (lib.strings.concatStringsSep "\n"
-        (lib.attrsets.mapAttrsToList
+      pkgs.writeText name (concatStringsSep "\n"
+        (attrsets.mapAttrsToList
           (key: value: "${key}=${builtins.toJSON value}") attrs));
   };
 in {
@@ -15,21 +23,21 @@ in {
 
     services.uhub = mkOption {
       default = { };
-      description = lib.mdDoc "Uhub ADC hub instances";
+      description = mdDoc "Uhub ADC hub instances";
       type = types.attrsOf (types.submodule {
         options = {
 
-          enable = mkEnableOption (lib.mdDoc "hub instance") // { default = true; };
+          enable = mkEnableOption (mdDoc "hub instance") // { default = true; };
 
           enableTLS = mkOption {
             type = types.bool;
             default = false;
-            description = lib.mdDoc "Whether to enable TLS support.";
+            description = mdDoc "Whether to enable TLS support.";
           };
 
           settings = mkOption {
             inherit (settingsFormat) type;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Configuration of uhub.
               See https://www.uhub.org/doc/config.php for a list of options.
             '';
@@ -44,7 +52,7 @@ in {
           };
 
           plugins = mkOption {
-            description = lib.mdDoc "Uhub plugin configuration.";
+            description = mdDoc "Uhub plugin configuration.";
             type = with types;
               listOf (submodule {
                 options = {
@@ -52,10 +60,10 @@ in {
                     type = path;
                     example = literalExpression
                       "$${pkgs.uhub}/plugins/mod_auth_sqlite.so";
-                    description = lib.mdDoc "Path to plugin file.";
+                    description = mdDoc "Path to plugin file.";
                   };
                   settings = mkOption {
-                    description = lib.mdDoc "Settings specific to this plugin.";
+                    description = mdDoc "Settings specific to this plugin.";
                     type = with types; attrsOf str;
                     example = { file = "/etc/uhub/users.db"; };
                   };
@@ -71,19 +79,19 @@ in {
   };
 
   config = let
-    hubs = lib.attrsets.filterAttrs (_: cfg: cfg.enable) config.services.uhub;
+    hubs = attrsets.filterAttrs (_: cfg: cfg.enable) config.services.uhub;
   in {
 
-    environment.etc = lib.attrsets.mapAttrs' (name: cfg:
+    environment.etc = attrsets.mapAttrs' (name: cfg:
       let
         settings' = cfg.settings // {
           tls_enable = cfg.enableTLS;
           file_plugins = pkgs.writeText "uhub-plugins.conf"
-            (lib.strings.concatStringsSep "\n" (map ({ plugin, settings }:
+            (concatStringsSep "\n" (map ({ plugin, settings }:
               ''
                 plugin ${plugin} "${
                   toString
-                  (lib.attrsets.mapAttrsToList (key: value: "${key}=${value}")
+                  (attrsets.mapAttrsToList (key: value: "${key}=${value}")
                     settings)
                 }"'') cfg.plugins));
         };
@@ -92,7 +100,7 @@ in {
         value.source = settingsFormat.generate "uhub-${name}.conf" settings';
       }) hubs;
 
-    systemd.services = lib.attrsets.mapAttrs' (name: cfg: {
+    systemd.services = attrsets.mapAttrs' (name: cfg: {
       name = "uhub-${name}";
       value = let pkg = pkgs.uhub.override { tlsSupport = cfg.enableTLS; };
       in {
