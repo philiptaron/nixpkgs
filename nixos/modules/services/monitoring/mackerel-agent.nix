@@ -1,26 +1,33 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.mackerel-agent;
   settingsFmt = pkgs.formats.toml {};
 in {
   options.services.mackerel-agent = {
-    enable = mkEnableOption (lib.mdDoc "mackerel.io agent");
+    enable = mkEnableOption (mdDoc "mackerel.io agent");
 
     # the upstream package runs as root, but doesn't seem to be strictly
     # necessary for basic functionality
-    runAsRoot = mkEnableOption (lib.mdDoc "running as root");
+    runAsRoot = mkEnableOption (mdDoc "running as root");
 
-    autoRetirement = mkEnableOption (lib.mdDoc ''
+    autoRetirement = mkEnableOption (mdDoc ''
       retiring the host upon OS shutdown
     '');
 
     apiKeyFile = mkOption {
       type = types.path;
       example = "/run/keys/mackerel-api-key";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path to file containing the Mackerel API key. The file should contain a
         single line of the following form:
 
@@ -29,7 +36,7 @@ in {
     };
 
     settings = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Options for mackerel-agent.conf.
 
         Documentation:
@@ -48,18 +55,18 @@ in {
         options.host_status = {
           on_start = mkOption {
             type = types.enum [ "working" "standby" "maintenance" "poweroff" ];
-            description = lib.mdDoc "Host status after agent startup.";
+            description = mdDoc "Host status after agent startup.";
             default = "working";
           };
           on_stop = mkOption {
             type = types.enum [ "working" "standby" "maintenance" "poweroff" ];
-            description = lib.mdDoc "Host status after agent shutdown.";
+            description = mdDoc "Host status after agent shutdown.";
             default = "poweroff";
           };
         };
 
         options.diagnostic =
-          mkEnableOption (lib.mdDoc "collecting memory usage for the agent itself");
+          mkEnableOption (mdDoc "collecting memory usage for the agent itself");
       };
     };
   };
@@ -98,7 +105,7 @@ in {
         RuntimeDirectory = "mackerel-agent";
         StateDirectory = "mackerel-agent";
         ExecStart = "${pkgs.mackerel-agent}/bin/mackerel-agent supervise";
-        ExecStopPost = mkIf cfg.autoRetirement "${pkg.mackerel-agent}/bin/mackerel-agent retire -force";
+        ExecStopPost = mkIf cfg.autoRetirement "${pkgs.mackerel-agent}/bin/mackerel-agent retire -force";
         ExecReload = "${pkgs.coreutils}/bin/kill -HUP $MAINPID";
         LimitNOFILE = mkDefault 65536;
         LimitNPROC = mkDefault 65536;
