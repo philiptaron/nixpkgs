@@ -1,20 +1,26 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.target;
 in
 {
   ###### interface
   options = {
     services.target = with types; {
-      enable = mkEnableOption (lib.mdDoc "the kernel's LIO iscsi target");
+      enable = mkEnableOption (mdDoc "the kernel's LIO iscsi target");
 
       config = mkOption {
         type = attrs;
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Content of /etc/target/saveconfig.json
           This file is normally read and written by targetcli
         '';
