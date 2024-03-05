@@ -1,6 +1,15 @@
 { config, lib, pkgs, ... }:
-with lib;
 let
+  inherit (lib)
+    literalExpression
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.tang;
 in
 {
@@ -91,5 +100,5 @@ in
       };
     };
   };
-  meta.maintainers = with lib.maintainers; [ jfroche julienmalka ];
+  meta.maintainers = with maintainers; [ jfroche julienmalka ];
 }
