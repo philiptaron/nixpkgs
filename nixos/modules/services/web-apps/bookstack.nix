@@ -1,8 +1,35 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStrings
+    converge
+    elem
+    escapeShellArgs
+    filterAttrs
+    filterAttrsRecursive
+    flip
+    generators
+    isAttrs
+    isInt
+    isString
+    literalExpression
+    maintainers
+    mapAttrsToList
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkForce
+    mkIf
+    mkMerge
+    mkOption
+    mkRemovedOptionModule
+    optional
+    optionalString
+    recursiveUpdate
+    types
+    ;
+
   cfg = config.services.bookstack;
   bookstack = pkgs.bookstack.override {
     dataDir = cfg.dataDir;
@@ -34,22 +61,22 @@ in {
 
   options.services.bookstack = {
 
-    enable = mkEnableOption (lib.mdDoc "BookStack");
+    enable = mkEnableOption (mdDoc "BookStack");
 
     user = mkOption {
       default = "bookstack";
-      description = lib.mdDoc "User bookstack runs as.";
+      description = mdDoc "User bookstack runs as.";
       type = types.str;
     };
 
     group = mkOption {
       default = "bookstack";
-      description = lib.mdDoc "Group bookstack runs as.";
+      description = mdDoc "Group bookstack runs as.";
       type = types.str;
     };
 
     appKeyFile = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         A file containing the Laravel APP_KEY - a 32 character long,
         base64 encoded key used for encryption where needed. Can be
         generated with `head -c 32 /dev/urandom | base64`.
@@ -58,29 +85,29 @@ in {
       type = types.path;
     };
 
-    hostname = lib.mkOption {
-      type = lib.types.str;
+    hostname = mkOption {
+      type = types.str;
       default = config.networking.fqdnOrHostName;
-      defaultText = lib.literalExpression "config.networking.fqdnOrHostName";
+      defaultText = literalExpression "config.networking.fqdnOrHostName";
       example = "bookstack.example.com";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The hostname to serve BookStack on.
       '';
     };
 
     appURL = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The root URL that you want to host BookStack on. All URLs in BookStack will be generated using this value.
         If you change this in the future you may need to run a command to update stored URLs in the database. Command example: `php artisan bookstack:update-url https://old.example.com https://new.example.com`
       '';
-      default = "http${lib.optionalString tlsEnabled "s"}://${cfg.hostname}";
-      defaultText = ''http''${lib.optionalString tlsEnabled "s"}://''${cfg.hostname}'';
+      default = "http${optionalString tlsEnabled "s"}://${cfg.hostname}";
+      defaultText = ''http''${optionalString tlsEnabled "s"}://''${cfg.hostname}'';
       example = "https://example.com";
       type = types.str;
     };
 
     dataDir = mkOption {
-      description = lib.mdDoc "BookStack data directory";
+      description = mdDoc "BookStack data directory";
       default = "/var/lib/bookstack";
       type = types.path;
     };
@@ -89,29 +116,29 @@ in {
       host = mkOption {
         type = types.str;
         default = "localhost";
-        description = lib.mdDoc "Database host address.";
+        description = mdDoc "Database host address.";
       };
       port = mkOption {
         type = types.port;
         default = 3306;
-        description = lib.mdDoc "Database host port.";
+        description = mdDoc "Database host port.";
       };
       name = mkOption {
         type = types.str;
         default = "bookstack";
-        description = lib.mdDoc "Database name.";
+        description = mdDoc "Database name.";
       };
       user = mkOption {
         type = types.str;
         default = user;
         defaultText = literalExpression "user";
-        description = lib.mdDoc "Database username.";
+        description = mdDoc "Database username.";
       };
       passwordFile = mkOption {
         type = with types; nullOr path;
         default = null;
         example = "/run/keys/bookstack-dbpassword";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A file containing the password corresponding to
           {option}`database.user`.
         '';
@@ -119,7 +146,7 @@ in {
       createLocally = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Create the database and database user locally.";
+        description = mdDoc "Create the database and database user locally.";
       };
     };
 
@@ -127,39 +154,39 @@ in {
       driver = mkOption {
         type = types.enum [ "smtp" "sendmail" ];
         default = "smtp";
-        description = lib.mdDoc "Mail driver to use.";
+        description = mdDoc "Mail driver to use.";
       };
       host = mkOption {
         type = types.str;
         default = "localhost";
-        description = lib.mdDoc "Mail host address.";
+        description = mdDoc "Mail host address.";
       };
       port = mkOption {
         type = types.port;
         default = 1025;
-        description = lib.mdDoc "Mail host port.";
+        description = mdDoc "Mail host port.";
       };
       fromName = mkOption {
         type = types.str;
         default = "BookStack";
-        description = lib.mdDoc "Mail \"from\" name.";
+        description = mdDoc "Mail \"from\" name.";
       };
       from = mkOption {
         type = types.str;
         default = "mail@bookstackapp.com";
-        description = lib.mdDoc "Mail \"from\" email.";
+        description = mdDoc "Mail \"from\" email.";
       };
       user = mkOption {
         type = with types; nullOr str;
         default = null;
         example = "bookstack";
-        description = lib.mdDoc "Mail username.";
+        description = mdDoc "Mail username.";
       };
       passwordFile = mkOption {
         type = with types; nullOr path;
         default = null;
         example = "/run/keys/bookstack-mailpassword";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A file containing the password corresponding to
           {option}`mail.user`.
         '';
@@ -167,7 +194,7 @@ in {
       encryption = mkOption {
         type = with types; nullOr (enum [ "tls" ]);
         default = null;
-        description = lib.mdDoc "SMTP encryption mechanism to use.";
+        description = mdDoc "SMTP encryption mechanism to use.";
       };
     };
 
@@ -175,7 +202,7 @@ in {
       type = types.str;
       default = "18M";
       example = "1G";
-      description = lib.mdDoc "The maximum size for uploads (e.g. images).";
+      description = mdDoc "The maximum size for uploads (e.g. images).";
     };
 
     poolConfig = mkOption {
@@ -188,7 +215,7 @@ in {
         "pm.max_spare_servers" = 4;
         "pm.max_requests" = 500;
       };
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Options for the bookstack PHP pool. See the documentation on `php-fpm.conf`
         for details on configuration directives.
       '';
@@ -210,7 +237,7 @@ in {
           enableACME = true;
         }
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         With this option, you can customize the nginx virtualHost settings.
       '';
     };
@@ -231,7 +258,7 @@ in {
                 options = {
                   _secret = mkOption {
                     type = nullOr str;
-                    description = lib.mdDoc ''
+                    description = mdDoc ''
                       The path to a file containing the value the
                       option should be set to in the final
                       configuration file.
@@ -253,7 +280,7 @@ in {
           OIDC_ISSUER_DISCOVER = true;
         }
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         BookStack configuration options to set in the
         {file}`.env` file.
 
@@ -375,23 +402,23 @@ in {
       script =
         let
           isSecret = v: isAttrs v && v ? _secret && isString v._secret;
-          bookstackEnvVars = lib.generators.toKeyValue {
-            mkKeyValue = lib.flip lib.generators.mkKeyValueDefault "=" {
+          bookstackEnvVars = generators.toKeyValue {
+            mkKeyValue = flip generators.mkKeyValueDefault "=" {
               mkValueString = v: with builtins;
                 if isInt         v then toString v
                 else if isString v then v
                 else if true  == v then "true"
                 else if false == v then "false"
                 else if isSecret v then hashString "sha256" v._secret
-                else throw "unsupported type ${typeOf v}: ${(lib.generators.toPretty {}) v}";
+                else throw "unsupported type ${typeOf v}: ${(generators.toPretty {}) v}";
             };
           };
-          secretPaths = lib.mapAttrsToList (_: v: v._secret) (lib.filterAttrs (_: isSecret) cfg.config);
+          secretPaths = mapAttrsToList (_: v: v._secret) (filterAttrs (_: isSecret) cfg.config);
           mkSecretReplacement = file: ''
             replace-secret ${escapeShellArgs [ (builtins.hashString "sha256" file) file "${cfg.dataDir}/.env" ]}
           '';
-          secretReplacements = lib.concatMapStrings mkSecretReplacement secretPaths;
-          filteredConfig = lib.converge (lib.filterAttrsRecursive (_: v: ! elem v [ {} null ])) cfg.config;
+          secretReplacements = concatMapStrings mkSecretReplacement secretPaths;
+          filteredConfig = converge (filterAttrsRecursive (_: v: ! elem v [ {} null ])) cfg.config;
           bookstackEnv = pkgs.writeText "bookstack.env" (bookstackEnvVars filteredConfig);
         in ''
         # error handling
