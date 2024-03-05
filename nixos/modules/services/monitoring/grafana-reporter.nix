@@ -1,46 +1,55 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.grafana_reporter;
 
-in {
+in
+{
   options.services.grafana_reporter = {
-    enable = mkEnableOption (lib.mdDoc "grafana_reporter");
+    enable = mkEnableOption (mdDoc "grafana_reporter");
 
     grafana = {
       protocol = mkOption {
-        description = lib.mdDoc "Grafana protocol.";
+        description = mdDoc "Grafana protocol.";
         default = "http";
         type = types.enum ["http" "https"];
       };
       addr = mkOption {
-        description = lib.mdDoc "Grafana address.";
+        description = mdDoc "Grafana address.";
         default = "127.0.0.1";
         type = types.str;
       };
       port = mkOption {
-        description = lib.mdDoc "Grafana port.";
+        description = mdDoc "Grafana port.";
         default = 3000;
         type = types.port;
       };
 
     };
     addr = mkOption {
-      description = lib.mdDoc "Listening address.";
+      description = mdDoc "Listening address.";
       default = "127.0.0.1";
       type = types.str;
     };
 
     port = mkOption {
-      description = lib.mdDoc "Listening port.";
+      description = mdDoc "Listening port.";
       default = 8686;
       type = types.port;
     };
 
     templateDir = mkOption {
-      description = lib.mdDoc "Optional template directory to use custom tex templates";
+      description = mdDoc "Optional template directory to use custom tex templates";
       default = pkgs.grafana_reporter;
       defaultText = literalExpression "pkgs.grafana_reporter";
       type = types.either types.str types.path;
@@ -53,7 +62,7 @@ in {
       wantedBy = ["multi-user.target"];
       after = ["network.target"];
       serviceConfig = let
-        args = lib.concatStringsSep " " [
+        args = concatStringsSep " " [
           "-proto ${cfg.grafana.protocol}://"
           "-ip ${cfg.grafana.addr}:${toString cfg.grafana.port}"
           "-port :${toString cfg.port}"
