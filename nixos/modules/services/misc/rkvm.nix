@@ -1,9 +1,21 @@
 { options, config, pkgs, lib, ... }:
 
-with lib;
 let
+  inherit (lib)
+    literalExpression
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   opt = options.services.rkvm;
+
   cfg = config.services.rkvm;
+
   toml = pkgs.formats.toml { };
 in
 {
