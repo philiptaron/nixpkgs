@@ -1,20 +1,29 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStrings
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.zerotierone;
   localConfFile = pkgs.writeText "zt-local.conf" (builtins.toJSON cfg.localConf);
   localConfFilePath = "/var/lib/zerotier-one/local.conf";
 in
 {
-  options.services.zerotierone.enable = mkEnableOption (lib.mdDoc "ZeroTierOne");
+  options.services.zerotierone.enable = mkEnableOption (mdDoc "ZeroTierOne");
 
   options.services.zerotierone.joinNetworks = mkOption {
     default = [];
     example = [ "a8a2c3c10c1a68de" ];
     type = types.listOf types.str;
-    description = lib.mdDoc ''
+    description = mdDoc ''
       List of ZeroTier Network IDs to join on startup.
       Note that networks are only ever joined, but not automatically left after removing them from the list.
       To remove networks, use the ZeroTier CLI: `zerotier-cli leave <network-id>`
@@ -24,7 +33,7 @@ in
   options.services.zerotierone.port = mkOption {
     default = 9993;
     type = types.port;
-    description = lib.mdDoc ''
+    description = mdDoc ''
       Network port used by ZeroTier.
     '';
   };
