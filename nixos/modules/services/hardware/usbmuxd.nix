@@ -1,8 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    optionalAttrs
+    types
+    ;
 
   defaultUserGroup = "usbmux";
   apple = "05ac";
@@ -17,7 +23,7 @@ in
     enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Enable the usbmuxd ("USB multiplexing daemon") service. This daemon is
         in charge of multiplexing connections over USB to an iOS device. This is
         needed for transferring data from and to iOS devices (see ifuse). Also
@@ -28,7 +34,7 @@ in
     user = mkOption {
       type = types.str;
       default = defaultUserGroup;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The user usbmuxd should use to run after startup.
       '';
     };
@@ -36,7 +42,7 @@ in
     group = mkOption {
       type = types.str;
       default = defaultUserGroup;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The group usbmuxd should use to run after startup.
       '';
     };
@@ -45,7 +51,7 @@ in
       type = types.package;
       default = pkgs.usbmuxd;
       defaultText = literalExpression "pkgs.usbmuxd";
-      description = lib.mdDoc "Which package to use for the usbmuxd daemon.";
+      description = mdDoc "Which package to use for the usbmuxd daemon.";
       relatedPackages = [ "usbmuxd" "usbmuxd2" ];
     };
 
