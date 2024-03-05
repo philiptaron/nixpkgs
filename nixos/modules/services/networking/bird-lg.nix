@@ -1,8 +1,27 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    boolToString
+    concatStringsSep
+    escapeShellArg
+    filterAttrs
+    isBool
+    isString
+    lists
+    literalExpression
+    maintainers
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optional
+    optionals
+    types
+    ;
+
   cfg = config.services.bird-lg;
 
   stringOrConcat = sep: v: if builtins.isString v then v else concatStringsSep sep v;
@@ -56,123 +75,123 @@ in
       user = mkOption {
         type = types.str;
         default = "bird-lg";
-        description = lib.mdDoc "User to run the service.";
+        description = mdDoc "User to run the service.";
       };
 
       group = mkOption {
         type = types.str;
         default = "bird-lg";
-        description = lib.mdDoc "Group to run the service.";
+        description = mdDoc "Group to run the service.";
       };
 
       frontend = {
-        enable = mkEnableOption (lib.mdDoc "Bird Looking Glass Frontend Webserver");
+        enable = mkEnableOption (mdDoc "Bird Looking Glass Frontend Webserver");
 
         listenAddress = mkOption {
           type = types.str;
           default = "127.0.0.1:5000";
-          description = lib.mdDoc "Address to listen on.";
+          description = mdDoc "Address to listen on.";
         };
 
         proxyPort = mkOption {
           type = types.port;
           default = 8000;
-          description = lib.mdDoc "Port bird-lg-proxy is running on.";
+          description = mdDoc "Port bird-lg-proxy is running on.";
         };
 
         domain = mkOption {
           type = types.str;
           example = "dn42.lantian.pub";
-          description = lib.mdDoc "Server name domain suffixes.";
+          description = mdDoc "Server name domain suffixes.";
         };
 
         servers = mkOption {
           type = types.listOf types.str;
           example = [ "gigsgigscloud" "hostdare" ];
-          description = lib.mdDoc "Server name prefixes.";
+          description = mdDoc "Server name prefixes.";
         };
 
         whois = mkOption {
           type = types.str;
           default = "whois.verisign-grs.com";
-          description = lib.mdDoc "Whois server for queries.";
+          description = mdDoc "Whois server for queries.";
         };
 
         dnsInterface = mkOption {
           type = types.str;
           default = "asn.cymru.com";
-          description = lib.mdDoc "DNS zone to query ASN information.";
+          description = mdDoc "DNS zone to query ASN information.";
         };
 
         bgpMapInfo = mkOption {
           type = types.listOf types.str;
           default = [ "asn" "as-name" "ASName" "descr" ];
-          description = lib.mdDoc "Information displayed in bgpmap.";
+          description = mdDoc "Information displayed in bgpmap.";
         };
 
         titleBrand = mkOption {
           type = types.str;
           default = "Bird-lg Go";
-          description = lib.mdDoc "Prefix of page titles in browser tabs.";
+          description = mdDoc "Prefix of page titles in browser tabs.";
         };
 
         netSpecificMode = mkOption {
           type = types.str;
           default = "";
           example = "dn42";
-          description = lib.mdDoc "Apply network-specific changes for some networks.";
+          description = mdDoc "Apply network-specific changes for some networks.";
         };
 
         protocolFilter = mkOption {
           type = types.listOf types.str;
           default = [ ];
           example = [ "ospf" ];
-          description = lib.mdDoc "Information displayed in bgpmap.";
+          description = mdDoc "Information displayed in bgpmap.";
         };
 
         nameFilter = mkOption {
           type = types.str;
           default = "";
           example = "^ospf";
-          description = lib.mdDoc "Protocol names to hide in summary tables (RE2 syntax),";
+          description = mdDoc "Protocol names to hide in summary tables (RE2 syntax),";
         };
 
         timeout = mkOption {
           type = types.int;
           default = 120;
-          description = lib.mdDoc "Time before request timed out, in seconds.";
+          description = mdDoc "Time before request timed out, in seconds.";
         };
 
         navbar = {
           brand = mkOption {
             type = types.str;
             default = "Bird-lg Go";
-            description = lib.mdDoc "Brand to show in the navigation bar .";
+            description = mdDoc "Brand to show in the navigation bar .";
           };
 
           brandURL = mkOption {
             type = types.str;
             default = "/";
-            description = lib.mdDoc "URL of the brand to show in the navigation bar.";
+            description = mdDoc "URL of the brand to show in the navigation bar.";
           };
 
           allServers = mkOption {
             type = types.str;
             default = "ALL Servers";
-            description = lib.mdDoc "Text of 'All server' button in the navigation bar.";
+            description = mdDoc "Text of 'All server' button in the navigation bar.";
           };
 
           allServersURL = mkOption {
             type = types.str;
             default = "all";
-            description = lib.mdDoc "URL of 'All servers' button.";
+            description = mdDoc "URL of 'All servers' button.";
           };
         };
 
         extraArgs = mkOption {
           type = with types; either lines (listOf str);
           default = [ ];
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Extra parameters documented [here](https://github.com/xddxdd/bird-lg-go#frontend).
 
             :::{.note}
@@ -183,25 +202,25 @@ in
       };
 
       proxy = {
-        enable = mkEnableOption (lib.mdDoc "Bird Looking Glass Proxy");
+        enable = mkEnableOption (mdDoc "Bird Looking Glass Proxy");
 
         listenAddress = mkOption {
           type = types.str;
           default = "127.0.0.1:8000";
-          description = lib.mdDoc "Address to listen on.";
+          description = mdDoc "Address to listen on.";
         };
 
         allowedIPs = mkOption {
           type = types.listOf types.str;
           default = [ ];
           example = [ "192.168.25.52" "192.168.25.53" "192.168.0.0/24" ];
-          description = lib.mdDoc "List of IPs or networks to allow (default all allowed).";
+          description = mdDoc "List of IPs or networks to allow (default all allowed).";
         };
 
         birdSocket = mkOption {
           type = types.str;
           default = "/var/run/bird/bird.ctl";
-          description = lib.mdDoc "Bird control socket path.";
+          description = mdDoc "Bird control socket path.";
         };
 
         traceroute = {
@@ -209,26 +228,26 @@ in
             type = types.str;
             default = "${pkgs.traceroute}/bin/traceroute";
             defaultText = literalExpression ''"''${pkgs.traceroute}/bin/traceroute"'';
-            description = lib.mdDoc "Traceroute's binary path.";
+            description = mdDoc "Traceroute's binary path.";
           };
 
           flags = mkOption {
             type = with types; listOf str;
             default = [ ];
-            description = lib.mdDoc "Flags for traceroute process";
+            description = mdDoc "Flags for traceroute process";
           };
 
           rawOutput = mkOption {
             type = types.bool;
             default = false;
-            description = lib.mdDoc "Display traceroute output in raw format.";
+            description = mdDoc "Display traceroute output in raw format.";
           };
         };
 
         extraArgs = mkOption {
           type = with types; either lines (listOf str);
           default = [ ];
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Extra parameters documented [here](https://github.com/xddxdd/bird-lg-go#proxy).
 
             :::{.note}
@@ -245,10 +264,10 @@ in
   config = {
 
     warnings =
-      lib.optional (cfg.frontend.enable  && builtins.isString cfg.frontend.extraArgs) ''
+      optional (cfg.frontend.enable  && builtins.isString cfg.frontend.extraArgs) ''
         Passing strings to `services.bird-lg.frontend.extraOptions' is deprecated. Please pass a list of strings instead.
       ''
-      ++ lib.optional (cfg.proxy.enable  && builtins.isString cfg.proxy.extraArgs) ''
+      ++ optional (cfg.proxy.enable  && builtins.isString cfg.proxy.extraArgs) ''
         Passing strings to `services.bird-lg.proxy.extraOptions' is deprecated. Please pass a list of strings instead.
       ''
     ;
@@ -300,14 +319,14 @@ in
       groups."bird-lg" = mkIf (cfg.group == "bird-lg") { };
       users."bird-lg" = mkIf (cfg.user == "bird-lg") {
         description = "Bird Looking Glass user";
-        extraGroups = lib.optionals (config.services.bird2.enable) [ "bird2" ];
+        extraGroups = optionals (config.services.bird2.enable) [ "bird2" ];
         group = cfg.group;
         isSystemUser = true;
       };
     };
   };
 
-  meta.maintainers = with lib.maintainers; [
+  meta.maintainers = with maintainers; [
     e1mo
     tchekda
   ];
