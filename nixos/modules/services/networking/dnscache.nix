@@ -1,20 +1,31 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStrings
+    concatStrings
+    escapeShellArg
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.dnscache;
 
   dnscache-root = pkgs.runCommand "dnscache-root" { preferLocalBuild = true; } ''
     mkdir -p $out/{servers,ip}
 
     ${concatMapStrings (ip: ''
-      touch "$out/ip/"${lib.escapeShellArg ip}
+      touch "$out/ip/"${escapeShellArg ip}
     '') cfg.clientIps}
 
     ${concatStrings (mapAttrsToList (host: ips: ''
       ${concatMapStrings (ip: ''
-        echo ${lib.escapeShellArg ip} >> "$out/servers/"${lib.escapeShellArg host}
+        echo ${escapeShellArg ip} >> "$out/servers/"${escapeShellArg host}
       '') ips}
     '') cfg.domainServers)}
 
@@ -38,26 +49,26 @@ in {
       enable = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc "Whether to run the dnscache caching dns server.";
+        description = mdDoc "Whether to run the dnscache caching dns server.";
       };
 
       ip = mkOption {
         default = "0.0.0.0";
         type = types.str;
-        description = lib.mdDoc "IP address on which to listen for connections.";
+        description = mdDoc "IP address on which to listen for connections.";
       };
 
       clientIps = mkOption {
         default = [ "127.0.0.1" ];
         type = types.listOf types.str;
-        description = lib.mdDoc "Client IP addresses (or prefixes) from which to accept connections.";
+        description = mdDoc "Client IP addresses (or prefixes) from which to accept connections.";
         example = ["192.168" "172.23.75.82"];
       };
 
       domainServers = mkOption {
         default = { };
         type = types.attrsOf (types.listOf types.str);
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Table of {hostname: server} pairs to use as authoritative servers for hosts (and subhosts).
           If entry for @ is not specified predefined list of root servers is used.
         '';
@@ -72,7 +83,7 @@ in {
       forwardOnly = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to treat root servers (for @) as caching
           servers, requesting addresses the same way a client does. This is
           needed if you want to use e.g. Google DNS as your upstream DNS.
