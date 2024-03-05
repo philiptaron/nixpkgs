@@ -1,8 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    boolToString
+    concatStringsSep
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.ndppd;
 
   render = s: f: concatStringsSep "\n" (mapAttrsToList f s);
@@ -26,7 +37,7 @@ let
     options = {
       interface = mkOption {
         type = types.nullOr types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Listen for any Neighbor Solicitation messages on this interface,
           and respond to them according to a set of rules.
           Defaults to the name of the attrset.
@@ -35,14 +46,14 @@ let
       };
       router = mkOption {
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Turns on or off the router flag for Neighbor Advertisement Messages.
         '';
         default = true;
       };
       timeout = mkOption {
         type = types.int;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Controls how long to wait for a Neighbor Advertisement Message before
           invalidating the entry, in milliseconds.
         '';
@@ -50,7 +61,7 @@ let
       };
       ttl = mkOption {
         type = types.int;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Controls how long a valid or invalid entry remains in the cache, in
           milliseconds.
         '';
@@ -58,7 +69,7 @@ let
       };
       rules = mkOption {
         type = types.attrsOf rule;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           This is a rule that the target address is to match against. If no netmask
           is provided, /128 is assumed. You may have several rule sections, and the
           addresses may or may not overlap.
@@ -72,7 +83,7 @@ let
     options = {
       network = mkOption {
         type = types.nullOr types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           This is the target address is to match against. If no netmask
           is provided, /128 is assumed. The addresses of several rules
           may or may not overlap.
@@ -82,7 +93,7 @@ let
       };
       method = mkOption {
         type = types.enum [ "static" "iface" "auto" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           static: Immediately answer any Neighbor Solicitation Messages
             (if they match the IP rule).
           iface: Forward the Neighbor Solicitation Message through the specified
@@ -95,7 +106,7 @@ let
       };
       interface = mkOption {
         type = types.nullOr types.str;
-        description = lib.mdDoc "Interface to use when method is iface.";
+        description = mdDoc "Interface to use when method is iface.";
         default = null;
       };
     };
@@ -103,10 +114,10 @@ let
 
 in {
   options.services.ndppd = {
-    enable = mkEnableOption (lib.mdDoc "daemon that proxies NDP (Neighbor Discovery Protocol) messages between interfaces");
+    enable = mkEnableOption (mdDoc "daemon that proxies NDP (Neighbor Discovery Protocol) messages between interfaces");
     interface = mkOption {
       type = types.nullOr types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Interface which is on link-level with router.
         (Legacy option, use services.ndppd.proxies.\<interface\>.rules.\<network\> instead)
       '';
@@ -115,7 +126,7 @@ in {
     };
     network = mkOption {
       type = types.nullOr types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Network that we proxy.
         (Legacy option, use services.ndppd.proxies.\<interface\>.rules.\<network\> instead)
       '';
@@ -124,12 +135,12 @@ in {
     };
     configFile = mkOption {
       type = types.nullOr types.path;
-      description = lib.mdDoc "Path to configuration file.";
+      description = mdDoc "Path to configuration file.";
       default = null;
     };
     routeTTL = mkOption {
       type = types.int;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         This tells 'ndppd' how often to reload the route file /proc/net/ipv6_route,
         in milliseconds.
       '';
@@ -137,7 +148,7 @@ in {
     };
     proxies = mkOption {
       type = types.attrsOf proxy;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         This sets up a listener, that will listen for any Neighbor Solicitation
         messages, and respond to them according to a set of rules.
       '';
