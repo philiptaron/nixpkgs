@@ -1,8 +1,30 @@
 { config, lib, options, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    boolToString
+    concatMapStringsSep
+    concatStringsSep
+    elemAt
+    escape
+    getExe
+    isAttrs
+    isBool
+    length
+    literalExpression
+    maintainers
+    mapAttrs
+    mapAttrsToList
+    mdDoc
+    mkAliasOptionModuleMD
+    mkDefault
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRemovedOptionModule
+    types
+    warn
+    ;
 
   cfg = config.services.picom;
   opt = options.services.picom;
@@ -13,7 +35,7 @@ let
 
   mkDefaultAttrs = mapAttrs (n: v: mkDefault v);
 
-  # Basically a tinkered lib.generators.mkKeyValueDefault
+  # Basically a tinkered generators.mkKeyValueDefault
   # It either serializes a top-level definition "key: { values };"
   # or an expression "key = { values };"
   mkAttrsString = top:
@@ -56,7 +78,7 @@ in {
     enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether or not to enable Picom as the X.org composite manager.
       '';
     };
@@ -66,7 +88,7 @@ in {
     fade = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Fade windows in and out.
       '';
     };
@@ -75,7 +97,7 @@ in {
       type = types.ints.positive;
       default = 10;
       example = 5;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Time between fade animation step (in ms).
       '';
     };
@@ -84,7 +106,7 @@ in {
       type = pairOf (types.numbers.between 0.01 1);
       default = [ 0.028 0.03 ];
       example = [ 0.04 0.04 ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Opacity change between fade steps (in and out).
       '';
     };
@@ -97,7 +119,7 @@ in {
         "name ~= 'Firefox$'"
         "focused = 1"
       ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         List of conditions of windows that should not be faded.
         See `picom(1)` man page for more examples.
       '';
@@ -106,7 +128,7 @@ in {
     shadow = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Draw window shadows.
       '';
     };
@@ -115,7 +137,7 @@ in {
       type = pairOf types.int;
       default = [ (-15) (-15) ];
       example = [ (-10) (-15) ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Left and right offset for shadows (in pixels).
       '';
     };
@@ -124,7 +146,7 @@ in {
       type = types.numbers.between 0 1;
       default = 0.75;
       example = 0.8;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Window shadows opacity.
       '';
     };
@@ -137,7 +159,7 @@ in {
         "name ~= 'Firefox$'"
         "focused = 1"
       ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         List of conditions of windows that should have no shadow.
         See `picom(1)` man page for more examples.
       '';
@@ -147,7 +169,7 @@ in {
       type = types.numbers.between 0 1;
       default = 1.0;
       example = 0.8;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Opacity of active windows.
       '';
     };
@@ -156,7 +178,7 @@ in {
       type = types.numbers.between 0.1 1;
       default = 1.0;
       example = 0.8;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Opacity of inactive windows.
       '';
     };
@@ -165,7 +187,7 @@ in {
       type = types.numbers.between 0 1;
       default = 1.0;
       example = 0.8;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Opacity of dropdown and popup menu.
       '';
     };
@@ -183,7 +205,7 @@ in {
         }
       '';
       example = {};
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Rules for specific window types.
       '';
     };
@@ -195,7 +217,7 @@ in {
         "95:class_g = 'URxvt' && !_NET_WM_STATE@:32a"
         "0:_NET_WM_STATE@:32a *= '_NET_WM_STATE_HIDDEN'"
       ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Rules that control the opacity of windows, in format PERCENT:PATTERN.
       '';
     };
@@ -203,7 +225,7 @@ in {
     backend = mkOption {
       type = types.enum [ "egl" "glx" "xrender" "xr_glx_hybrid" ];
       default = "xrender";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Backend to use: `egl`, `glx`, `xrender` or `xr_glx_hybrid`.
       '';
     };
@@ -221,7 +243,7 @@ in {
           if isBool x then x
           else warn msg res;
 
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Enable vertical synchronization. Chooses the best method
         (drm, opengl, opengl-oml, opengl-swc, opengl-mswc) automatically.
         The bool value should be used, the others are just for backwards compatibility.
@@ -255,7 +277,7 @@ in {
             deviation = 5.0;
           };
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Picom settings. Use this option to configure Picom settings not exposed
         in a NixOS option or to bypass one.  For the available options see the
         CONFIGURATION FILES section at `picom(1)`.
@@ -312,6 +334,6 @@ in {
     environment.systemPackages = [ cfg.package ];
   };
 
-  meta.maintainers = with lib.maintainers; [ rnhmjoj ];
+  meta.maintainers = with maintainers; [ rnhmjoj ];
 
 }
