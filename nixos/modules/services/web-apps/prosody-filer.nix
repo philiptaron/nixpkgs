@@ -1,7 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    ;
 
   cfg = config.services.prosody-filer;
 
@@ -11,10 +18,10 @@ in {
 
   options = {
     services.prosody-filer = {
-      enable = mkEnableOption (lib.mdDoc "Prosody Filer XMPP upload file server");
+      enable = mkEnableOption (mdDoc "Prosody Filer XMPP upload file server");
 
       settings = mkOption {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration for Prosody Filer.
           Refer to <https://github.com/ThomasLeister/prosody-filer#configure-prosody-filer> for details on supported values.
         '';
