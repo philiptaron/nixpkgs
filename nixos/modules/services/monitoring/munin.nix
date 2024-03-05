@@ -11,9 +11,19 @@
 # nginx https://munin.readthedocs.org/en/latest/example/webserver/nginx.html
 
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkIf
+    mkMerge
+    mkOption
+    optionalString
+    types
+    ;
+
   nodeCfg = config.services.munin-node;
   cronCfg = config.services.munin-cron;
 
@@ -24,7 +34,7 @@ let
       logdir    /var/log/munin
       rundir    /run/munin
 
-      ${lib.optionalString (cronCfg.extraCSS != "") "staticdir ${customStaticDir}"}
+      ${optionalString (cronCfg.extraCSS != "") "staticdir ${customStaticDir}"}
 
       ${cronCfg.extraGlobalConfig}
 
@@ -108,7 +118,7 @@ let
     pkgs.runCommand name {} ''
       mkdir -p "$out"
       cd "$out"
-      ${lib.concatStringsSep "\n" (map intern-fn paths)}
+      ${concatStringsSep "\n" (map intern-fn paths)}
       chmod -R u+w .
       ${pkgs.findutils}/bin/find . -type f -exec ${pkgs.gnused}/bin/sed -E -i "
         \%''${NIX_STORE}/%! s,(/usr)?/s?bin/,/run/current-system/sw/bin/,g
@@ -120,7 +130,7 @@ let
   # of munin-contrib in your nixos configuration.
   extraPluginDir = internAndFixPlugins "munin-extra-plugins.d"
     internOnePlugin
-    (lib.attrsets.mapAttrsToList (k: v: { name = k; path = v; }) nodeCfg.extraPlugins);
+    (mapAttrsToList (k: v: { name = k; path = v; }) nodeCfg.extraPlugins);
 
   extraAutoPluginDir = internAndFixPlugins "munin-extra-auto-plugins.d"
     internManyPlugins nodeCfg.extraAutoPlugins;
@@ -143,7 +153,7 @@ in
       enable = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable Munin Node agent. Munin node listens on 0.0.0.0 and
           by default accepts connections only from 127.0.0.1 for security reasons.
 
@@ -154,7 +164,7 @@ in
       extraConfig = mkOption {
         default = "";
         type = types.lines;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           {file}`munin-node.conf` extra configuration. See
           <https://guide.munin-monitoring.org/en/latest/reference/munin-node.conf.html>
         '';
@@ -163,7 +173,7 @@ in
       extraPluginConfig = mkOption {
         default = "";
         type = types.lines;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           {file}`plugin-conf.d` extra plugin configuration. See
           <https://guide.munin-monitoring.org/en/latest/plugin/use.html>
         '';
@@ -176,7 +186,7 @@ in
       extraPlugins = mkOption {
         default = {};
         type = with types; attrsOf path;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Additional Munin plugins to activate. Keys are the name of the plugin
           symlink, values are the path to the underlying plugin script. You
           can use the same plugin script multiple times (e.g. for wildcard
@@ -206,7 +216,7 @@ in
       extraAutoPlugins = mkOption {
         default = [];
         type = with types; listOf path;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Additional Munin plugins to autoconfigure, using
           `munin-node-configure --suggest`. These should be
           the actual paths to the plugin files (or directories containing them),
@@ -239,7 +249,7 @@ in
         # NaNs in the output.
         default = [ "munin_stats" ];
         type = with types; listOf str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Munin plugins to disable, even if
           `munin-node-configure --suggest` tries to enable
           them. To disable a wildcard plugin, use an actual wildcard, as in
@@ -258,7 +268,7 @@ in
       enable = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable munin-cron. Takes care of all heavy lifting to collect data from
           nodes and draws graphs to html. Runs munin-update, munin-limits,
           munin-graphs and munin-html in that order.
@@ -271,7 +281,7 @@ in
       extraGlobalConfig = mkOption {
         default = "";
         type = types.lines;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           {file}`munin.conf` extra global configuration.
           See <https://guide.munin-monitoring.org/en/latest/reference/munin.conf.html>.
           Useful to setup notifications, see
@@ -285,7 +295,7 @@ in
       hosts = mkOption {
         default = "";
         type = types.lines;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Definitions of hosts of nodes to collect data from. Needs at least one
           host for cron to succeed. See
           <https://guide.munin-monitoring.org/en/latest/reference/munin.conf.html>
@@ -301,7 +311,7 @@ in
       extraCSS = mkOption {
         default = "";
         type = types.lines;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Custom styling for the HTML that munin-cron generates. This will be
           appended to the CSS files used by munin-cron and will thus take
           precedence over the builtin styles.
@@ -357,12 +367,12 @@ in
         # Autoconfigure extra plugins
         ${pkgs.munin}/bin/munin-node-configure --suggest --shell --families contrib,auto,manual --config ${nodeConf} --libdir=${extraAutoPluginDir} --servicedir=/etc/munin/plugins --sconfdir=${pluginConfDir} 2>/dev/null | ${pkgs.bash}/bin/bash
 
-        ${lib.optionalString (nodeCfg.extraPlugins != {}) ''
+        ${optionalString (nodeCfg.extraPlugins != {}) ''
             # Link in manually enabled plugins
             ln -f -s -t /etc/munin/plugins ${extraPluginDir}/*
           ''}
 
-        ${lib.optionalString (nodeCfg.disabledPlugins != []) ''
+        ${optionalString (nodeCfg.disabledPlugins != []) ''
             # Disable plugins
             cd /etc/munin/plugins
             rm -f ${toString nodeCfg.disabledPlugins}
