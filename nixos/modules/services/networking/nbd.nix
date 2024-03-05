@@ -1,8 +1,21 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    generators
+    hasPrefix
+    mapAttrs
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalAttrs
+    partition
+    types
+    ;
+
   cfg = config.services.nbd;
   iniFields = with types; attrsOf (oneOf [ bool int float str ]);
   # The `[generic]` section must come before all the others in the
@@ -29,8 +42,8 @@ let
       cfg.server.exports;
   serverConfig =
     pkgs.writeText "nbd-server-config" ''
-      ${lib.generators.toINI {} genericSection}
-      ${lib.generators.toINI {} exportSections}
+      ${generators.toINI {} genericSection}
+      ${generators.toINI {} exportSections}
     '';
   splitLists =
     partition
@@ -43,12 +56,12 @@ in
   options = {
     services.nbd = {
       server = {
-        enable = mkEnableOption (lib.mdDoc "the Network Block Device (nbd) server");
+        enable = mkEnableOption (mdDoc "the Network Block Device (nbd) server");
 
         listenPort = mkOption {
           type = types.port;
           default = 10809;
-          description = lib.mdDoc "Port to listen on. The port is NOT automatically opened in the firewall.";
+          description = mdDoc "Port to listen on. The port is NOT automatically opened in the firewall.";
         };
 
         extraOptions = mkOption {
@@ -56,21 +69,21 @@ in
           default = {
             allowlist = false;
           };
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Extra options for the server. See
             {manpage}`nbd-server(5)`.
           '';
         };
 
         exports = mkOption {
-          description = lib.mdDoc "Files or block devices to make available over the network.";
+          description = mdDoc "Files or block devices to make available over the network.";
           default = { };
           type = with types; attrsOf
             (submodule {
               options = {
                 path = mkOption {
                   type = str;
-                  description = lib.mdDoc "File or block device to export.";
+                  description = mdDoc "File or block device to export.";
                   example = "/dev/sdb1";
                 };
 
@@ -78,7 +91,7 @@ in
                   type = nullOr (listOf str);
                   default = null;
                   example = [ "10.10.0.0/24" "127.0.0.1" ];
-                  description = lib.mdDoc "IPs and subnets that are authorized to connect for this device. If not specified, the server will allow all connections.";
+                  description = mdDoc "IPs and subnets that are authorized to connect for this device. If not specified, the server will allow all connections.";
                 };
 
                 extraOptions = mkOption {
@@ -87,7 +100,7 @@ in
                     flush = true;
                     fua = true;
                   };
-                  description = lib.mdDoc ''
+                  description = mdDoc ''
                     Extra options for this export. See
                     {manpage}`nbd-server(5)`.
                   '';
@@ -98,7 +111,7 @@ in
 
         listenAddress = mkOption {
           type = with types; nullOr str;
-          description = lib.mdDoc "Address to listen on. If not specified, the server will listen on all interfaces.";
+          description = mdDoc "Address to listen on. If not specified, the server will listen on all interfaces.";
           default = null;
           example = "10.10.0.1";
         };
