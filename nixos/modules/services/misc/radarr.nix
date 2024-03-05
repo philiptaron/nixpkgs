@@ -1,40 +1,47 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.radarr;
 
 in
 {
   options = {
     services.radarr = {
-      enable = mkEnableOption (lib.mdDoc "Radarr");
+      enable = mkEnableOption (mdDoc "Radarr");
 
       package = mkPackageOption pkgs "radarr" { };
 
       dataDir = mkOption {
         type = types.str;
         default = "/var/lib/radarr/.config/Radarr";
-        description = lib.mdDoc "The directory where Radarr stores its data files.";
+        description = mdDoc "The directory where Radarr stores its data files.";
       };
 
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Open ports in the firewall for the Radarr web interface.";
+        description = mdDoc "Open ports in the firewall for the Radarr web interface.";
       };
 
       user = mkOption {
         type = types.str;
         default = "radarr";
-        description = lib.mdDoc "User account under which Radarr runs.";
+        description = mdDoc "User account under which Radarr runs.";
       };
 
       group = mkOption {
         type = types.str;
         default = "radarr";
-        description = lib.mdDoc "Group under which Radarr runs.";
+        description = mdDoc "Group under which Radarr runs.";
       };
     };
   };
