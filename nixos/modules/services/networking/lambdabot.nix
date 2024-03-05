@@ -1,8 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
 
   cfg = config.services.lambdabot;
 
@@ -21,7 +26,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Enable the Lambdabot IRC bot";
+        description = mdDoc "Enable the Lambdabot IRC bot";
       };
 
       package = mkPackageOption pkgs "lambdabot" { };
@@ -29,7 +34,7 @@ in
       script = mkOption {
         type = types.str;
         default = "";
-        description = lib.mdDoc "Lambdabot script";
+        description = mdDoc "Lambdabot script";
       };
 
     };
