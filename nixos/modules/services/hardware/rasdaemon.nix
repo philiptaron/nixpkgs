@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionals
+    optionalString
+    types
+    ;
 
   cfg = config.hardware.rasdaemon;
 
@@ -10,18 +18,18 @@ in
 {
   options.hardware.rasdaemon = {
 
-    enable = mkEnableOption (lib.mdDoc "RAS logging daemon");
+    enable = mkEnableOption (mdDoc "RAS logging daemon");
 
     record = mkOption {
       type = types.bool;
       default = true;
-      description = lib.mdDoc "record events via sqlite3, required for ras-mc-ctl";
+      description = mdDoc "record events via sqlite3, required for ras-mc-ctl";
     };
 
     mainboard = mkOption {
       type = types.lines;
       default = "";
-      description = lib.mdDoc "Custom mainboard description, see {manpage}`ras-mc-ctl(8)` for more details.";
+      description = mdDoc "Custom mainboard description, see {manpage}`ras-mc-ctl(8)` for more details.";
       example = ''
         vendor = ASRock
         model = B450M Pro4
@@ -40,7 +48,7 @@ in
     labels = mkOption {
       type = types.lines;
       default = "";
-      description = lib.mdDoc "Additional memory module label descriptions to be placed in /etc/ras/dimm_labels.d/labels";
+      description = mdDoc "Additional memory module label descriptions to be placed in /etc/ras/dimm_labels.d/labels";
       example = ''
         # vendor and model may be shown by 'ras-mc-ctl --mainboard'
         vendor: ASRock
@@ -57,7 +65,7 @@ in
     config = mkOption {
       type = types.lines;
       default = "";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         rasdaemon configuration, currently only used for CE PFA
         for details, read rasdaemon.outPath/etc/sysconfig/rasdaemon's comments
       '';
@@ -72,11 +80,11 @@ in
     extraModules = mkOption {
       type = types.listOf types.str;
       default = [];
-      description = lib.mdDoc "extra kernel modules to load";
+      description = mdDoc "extra kernel modules to load";
       example = [ "i7core_edac" ];
     };
 
-    testing = mkEnableOption (lib.mdDoc "error injection infrastructure");
+    testing = mkEnableOption (mdDoc "error injection infrastructure");
   };
 
   config = mkIf cfg.enable {
