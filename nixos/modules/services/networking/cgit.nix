@@ -1,8 +1,29 @@
 { config, lib, pkgs, ...}:
 
-with lib;
-
 let
+  inherit (lib)
+    any
+    attrValues
+    concatStrings
+    concatStringsSep
+    escapeShellArg
+    genAttrs
+    listToAttrs
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    nameValuePair
+    optionalString
+    removeSuffix
+    replaceStrings
+    types
+    ;
+
   cfgs = config.services.cgit;
 
   settingType = with types; oneOf [ bool int str ];
