@@ -11,13 +11,22 @@
 
 { config, lib, pkgs, ...}:
 
-with lib; let cfg = config.services.journaldriver;
-in {
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
+  cfg = config.services.journaldriver;
+in
+{
   options.services.journaldriver = {
     enable = mkOption {
       type        = types.bool;
       default     = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to enable journaldriver to forward journald logs to
         Stackdriver Logging.
       '';
@@ -26,7 +35,7 @@ in {
     logLevel = mkOption {
       type        = types.str;
       default     = "info";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Log level at which journaldriver logs its own output.
       '';
     };
@@ -34,7 +43,7 @@ in {
     logName = mkOption {
       type        = with types; nullOr str;
       default     = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Configures the name of the target log in Stackdriver Logging.
         This option can be set to, for example, the hostname of a
         machine to improve the user experience in the logging
@@ -45,7 +54,7 @@ in {
     googleCloudProject = mkOption {
       type        = with types; nullOr str;
       default     = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Configures the name of the Google Cloud project to which to
         forward journald logs.
 
@@ -57,7 +66,7 @@ in {
     logStream = mkOption {
       type        = with types; nullOr str;
       default     = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Configures the name of the Stackdriver Logging log stream into
         which to write journald entries.
 
@@ -69,7 +78,7 @@ in {
     applicationCredentials = mkOption {
       type        = with types; nullOr path;
       default     = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path to the service account private key (in JSON-format) used
         to forward log entries to Stackdriver Logging on non-GCP
         instances.
