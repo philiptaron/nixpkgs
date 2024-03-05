@@ -1,7 +1,23 @@
 { lib, config, ... }:
 
-with lib;
 let
+  inherit (lib)
+    any
+    concatStrings
+    elem
+    getValues
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mergeEqualOption
+    mkOption
+    optional
+    optionalString
+    stringToCharacters
+    substring
+    types
+    ;
+
   mergeFalseByDefault = locs: defs:
     if defs == [] then abort "This case should never happen."
     else if any (x: x == false) (getValues defs) then false
@@ -14,7 +30,7 @@ let
         default = null;
         internal = true;
         visible = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Use this field for tristate kernel options expecting a "y" or "m" or "n".
         '';
       };
@@ -25,7 +41,7 @@ let
         };
         default = null;
         example = ''MMC_BLOCK_MINORS.freeform = "32";'';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Freeform description of a kernel configuration item value.
         '';
       };
@@ -33,7 +49,7 @@ let
       optional = mkOption {
         type = types.bool // { merge = mergeFalseByDefault; };
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether option should generate a failure when unused.
           Upon merging values, mandatory wins over optional.
         '';
@@ -90,7 +106,7 @@ in
         USB? y
         DEBUG n
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The result of converting the structured kernel configuration in settings
         to an intermediate string that can be parsed by generate-config.pl to
         answer the kernel `make defconfig`.
@@ -99,12 +115,12 @@ in
 
     settings = mkOption {
       type = types.attrsOf kernelItem;
-      example = literalExpression '' with lib.kernel; {
-        "9P_NET" = yes;
-        USB = option yes;
-        MMC_BLOCK_MINORS = freeform "32";
+      example = literalExpression ''{
+        "9P_NET" = lib.kernel.yes;
+        USB = option lib.kernel.yes;
+        MMC_BLOCK_MINORS = lib.kernel.freeform "32";
       }'';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Structured kernel configuration.
       '';
     };
