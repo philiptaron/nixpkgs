@@ -1,8 +1,28 @@
 { config, pkgs, lib, ... }:
 
-with lib;
 let
+  inherit (lib)
+    boolToString
+    isAttrs
+    isBool
+    isList
+    literalExpression
+    maintainers
+    mapAttrs
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRenamedOptionModule
+    optional
+    optionalAttrs
+    optionalString
+    toShellVars
+    types
+    ;
+
   cfg = config.services.paperless;
+
   pkg = cfg.package;
 
   defaultUser = "paperless";
@@ -27,15 +47,15 @@ let
       name = "paperless_ngx_nltk_data";
       paths = pkg.nltkData;
     };
-  } // (lib.mapAttrs (_: s:
-    if (lib.isAttrs s || lib.isList s) then builtins.toJSON s
-    else if lib.isBool s then lib.boolToString s
+  } // (mapAttrs (_: s:
+    if (isAttrs s || isList s) then builtins.toJSON s
+    else if isBool s then boolToString s
     else toString s
   ) cfg.settings);
 
   manage = pkgs.writeShellScript "manage" ''
     set -o allexport # Export the following env vars
-    ${lib.toShellVars env}
+    ${toShellVars env}
     exec ${pkg}/bin/paperless-ngx "$@"
   '';
 
@@ -92,9 +112,9 @@ in
 
   options.services.paperless = {
     enable = mkOption {
-      type = lib.types.bool;
+      type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Enable Paperless.
 
         When started, the Paperless database is automatically created if it doesn't
@@ -109,34 +129,34 @@ in
     dataDir = mkOption {
       type = types.str;
       default = "/var/lib/paperless";
-      description = lib.mdDoc "Directory to store the Paperless data.";
+      description = mdDoc "Directory to store the Paperless data.";
     };
 
     mediaDir = mkOption {
       type = types.str;
       default = "${cfg.dataDir}/media";
       defaultText = literalExpression ''"''${dataDir}/media"'';
-      description = lib.mdDoc "Directory to store the Paperless documents.";
+      description = mdDoc "Directory to store the Paperless documents.";
     };
 
     consumptionDir = mkOption {
       type = types.str;
       default = "${cfg.dataDir}/consume";
       defaultText = literalExpression ''"''${dataDir}/consume"'';
-      description = lib.mdDoc "Directory from which new documents are imported.";
+      description = mdDoc "Directory from which new documents are imported.";
     };
 
     consumptionDirIsPublic = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc "Whether all users can write to the consumption dir.";
+      description = mdDoc "Whether all users can write to the consumption dir.";
     };
 
     passwordFile = mkOption {
       type = types.nullOr types.path;
       default = null;
       example = "/run/keys/paperless-password";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         A file containing the superuser password.
 
         A superuser is required to access the web interface.
@@ -157,23 +177,23 @@ in
     address = mkOption {
       type = types.str;
       default = "localhost";
-      description = lib.mdDoc "Web interface address.";
+      description = mdDoc "Web interface address.";
     };
 
     port = mkOption {
       type = types.port;
       default = 28981;
-      description = lib.mdDoc "Web interface port.";
+      description = mdDoc "Web interface port.";
     };
 
     settings = mkOption {
-      type = lib.types.submodule {
-        freeformType = with lib.types; attrsOf (let
+      type = types.submodule {
+        freeformType = with types; attrsOf (let
           typeList = [ bool float int str path package ];
         in oneOf (typeList ++ [ (listOf (oneOf typeList)) (attrsOf (oneOf typeList)) ]));
       };
       default = { };
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra paperless config options.
 
         See [the documentation](https://docs.paperless-ngx.com/configuration/) for available options.
@@ -195,7 +215,7 @@ in
     user = mkOption {
       type = types.str;
       default = defaultUser;
-      description = lib.mdDoc "User under which Paperless runs.";
+      description = mdDoc "User under which Paperless runs.";
     };
 
     package = mkPackageOption pkgs "paperless-ngx" { };
@@ -347,7 +367,7 @@ in
         SystemCallFilter = defaultServiceConfig.SystemCallFilter ++ [ "@setuid mbind" ];
         # Needs to serve web page
         PrivateNetwork = false;
-      } // lib.optionalAttrs (cfg.port < 1024) {
+      } // optionalAttrs (cfg.port < 1024) {
         AmbientCapabilities = [ "CAP_NET_BIND_SERVICE" ];
         CapabilityBoundingSet = [ "CAP_NET_BIND_SERVICE" ];
       };
