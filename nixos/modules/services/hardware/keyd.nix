@@ -1,6 +1,22 @@
 { config, lib, pkgs, ... }:
-with lib;
+
 let
+  inherit (lib)
+    concatStringsSep
+    generators
+    literalExpression
+    mapAttrs'
+    mapAttrsToList
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRemovedOptionModule
+    nameValuePair
+    types
+    ;
+
   cfg = config.services.keyd;
 
   keyboardOptions = { ... }: {
@@ -9,7 +25,7 @@ let
         type = types.listOf types.str;
         default = [ "*" ];
         example = [ "*" "-0123:0456" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Device identifiers, as shown by {manpage}`keyd(1)`.
         '';
       };
@@ -30,7 +46,7 @@ let
             l = "right";
           };
         };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration, except `ids` section, that is written to {file}`/etc/keyd/<keyboard>.conf`.
           Appropriate names can be used to write non-alpha keys, for example "equal" instead of "=" sign (see <https://github.com/NixOS/nixpkgs/issues/236622>).
           See <https://github.com/rvaiya/keyd> how to configure.
@@ -44,7 +60,7 @@ let
           [control+shift]
           h = left
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra configuration that is appended to the end of the file.
           **Do not** write `ids` section here, use a separate option for it.
           You can use this option to define compound layers that must always be defined after the layer they are comprised.
@@ -62,7 +78,7 @@ in
   ];
 
   options.services.keyd = {
-    enable = mkEnableOption (lib.mdDoc "keyd, a key remapping daemon");
+    enable = mkEnableOption (mdDoc "keyd, a key remapping daemon");
 
     keyboards = mkOption {
       type = types.attrsOf (types.submodule keyboardOptions);
@@ -108,7 +124,7 @@ in
         })
       cfg.keyboards;
 
-    hardware.uinput.enable = lib.mkDefault true;
+    hardware.uinput.enable = mkDefault true;
 
     systemd.services.keyd = {
       description = "Keyd remapping daemon";
