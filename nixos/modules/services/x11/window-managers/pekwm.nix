@@ -1,14 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    singleton
+    ;
+
   cfg = config.services.xserver.windowManager.pekwm;
 in
 {
   ###### interface
   options = {
-    services.xserver.windowManager.pekwm.enable = mkEnableOption (lib.mdDoc "pekwm");
+    services.xserver.windowManager.pekwm.enable = mkEnableOption (mdDoc "pekwm");
   };
 
   ###### implementation
