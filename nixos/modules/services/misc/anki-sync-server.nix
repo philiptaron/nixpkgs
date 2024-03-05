@@ -4,18 +4,39 @@
   pkgs,
   ...
 }:
-with lib; let
+
+let
+  inherit (lib)
+    concatMapStringsSep
+    escapeShellArg
+    filter
+    imap1
+    maintainers
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    replaceStrings
+    types
+    ;
+
   cfg = config.services.anki-sync-server;
+
   name = "anki-sync-server";
+
   specEscape = replaceStrings ["%"] ["%%"];
+
   usersWithIndexes =
-    lists.imap1 (i: user: {
+    imap1 (i: user: {
       i = i;
       user = user;
     })
     cfg.users;
+
   usersWithIndexesFile = filter (x: x.user.passwordFile != null) usersWithIndexes;
+
   usersWithIndexesNoFile = filter (x: x.user.passwordFile == null && x.user.password != null) usersWithIndexes;
+
   anki-sync-server-run = pkgs.writeShellScriptBin "anki-sync-server-run" ''
     # When services.anki-sync-server.users.passwordFile is set,
     # each password file is passed as a systemd credential, which is mounted in
@@ -38,7 +59,8 @@ with lib; let
     }
     exec ${cfg.package}/bin/anki-sync-server
   '';
-in {
+in
+{
   options.services.anki-sync-server = {
     enable = mkEnableOption "anki-sync-server";
 
