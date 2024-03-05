@@ -1,26 +1,33 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.whitebophir;
 in {
   options = {
     services.whitebophir = {
-      enable = mkEnableOption (lib.mdDoc "whitebophir, an online collaborative whiteboard server (persistent state will be maintained under {file}`/var/lib/whitebophir`)");
+      enable = mkEnableOption (mdDoc "whitebophir, an online collaborative whiteboard server (persistent state will be maintained under {file}`/var/lib/whitebophir`)");
 
       package = mkPackageOption pkgs "whitebophir" { };
 
       listenAddress = mkOption {
         type = types.str;
         default = "0.0.0.0";
-        description = lib.mdDoc "Address to listen on (use 0.0.0.0 to allow access from any address).";
+        description = mdDoc "Address to listen on (use 0.0.0.0 to allow access from any address).";
       };
 
       port = mkOption {
         type = types.port;
         default = 5001;
-        description = lib.mdDoc "Port to bind to.";
+        description = mdDoc "Port to bind to.";
       };
     };
   };
