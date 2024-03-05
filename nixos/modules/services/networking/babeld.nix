@@ -1,8 +1,24 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrNames
+    boolToString
+    concatMapStrings
+    concatMapStringsSep
+    getAttr
+    isBool
+    maintainers
+    mapAttrs'
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    nameValuePair
+    optionalString
+    types
+    ;
 
   cfg = config.services.babeld;
 
@@ -40,11 +56,11 @@ in
 
     services.babeld = {
 
-      enable = mkEnableOption (lib.mdDoc "the babeld network routing daemon");
+      enable = mkEnableOption (mdDoc "the babeld network routing daemon");
 
       interfaceDefaults = mkOption {
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A set describing default parameters for babeld interfaces.
           See {manpage}`babeld(8)` for options.
         '';
@@ -58,7 +74,7 @@ in
 
       interfaces = mkOption {
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A set describing babeld interfaces.
           See {manpage}`babeld(8)` for options.
         '';
@@ -75,7 +91,7 @@ in
       extraConfig = mkOption {
         default = "";
         type = types.lines;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Options that will be copied to babeld.conf.
           See {manpage}`babeld(8)` for details.
         '';
@@ -94,7 +110,7 @@ in
       "net.ipv6.conf.all.accept_redirects" = 0;
       "net.ipv4.conf.all.forwarding" = 1;
       "net.ipv4.conf.all.rp_filter" = 0;
-    } // lib.mapAttrs' (ifname: _: lib.nameValuePair "net.ipv4.conf.${ifname}.rp_filter" (lib.mkDefault 0)) config.services.babeld.interfaces;
+    } // mapAttrs' (ifname: _: nameValuePair "net.ipv4.conf.${ifname}.rp_filter" (mkDefault 0)) config.services.babeld.interfaces;
 
     systemd.services.babeld = {
       description = "Babel routing daemon";
