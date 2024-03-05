@@ -1,8 +1,18 @@
 { config, lib, options, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    escape
+    getAttr
+    getBin
+    mdDoc
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
+
   cfg   = config.services.terraria;
   opt   = options.services.terraria;
   worldSizeMap = { small = 1; medium = 2; large = 3; };
@@ -36,7 +46,7 @@ in
       enable = mkOption {
         type        = types.bool;
         default     = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If enabled, starts a Terraria server. The server can be connected to via `tmux -S ''${config.${opt.dataDir}}/terraria.sock attach`
           for administration by users who are a part of the `terraria` group (use `C-b d` shortcut to detach again).
         '';
@@ -45,7 +55,7 @@ in
       port = mkOption {
         type        = types.port;
         default     = 7777;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Specifies the port to listen on.
         '';
       };
@@ -53,7 +63,7 @@ in
       maxPlayers = mkOption {
         type        = types.ints.u8;
         default     = 255;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Sets the max number of players (between 1 and 255).
         '';
       };
@@ -61,7 +71,7 @@ in
       password = mkOption {
         type        = types.nullOr types.str;
         default     = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Sets the server password. Leave `null` for no password.
         '';
       };
@@ -69,7 +79,7 @@ in
       messageOfTheDay = mkOption {
         type        = types.nullOr types.str;
         default     = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Set the server message of the day text.
         '';
       };
@@ -77,7 +87,7 @@ in
       worldPath = mkOption {
         type        = types.nullOr types.path;
         default     = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The path to the world file (`.wld`) which should be loaded.
           If no world exists at this path, one will be created with the size
           specified by `autoCreatedWorldSize`.
@@ -87,7 +97,7 @@ in
       autoCreatedWorldSize = mkOption {
         type        = types.enum [ "small" "medium" "large" ];
         default     = "medium";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Specifies the size of the auto-created world if `worldPath` does not
           point to an existing world.
         '';
@@ -96,7 +106,7 @@ in
       banListPath = mkOption {
         type        = types.nullOr types.path;
         default     = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The path to the ban list.
         '';
       };
@@ -104,26 +114,26 @@ in
       secure = mkOption {
         type        = types.bool;
         default     = false;
-        description = lib.mdDoc "Adds additional cheat protection to the server.";
+        description = mdDoc "Adds additional cheat protection to the server.";
       };
 
       noUPnP = mkOption {
         type        = types.bool;
         default     = false;
-        description = lib.mdDoc "Disables automatic Universal Plug and Play.";
+        description = mdDoc "Disables automatic Universal Plug and Play.";
       };
 
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to open ports in the firewall";
+        description = mdDoc "Whether to open ports in the firewall";
       };
 
       dataDir = mkOption {
         type        = types.str;
         default     = "/var/lib/terraria";
         example     = "/srv/terraria";
-        description = lib.mdDoc "Path to variable state data directory for terraria.";
+        description = mdDoc "Path to variable state data directory for terraria.";
       };
     };
   };
