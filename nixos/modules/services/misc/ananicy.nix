@@ -1,19 +1,38 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStringsSep
+    generators
+    getName
+    maintainers
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkOptionDefault
+    mkPackageOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.ananicy;
+
   configFile = pkgs.writeText "ananicy.conf" (generators.toKeyValue { } cfg.settings);
+
   extraRules = pkgs.writeText "extraRules" (concatMapStringsSep "\n" (l: builtins.toJSON l) cfg.extraRules);
+
   extraTypes = pkgs.writeText "extraTypes" (concatMapStringsSep "\n" (l: builtins.toJSON l) cfg.extraTypes);
+
   extraCgroups = pkgs.writeText "extraCgroups" (concatMapStringsSep "\n" (l: builtins.toJSON l) cfg.extraCgroups);
-  servicename = if ((lib.getName cfg.package) == (lib.getName pkgs.ananicy-cpp)) then "ananicy-cpp" else "ananicy";
+
+  serviceName = if ((getName cfg.package) == (getName pkgs.ananicy-cpp)) then "ananicy-cpp" else "ananicy";
 in
 {
   options = {
     services.ananicy = {
-      enable = mkEnableOption (lib.mdDoc "Ananicy, an auto nice daemon");
+      enable = mkEnableOption (mdDoc "Ananicy, an auto nice daemon");
 
       package = mkPackageOption pkgs "ananicy" {
         example = "ananicy-cpp";
@@ -22,7 +41,7 @@ in
       rulesProvider = mkPackageOption pkgs "ananicy" {
         example = "ananicy-cpp";
       } // {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Which package to copy default rules,types,cgroups from.
         '';
       };
@@ -33,7 +52,7 @@ in
         example = {
           apply_nice = false;
         };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           See <https://github.com/Nefelim4ag/Ananicy/blob/master/ananicy.d/ananicy.conf>
         '';
       };
@@ -41,7 +60,7 @@ in
       extraRules = mkOption {
         type = with types; listOf attrs;
         default = [ ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Rules to write in 'nixRules.rules'. See:
           <https://github.com/Nefelim4ag/Ananicy#configuration>
           <https://gitlab.com/ananicy-cpp/ananicy-cpp/#global-configuration>
@@ -54,7 +73,7 @@ in
       extraTypes = mkOption {
         type = with types; listOf attrs;
         default = [ ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Types to write in 'nixTypes.types'. See:
           <https://gitlab.com/ananicy-cpp/ananicy-cpp/#types>
         '';
@@ -66,7 +85,7 @@ in
       extraCgroups = mkOption {
         type = with types; listOf attrs;
         default = [ ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Cgroups to write in 'nixCgroups.cgroups'. See:
           <https://gitlab.com/ananicy-cpp/ananicy-cpp/#cgroups>
         '';
@@ -113,7 +132,7 @@ in
         apply_sched = mkOD true;
         apply_oom_score_adj = mkOD true;
         apply_cgroup = mkOD true;
-      } // (if ((lib.getName cfg.package) == (lib.getName pkgs.ananicy-cpp)) then {
+      } // (if ((getName cfg.package) == (getName pkgs.ananicy-cpp)) then {
         # https://gitlab.com/ananicy-cpp/ananicy-cpp/-/blob/master/src/config.cpp#L12
         loglevel = mkOD "warn"; # default is info but its spammy
         cgroup_realtime_workaround = mkOD config.systemd.enableUnifiedCgroupHierarchy;
@@ -128,7 +147,7 @@ in
       # https://gitlab.com/ananicy-cpp/ananicy-cpp/#cgroups applies to both ananicy and -cpp
       enableUnifiedCgroupHierarchy = mkDefault false;
       packages = [ cfg.package ];
-      services."${servicename}" = {
+      services."${serviceName}" = {
         wantedBy = [ "default.target" ];
       };
     };
