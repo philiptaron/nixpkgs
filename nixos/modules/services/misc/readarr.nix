@@ -1,19 +1,26 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.readarr;
 in
 {
   options = {
     services.readarr = {
-      enable = mkEnableOption (lib.mdDoc "Readarr");
+      enable = mkEnableOption (mdDoc "Readarr");
 
       dataDir = mkOption {
         type = types.str;
         default = "/var/lib/readarr/";
-        description = lib.mdDoc "The directory where Readarr stores its data files.";
+        description = mdDoc "The directory where Readarr stores its data files.";
       };
 
       package = mkPackageOption pkgs "readarr" { };
@@ -21,7 +28,7 @@ in
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Open ports in the firewall for Readarr
         '';
       };
@@ -29,7 +36,7 @@ in
       user = mkOption {
         type = types.str;
         default = "readarr";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           User account under which Readarr runs.
         '';
       };
@@ -37,7 +44,7 @@ in
       group = mkOption {
         type = types.str;
         default = "readarr";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Group under which Readarr runs.
         '';
       };
