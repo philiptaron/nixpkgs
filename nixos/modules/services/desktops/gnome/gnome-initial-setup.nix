@@ -2,7 +2,17 @@
 
 { config, pkgs, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkRenamedOptionModule
+    optional
+    teams
+    versionOlder
+    ;
+in
 
 let
 
@@ -62,7 +72,7 @@ in
 
     services.gnome.gnome-initial-setup = {
 
-      enable = mkEnableOption (lib.mdDoc "GNOME Initial Setup, a Simple, easy, and safe way to prepare a new system");
+      enable = mkEnableOption (mdDoc "GNOME Initial Setup, a Simple, easy, and safe way to prepare a new system");
 
     };
 
