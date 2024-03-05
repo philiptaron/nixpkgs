@@ -1,15 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.services.magic-wormhole-mailbox-server;
   dataDir = "/var/lib/magic-wormhole-mailbox-server;";
   python = pkgs.python3.withPackages (py: [ py.magic-wormhole-mailbox-server py.twisted ]);
 in
 {
   options.services.magic-wormhole-mailbox-server = {
-    enable = mkEnableOption (lib.mdDoc "Magic Wormhole Mailbox Server");
+    enable = mkEnableOption (mdDoc "Magic Wormhole Mailbox Server");
   };
 
   config = mkIf cfg.enable {
