@@ -1,15 +1,20 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.services.wg-netmanager;
 in
 {
 
   options = {
     services.wg-netmanager = {
-      enable = mkEnableOption (lib.mdDoc "Wireguard network manager");
+      enable = mkEnableOption (mdDoc "Wireguard network manager");
     };
   };
 
