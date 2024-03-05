@@ -1,21 +1,31 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMap
+    escapeShellArgs
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionals
+    types
+    ;
+
   cfg = config.services.agate;
 in
 {
   options = {
     services.agate = {
-      enable = mkEnableOption (lib.mdDoc "Agate Server");
+      enable = mkEnableOption (mdDoc "Agate Server");
 
       package = mkPackageOption pkgs "agate" { };
 
       addresses = mkOption {
         type = types.listOf types.str;
         default = [ "0.0.0.0:1965" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Addresses to listen on, IP:PORT, if you haven't disabled forwarding
           only set IPv4.
         '';
@@ -24,19 +34,19 @@ in
       contentDir = mkOption {
         default = "/var/lib/agate/content";
         type = types.path;
-        description = lib.mdDoc "Root of the content directory.";
+        description = mdDoc "Root of the content directory.";
       };
 
       certificatesDir = mkOption {
         default = "/var/lib/agate/certificates";
         type = types.path;
-        description = lib.mdDoc "Root of the certificate directory.";
+        description = mdDoc "Root of the certificate directory.";
       };
 
       hostnames = mkOption {
         default = [ ];
         type = types.listOf types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Domain name of this Gemini server, enables checking hostname and port
           in requests. (multiple occurrences means basic vhosts)
         '';
@@ -45,20 +55,20 @@ in
       language = mkOption {
         default = null;
         type = types.nullOr types.str;
-        description = lib.mdDoc "RFC 4646 Language code for text/gemini documents.";
+        description = mdDoc "RFC 4646 Language code for text/gemini documents.";
       };
 
       onlyTls_1_3 = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc "Only use TLSv1.3 (default also allows TLSv1.2).";
+        description = mdDoc "Only use TLSv1.3 (default also allows TLSv1.2).";
       };
 
       extraArgs = mkOption {
         type = types.listOf types.str;
         default = [ "" ];
         example = [ "--log-ip" ];
-        description = lib.mdDoc "Extra arguments to use running agate.";
+        description = mdDoc "Extra arguments to use running agate.";
       };
     };
   };
