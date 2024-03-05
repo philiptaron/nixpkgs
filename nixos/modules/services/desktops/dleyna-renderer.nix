@@ -1,7 +1,14 @@
 # dleyna-renderer service.
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+in
 
 {
   ###### interface
@@ -10,7 +17,7 @@ with lib;
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable dleyna-renderer service, a DBus service
           for handling DLNA renderers.
         '';
