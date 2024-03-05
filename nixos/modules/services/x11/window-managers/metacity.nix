@@ -1,8 +1,12 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    singleton
+    ;
 
   cfg = config.services.xserver.windowManager.metacity;
   inherit (pkgs) gnome;
@@ -10,7 +14,7 @@ in
 
 {
   options = {
-    services.xserver.windowManager.metacity.enable = mkEnableOption (lib.mdDoc "metacity");
+    services.xserver.windowManager.metacity.enable = mkEnableOption (mdDoc "metacity");
   };
 
   config = mkIf cfg.enable {
