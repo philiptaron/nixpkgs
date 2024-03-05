@@ -3,7 +3,14 @@
   , motifSupport ? false, lesstif
 }:
 
-with lib;
+let
+  inherit (lib)
+    licenses
+    maintainers
+    optional
+    platforms
+    ;
+in
 stdenv.mkDerivation rec {
   version = "20070122";
   pname = "xcpc";
