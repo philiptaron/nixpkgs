@@ -1,15 +1,30 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    boolToString
+    concatStringsSep
+    foldAttrs
+    isBool
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalAttrs
+    types
+    ;
+
   cfg = config.services.cgminer;
 
   convType = with builtins;
     v: if isBool v then boolToString v else toString v;
+
   mergedHwConfig =
     mapAttrsToList (n: v: ''"${n}": "${(concatStringsSep "," (map convType v))}"'')
       (foldAttrs (n: a: [n] ++ a) [] cfg.hardware);
+
   mergedConfig = with builtins;
     mapAttrsToList (n: v: ''"${n}":  ${if isBool v then convType v else ''"${convType v}"''}'')
       cfg.config;
@@ -31,20 +46,20 @@ in
 
     services.cgminer = {
 
-      enable = mkEnableOption (lib.mdDoc "cgminer, an ASIC/FPGA/GPU miner for bitcoin and litecoin");
+      enable = mkEnableOption (mdDoc "cgminer, an ASIC/FPGA/GPU miner for bitcoin and litecoin");
 
       package = mkPackageOption pkgs "cgminer" { };
 
       user = mkOption {
         type = types.str;
         default = "cgminer";
-        description = lib.mdDoc "User account under which cgminer runs";
+        description = mdDoc "User account under which cgminer runs";
       };
 
       pools = mkOption {
         default = [];  # Run benchmark
         type = types.listOf (types.attrsOf types.str);
-        description = lib.mdDoc "List of pools where to mine";
+        description = mdDoc "List of pools where to mine";
         example = [{
           url = "http://p2pool.org:9332";
           username = "17EUZxTvs9uRmPsjPZSYUU3zCz9iwstudk";
@@ -55,7 +70,7 @@ in
       hardware = mkOption {
         default = []; # Run without options
         type = types.listOf (types.attrsOf (types.either types.str types.int));
-        description= lib.mdDoc "List of config options for every GPU";
+        description= mdDoc "List of config options for every GPU";
         example = [
         {
           intensity = 9;
@@ -82,7 +97,7 @@ in
       config = mkOption {
         default = {};
         type = types.attrsOf (types.either types.bool types.int);
-        description = lib.mdDoc "Additional config";
+        description = mdDoc "Additional config";
         example = {
           auto-fan = true;
           auto-gpu = true;
