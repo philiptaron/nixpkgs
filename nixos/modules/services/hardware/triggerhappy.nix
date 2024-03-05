@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStringsSep
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    optionalString
+    singleton
+    types
+    ;
 
   cfg = config.services.triggerhappy;
 
@@ -22,18 +30,18 @@ let
 
       keys = mkOption {
         type = types.listOf types.str;
-        description = lib.mdDoc "List of keys to match.  Key names as defined in linux/input-event-codes.h";
+        description = mdDoc "List of keys to match.  Key names as defined in linux/input-event-codes.h";
       };
 
       event = mkOption {
         type = types.enum ["press" "hold" "release"];
         default = "press";
-        description = lib.mdDoc "Event to match.";
+        description = mdDoc "Event to match.";
       };
 
       cmd = mkOption {
         type = types.str;
-        description = lib.mdDoc "What to run.";
+        description = mdDoc "What to run.";
       };
 
     };
@@ -52,7 +60,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the {command}`triggerhappy` hotkey daemon.
         '';
       };
@@ -61,7 +69,7 @@ in
         type = types.str;
         default = "nobody";
         example = "root";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           User account under which {command}`triggerhappy` runs.
         '';
       };
@@ -69,10 +77,10 @@ in
       bindings = mkOption {
         type = types.listOf (types.submodule bindingCfg);
         default = [];
-        example = lib.literalExpression ''
+        example = literalExpression ''
           [ { keys = ["PLAYPAUSE"];  cmd = "''${pkgs.mpc-cli}/bin/mpc -q toggle"; } ]
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Key bindings for {command}`triggerhappy`.
         '';
       };
@@ -80,7 +88,7 @@ in
       extraConfig = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Literal contents to append to the end of {command}`triggerhappy` configuration file.
         '';
       };
@@ -108,7 +116,7 @@ in
       };
     };
 
-    services.udev.packages = lib.singleton (pkgs.writeTextFile {
+    services.udev.packages = singleton (pkgs.writeTextFile {
       name = "triggerhappy-udev-rules";
       destination = "/etc/udev/rules.d/61-triggerhappy.rules";
       text = ''
