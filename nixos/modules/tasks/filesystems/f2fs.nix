@@ -1,8 +1,10 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mkIf
+    ;
+
   inInitrd = config.boot.initrd.supportedFilesystems.f2fs or false;
 in
 {
