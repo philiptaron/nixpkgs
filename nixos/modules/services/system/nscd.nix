@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    optionals
+    optionalString
+    types
+    ;
 
   nssModulesPath = config.system.nssModules.path;
   cfg = config.services.nscd;
@@ -20,7 +27,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the Name Service Cache Daemon.
           Disabling this is strongly discouraged, as this effectively disables NSS Lookups
           from all non-glibc NSS modules, including the ones provided by systemd.
@@ -30,7 +37,7 @@ in
       enableNsncd = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to use nsncd instead of nscd from glibc.
           This is a nscd-compatible daemon, that proxies lookups, without any caching.
           Using nscd from glibc is discouraged.
@@ -40,7 +47,7 @@ in
       user = mkOption {
         type = types.str;
         default = "nscd";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           User account under which nscd runs.
         '';
       };
@@ -48,7 +55,7 @@ in
       group = mkOption {
         type = types.str;
         default = "nscd";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           User group under which nscd runs.
         '';
       };
@@ -56,7 +63,7 @@ in
       config = mkOption {
         type = types.lines;
         default = builtins.readFile ./nscd.conf;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration to use for Name Service Cache Daemon.
           Only used in case glibc-nscd is used.
         '';
@@ -68,12 +75,12 @@ in
           if pkgs.stdenv.hostPlatform.libc == "glibc"
           then pkgs.stdenv.cc.libc.bin
           else pkgs.glibc.bin;
-        defaultText = lib.literalExpression ''
+        defaultText = literalExpression ''
           if pkgs.stdenv.hostPlatform.libc == "glibc"
             then pkgs.stdenv.cc.libc.bin
             else pkgs.glibc.bin;
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           package containing the nscd binary to be used by the service.
           Ignored when enableNsncd is set to true.
         '';
@@ -99,7 +106,7 @@ in
     systemd.services.nscd =
       {
         description = "Name Service Cache Daemon"
-          + lib.optionalString cfg.enableNsncd " (nsncd)";
+          + optionalString cfg.enableNsncd " (nsncd)";
 
         before = [ "nss-lookup.target" "nss-user-lookup.target" ];
         wants = [ "nss-lookup.target" "nss-user-lookup.target" ];
@@ -108,7 +115,7 @@ in
 
         environment = { LD_LIBRARY_PATH = nssModulesPath; };
 
-        restartTriggers = lib.optionals (!cfg.enableNsncd) ([
+        restartTriggers = optionals (!cfg.enableNsncd) ([
           config.environment.etc.hosts.source
           config.environment.etc."nsswitch.conf".source
           config.environment.etc."nscd.conf".source
@@ -142,7 +149,7 @@ in
             PIDFile = "/run/nscd/nscd.pid";
             Restart = "always";
             ExecReload =
-              lib.optionals (!cfg.enableNsncd) [
+              optionals (!cfg.enableNsncd) [
                 "${cfg.package}/bin/nscd --invalidate passwd"
                 "${cfg.package}/bin/nscd --invalidate group"
                 "${cfg.package}/bin/nscd --invalidate hosts"
