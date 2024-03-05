@@ -1,8 +1,12 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkOption
+    types
+    ;
+
   cfg = config.hyperv;
 
 in {
@@ -12,21 +16,21 @@ in {
         type = with types; either (enum [ "auto" ]) int;
         default = "auto";
         example = 2048;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The size of the hyper-v base image in MiB.
         '';
       };
       vmDerivationName = mkOption {
         type = types.str;
         default = "nixos-hyperv-${config.system.nixos.label}-${pkgs.stdenv.hostPlatform.system}";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The name of the derivation for the hyper-v appliance.
         '';
       };
       vmFileName = mkOption {
         type = types.str;
         default = "nixos-${config.system.nixos.label}-${pkgs.stdenv.hostPlatform.system}.vhdx";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The file name of the hyper-v appliance.
         '';
       };
