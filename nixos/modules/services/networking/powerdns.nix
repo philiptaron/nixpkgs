@@ -1,20 +1,27 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optional
+    types
+    ;
+
   cfg = config.services.powerdns;
   configDir = pkgs.writeTextDir "pdns.conf" "${cfg.extraConfig}";
   finalConfigDir = if cfg.secretFile == null then configDir else "/run/pdns";
 in {
   options = {
     services.powerdns = {
-      enable = mkEnableOption (lib.mdDoc "PowerDNS domain name server");
+      enable = mkEnableOption (mdDoc "PowerDNS domain name server");
 
       extraConfig = mkOption {
         type = types.lines;
         default = "launch=bind";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           PowerDNS configuration. Refer to
           <https://doc.powerdns.com/authoritative/settings.html>
           for details on supported values.
@@ -25,7 +32,7 @@ in {
         type = types.nullOr types.path;
         default = null;
         example = "/run/keys/powerdns.env";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Environment variables from this file will be interpolated into the
           final config file using envsubst with this syntax: `$ENVIRONMENT`
           or `''${VARIABLE}`.
@@ -47,8 +54,8 @@ in {
       after = [ "network.target" "mysql.service" "postgresql.service" "openldap.service" ];
 
       serviceConfig = {
-        EnvironmentFile = lib.optional (cfg.secretFile != null) cfg.secretFile;
-        ExecStartPre = lib.optional (cfg.secretFile != null)
+        EnvironmentFile = optional (cfg.secretFile != null) cfg.secretFile;
+        ExecStartPre = optional (cfg.secretFile != null)
           (pkgs.writeShellScript "pdns-pre-start" ''
             umask 077
             ${pkgs.envsubst}/bin/envsubst -i "${configDir}/pdns.conf" > ${finalConfigDir}/pdns.conf
