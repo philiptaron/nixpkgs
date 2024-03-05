@@ -1,6 +1,15 @@
 { config, lib, pkgs, ... }:
-with lib;
+
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.seafile;
   settingsFormat = pkgs.formats.ini { };
 
@@ -38,7 +47,7 @@ in
   ###### Interface
 
   options.services.seafile = {
-    enable = mkEnableOption (lib.mdDoc "Seafile server");
+    enable = mkEnableOption (mdDoc "Seafile server");
 
     ccnetSettings = mkOption {
       type = types.submodule {
@@ -49,7 +58,7 @@ in
             SERVICE_URL = mkOption {
               type = types.str;
               example = "https://www.example.com";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Seahub public URL.
               '';
             };
@@ -57,7 +66,7 @@ in
         };
       };
       default = { };
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Configuration for ccnet, see
         <https://manual.seafile.com/config/ccnet-conf/>
         for supported values.
@@ -73,7 +82,7 @@ in
             port = mkOption {
               type = types.port;
               default = 8082;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The tcp port used by seafile fileserver.
               '';
             };
@@ -81,7 +90,7 @@ in
               type = types.str;
               default = "127.0.0.1";
               example = "0.0.0.0";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The binding address used by seafile fileserver.
               '';
             };
@@ -89,7 +98,7 @@ in
         };
       };
       default = { };
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Configuration for seafile-server, see
         <https://manual.seafile.com/config/seafile-conf/>
         for supported values.
@@ -100,7 +109,7 @@ in
       type = types.int;
       default = 4;
       example = 10;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The number of gunicorn worker processes for handling requests.
       '';
     };
@@ -108,7 +117,7 @@ in
     adminEmail = mkOption {
       example = "john@example.com";
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Seafile Seahub Admin Account Email.
       '';
     };
@@ -116,7 +125,7 @@ in
     initialAdminPassword = mkOption {
       example = "someStrongPass";
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Seafile Seahub Admin Account initial password.
         Should be change via Seahub web front-end.
       '';
@@ -127,7 +136,7 @@ in
     seahubExtraConf = mkOption {
       default = "";
       type = types.lines;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra config to append to `seahub_settings.py` file.
         Refer to <https://manual.seafile.com/config/seahub_settings_py/>
         for all available options.
