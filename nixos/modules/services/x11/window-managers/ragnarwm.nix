@@ -1,8 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkPackageOption
+    ;
+
   cfg = config.services.xserver.windowManager.ragnarwm;
 in
 {
@@ -10,7 +16,7 @@ in
 
   options = {
     services.xserver.windowManager.ragnarwm = {
-      enable = mkEnableOption (lib.mdDoc "ragnarwm");
+      enable = mkEnableOption (mdDoc "ragnarwm");
       package = mkPackageOption pkgs "ragnarwm" { };
     };
   };
@@ -22,5 +28,5 @@ in
     environment.systemPackages = [ cfg.package ];
   };
 
-  meta.maintainers = with lib.maintainers; [ sigmanificient ];
+  meta.maintainers = with maintainers; [ sigmanificient ];
 }
