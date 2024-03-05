@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStrings
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.services.tiddlywiki;
   listenParams = concatStrings (mapAttrsToList (n: v: " '${n}=${toString v}' ") cfg.listenOptions);
@@ -10,11 +17,12 @@ let
   name = "tiddlywiki";
   dataDir = "/var/lib/" + name;
 
-in {
+in
+{
 
   options.services.tiddlywiki = {
 
-    enable = mkEnableOption (lib.mdDoc "TiddlyWiki nodejs server");
+    enable = mkEnableOption (mdDoc "TiddlyWiki nodejs server");
 
     listenOptions = mkOption {
       type = types.attrs;
@@ -24,7 +32,7 @@ in {
         readers="(authenticated)";
         port = 3456;
       };
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Parameters passed to `--listen` command.
         Refer to <https://tiddlywiki.com/#WebServer>
         for details on supported values.
