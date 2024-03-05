@@ -1,8 +1,26 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStrings
+    elem
+    elemAt
+    findFirst
+    getAttrFromPath
+    head
+    maintainers
+    mdDoc
+    mkChangedOptionModule
+    mkDefault
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRemovedOptionModule
+    range
+    stringToCharacters
+    types
+    ;
+
   cfg = config.services.kresd;
 
   # Convert systemd-style address specification to kresd config line(s).
@@ -50,7 +68,7 @@ in {
     enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to enable knot-resolver domain name server.
         DNSSEC validation is turned on by default.
         You can run `sudo nc -U /run/knot-resolver/control/1`
@@ -63,7 +81,7 @@ in {
     extraConfig = mkOption {
       type = types.lines;
       default = "";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra lines to be added verbatim to the generated configuration file.
       '';
     };
@@ -71,7 +89,7 @@ in {
       type = with types; listOf str;
       default = [ "[::1]:53" "127.0.0.1:53" ];
       example = [ "53" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         What addresses and ports the server should listen on.
         For detailed syntax see ListenStream in {manpage}`systemd.socket(5)`.
       '';
@@ -80,7 +98,7 @@ in {
       type = with types; listOf str;
       default = [];
       example = [ "198.51.100.1:853" "[2001:db8::1]:853" "853" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Addresses and ports on which kresd should provide DNS over TLS (see RFC 7858).
         For detailed syntax see ListenStream in {manpage}`systemd.socket(5)`.
       '';
@@ -89,7 +107,7 @@ in {
       type = with types; listOf str;
       default = [];
       example = [ "198.51.100.1:443" "[2001:db8::1]:443" "443" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Addresses and ports on which kresd should provide DNS over HTTPS/2 (see RFC 8484).
         For detailed syntax see ListenStream in {manpage}`systemd.socket(5)`.
       '';
@@ -97,7 +115,7 @@ in {
     instances = mkOption {
       type = types.ints.unsigned;
       default = 1;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The number of instances to start.  They will be called kresd@{1,2,...}.service.
         Knot Resolver uses no threads, so this is the way to scale.
         You can dynamically start/stop them at will, so this is just system default.
