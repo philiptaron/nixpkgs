@@ -1,19 +1,29 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalAttrs
+    optionalString
+    types
+    versionAtLeast
+    ;
+
   cfg = config.services.nix-serve;
 in
 {
   options = {
     services.nix-serve = {
-      enable = mkEnableOption (lib.mdDoc "nix-serve, the standalone Nix binary cache server");
+      enable = mkEnableOption (mdDoc "nix-serve, the standalone Nix binary cache server");
 
       port = mkOption {
         type = types.port;
         default = 5000;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Port number where nix-serve will listen on.
         '';
       };
@@ -21,7 +31,7 @@ in
       bindAddress = mkOption {
         type = types.str;
         default = "0.0.0.0";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           IP address where nix-serve will bind its listening socket.
         '';
       };
@@ -31,13 +41,13 @@ in
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Open ports in the firewall for nix-serve.";
+        description = mdDoc "Open ports in the firewall for nix-serve.";
       };
 
       secretKeyFile = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The path to the file used for signing derivation data.
           Generate with:
 
@@ -52,7 +62,7 @@ in
       extraParams = mkOption {
         type = types.separatedString " ";
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra command line parameters for nix-serve.
         '';
       };
@@ -60,7 +70,7 @@ in
   };
 
   config = mkIf cfg.enable {
-    nix.settings = lib.optionalAttrs (lib.versionAtLeast config.nix.package.version "2.4") {
+    nix.settings = optionalAttrs (versionAtLeast config.nix.package.version "2.4") {
       extra-allowed-users = [ "nix-serve" ];
     };
 
@@ -73,7 +83,7 @@ in
       environment.NIX_REMOTE = "daemon";
 
       script = ''
-        ${lib.optionalString (cfg.secretKeyFile != null) ''
+        ${optionalString (cfg.secretKeyFile != null) ''
           export NIX_SECRET_KEY_FILE="$CREDENTIALS_DIRECTORY/NIX_SECRET_KEY_FILE"
         ''}
         exec ${cfg.package}/bin/nix-serve --listen ${cfg.bindAddress}:${toString cfg.port} ${cfg.extraParams}
@@ -85,7 +95,7 @@ in
         User = "nix-serve";
         Group = "nix-serve";
         DynamicUser = true;
-        LoadCredential = lib.optionalString (cfg.secretKeyFile != null)
+        LoadCredential = optionalString (cfg.secretKeyFile != null)
           "NIX_SECRET_KEY_FILE:${cfg.secretKeyFile}";
       };
     };
