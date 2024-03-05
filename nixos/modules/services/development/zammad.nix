@@ -1,8 +1,23 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    filterAttrs
+    literalExpression
+    maintainers
+    mapAttrs
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalAttrs
+    optionals
+    optionalString
+    types
+    ;
+
   cfg = config.services.zammad;
   settingsFormat = pkgs.formats.yaml { };
   filterNull = filterAttrs (_: v: v != null);
@@ -29,14 +44,14 @@ in
 
   options = {
     services.zammad = {
-      enable = mkEnableOption (lib.mdDoc "Zammad, a web-based, open source user support/ticketing solution");
+      enable = mkEnableOption (mdDoc "Zammad, a web-based, open source user support/ticketing solution");
 
       package = mkPackageOption pkgs "zammad" { };
 
       dataDir = mkOption {
         type = types.path;
         default = "/var/lib/zammad";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Path to a folder that will contain Zammad working directory.
         '';
       };
@@ -45,38 +60,38 @@ in
         type = types.str;
         default = "127.0.0.1";
         example = "192.168.23.42";
-        description = lib.mdDoc "Host address.";
+        description = mdDoc "Host address.";
       };
 
       openPorts = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to open firewall ports for Zammad";
+        description = mdDoc "Whether to open firewall ports for Zammad";
       };
 
       port = mkOption {
         type = types.port;
         default = 3000;
-        description = lib.mdDoc "Web service port.";
+        description = mdDoc "Web service port.";
       };
 
       websocketPort = mkOption {
         type = types.port;
         default = 6042;
-        description = lib.mdDoc "Websocket service port.";
+        description = mdDoc "Websocket service port.";
       };
 
       redis = {
         createLocally = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc "Whether to create a local redis automatically.";
+          description = mdDoc "Whether to create a local redis automatically.";
         };
 
         name = mkOption {
           type = types.str;
           default = "zammad";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Name of the redis server. Only used if `createLocally` is set to true.
           '';
         };
@@ -84,7 +99,7 @@ in
         host = mkOption {
           type = types.str;
           default = "localhost";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Redis server address.
           '';
         };
@@ -92,7 +107,7 @@ in
         port = mkOption {
           type = types.port;
           default = 6379;
-          description = lib.mdDoc "Port of the redis server.";
+          description = mdDoc "Port of the redis server.";
         };
       };
 
@@ -101,7 +116,7 @@ in
           type = types.enum [ "PostgreSQL" "MySQL" ];
           default = "PostgreSQL";
           example = "MySQL";
-          description = lib.mdDoc "Database engine to use.";
+          description = mdDoc "Database engine to use.";
         };
 
         host = mkOption {
@@ -116,7 +131,7 @@ in
               MySQL = "localhost";
             }.''${config.services.zammad.database.type};
           '';
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Database host address.
           '';
         };
@@ -124,13 +139,13 @@ in
         port = mkOption {
           type = types.nullOr types.port;
           default = null;
-          description = lib.mdDoc "Database port. Use `null` for default port.";
+          description = mdDoc "Database port. Use `null` for default port.";
         };
 
         name = mkOption {
           type = types.str;
           default = "zammad";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Database name.
           '';
         };
@@ -138,14 +153,14 @@ in
         user = mkOption {
           type = types.nullOr types.str;
           default = "zammad";
-          description = lib.mdDoc "Database user.";
+          description = mdDoc "Database user.";
         };
 
         passwordFile = mkOption {
           type = types.nullOr types.path;
           default = null;
           example = "/run/keys/zammad-dbpassword";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             A file containing the password for {option}`services.zammad.database.user`.
           '';
         };
@@ -153,7 +168,7 @@ in
         createLocally = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc "Whether to create a local database automatically.";
+          description = mdDoc "Whether to create a local database automatically.";
         };
 
         settings = mkOption {
@@ -163,7 +178,7 @@ in
             {
             }
           '';
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The {file}`database.yml` configuration file as key value set.
             See \<TODO\>
             for list of configuration parameters.
@@ -175,7 +190,7 @@ in
         type = types.nullOr types.path;
         default = null;
         example = "/run/keys/secret_key_base";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The path to a file containing the
           `secret_key_base` secret.
 
@@ -357,5 +372,5 @@ in
     };
   };
 
-  meta.maintainers = with lib.maintainers; [ taeer netali ];
+  meta.maintainers = with maintainers; [ taeer netali ];
 }
