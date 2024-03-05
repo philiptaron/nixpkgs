@@ -1,11 +1,25 @@
 { config, lib, pkgs, ... }:
-with lib;
 let
+  inherit (lib)
+    escapeShellArgs
+    getExe
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    optionals
+    types
+    ;
+
   cfg = config.services.foldingathome;
 
   args =
     ["--team" "${toString cfg.team}"]
-    ++ lib.optionals (cfg.user != null) ["--user" cfg.user]
+    ++ optionals (cfg.user != null) ["--user" cfg.user]
     ++ cfg.extraArgs
     ;
 in
@@ -18,14 +32,14 @@ in
     '')
   ];
   options.services.foldingathome = {
-    enable = mkEnableOption (lib.mdDoc "Folding@home client");
+    enable = mkEnableOption (mdDoc "Folding@home client");
 
     package = mkPackageOption pkgs "fahclient" { };
 
     user = mkOption {
       type = types.nullOr types.str;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The user associated with the reported computation results. This will
         be used in the ranking statistics.
       '';
@@ -34,7 +48,7 @@ in
     team = mkOption {
       type = types.int;
       default = 236565;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The team ID associated with the reported computation results. This
         will be used in the ranking statistics.
 
@@ -45,7 +59,7 @@ in
     daemonNiceLevel = mkOption {
       type = types.ints.between (-20) 19;
       default = 0;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Daemon process priority for FAHClient.
         0 is the default Unix process priority, 19 is the lowest.
       '';
@@ -54,7 +68,7 @@ in
     extraArgs = mkOption {
       type = types.listOf types.str;
       default = [];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra startup options for the FAHClient. Run
         `fah-client --help` to find all the available options.
       '';
@@ -67,7 +81,7 @@ in
       after = [ "network.target" ];
       wantedBy = [ "multi-user.target" ];
       script = ''
-        exec ${lib.getExe cfg.package} ${lib.escapeShellArgs args}
+        exec ${getExe cfg.package} ${escapeShellArgs args}
       '';
       serviceConfig = {
         DynamicUser = true;
@@ -79,6 +93,6 @@ in
   };
 
   meta = {
-    maintainers = with lib.maintainers; [ zimbatm ];
+    maintainers = with maintainers; [ zimbatm ];
   };
 }
