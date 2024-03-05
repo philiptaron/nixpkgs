@@ -1,27 +1,34 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.weechat;
 in
 
 {
   options.services.weechat = {
-    enable = mkEnableOption (lib.mdDoc "weechat");
+    enable = mkEnableOption (mdDoc "weechat");
     root = mkOption {
-      description = lib.mdDoc "Weechat state directory.";
+      description = mdDoc "Weechat state directory.";
       type = types.str;
       default = "/var/lib/weechat";
     };
     sessionName = mkOption {
-      description = lib.mdDoc "Name of the `screen` session for weechat.";
+      description = mdDoc "Name of the `screen` session for weechat.";
       default = "weechat-screen";
       type = types.str;
     };
     binary = mkOption {
       type = types.path;
-      description = lib.mdDoc "Binary to execute.";
+      description = mdDoc "Binary to execute.";
       default = "${pkgs.weechat}/bin/weechat";
       defaultText = literalExpression ''"''${pkgs.weechat}/bin/weechat"'';
       example = literalExpression ''"''${pkgs.weechat}/bin/weechat-headless"'';
