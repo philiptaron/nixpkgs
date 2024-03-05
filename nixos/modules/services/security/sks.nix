@@ -1,8 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    literalExpression
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.sks;
   sksPkg = cfg.package;
   dbConfig = pkgs.writeText "DB_CONFIG" ''
@@ -16,7 +27,7 @@ in {
 
     services.sks = {
 
-      enable = mkEnableOption (lib.mdDoc ''
+      enable = mkEnableOption (mdDoc ''
         SKS (synchronizing key server for OpenPGP) and start the database
         server. You need to create "''${dataDir}/dump/*.gpg" for the initial
         import'');
@@ -30,7 +41,7 @@ in {
         # TODO: The default might change to "/var/lib/sks" as this is more
         # common. There's also https://github.com/NixOS/nixpkgs/issues/26256
         # and "/var/db" is not FHS compliant (seems to come from BSD).
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Data directory (-basedir) for SKS, where the database and all
           configuration files are located (e.g. KDB, PTree, membership and
           sksconf).
@@ -40,7 +51,7 @@ in {
       extraDbConfig = mkOption {
         type = types.str;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Set contents of the files "KDB/DB_CONFIG" and "PTree/DB_CONFIG" within
           the ''${dataDir} directory. This is used to configure options for the
           database for the sks key server.
@@ -54,7 +65,7 @@ in {
       hkpAddress = mkOption {
         default = [ "127.0.0.1" "::1" ];
         type = types.listOf types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Domain names, IPv4 and/or IPv6 addresses to listen on for HKP
           requests.
         '';
@@ -63,14 +74,14 @@ in {
       hkpPort = mkOption {
         default = 11371;
         type = types.ints.u16;
-        description = lib.mdDoc "HKP port to listen on.";
+        description = mdDoc "HKP port to listen on.";
       };
 
       webroot = mkOption {
         type = types.nullOr types.path;
         default = "${sksPkg.webSamples}/OpenPKG";
         defaultText = literalExpression ''"''${package.webSamples}/OpenPKG"'';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Source directory (will be symlinked, if not null) for the files the
           built-in webserver should serve. SKS (''${pkgs.sks.webSamples})
           provides the following examples: "HTML5", "OpenPKG", and "XHTML+ES".
@@ -108,7 +119,7 @@ in {
         after = [ "network.target" ];
         wantedBy = [ "multi-user.target" ];
         preStart = ''
-          ${lib.optionalString (cfg.webroot != null)
+          ${optionalString (cfg.webroot != null)
             "ln -sfT \"${cfg.webroot}\" web"}
           mkdir -p dump
           ${sksPkg}/bin/sks build dump/*.gpg -n 10 -cache 100 || true #*/
