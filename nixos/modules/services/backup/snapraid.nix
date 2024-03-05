@@ -1,8 +1,25 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    attrValues
+    concatStringsSep
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRenamedOptionModule
+    optionalAttrs
+    optionalString
+    range
+    splitString
+    types
+    unique
+    zipListsWith
+    ;
 
-let cfg = config.services.snapraid;
+  cfg = config.services.snapraid;
 in
 {
   imports = [
@@ -11,7 +28,7 @@ in
   ];
 
   options.services.snapraid = with types; {
-    enable = mkEnableOption (lib.mdDoc "SnapRAID");
+    enable = mkEnableOption (mdDoc "SnapRAID");
     dataDisks = mkOption {
       default = { };
       example = {
@@ -19,7 +36,7 @@ in
         d2 = "/mnt/disk2/";
         d3 = "/mnt/disk3/";
       };
-      description = lib.mdDoc "SnapRAID data disks.";
+      description = mdDoc "SnapRAID data disks.";
       type = attrsOf str;
     };
     parityFiles = mkOption {
@@ -32,7 +49,7 @@ in
         "/mnt/diskt/snapraid.5-parity"
         "/mnt/disku/snapraid.6-parity"
       ];
-      description = lib.mdDoc "SnapRAID parity files.";
+      description = mdDoc "SnapRAID parity files.";
       type = listOf str;
     };
     contentFiles = mkOption {
@@ -42,46 +59,46 @@ in
         "/mnt/disk1/snapraid.content"
         "/mnt/disk2/snapraid.content"
       ];
-      description = lib.mdDoc "SnapRAID content list files.";
+      description = mdDoc "SnapRAID content list files.";
       type = listOf str;
     };
     exclude = mkOption {
       default = [ ];
       example = [ "*.unrecoverable" "/tmp/" "/lost+found/" ];
-      description = lib.mdDoc "SnapRAID exclude directives.";
+      description = mdDoc "SnapRAID exclude directives.";
       type = listOf str;
     };
     touchBeforeSync = mkOption {
       default = true;
       example = false;
-      description = lib.mdDoc
+      description = mdDoc
         "Whether {command}`snapraid touch` should be run before {command}`snapraid sync`.";
       type = bool;
     };
     sync.interval = mkOption {
       default = "01:00";
       example = "daily";
-      description = lib.mdDoc "How often to run {command}`snapraid sync`.";
+      description = mdDoc "How often to run {command}`snapraid sync`.";
       type = str;
     };
     scrub = {
       interval = mkOption {
         default = "Mon *-*-* 02:00:00";
         example = "weekly";
-        description = lib.mdDoc "How often to run {command}`snapraid scrub`.";
+        description = mdDoc "How often to run {command}`snapraid scrub`.";
         type = str;
       };
       plan = mkOption {
         default = 8;
         example = 5;
-        description = lib.mdDoc
+        description = mdDoc
           "Percent of the array that should be checked by {command}`snapraid scrub`.";
         type = int;
       };
       olderThan = mkOption {
         default = 10;
         example = 20;
-        description = lib.mdDoc
+        description = mdDoc
           "Number of days since data was last scrubbed before it can be scrubbed again.";
         type = int;
       };
@@ -95,7 +112,7 @@ in
         autosave 500
         pool /pool
       '';
-      description = lib.mdDoc "Extra config options for SnapRAID.";
+      description = mdDoc "Extra config options for SnapRAID.";
       type = lines;
     };
   };
@@ -213,7 +230,7 @@ in
             SystemCallFilter = "@system-service";
             SystemCallErrorNumber = "EPERM";
             CapabilityBoundingSet = "CAP_DAC_OVERRIDE" +
-              lib.optionalString cfg.touchBeforeSync " CAP_FOWNER";
+              optionalString cfg.touchBeforeSync " CAP_FOWNER";
 
             ProtectSystem = "strict";
             ProtectHome = "read-only";
