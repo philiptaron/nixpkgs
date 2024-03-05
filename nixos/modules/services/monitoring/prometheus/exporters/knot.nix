@@ -1,8 +1,15 @@
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    literalExpression
+    mdDoc
+    mkOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.knot;
 in {
   port = 9433;
@@ -11,7 +18,7 @@ in {
       type = types.nullOr types.str;
       default = null;
       example = literalExpression ''"''${pkgs.knot-dns.out}/lib/libknot.so"'';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path to the library of `knot-dns`.
       '';
     };
@@ -19,7 +26,7 @@ in {
     knotSocketPath = mkOption {
       type = types.str;
       default = "/run/knot/knot.sock";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Socket path of {manpage}`knotd(8)`.
       '';
     };
@@ -27,7 +34,7 @@ in {
     knotSocketTimeout = mkOption {
       type = types.ints.positive;
       default = 2000;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Timeout in seconds.
       '';
     };
@@ -43,7 +50,7 @@ in {
           --web-listen-port ${toString cfg.port} \
           --knot-socket-path ${cfg.knotSocketPath} \
           --knot-socket-timeout ${toString cfg.knotSocketTimeout} \
-          ${lib.optionalString (cfg.knotLibraryPath != null) "--knot-library-path ${cfg.knotLibraryPath}"} \
+          ${optionalString (cfg.knotLibraryPath != null) "--knot-library-path ${cfg.knotLibraryPath}"} \
           ${concatStringsSep " \\\n  " cfg.extraFlags}
       '';
       SupplementaryGroups = [
