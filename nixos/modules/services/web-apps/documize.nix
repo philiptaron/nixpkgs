@@ -1,8 +1,19 @@
 { pkgs, lib, config, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStrings
+    concatStringsSep
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optional
+    optionalString
+    types
+    ;
+
   cfg = config.services.documize;
 
   mkParams = optional: concatMapStrings (name: let
@@ -12,12 +23,12 @@ let
 
 in {
   options.services.documize = {
-    enable = mkEnableOption (lib.mdDoc "Documize Wiki");
+    enable = mkEnableOption (mdDoc "Documize Wiki");
 
     stateDirectoryName = mkOption {
       type = types.str;
       default = "documize";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The name of the directory below {file}`/var/lib/private`
         where documize runs in and stores, for example, backups.
       '';
@@ -29,7 +40,7 @@ in {
       type = types.nullOr types.str;
       default = null;
       example = "3edIYV6c8B28b19fh";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The salt string used to encode JWT tokens, if not set a random value will be generated.
       '';
     };
@@ -37,7 +48,7 @@ in {
     cert = mkOption {
       type = types.nullOr types.str;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The {file}`cert.pem` file used for https.
       '';
     };
@@ -45,7 +56,7 @@ in {
     key = mkOption {
       type = types.nullOr types.str;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The {file}`key.pem` file used for https.
       '';
     };
@@ -53,7 +64,7 @@ in {
     port = mkOption {
       type = types.port;
       default = 5001;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The http/https port number.
       '';
     };
@@ -61,7 +72,7 @@ in {
     forcesslport = mkOption {
       type = types.nullOr types.port;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Redirect given http port number to TLS.
       '';
     };
@@ -69,7 +80,7 @@ in {
     offline = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Set `true` for offline mode.
       '';
       apply = v: if true == v then 1 else 0;
@@ -78,14 +89,14 @@ in {
     dbtype = mkOption {
       type = types.enum [ "mysql" "percona" "mariadb" "postgresql" "sqlserver" ];
       default = "postgresql";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Specify the database provider: `mysql`, `percona`, `mariadb`, `postgresql`, `sqlserver`
       '';
     };
 
     db = mkOption {
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Database specific connection string for example:
         - MySQL/Percona/MariaDB:
           `user:password@tcp(host:3306)/documize`
@@ -102,7 +113,7 @@ in {
     location = mkOption {
       type = types.nullOr types.str;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         reserved
       '';
     };
