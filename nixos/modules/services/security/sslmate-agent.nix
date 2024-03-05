@@ -1,8 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.services.sslmate-agent;
 
 in {
@@ -10,7 +15,7 @@ in {
 
   options = {
     services.sslmate-agent = {
-      enable = mkEnableOption (lib.mdDoc "sslmate-agent, a daemon for managing SSL/TLS certificates on a server");
+      enable = mkEnableOption (mdDoc "sslmate-agent, a daemon for managing SSL/TLS certificates on a server");
     };
   };
 
