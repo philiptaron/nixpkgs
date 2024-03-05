@@ -1,8 +1,15 @@
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    escapeShellArg
+    literalExpression
+    mdDoc
+    mkOption
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.mikrotik;
 in
 {
@@ -11,7 +18,7 @@ in
     configFile = mkOption {
       type = types.nullOr types.path;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path to a mikrotik exporter configuration file. Mutually exclusive with
         {option}`configuration` option.
       '';
@@ -21,7 +28,7 @@ in
     configuration = mkOption {
       type = types.nullOr types.attrs;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Mikrotik exporter configuration as nix attribute set. Mutually exclusive with
         {option}`configFile` option.
 
