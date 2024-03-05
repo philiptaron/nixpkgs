@@ -1,8 +1,24 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStrings
+    concatMapStringsSep
+    flip
+    getBin
+    literalExpression
+    maintainers
+    mapAttrs
+    mapAttrsToList
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.opensnitch;
   format = pkgs.formats.json {};
 
@@ -28,7 +44,7 @@ in {
                 "type" ="simple";
                 "sensitive" = false;
                 "operand" = "process.path";
-                "data" = "''${lib.getBin pkgs.tor}/bin/tor";
+                "data" = "''${getBin pkgs.tor}/bin/tor";
               };
             };
           };
@@ -203,6 +219,6 @@ in {
 
   };
 
-  meta.maintainers = with lib.maintainers; [ onny ];
+  meta.maintainers = with maintainers; [ onny ];
 }
 
