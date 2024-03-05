@@ -1,5 +1,16 @@
 { config, pkgs, lib, modulesPath, ... }:
-with lib;
+let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkDefault
+    mkIf
+    mkMerge
+    mkOption
+    optional
+    types
+    ;
+in
 {
   imports = [
     (modulesPath + "/profiles/qemu-guest.nix")
@@ -10,19 +21,19 @@ with lib;
       type = bool;
       default = false;
       example = true;
-      description = lib.mdDoc "Whether to set the root password from the Digital Ocean metadata";
+      description = mdDoc "Whether to set the root password from the Digital Ocean metadata";
     };
     setSshKeys = mkOption {
       type = bool;
       default = true;
       example = true;
-      description = lib.mdDoc "Whether to fetch ssh keys from Digital Ocean";
+      description = mdDoc "Whether to fetch ssh keys from Digital Ocean";
     };
     seedEntropy = mkOption {
       type = bool;
       default = true;
       example = true;
-      description = lib.mdDoc "Whether to run the kernel RNG entropy seeding script from the Digital Ocean vendor data";
+      description = mdDoc "Whether to run the kernel RNG entropy seeding script from the Digital Ocean vendor data";
     };
   };
   config =
