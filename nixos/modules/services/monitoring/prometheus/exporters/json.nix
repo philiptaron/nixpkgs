@@ -1,8 +1,15 @@
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    escapeShellArg
+    mdDoc
+    mkOption
+    mkRemovedOptionModule
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.json;
 in
 {
@@ -10,7 +17,7 @@ in
   extraOpts = {
     configFile = mkOption {
       type = types.path;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path to configuration file.
       '';
     };
