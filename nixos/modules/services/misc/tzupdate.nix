@@ -1,15 +1,22 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.tzupdate;
-in {
+in
+{
   options.services.tzupdate = {
     enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Enable the tzupdate timezone updating service. This provides
         a one-shot service which can be activated with systemctl to
         update the timezone.
