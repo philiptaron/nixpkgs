@@ -1,8 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.boot.initrd.network.openvpn;
 
@@ -15,7 +20,7 @@ in
     boot.initrd.network.openvpn.enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Starts an OpenVPN client during initrd boot. It can be used to e.g.
         remotely accessing the SSH service controlled by
         {option}`boot.initrd.network.ssh` or other network services
@@ -25,7 +30,7 @@ in
 
     boot.initrd.network.openvpn.configuration = mkOption {
       type = types.path; # Same type as boot.initrd.secrets
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The configuration file for OpenVPN.
 
         ::: {.warning}
