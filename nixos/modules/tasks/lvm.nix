@@ -1,11 +1,24 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    concatMapStringsSep
+    literalExpression
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkOverride
+    optionalString
+    types
+    ;
+
   cfg = config.services.lvm;
 in {
   options.services.lvm = {
-    enable = mkEnableOption (lib.mdDoc "lvm2") // {
+    enable = mkEnableOption (mdDoc "lvm2") // {
       default = true;
     };
 
@@ -14,19 +27,19 @@ in {
       default = pkgs.lvm2;
       internal = true;
       defaultText = literalExpression "pkgs.lvm2";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         This option allows you to override the LVM package that's used on the system
         (udev rules, tmpfiles, systemd services).
         Defaults to pkgs.lvm2, pkgs.lvm2_dmeventd if dmeventd or pkgs.lvm2_vdo if vdo is enabled.
       '';
     };
-    dmeventd.enable = mkEnableOption (lib.mdDoc "the LVM dmevent daemon");
-    boot.thin.enable = mkEnableOption (lib.mdDoc "support for booting from ThinLVs");
-    boot.vdo.enable = mkEnableOption (lib.mdDoc "support for booting from VDOLVs");
+    dmeventd.enable = mkEnableOption (mdDoc "the LVM dmevent daemon");
+    boot.thin.enable = mkEnableOption (mdDoc "support for booting from ThinLVs");
+    boot.vdo.enable = mkEnableOption (mdDoc "support for booting from VDOLVs");
   };
 
-  options.boot.initrd.services.lvm.enable = mkEnableOption (lib.mdDoc "booting from LVM2 in the initrd") // {
-    description = lib.mdDoc ''
+  options.boot.initrd.services.lvm.enable = mkEnableOption (mdDoc "booting from LVM2 in the initrd") // {
+    description = mdDoc ''
       *This will only be used when systemd is used in stage 1.*
 
       Whether to enable booting from LVM2 in the initrd.
@@ -65,7 +78,7 @@ in {
       boot.initrd = {
         kernelModules = [ "dm-snapshot" "dm-thin-pool" ];
 
-        systemd.initrdBin = lib.mkIf config.boot.initrd.services.lvm.enable [ pkgs.thin-provisioning-tools ];
+        systemd.initrdBin = mkIf config.boot.initrd.services.lvm.enable [ pkgs.thin-provisioning-tools ];
 
         extraUtilsCommands = mkIf (!config.boot.initrd.systemd.enable) ''
           for BIN in ${pkgs.thin-provisioning-tools}/bin/*; do
@@ -91,7 +104,7 @@ in {
         initrd = {
           kernelModules = [ "kvdo" ];
 
-          systemd.initrdBin = lib.mkIf config.boot.initrd.services.lvm.enable [ pkgs.vdo ];
+          systemd.initrdBin = mkIf config.boot.initrd.services.lvm.enable [ pkgs.vdo ];
 
           extraUtilsCommands = mkIf (!config.boot.initrd.systemd.enable)''
             ls ${pkgs.vdo}/bin/ | while read BIN; do
