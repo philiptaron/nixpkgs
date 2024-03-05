@@ -1,14 +1,19 @@
 { config, lib, pkgs, ... }:
 
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkPackageOption
+    ;
+
   cfg = config.services.joycond;
 in
 
-with lib;
-
 {
   options.services.joycond = {
-    enable = mkEnableOption (lib.mdDoc "support for Nintendo Pro Controllers and Joycons");
+    enable = mkEnableOption (mdDoc "support for Nintendo Pro Controllers and Joycons");
 
     package = mkPackageOption pkgs "joycond" { };
   };
