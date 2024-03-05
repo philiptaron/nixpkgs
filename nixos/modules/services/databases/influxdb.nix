@@ -1,8 +1,20 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    hasPrefix
+    max
+    mdDoc
+    mkBefore
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalAttrs
+    partition
+    recursiveUpdate
+    types
+    ;
+
   cfg = config.services.influxdb;
 
   configOptions = recursiveUpdate {
@@ -112,7 +124,7 @@ in
 
       enable = mkOption {
         default = false;
-        description = lib.mdDoc "Whether to enable the influxdb server";
+        description = mdDoc "Whether to enable the influxdb server";
         type = types.bool;
       };
 
@@ -120,25 +132,25 @@ in
 
       user = mkOption {
         default = "influxdb";
-        description = lib.mdDoc "User account under which influxdb runs";
+        description = mdDoc "User account under which influxdb runs";
         type = types.str;
       };
 
       group = mkOption {
         default = "influxdb";
-        description = lib.mdDoc "Group under which influxdb runs";
+        description = mdDoc "Group under which influxdb runs";
         type = types.str;
       };
 
       dataDir = mkOption {
         default = "/var/db/influxdb";
-        description = lib.mdDoc "Data directory for influxd data files.";
+        description = mdDoc "Data directory for influxd data files.";
         type = types.path;
       };
 
       extraConfig = mkOption {
         default = {};
-        description = lib.mdDoc "Extra configuration options for influxdb";
+        description = mdDoc "Extra configuration options for influxdb";
         type = types.attrs;
       };
     };
