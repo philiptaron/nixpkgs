@@ -1,14 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    singleton
+    ;
+
   cfg = config.services.xserver.windowManager.hypr;
 in
 {
   ###### interface
   options = {
-    services.xserver.windowManager.hypr.enable = mkEnableOption (lib.mdDoc "hypr");
+    services.xserver.windowManager.hypr.enable = mkEnableOption (mdDoc "hypr");
   };
 
   ###### implementation
