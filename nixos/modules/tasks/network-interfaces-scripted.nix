@@ -1,9 +1,41 @@
 { config, lib, pkgs, utils, ... }:
 
-with utils;
-with lib;
-
 let
+  inherit (lib)
+    attrNames
+    attrValues
+    concatLists
+    concatMap
+    concatMapStrings
+    concatStrings
+    concatStringsSep
+    const
+    elem
+    escapeShellArg
+    filter
+    filterAttrs
+    flatten
+    flip
+    genAttrs
+    hasAttr
+    hasPrefix
+    listToAttrs
+    mapAttrs
+    mapAttrs'
+    mapAttrsToList
+    mkIf
+    mkMerge
+    nameValuePair
+    optional
+    optionalAttrs
+    optionals
+    optionalString
+    splitString
+    ;
+
+  inherit (utils)
+    escapeSystemdPath
+    ;
 
   cfg = config.networking;
   interfaces = attrValues cfg.interfaces;
@@ -86,12 +118,12 @@ let
 
         needNetworkSetup = cfg.resolvconf.enable || cfg.defaultGateway != null || cfg.defaultGateway6 != null;
 
-        networkLocalCommands = lib.mkIf needNetworkSetup {
+        networkLocalCommands = mkIf needNetworkSetup {
           after = [ "network-setup.service" ];
           bindsTo = [ "network-setup.service" ];
         };
 
-        networkSetup = lib.mkIf needNetworkSetup
+        networkSetup = mkIf needNetworkSetup
           { description = "Networking Setup";
 
             after = [ "network-pre.target" "systemd-udevd.service" "systemd-sysctl.service" ];
@@ -537,7 +569,7 @@ let
         createGreDevice = n: v: nameValuePair "${n}-netdev"
           (let
             deps = deviceDependency v.dev;
-            ttlarg = if lib.hasPrefix "ip6" v.type then "hoplimit" else "ttl";
+            ttlarg = if hasPrefix "ip6" v.type then "hoplimit" else "ttl";
           in
           { description = "GRE Tunnel Interface ${n}";
             wantedBy = [ "network-setup.service" (subsystemDevice n) ];
