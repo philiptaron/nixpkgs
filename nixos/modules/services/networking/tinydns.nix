@@ -1,6 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+in
 
 {
   ###### interface
@@ -10,19 +17,19 @@ with lib;
       enable = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc "Whether to run the tinydns dns server";
+        description = mdDoc "Whether to run the tinydns dns server";
       };
 
       data = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc "The DNS data to serve, in the format described by tinydns-data(8)";
+        description = mdDoc "The DNS data to serve, in the format described by tinydns-data(8)";
       };
 
       ip = mkOption {
         default = "0.0.0.0";
         type = types.str;
-        description = lib.mdDoc "IP address on which to listen for connections";
+        description = mdDoc "IP address on which to listen for connections";
       };
     };
   };
