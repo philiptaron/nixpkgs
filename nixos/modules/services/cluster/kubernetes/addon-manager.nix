@@ -1,8 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStringsSep
+    elem
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   top = config.services.kubernetes;
   cfg = top.addonManager;
 
@@ -18,10 +28,10 @@ let
 in
 {
   ###### interface
-  options.services.kubernetes.addonManager = with lib.types; {
+  options.services.kubernetes.addonManager = with types; {
 
     bootstrapAddons = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Bootstrap addons are like regular addons, but they are applied with cluster-admin rights.
         They are applied at addon-manager startup only.
       '';
@@ -43,7 +53,7 @@ in
     };
 
     addons = mkOption {
-      description = lib.mdDoc "Kubernetes addons (any kind of Kubernetes resource can be an addon).";
+      description = mdDoc "Kubernetes addons (any kind of Kubernetes resource can be an addon).";
       default = { };
       type = attrsOf (either attrs (listOf attrs));
       example = literalExpression ''
@@ -62,7 +72,7 @@ in
       '';
     };
 
-    enable = mkEnableOption (lib.mdDoc "Kubernetes addon manager");
+    enable = mkEnableOption (mdDoc "Kubernetes addon manager");
   };
 
   ###### implementation
@@ -159,7 +169,7 @@ in
     });
 
     services.kubernetes.pki.certs = {
-      addonManager = top.lib.mkCert {
+      addonManager = top.mkCert {
         name = "kube-addon-manager";
         CN = "system:kube-addon-manager";
         action = "systemctl restart kube-addon-manager.service";
