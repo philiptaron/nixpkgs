@@ -1,8 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
 
   cfg = config.services.saslauthd;
 
@@ -16,20 +22,20 @@ in
 
     services.saslauthd = {
 
-      enable = mkEnableOption (lib.mdDoc "saslauthd, the Cyrus SASL authentication daemon");
+      enable = mkEnableOption (mdDoc "saslauthd, the Cyrus SASL authentication daemon");
 
       package = mkPackageOption pkgs [ "cyrus_sasl" "bin" ] { };
 
       mechanism = mkOption {
         type = types.str;
         default = "pam";
-        description = lib.mdDoc "Auth mechanism to use";
+        description = mdDoc "Auth mechanism to use";
       };
 
       config = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc "Configuration to use for Cyrus SASL authentication daemon.";
+        description = mdDoc "Configuration to use for Cyrus SASL authentication daemon.";
       };
 
     };
