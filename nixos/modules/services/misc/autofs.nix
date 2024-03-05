@@ -1,8 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
 
   cfg = config.services.autofs;
 
@@ -21,7 +27,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Mount filesystems on demand. Unmount them automatically.
           You may also be interested in afuse.
         '';
@@ -46,7 +52,7 @@ in
             /auto file:''${mapConf}
           '''
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Contents of `/etc/auto.master` file. See {command}`auto.master(5)` and {command}`autofs(5)`.
         '';
       };
@@ -54,13 +60,13 @@ in
       timeout = mkOption {
         type = types.int;
         default = 600;
-        description = lib.mdDoc "Set the global minimum timeout, in seconds, until directories are unmounted";
+        description = mdDoc "Set the global minimum timeout, in seconds, until directories are unmounted";
       };
 
       debug = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Pass -d and -7 to automount and write log to the system journal.
         '';
       };
