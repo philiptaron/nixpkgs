@@ -1,8 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStringsSep
+    concatStringsSep
+    literalExpression
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.soju;
   stateDir = "/var/lib/soju";
   listenCfg = concatMapStringsSep "\n" (l: "listen ${l}") cfg.listen;
@@ -27,12 +38,12 @@ in
   ###### interface
 
   options.services.soju = {
-    enable = mkEnableOption (lib.mdDoc "soju");
+    enable = mkEnableOption (mdDoc "soju");
 
     listen = mkOption {
       type = types.listOf types.str;
       default = [ ":6697" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Where soju should listen for incoming connections. See the
         `listen` directive in
         {manpage}`soju(1)`.
@@ -43,33 +54,33 @@ in
       type = types.str;
       default = config.networking.hostName;
       defaultText = literalExpression "config.networking.hostName";
-      description = lib.mdDoc "Server hostname.";
+      description = mdDoc "Server hostname.";
     };
 
     tlsCertificate = mkOption {
       type = types.nullOr types.path;
       default = null;
       example = "/var/host.cert";
-      description = lib.mdDoc "Path to server TLS certificate.";
+      description = mdDoc "Path to server TLS certificate.";
     };
 
     tlsCertificateKey = mkOption {
       type = types.nullOr types.path;
       default = null;
       example = "/var/host.key";
-      description = lib.mdDoc "Path to server TLS certificate key.";
+      description = mdDoc "Path to server TLS certificate key.";
     };
 
     enableMessageLogging = mkOption {
       type = types.bool;
       default = true;
-      description = lib.mdDoc "Whether to enable message logging.";
+      description = mdDoc "Whether to enable message logging.";
     };
 
     httpOrigins = mkOption {
       type = types.listOf types.str;
       default = [];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         List of allowed HTTP origins for WebSocket listeners. The parameters are
         interpreted as shell patterns, see
         {manpage}`glob(7)`.
@@ -79,7 +90,7 @@ in
     acceptProxyIP = mkOption {
       type = types.listOf types.str;
       default = [];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Allow the specified IPs to act as a proxy. Proxys have the ability to
         overwrite the remote and local connection addresses (via the X-Forwarded-\*
         HTTP header fields). The special name "localhost" accepts the loopback
@@ -90,7 +101,7 @@ in
     extraConfig = mkOption {
       type = types.lines;
       default = "";
-      description = lib.mdDoc "Lines added verbatim to the configuration file.";
+      description = mdDoc "Lines added verbatim to the configuration file.";
     };
   };
 
