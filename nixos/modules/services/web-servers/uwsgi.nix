@@ -1,8 +1,29 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    any
+    concatStringsSep
+    filter
+    hasPrefix
+    isFunction
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mergeOneOption
+    mkIf
+    mkOption
+    mkOptionType
+    optional
+    optionalAttrs
+    optionals
+    partition
+    stringLength
+    substring
+    types
+    unique
+    ;
+
   cfg = config.services.uwsgi;
 
   isEmperor = cfg.instance.type == "emperor";
@@ -75,13 +96,13 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Enable uWSGI";
+        description = mdDoc "Enable uWSGI";
       };
 
       runDir = mkOption {
         type = types.path;
         default = "/run/uwsgi";
-        description = lib.mdDoc "Where uWSGI communication sockets can live";
+        description = mdDoc "Where uWSGI communication sockets can live";
       };
 
       package = mkOption {
@@ -124,7 +145,7 @@ in {
             };
           }
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           uWSGI configuration. It awaits an attribute `type` inside which can be either
           `normal` or `emperor`.
 
@@ -142,19 +163,19 @@ in {
       plugins = mkOption {
         type = types.listOf types.str;
         default = [];
-        description = lib.mdDoc "Plugins used with uWSGI";
+        description = mdDoc "Plugins used with uWSGI";
       };
 
       user = mkOption {
         type = types.str;
         default = "uwsgi";
-        description = lib.mdDoc "User account under which uWSGI runs.";
+        description = mdDoc "User account under which uWSGI runs.";
       };
 
       group = mkOption {
         type = types.str;
         default = "uwsgi";
-        description = lib.mdDoc "Group account under which uWSGI runs.";
+        description = mdDoc "Group account under which uWSGI runs.";
       };
 
       capabilities = mkOption {
@@ -167,7 +188,7 @@ in {
             "CAP_NET_RAW"          # open raw sockets
           ]
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Grant capabilities to the uWSGI instance. See the
           `capabilities(7)` for available values.
 
