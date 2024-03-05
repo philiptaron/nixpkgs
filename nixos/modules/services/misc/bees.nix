@@ -1,6 +1,22 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    attrNames
+    attrValues
+    escapeShellArgs
+    hasPrefix
+    isString
+    literalExpression
+    mapAttrs'
+    mdDoc
+    mkIf
+    mkOption
+    mod
+    nameValuePair
+    types
+    ;
+in
 
 let
 
@@ -11,7 +27,7 @@ let
   fsOptions = with types; {
     options.spec = mkOption {
       type = str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Description of how to identify the filesystem to be duplicated by this
         instance of bees. Note that deduplication crosses subvolumes; one must
         not configure multiple instances for subvolumes of the same filesystem
@@ -28,7 +44,7 @@ let
     options.hashTableSizeMB = mkOption {
       type = types.addCheck types.int (n: mod n 16 == 0);
       default = 1024; # 1GB; default from upstream beesd script
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Hash table size in MB; must be a multiple of 16.
 
         A larger ratio of index size to storage size means smaller blocks of
@@ -44,12 +60,12 @@ let
       type = types.enum (attrNames logLevels ++ attrValues logLevels);
       apply = v: if isString v then logLevels.${v} else v;
       default = "info";
-      description = lib.mdDoc "Log verbosity (syslog keyword/level).";
+      description = mdDoc "Log verbosity (syslog keyword/level).";
     };
     options.workDir = mkOption {
       type = str;
       default = ".beeshome";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Name (relative to the root of the filesystem) of the subvolume where
         the hash table will be stored.
       '';
@@ -57,7 +73,7 @@ let
     options.extraOptions = mkOption {
       type = listOf str;
       default = [ ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra command-line options passed to the daemon. See upstream bees documentation.
       '';
       example = literalExpression ''
@@ -72,7 +88,7 @@ in
   options.services.beesd = {
     filesystems = mkOption {
       type = with types; attrsOf (submodule fsOptions);
-      description = lib.mdDoc "BTRFS filesystems to run block-level deduplication on.";
+      description = mdDoc "BTRFS filesystems to run block-level deduplication on.";
       default = { };
       example = literalExpression ''
         {
@@ -121,7 +137,7 @@ in
             StartupIOWeight = 25;
             SyslogIdentifier = "beesd"; # would otherwise be "bees-service-wrapper"
           };
-        unitConfig.RequiresMountsFor = lib.mkIf (lib.hasPrefix "/" fs.spec) fs.spec;
+        unitConfig.RequiresMountsFor = mkIf (hasPrefix "/" fs.spec) fs.spec;
         wantedBy = [ "multi-user.target" ];
       })
       cfg.filesystems;
