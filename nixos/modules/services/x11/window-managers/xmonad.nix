@@ -1,8 +1,19 @@
 {pkgs, lib, config, ...}:
 
-with lib;
 let
-  inherit (lib) mkOption mkIf optionals literalExpression optionalString;
+  inherit (lib)
+    escapeShellArgs
+    literalExpression
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionals
+    optionalString
+    types
+    ;
+
   cfg = config.services.xserver.windowManager.xmonad;
 
   ghcWithPackages = cfg.haskellPackages.ghcWithPackages;
@@ -41,14 +52,14 @@ in {
 
   options = {
     services.xserver.windowManager.xmonad = {
-      enable = mkEnableOption (lib.mdDoc "xmonad");
+      enable = mkEnableOption (mdDoc "xmonad");
 
       haskellPackages = mkOption {
         default = pkgs.haskellPackages;
         defaultText = literalExpression "pkgs.haskellPackages";
         example = literalExpression "pkgs.haskell.packages.ghc810";
         type = types.attrs;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           haskellPackages used to build Xmonad and other packages.
           This can be used to change the GHC version used to build
           Xmonad and the packages listed in
@@ -66,7 +77,7 @@ in {
             haskellPackages.monad-logger
           ]
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra packages available to ghc when rebuilding Xmonad. The
           value must be a function which receives the attrset defined
           in {var}`haskellPackages` as the sole argument.
@@ -75,14 +86,14 @@ in {
 
       enableContribAndExtras = mkOption {
         default = false;
-        type = lib.types.bool;
-        description = lib.mdDoc "Enable xmonad-{contrib,extras} in Xmonad.";
+        type = types.bool;
+        description = mdDoc "Enable xmonad-{contrib,extras} in Xmonad.";
       };
 
       config = mkOption {
         default = null;
-        type = with lib.types; nullOr (either path str);
-        description = lib.mdDoc ''
+        type = with types; nullOr (either path str);
+        description = mdDoc ''
           Configuration from which XMonad gets compiled. If no value is
           specified, a vanilla xmonad binary is put in PATH, which will
           attempt to recompile and exec your xmonad config from $HOME/.xmonad.
@@ -161,8 +172,8 @@ in {
 
       enableConfiguredRecompile = mkOption {
         default = false;
-        type = lib.types.bool;
-        description = lib.mdDoc ''
+        type = types.bool;
+        description = mdDoc ''
           Enable recompilation even if {option}`config` is set to a
           non-null value. This adds the necessary Haskell dependencies (GHC with
           packages) to the xmonad binary's environment.
@@ -171,16 +182,16 @@ in {
 
       xmonadCliArgs = mkOption {
         default = [];
-        type = with lib.types; listOf str;
-        description = lib.mdDoc ''
+        type = with types; listOf str;
+        description = mdDoc ''
           Command line arguments passed to the xmonad binary.
         '';
       };
 
       ghcArgs = mkOption {
         default = [];
-        type = with lib.types; listOf str;
-        description = lib.mdDoc ''
+        type = with types; listOf str;
+        description = mdDoc ''
           Command line arguments passed to the compiler (ghc)
           invocation when xmonad.config is set.
         '';
@@ -193,7 +204,7 @@ in {
       session = [{
         name = "xmonad";
         start = ''
-           systemd-cat -t xmonad -- ${xmonad}/bin/xmonad ${lib.escapeShellArgs cfg.xmonadCliArgs} &
+           systemd-cat -t xmonad -- ${xmonad}/bin/xmonad ${escapeShellArgs cfg.xmonadCliArgs} &
            waitPID=$!
         '';
       }];
