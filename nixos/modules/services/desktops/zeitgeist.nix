@@ -2,19 +2,26 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    teams
+    ;
+in
 
 {
 
-  meta = with lib; {
-    maintainers = with maintainers; [ ] ++ teams.pantheon.members;
+  meta = {
+    maintainers = teams.pantheon.members;
   };
 
   ###### interface
 
   options = {
     services.zeitgeist = {
-      enable = mkEnableOption (lib.mdDoc "zeitgeist");
+      enable = mkEnableOption (mdDoc "zeitgeist");
     };
   };
 
