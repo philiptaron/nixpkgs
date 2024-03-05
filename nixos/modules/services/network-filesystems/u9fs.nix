@@ -1,8 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.u9fs;
 in
 {
@@ -14,14 +19,14 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to run the u9fs 9P server for Unix.";
+        description = mdDoc "Whether to run the u9fs 9P server for Unix.";
       };
 
       listenStreams = mkOption {
         type = types.listOf types.str;
         default = [ "564" ];
         example = [ "192.168.16.1:564" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Sockets to listen for clients on.
           See {command}`man 5 systemd.socket` for socket syntax.
         '';
@@ -31,7 +36,7 @@ in
         type = types.str;
         default = "nobody";
         description =
-          lib.mdDoc "User to run u9fs under.";
+          mdDoc "User to run u9fs under.";
       };
 
       extraArgs = mkOption {
@@ -39,7 +44,7 @@ in
         default = "";
         example = "-a none";
         description =
-          lib.mdDoc ''
+          mdDoc ''
             Extra arguments to pass on invocation,
             see {command}`man 4 u9fs`
           '';
