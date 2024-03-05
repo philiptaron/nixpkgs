@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
+
   ts3 = pkgs.teamspeak_server;
   cfg = config.services.teamspeak3;
   user = "teamspeak";
@@ -19,7 +26,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to run the Teamspeak3 voice communication server daemon.
         '';
       };
@@ -27,7 +34,7 @@ in
       dataDir = mkOption {
         type = types.path;
         default = "/var/lib/teamspeak3-server";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Directory to store TS3 database and other state/data files.
         '';
       };
@@ -35,7 +42,7 @@ in
       logPath = mkOption {
         type = types.path;
         default = "/var/log/teamspeak3-server/";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Directory to store log files in.
         '';
       };
@@ -44,7 +51,7 @@ in
         type = types.nullOr types.str;
         default = null;
         example = "[::]";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           IP on which the server instance will listen for incoming voice connections. Defaults to any IP.
         '';
       };
@@ -52,7 +59,7 @@ in
       defaultVoicePort = mkOption {
         type = types.port;
         default = 9987;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Default UDP port for clients to connect to virtual servers - used for first virtual server, subsequent ones will open on incrementing port numbers by default.
         '';
       };
@@ -61,7 +68,7 @@ in
         type = types.nullOr types.str;
         default = null;
         example = "[::]";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           IP on which the server instance will listen for incoming file transfer connections. Defaults to any IP.
         '';
       };
@@ -69,7 +76,7 @@ in
       fileTransferPort = mkOption {
         type = types.port;
         default = 30033;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           TCP port opened for file transfers.
         '';
       };
@@ -78,7 +85,7 @@ in
         type = types.nullOr types.str;
         default = null;
         example = "0.0.0.0";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           IP on which the server instance will listen for incoming ServerQuery connections. Defaults to any IP.
         '';
       };
@@ -86,7 +93,7 @@ in
       queryPort = mkOption {
         type = types.port;
         default = 10011;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           TCP port opened for ServerQuery connections using the raw telnet protocol.
         '';
       };
@@ -94,7 +101,7 @@ in
       querySshPort = mkOption {
         type = types.port;
         default = 10022;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           TCP port opened for ServerQuery connections using the SSH protocol.
         '';
       };
@@ -102,7 +109,7 @@ in
       queryHttpPort = mkOption {
         type = types.port;
         default = 10080;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           TCP port opened for ServerQuery connections using the HTTP protocol.
         '';
       };
@@ -110,13 +117,13 @@ in
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Open ports in the firewall for the TeamSpeak3 server.";
+        description = mdDoc "Open ports in the firewall for the TeamSpeak3 server.";
       };
 
       openFirewallServerQuery = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Open ports in the firewall for the TeamSpeak3 serverquery (administration) system. Requires openFirewall.";
+        description = mdDoc "Open ports in the firewall for the TeamSpeak3 serverquery (administration) system. Requires openFirewall.";
       };
 
     };
@@ -181,5 +188,5 @@ in
     };
   };
 
-  meta.maintainers = with lib.maintainers; [ arobyn ];
+  meta.maintainers = with maintainers; [ arobyn ];
 }
