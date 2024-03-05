@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.ankisyncd;
 
   name = "ankisyncd";
@@ -22,26 +29,26 @@ let
 in
   {
     options.services.ankisyncd = {
-      enable = mkEnableOption (lib.mdDoc "ankisyncd");
+      enable = mkEnableOption (mdDoc "ankisyncd");
 
       package = mkPackageOption pkgs "ankisyncd" { };
 
       host = mkOption {
         type = types.str;
         default = "localhost";
-        description = lib.mdDoc "ankisyncd host";
+        description = mdDoc "ankisyncd host";
       };
 
       port = mkOption {
         type = types.port;
         default = 27701;
-        description = lib.mdDoc "ankisyncd port";
+        description = mdDoc "ankisyncd port";
       };
 
       openFirewall = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc "Whether to open the firewall for the specified port.";
+        description = mdDoc "Whether to open the firewall for the specified port.";
       };
     };
 
