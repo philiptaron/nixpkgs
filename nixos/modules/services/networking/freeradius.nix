@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optional
+    optionalString
+    types
+    ;
 
   cfg = config.services.freeradius;
 
@@ -33,12 +40,12 @@ let
   };
 
   freeradiusConfig = {
-    enable = mkEnableOption (lib.mdDoc "the freeradius server");
+    enable = mkEnableOption (mdDoc "the freeradius server");
 
     configDir = mkOption {
       type = types.path;
       default = "/etc/raddb";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The path of the freeradius server configuration directory.
       '';
     };
@@ -46,7 +53,7 @@ let
     debug = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to enable debug logging for freeradius (-xx
         option). This should not be left on, since it includes
         sensitive data such as passwords in the logs.
