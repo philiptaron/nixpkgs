@@ -1,8 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    literalExpression
+    mapAttrs
+    mapAttrsToList
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    teams
+    types
+    ;
+
   cfg = config.services.jigasi;
   homeDirName = "jigasi-home";
   stateDir = "/tmp";
@@ -233,5 +244,5 @@ in
       mkDefault "${stateDir}/logging.properties-journal";
   };
 
-  meta.maintainers = lib.teams.jitsi.members;
+  meta.maintainers = teams.jitsi.members;
 }
