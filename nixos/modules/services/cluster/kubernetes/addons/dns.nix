@@ -1,21 +1,37 @@
 { config, options, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    literalExpression
+    literalMD
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    singleton
+    splitString
+    take
+    types
+    ;
+
   version = "1.10.1";
+
   cfg = config.services.kubernetes.addons.dns;
+
   ports = {
     dns = 10053;
     health = 10054;
     metrics = 10055;
   };
-in {
+in
+{
   options.services.kubernetes.addons.dns = {
-    enable = mkEnableOption (lib.mdDoc "kubernetes dns addon");
+    enable = mkEnableOption (mdDoc "kubernetes dns addon");
 
     clusterIp = mkOption {
-      description = lib.mdDoc "Dns addon clusterIP";
+      description = mdDoc "Dns addon clusterIP";
 
       # this default is also what kubernetes users
       default = (
@@ -31,19 +47,19 @@ in {
     };
 
     clusterDomain = mkOption {
-      description = lib.mdDoc "Dns cluster domain";
+      description = mdDoc "Dns cluster domain";
       default = "cluster.local";
       type = types.str;
     };
 
     replicas = mkOption {
-      description = lib.mdDoc "Number of DNS pod replicas to deploy in the cluster.";
+      description = mdDoc "Number of DNS pod replicas to deploy in the cluster.";
       default = 2;
       type = types.int;
     };
 
     reconcileMode = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Controls the addon manager reconciliation mode for the DNS addon.
 
         Setting reconcile mode to EnsureExists makes it possible to tailor DNS behavior by editing the coredns ConfigMap.
@@ -55,7 +71,7 @@ in {
     };
 
     coredns = mkOption {
-      description = lib.mdDoc "Docker image to seed for the CoreDNS container.";
+      description = mdDoc "Docker image to seed for the CoreDNS container.";
       type = types.attrs;
       default = {
         imageName = "coredns/coredns";
@@ -66,7 +82,7 @@ in {
     };
 
     corefile = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Custom coredns corefile configuration.
 
         See: <https://coredns.io/manual/toc/#configuration>.
