@@ -1,8 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    getExe
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOptionMD
+    optionalString
+    types
+    ;
+
   cfg = config.services.xrdp;
 
   confDir = pkgs.runCommand "xrdp.conf" { preferLocalBuild = true; } ''
@@ -14,7 +25,7 @@ let
     cat > $out/startwm.sh <<EOF
     #!/bin/sh
     . /etc/profile
-    ${lib.optionalString cfg.audio.enable "${cfg.audio.package}/libexec/pulsaudio-xrdp-module/pulseaudio_xrdp_init"}
+    ${optionalString cfg.audio.enable "${cfg.audio.package}/libexec/pulsaudio-xrdp-module/pulseaudio_xrdp_init"}
     ${cfg.defaultWindowManager}
     EOF
     chmod +x $out/startwm.sh
@@ -49,19 +60,19 @@ in
 
     services.xrdp = {
 
-      enable = mkEnableOption (lib.mdDoc "xrdp, the Remote Desktop Protocol server");
+      enable = mkEnableOption (mdDoc "xrdp, the Remote Desktop Protocol server");
 
       package = mkPackageOptionMD pkgs "xrdp" { };
 
       audio = {
-        enable = mkEnableOption (lib.mdDoc "audio support for xrdp sessions. So far it only works with PulseAudio sessions on the server side. No PipeWire support yet");
+        enable = mkEnableOption (mdDoc "audio support for xrdp sessions. So far it only works with PulseAudio sessions on the server side. No PipeWire support yet");
         package = mkPackageOptionMD pkgs "pulseaudio-module-xrdp" {};
       };
 
       port = mkOption {
         type = types.port;
         default = 3389;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Specifies on which port the xrdp daemon listens.
         '';
       };
@@ -69,14 +80,14 @@ in
       openFirewall = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc "Whether to open the firewall for the specified RDP port.";
+        description = mdDoc "Whether to open the firewall for the specified RDP port.";
       };
 
       sslKey = mkOption {
         type = types.str;
         default = "/etc/xrdp/key.pem";
         example = "/path/to/your/key.pem";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           ssl private key path
           A self-signed certificate will be generated if file not exists.
         '';
@@ -86,7 +97,7 @@ in
         type = types.str;
         default = "/etc/xrdp/cert.pem";
         example = "/path/to/your/cert.pem";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           ssl certificate path
           A self-signed certificate will be generated if file not exists.
         '';
@@ -96,7 +107,7 @@ in
         type = types.str;
         default = "xterm";
         example = "xfce4-session";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The script to run when user log in, usually a window manager, e.g. "icewm", "xfce4-session"
           This is per-user overridable, if file ~/startwm.sh exists it will be used instead.
         '';
@@ -106,7 +117,7 @@ in
         type = types.path;
         default = confDir;
         internal = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration directory of xrdp and sesman.
 
           Changes to this must be made through extraConfDirCommands.
@@ -117,7 +128,7 @@ in
       extraConfDirCommands = mkOption {
         type = types.str;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra commands to run on the default confDir derivation.
         '';
         example = ''
@@ -131,7 +142,7 @@ in
 
   ###### implementation
 
-  config = lib.mkMerge [
+  config = mkMerge [
     (mkIf cfg.audio.enable {
       environment.systemPackages = [ cfg.audio.package ];  # needed for autostart
 
@@ -170,7 +181,7 @@ in
             if [ ! -s ${cfg.sslCert} -o ! -s ${cfg.sslKey} ]; then
               mkdir -p $(dirname ${cfg.sslCert}) || true
               mkdir -p $(dirname ${cfg.sslKey}) || true
-              ${lib.getExe pkgs.openssl} req -x509 -newkey rsa:2048 -sha256 -nodes -days 365 \
+              ${getExe pkgs.openssl} req -x509 -newkey rsa:2048 -sha256 -nodes -days 365 \
                 -subj /C=US/ST=CA/L=Sunnyvale/O=xrdp/CN=www.xrdp.org \
                 -config ${cfg.package}/share/xrdp/openssl.conf \
                 -keyout ${cfg.sslKey} -out ${cfg.sslCert}
