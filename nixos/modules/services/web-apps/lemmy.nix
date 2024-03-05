@@ -1,6 +1,24 @@
 { lib, pkgs, config, utils, ... }:
-with lib;
 let
+  inherit (lib)
+    filterAttrs
+    foldlAttrs
+    hasAttrByPath
+    maintainers
+    mapAttrs
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRemovedOptionModule
+    optionals
+    recursiveUpdate
+    setAttrByPath
+    types
+    ;
+
   cfg = config.services.lemmy;
   settingsFormat = pkgs.formats.json { };
 in
@@ -14,7 +32,7 @@ in
 
   options.services.lemmy = {
 
-    enable = mkEnableOption (lib.mdDoc "lemmy a federated alternative to reddit in rust");
+    enable = mkEnableOption (mdDoc "lemmy a federated alternative to reddit in rust");
 
     server = {
       package = mkPackageOption pkgs "lemmy-server" {};
@@ -26,50 +44,50 @@ in
       port = mkOption {
         type = types.port;
         default = 1234;
-        description = lib.mdDoc "Port where lemmy-ui should listen for incoming requests.";
+        description = mdDoc "Port where lemmy-ui should listen for incoming requests.";
       };
     };
 
-    caddy.enable = mkEnableOption (lib.mdDoc "exposing lemmy with the caddy reverse proxy");
-    nginx.enable = mkEnableOption (lib.mdDoc "exposing lemmy with the nginx reverse proxy");
+    caddy.enable = mkEnableOption (mdDoc "exposing lemmy with the caddy reverse proxy");
+    nginx.enable = mkEnableOption (mdDoc "exposing lemmy with the nginx reverse proxy");
 
     database = {
-      createLocally = mkEnableOption (lib.mdDoc "creation of database on the instance");
+      createLocally = mkEnableOption (mdDoc "creation of database on the instance");
 
       uri = mkOption {
         type = with types; nullOr str;
         default = null;
-        description = lib.mdDoc "The connection URI to use. Takes priority over the configuration file if set.";
+        description = mdDoc "The connection URI to use. Takes priority over the configuration file if set.";
       };
 
       uriFile = mkOption {
         type = with types; nullOr path;
         default = null;
-        description = lib.mdDoc "File which contains the database uri.";
+        description = mdDoc "File which contains the database uri.";
       };
     };
 
     pictrsApiKeyFile = mkOption {
       type = with types; nullOr path;
       default = null;
-      description = lib.mdDoc "File which contains the value of `pictrs.api_key`.";
+      description = mdDoc "File which contains the value of `pictrs.api_key`.";
     };
 
     smtpPasswordFile = mkOption {
       type = with types; nullOr path;
       default = null;
-      description = lib.mdDoc "File which contains the value of `email.smtp_password`.";
+      description = mdDoc "File which contains the value of `email.smtp_password`.";
     };
 
     adminPasswordFile = mkOption {
       type = with types; nullOr path;
       default = null;
-      description = lib.mdDoc "File which contains the value of `setup.admin_password`.";
+      description = mdDoc "File which contains the value of `setup.admin_password`.";
     };
 
     settings = mkOption {
       default = { };
-      description = lib.mdDoc "Lemmy configuration";
+      description = mdDoc "Lemmy configuration";
 
       type = types.submodule {
         freeformType = settingsFormat.type;
@@ -77,25 +95,25 @@ in
         options.hostname = mkOption {
           type = types.str;
           default = null;
-          description = lib.mdDoc "The domain name of your instance (eg 'lemmy.ml').";
+          description = mdDoc "The domain name of your instance (eg 'lemmy.ml').";
         };
 
         options.port = mkOption {
           type = types.port;
           default = 8536;
-          description = lib.mdDoc "Port where lemmy should listen for incoming requests.";
+          description = mdDoc "Port where lemmy should listen for incoming requests.";
         };
 
         options.captcha = {
           enabled = mkOption {
             type = types.bool;
             default = true;
-            description = lib.mdDoc "Enable Captcha.";
+            description = mdDoc "Enable Captcha.";
           };
           difficulty = mkOption {
             type = types.enum [ "easy" "medium" "hard" ];
             default = "medium";
-            description = lib.mdDoc "The difficultly of the captcha to solve.";
+            description = mdDoc "The difficultly of the captcha to solve.";
           };
         };
       };
@@ -110,10 +128,10 @@ in
         adminPasswordFile = { setting = [ "setup" "admin_password" ]; path = cfg.adminPasswordFile; };
         uriFile = { setting = [ "database" "uri" ]; path = cfg.database.uriFile; };
       };
-      secrets = lib.filterAttrs (option: data: data.path != null) secretOptions;
+      secrets = filterAttrs (option: data: data.path != null) secretOptions;
     in
-    lib.mkIf cfg.enable {
-      services.lemmy.settings = lib.attrsets.recursiveUpdate (mapAttrs (name: mkDefault)
+    mkIf cfg.enable {
+      services.lemmy.settings = recursiveUpdate (mapAttrs (name: mkDefault)
         {
           bind = "127.0.0.1";
           tls_enabled = true;
@@ -138,7 +156,7 @@ in
             database = "lemmy";
             pool_size = 5;
           };
-        }) (lib.foldlAttrs (acc: option: data: acc // lib.setAttrByPath data.setting { _secret = option; }) {} secrets);
+        }) (foldlAttrs (acc: option: data: acc // setAttrByPath data.setting { _secret = option; }) {} secrets);
         # the option name is the id of the credential loaded by LoadCredential
 
       services.postgresql = mkIf cfg.database.createLocally {
@@ -258,9 +276,9 @@ in
 
         wantedBy = [ "multi-user.target" ];
 
-        after = [ "pict-rs.service" ] ++ lib.optionals cfg.database.createLocally [ "postgresql.service" ];
+        after = [ "pict-rs.service" ] ++ optionals cfg.database.createLocally [ "postgresql.service" ];
 
-        requires = lib.optionals cfg.database.createLocally [ "postgresql.service" ];
+        requires = optionals cfg.database.createLocally [ "postgresql.service" ];
 
         # substitute secrets and prevent others from reading the result
         # if somehow $CREDENTIALS_DIRECTORY is not set we fail
@@ -275,7 +293,7 @@ in
           DynamicUser = true;
           RuntimeDirectory = "lemmy";
           ExecStart = "${cfg.server.package}/bin/lemmy_server";
-          LoadCredential = lib.foldlAttrs (acc: option: data: acc ++ [ "${option}:${toString data.path}" ]) [] secrets;
+          LoadCredential = foldlAttrs (acc: option: data: acc ++ [ "${option}:${toString data.path}" ]) [] secrets;
           PrivateTmp = true;
           MemoryDenyWriteExecute = true;
           NoNewPrivileges = true;
