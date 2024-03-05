@@ -1,7 +1,15 @@
 { config, pkgs, lib, ... }:
 
-with lib;
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.jellyseerr;
 in
 {
