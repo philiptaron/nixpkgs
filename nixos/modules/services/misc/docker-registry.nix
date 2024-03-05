@@ -1,8 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optional
+    optionalAttrs
+    recursiveUpdate
+    types
+    ;
+
   cfg = config.services.dockerRegistry;
 
   blobCache = if cfg.enableRedisCache
@@ -43,22 +53,23 @@ let
 
   configFile = pkgs.writeText "docker-registry-config.yml" (builtins.toJSON (recursiveUpdate registryConfig cfg.extraConfig));
 
-in {
+in
+{
   options.services.dockerRegistry = {
-    enable = mkEnableOption (lib.mdDoc "Docker Registry");
+    enable = mkEnableOption (mdDoc "Docker Registry");
 
     package = mkPackageOption pkgs "docker-distribution" {
       example = "gitlab-container-registry";
     };
 
     listenAddress = mkOption {
-      description = lib.mdDoc "Docker registry host or ip to bind to.";
+      description = mdDoc "Docker registry host or ip to bind to.";
       default = "127.0.0.1";
       type = types.str;
     };
 
     port = mkOption {
-      description = lib.mdDoc "Docker registry port to bind to.";
+      description = mdDoc "Docker registry port to bind to.";
       default = 5000;
       type = types.port;
     };
@@ -66,13 +77,13 @@ in {
     openFirewall = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc "Opens the port used by the firewall.";
+      description = mdDoc "Opens the port used by the firewall.";
     };
 
     storagePath = mkOption {
       type = types.nullOr types.path;
       default = "/var/lib/docker-registry";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Docker registry storage path for the filesystem storage backend. Set to
         null to configure another backend via extraConfig.
       '';
@@ -81,37 +92,37 @@ in {
     enableDelete = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc "Enable delete for manifests and blobs.";
+      description = mdDoc "Enable delete for manifests and blobs.";
     };
 
-    enableRedisCache = mkEnableOption (lib.mdDoc "redis as blob cache");
+    enableRedisCache = mkEnableOption (mdDoc "redis as blob cache");
 
     redisUrl = mkOption {
       type = types.str;
       default = "localhost:6379";
-      description = lib.mdDoc "Set redis host and port.";
+      description = mdDoc "Set redis host and port.";
     };
 
     redisPassword = mkOption {
       type = types.str;
       default = "";
-      description = lib.mdDoc "Set redis password.";
+      description = mdDoc "Set redis password.";
     };
 
     extraConfig = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Docker extra registry configuration via environment variables.
       '';
       default = {};
       type = types.attrs;
     };
 
-    enableGarbageCollect = mkEnableOption (lib.mdDoc "garbage collect");
+    enableGarbageCollect = mkEnableOption (mdDoc "garbage collect");
 
     garbageCollectDates = mkOption {
       default = "daily";
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Specification (in the format described by
         {manpage}`systemd.time(7)`) of the time at
         which the garbage collect will occur.
