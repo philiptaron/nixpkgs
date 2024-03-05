@@ -1,8 +1,17 @@
 { config, lib, pkgs, utils, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    getBin
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkForce
+    mkIf
+    mkOption
+    types
+    ;
+
   xcfg = config.services.xserver;
   cfg = xcfg.desktopManager.deepin;
 
@@ -15,23 +24,23 @@ in
   options = {
 
     services.xserver.desktopManager.deepin = {
-      enable = mkEnableOption (lib.mdDoc "Deepin desktop manager");
+      enable = mkEnableOption (mdDoc "Deepin desktop manager");
       extraGSettingsOverrides = mkOption {
         default = "";
         type = types.lines;
-        description = lib.mdDoc "Additional gsettings overrides.";
+        description = mdDoc "Additional gsettings overrides.";
       };
       extraGSettingsOverridePackages = mkOption {
         default = [ ];
         type = types.listOf types.path;
-        description = lib.mdDoc "List of packages for which gsettings are overridden.";
+        description = mdDoc "List of packages for which gsettings are overridden.";
       };
     };
 
     environment.deepin.excludePackages = mkOption {
       default = [ ];
       type = types.listOf types.package;
-      description = lib.mdDoc "List of default packages to exclude from the configuration";
+      description = mdDoc "List of default packages to exclude from the configuration";
     };
 
   };
@@ -43,7 +52,7 @@ in
 
       # Update the DBus activation environment after launching the desktop manager.
       services.xserver.displayManager.sessionCommands = ''
-        ${lib.getBin pkgs.dbus}/bin/dbus-update-activation-environment --systemd --all
+        ${getBin pkgs.dbus}/bin/dbus-update-activation-environment --systemd --all
       '';
 
       hardware.bluetooth.enable = mkDefault true;
