@@ -1,8 +1,18 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    escapeShellArg
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRemovedOptionModule
+    optional
+    optionalString
+    types
+    ;
   cfg = config.services.cfdyndns;
 in
 {
@@ -14,11 +24,11 @@ in
 
   options = {
     services.cfdyndns = {
-      enable = mkEnableOption (lib.mdDoc "Cloudflare Dynamic DNS Client");
+      enable = mkEnableOption (mdDoc "Cloudflare Dynamic DNS Client");
 
       email = mkOption {
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The email address to use to authenticate to CloudFlare.
         '';
       };
@@ -26,7 +36,7 @@ in
       apiTokenFile = mkOption {
         default = null;
         type = types.nullOr types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The path to a file containing the API Token
           used to authenticate with CloudFlare.
         '';
@@ -35,7 +45,7 @@ in
       apikeyFile = mkOption {
         default = null;
         type = types.nullOr types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The path to a file containing the API Key
           used to authenticate with CloudFlare.
         '';
@@ -45,7 +55,7 @@ in
         default = [];
         example = [ "host.tld" ];
         type = types.listOf types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The records to update in CloudFlare.
         '';
       };
@@ -60,7 +70,7 @@ in
       startAt = "*:0/5";
       serviceConfig = {
         Type = "simple";
-        LoadCredential = lib.optional (cfg.apiTokenFile != null) "CLOUDFLARE_APITOKEN_FILE:${cfg.apiTokenFile}";
+        LoadCredential = optional (cfg.apiTokenFile != null) "CLOUDFLARE_APITOKEN_FILE:${cfg.apiTokenFile}";
         DynamicUser = true;
       };
       environment = {
