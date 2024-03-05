@@ -1,19 +1,31 @@
 { config, lib, pkgs, ... }:
-with lib;
+
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkForce
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.mainsail;
   moonraker = config.services.moonraker;
 in
 {
   options.services.mainsail = {
-    enable = mkEnableOption (lib.mdDoc "a modern and responsive user interface for Klipper");
+    enable = mkEnableOption (mdDoc "a modern and responsive user interface for Klipper");
 
     package = mkPackageOption pkgs "mainsail" { };
 
     hostName = mkOption {
       type = types.str;
       default = "localhost";
-      description = lib.mdDoc "Hostname to serve mainsail on";
+      description = mdDoc "Hostname to serve mainsail on";
     };
 
     nginx = mkOption {
@@ -25,7 +37,7 @@ in
           serverAliases = [ "mainsail.''${config.networking.domain}" ];
         }
       '';
-      description = lib.mdDoc "Extra configuration for the nginx virtual host of mainsail.";
+      description = mdDoc "Extra configuration for the nginx virtual host of mainsail.";
     };
   };
 
