@@ -1,8 +1,13 @@
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    mdDoc
+    mkOption
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.v2ray;
 in
 {
@@ -11,7 +16,7 @@ in
     v2rayEndpoint = mkOption {
       type = types.str;
       default = "127.0.0.1:54321";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         v2ray grpc api endpoint
       '';
     };
