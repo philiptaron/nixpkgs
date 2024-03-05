@@ -1,15 +1,26 @@
 { config, lib, pkgs, utils, ... }:
-with utils;
-with systemdUtils.unitOptions;
-with lib;
 
 let
-  cfg = config.systemd.user;
+  inherit (lib)
+    any
+    attrValues
+    concatStringsSep
+    filterAttrs
+    mapAttrs
+    mapAttrs'
+    mdDoc
+    mkOption
+    nameValuePair
+    optional
+    optionalString
+    types
+    ;
 
-  systemd = config.systemd.package;
+  inherit (utils)
+    systemdUtils
+    ;
 
-  inherit
-    (systemdUtils.lib)
+  inherit (utils.systemdUtils.lib)
     makeUnit
     generateUnits
     targetToUnit
@@ -18,6 +29,10 @@ let
     socketToUnit
     timerToUnit
     pathToUnit;
+
+  cfg = config.systemd.user;
+
+  systemd = config.systemd.package;
 
   upstreamUserUnits = [
     "app.slice"
@@ -59,14 +74,14 @@ in {
       default = "";
       type = types.lines;
       example = "DefaultCPUAccounting=yes";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra config options for systemd user instances. See {manpage}`systemd-user.conf(5)` for
         available options.
       '';
     };
 
     systemd.user.units = mkOption {
-      description = lib.mdDoc "Definition of systemd per-user units.";
+      description = mdDoc "Definition of systemd per-user units.";
       default = {};
       type = systemdUtils.types.units;
     };
@@ -74,37 +89,37 @@ in {
     systemd.user.paths = mkOption {
       default = {};
       type = systemdUtils.types.paths;
-      description = lib.mdDoc "Definition of systemd per-user path units.";
+      description = mdDoc "Definition of systemd per-user path units.";
     };
 
     systemd.user.services = mkOption {
       default = {};
       type = systemdUtils.types.services;
-      description = lib.mdDoc "Definition of systemd per-user service units.";
+      description = mdDoc "Definition of systemd per-user service units.";
     };
 
     systemd.user.slices = mkOption {
       default = {};
       type = systemdUtils.types.slices;
-      description = lib.mdDoc "Definition of systemd per-user slice units.";
+      description = mdDoc "Definition of systemd per-user slice units.";
     };
 
     systemd.user.sockets = mkOption {
       default = {};
       type = systemdUtils.types.sockets;
-      description = lib.mdDoc "Definition of systemd per-user socket units.";
+      description = mdDoc "Definition of systemd per-user socket units.";
     };
 
     systemd.user.targets = mkOption {
       default = {};
       type = systemdUtils.types.targets;
-      description = lib.mdDoc "Definition of systemd per-user target units.";
+      description = mdDoc "Definition of systemd per-user target units.";
     };
 
     systemd.user.timers = mkOption {
       default = {};
       type = systemdUtils.types.timers;
-      description = lib.mdDoc "Definition of systemd per-user timer units.";
+      description = mdDoc "Definition of systemd per-user timer units.";
     };
 
     systemd.user.tmpfiles = {
@@ -112,7 +127,7 @@ in {
         type = types.listOf types.str;
         default = [];
         example = [ "D %C - - - 7d" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Global user rules for creation, deletion and cleaning of volatile and
           temporary files automatically. See
           {manpage}`tmpfiles.d(5)`
@@ -148,7 +163,7 @@ in {
       default = [];
       type = types.listOf types.str;
       example = [];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Additional units shipped with systemd that should be enabled for per-user systemd instances.
       '';
       internal = true;
