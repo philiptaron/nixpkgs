@@ -1,8 +1,17 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOptionMD
+    optionalString
+    types
+    ;
+
   cfg = config.services.teeworlds;
   register = cfg.register;
 
@@ -93,20 +102,20 @@ in
 {
   options = {
     services.teeworlds = {
-      enable = mkEnableOption (lib.mdDoc "Teeworlds Server");
+      enable = mkEnableOption (mdDoc "Teeworlds Server");
 
       package = mkPackageOptionMD pkgs "teeworlds-server" { };
 
       openPorts = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to open firewall ports for Teeworlds.";
+        description = mdDoc "Whether to open firewall ports for Teeworlds.";
       };
 
       name = mkOption {
         type = types.str;
         default = "unnamed server";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Name of the server.
         '';
       };
@@ -115,7 +124,7 @@ in
         type = types.bool;
         example = true;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether the server registers as a public server in the global server list. This is disabled by default for privacy reasons.
         '';
       };
@@ -123,7 +132,7 @@ in
       motd = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The server's message of the day text.
         '';
       };
@@ -131,7 +140,7 @@ in
       password = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Password to connect to the server.
         '';
       };
@@ -139,7 +148,7 @@ in
       rconPassword = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Password to access the remote console. If not set, a randomly generated one is displayed in the server log.
         '';
       };
@@ -147,7 +156,7 @@ in
       port = mkOption {
         type = types.port;
         default = 8303;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Port the server will listen on.
         '';
       };
@@ -155,7 +164,7 @@ in
       extraOptions = mkOption {
         type = types.listOf types.str;
         default = [];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra configuration lines for the {file}`teeworlds.cfg`. See [Teeworlds Documentation](https://www.teeworlds.com/?page=docs&wiki=server_settings).
         '';
         example = [ "sv_map dm1" "sv_gametype dm" ];
@@ -165,7 +174,7 @@ in
         bindAddr = mkOption {
           type = types.nullOr types.str;
           default = null;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The address the server will bind to.
           '';
         };
@@ -173,7 +182,7 @@ in
         enableHighBandwidth = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Whether to enable high bandwidth mode on LAN servers. This will double the amount of bandwidth required for running the server.
           '';
         };
@@ -181,7 +190,7 @@ in
         hostName = mkOption {
           type = types.nullOr types.str;
           default = null;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Hostname for the server.
           '';
         };
@@ -190,7 +199,7 @@ in
           type = types.enum [ "spectator" "spectator/kick" "kick" ];
           example = "spectator";
           default = "spectator/kick";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Specify what to do when a client goes inactive (see [](#opt-services.teeworlds.server.inactiveTime)).
 
             - `spectator`: send the client into spectator mode
@@ -204,7 +213,7 @@ in
         kickInactiveSpectators = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Whether to kick inactive spectators.
           '';
         };
@@ -212,7 +221,7 @@ in
         inactiveTime = mkOption {
           type = types.ints.unsigned;
           default = 3;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The amount of minutes a client has to idle before it is considered inactive.
           '';
         };
@@ -220,7 +229,7 @@ in
         maxClients = mkOption {
           type = types.ints.unsigned;
           default = 12;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The maximum amount of clients that can be connected to the server at the same time.
           '';
         };
@@ -228,7 +237,7 @@ in
         maxClientsPerIP = mkOption {
           type = types.ints.unsigned;
           default = 12;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The maximum amount of clients with the same IP address that can be connected to the server at the same time.
           '';
         };
@@ -236,7 +245,7 @@ in
         skillLevel = mkOption {
           type = types.enum [ "casual" "normal" "competitive" ];
           default = "normal";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The skill level shown in the server browser.
           '';
         };
@@ -244,7 +253,7 @@ in
         enableSpamProtection = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Whether to enable chat spam protection.
           '';
         };
@@ -255,7 +264,7 @@ in
           type = types.str;
           example = "ctf";
           default = "dm";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The game type to use on the server.
 
             The default gametypes are `dm`, `tdm`, `ctf`, `lms`, and `lts`.
@@ -266,7 +275,7 @@ in
           type = types.str;
           example = "ctf5";
           default = "dm1";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The map to use on the server.
           '';
         };
@@ -274,7 +283,7 @@ in
         swapTeams = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Whether to swap teams each round.
           '';
         };
@@ -282,7 +291,7 @@ in
         enableReadyMode = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Whether to enable "ready mode"; where players can pause/unpause the game
             and start the game in warmup, using their ready state.
           '';
@@ -291,7 +300,7 @@ in
         playerSlots = mkOption {
           type = types.ints.unsigned;
           default = 8;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The amount of slots to reserve for players (as opposed to spectators).
           '';
         };
@@ -299,7 +308,7 @@ in
         enablePowerups = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Whether to allow powerups such as the ninja.
           '';
         };
@@ -308,7 +317,7 @@ in
           type = types.ints.unsigned;
           example = 400;
           default = 20;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The score limit needed to win a round.
           '';
         };
@@ -316,7 +325,7 @@ in
         restrictSpectators = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Whether to restrict access to information such as health, ammo and armour in spectator mode.
           '';
         };
@@ -324,7 +333,7 @@ in
         enableTeamDamage = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Whether to enable team damage; whether to allow team mates to inflict damage on one another.
           '';
         };
@@ -332,7 +341,7 @@ in
         timeLimit = mkOption {
           type = types.ints.unsigned;
           default = 0;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Time limit of the game. In cases of equal points, there will be sudden death.
             Setting this to 0 disables a time limit.
           '';
@@ -341,7 +350,7 @@ in
         tournamentMode = mkOption {
           type = types.enum [ "disable" "enable" "restrictSpectators" ];
           default = "disable";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Whether to enable tournament mode. In tournament mode, players join as spectators.
             If this is set to `restrictSpectators`, tournament mode is enabled but spectator chat is restricted.
           '';
@@ -350,7 +359,7 @@ in
         enableVoteKick = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Whether to enable voting to kick players.
           '';
         };
@@ -358,7 +367,7 @@ in
         voteKickBanTime = mkOption {
           type = types.ints.unsigned;
           default = 5;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The amount of minutes that a player is banned for if they get kicked by a vote.
           '';
         };
@@ -366,7 +375,7 @@ in
         voteKickMinimumPlayers = mkOption {
           type = types.ints.unsigned;
           default = 5;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The minimum amount of players required to start a kick vote.
           '';
         };
