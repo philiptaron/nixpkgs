@@ -1,8 +1,24 @@
 { config, lib, options, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    all
+    elem
+    literalExpression
+    mapAttrsRecursive
+    mdDoc
+    mkDefault
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    mkRemovedOptionModule
+    modules
+    optional
+    take
+    types
+    ;
+
   cfg = config.services.kubernetes;
   opt = options.services.kubernetes;
 
@@ -77,25 +93,25 @@ let
 
   mkKubeConfigOptions = prefix: {
     server = mkOption {
-      description = lib.mdDoc "${prefix} kube-apiserver server address.";
+      description = mdDoc "${prefix} kube-apiserver server address.";
       type = types.str;
     };
 
     caFile = mkOption {
-      description = lib.mdDoc "${prefix} certificate authority file used to connect to kube-apiserver.";
+      description = mdDoc "${prefix} certificate authority file used to connect to kube-apiserver.";
       type = types.nullOr types.path;
       default = cfg.caFile;
       defaultText = literalExpression "config.${opt.caFile}";
     };
 
     certFile = mkOption {
-      description = lib.mdDoc "${prefix} client certificate file used to connect to kube-apiserver.";
+      description = mdDoc "${prefix} client certificate file used to connect to kube-apiserver.";
       type = types.nullOr types.path;
       default = null;
     };
 
     keyFile = mkOption {
-      description = lib.mdDoc "${prefix} client key file used to connect to kube-apiserver.";
+      description = mdDoc "${prefix} client key file used to connect to kube-apiserver.";
       type = types.nullOr types.path;
       default = null;
     };
@@ -111,7 +127,7 @@ in {
 
   options.services.kubernetes = {
     roles = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Kubernetes role that this machine should take.
 
         Master role will enable etcd, apiserver, scheduler, controller manager
@@ -127,7 +143,7 @@ in {
     kubeconfig = mkKubeConfigOptions "Default kubeconfig";
 
     apiserverAddress = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Clusterwide accessible address for the kubernetes apiserver,
         including protocol and optional port.
       '';
@@ -136,49 +152,49 @@ in {
     };
 
     caFile = mkOption {
-      description = lib.mdDoc "Default kubernetes certificate authority";
+      description = mdDoc "Default kubernetes certificate authority";
       type = types.nullOr types.path;
       default = null;
     };
 
     dataDir = mkOption {
-      description = lib.mdDoc "Kubernetes root directory for managing kubelet files.";
+      description = mdDoc "Kubernetes root directory for managing kubelet files.";
       default = "/var/lib/kubernetes";
       type = types.path;
     };
 
     easyCerts = mkOption {
-      description = lib.mdDoc "Automatically setup x509 certificates and keys for the entire cluster.";
+      description = mdDoc "Automatically setup x509 certificates and keys for the entire cluster.";
       default = false;
       type = types.bool;
     };
 
     featureGates = mkOption {
-      description = lib.mdDoc "List set of feature gates.";
+      description = mdDoc "List set of feature gates.";
       default = [];
       type = types.listOf types.str;
     };
 
     masterAddress = mkOption {
-      description = lib.mdDoc "Clusterwide available network address or hostname for the kubernetes master server.";
+      description = mdDoc "Clusterwide available network address or hostname for the kubernetes master server.";
       example = "master.example.com";
       type = types.str;
     };
 
     path = mkOption {
-      description = lib.mdDoc "Packages added to the services' PATH environment variable. Both the bin and sbin subdirectories of each package are added.";
+      description = mdDoc "Packages added to the services' PATH environment variable. Both the bin and sbin subdirectories of each package are added.";
       type = types.listOf types.package;
       default = [];
     };
 
     clusterCidr = mkOption {
-      description = lib.mdDoc "Kubernetes controller manager and proxy CIDR Range for Pods in cluster.";
+      description = mdDoc "Kubernetes controller manager and proxy CIDR Range for Pods in cluster.";
       default = "10.1.0.0/16";
       type = types.nullOr types.str;
     };
 
     lib = mkOption {
-      description = lib.mdDoc "Common functions for the kubernetes modules.";
+      description = mdDoc "Common functions for the kubernetes modules.";
       default = {
         inherit mkCert;
         inherit mkKubeConfig;
@@ -188,7 +204,7 @@ in {
     };
 
     secretsPath = mkOption {
-      description = lib.mdDoc "Default location for kubernetes secrets. Not a store location.";
+      description = mdDoc "Default location for kubernetes secrets. Not a store location.";
       type = types.path;
       default = cfg.dataDir + "/secrets";
       defaultText = literalExpression ''
