@@ -1,8 +1,22 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    derivations
+    filter
+    foldr
+    inPureEvalMode
+    literalExpression
+    mdDoc
+    mkOption
+    mkRemovedOptionModule
+    optionalAttrs
+    optionalString
+    showWarnings
+    types
+    ;
+
   systemBuilder =
     ''
       mkdir $out
@@ -93,7 +107,7 @@ in
     system.boot.loader.id = mkOption {
       internal = true;
       default = "";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Id string of the used bootloader.
       '';
     };
@@ -103,7 +117,7 @@ in
       default = pkgs.stdenv.hostPlatform.linux-kernel.target;
       defaultText = literalExpression "pkgs.stdenv.hostPlatform.linux-kernel.target";
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Name of the kernel file to be passed to the bootloader.
       '';
     };
@@ -112,7 +126,7 @@ in
       internal = true;
       default = "initrd";
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Name of the initrd file to be passed to the bootloader.
       '';
     };
@@ -121,7 +135,7 @@ in
       toplevel = mkOption {
         type = types.package;
         readOnly = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           This option contains the store path that typically represents a NixOS system.
 
           You can read this path in a custom deployment tool for example.
@@ -133,7 +147,7 @@ in
     system.copySystemConfiguration = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         If enabled, copies the NixOS configuration file
         (usually {file}`/etc/nixos/configuration.nix`)
         and links it from the resulting system
@@ -155,8 +169,8 @@ in
       type = types.attrsOf types.unspecified;
       internal = true;
       default = {};
-      description = lib.mdDoc ''
-        `lib.mkDerivation` attributes that will be passed to the top level system builder.
+      description = mdDoc ''
+        `mkDerivation` attributes that will be passed to the top level system builder.
       '';
     };
 
@@ -164,7 +178,7 @@ in
       default = "";
       example = "-dev$";
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         A POSIX Extended Regular Expression that matches store paths that
         should not appear in the system closure, with the exception of {option}`system.extraDependencies`, which is not checked.
       '';
@@ -174,7 +188,7 @@ in
       type = types.lines;
       internal = true;
       default = "";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         This code will be added to the builder creating the system store path.
       '';
     };
@@ -182,7 +196,7 @@ in
     system.extraDependencies = mkOption {
       type = types.listOf types.pathInStore;
       default = [];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         A list of paths that should be included in the system
         closure but generally not visible to users.
 
@@ -195,7 +209,7 @@ in
     system.checks = mkOption {
       type = types.listOf types.package;
       default = [];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Packages that are added as dependencies of the system's build, usually
         for the purpose of validating some part of the configuration.
 
@@ -206,17 +220,17 @@ in
 
     system.replaceRuntimeDependencies = mkOption {
       default = [];
-      example = lib.literalExpression "[ ({ original = pkgs.openssl; replacement = pkgs.callPackage /path/to/openssl { }; }) ]";
+      example = literalExpression "[ ({ original = pkgs.openssl; replacement = pkgs.callPackage /path/to/openssl { }; }) ]";
       type = types.listOf (types.submodule (
         { ... }: {
           options.original = mkOption {
             type = types.package;
-            description = lib.mdDoc "The original package to override.";
+            description = mdDoc "The original package to override.";
           };
 
           options.replacement = mkOption {
             type = types.package;
-            description = lib.mdDoc "The replacement package.";
+            description = mdDoc "The replacement package.";
           };
         })
       );
@@ -224,7 +238,7 @@ in
         oldDependency = original;
         newDependency = replacement;
       });
-      description = lib.mdDoc ''
+      description = mdDoc ''
         List of packages to override without doing a full rebuild.
         The original derivation and replacement derivation must have the same
         name length, and ideally should have close-to-identical directory layout.
@@ -242,7 +256,7 @@ in
         then "unnamed"
         else config.networking.hostName;
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The name of the system used in the {option}`system.build.toplevel` derivation.
 
         That derivation has the following name:
@@ -253,7 +267,7 @@ in
     system.includeBuildDependencies = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to include the build closure of the whole system in
         its runtime closure.  This can be useful for making changes
         fully offline, as it includes all sources, patches, and
@@ -277,7 +291,7 @@ in
   config = {
     assertions = [
       {
-        assertion = config.system.copySystemConfiguration -> !lib.inPureEvalMode;
+        assertion = config.system.copySystemConfiguration -> !inPureEvalMode;
         message = "system.copySystemConfiguration is not supported with flakes";
       }
     ];
@@ -319,7 +333,7 @@ in
       # option, as opposed to `system.extraDependencies`.
       passedChecks = concatStringsSep " " config.system.checks;
     }
-    // lib.optionalAttrs (config.system.forbiddenDependenciesRegex != "") {
+    // optionalAttrs (config.system.forbiddenDependenciesRegex != "") {
       inherit (config.system) forbiddenDependenciesRegex;
       closureInfo = pkgs.closureInfo { rootPaths = [
         # override to avoid  infinite recursion (and to allow using extraDependencies to add forbidden dependencies)
