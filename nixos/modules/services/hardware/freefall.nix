@@ -1,8 +1,15 @@
 { config, lib, pkgs, utils, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    listToAttrs
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    nameValuePair
+    types
+    ;
 
   cfg = config.services.freefall;
 
@@ -13,7 +20,7 @@ in {
     enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to protect HP/Dell laptop hard drives (not SSDs) in free fall.
       '';
     };
@@ -23,7 +30,7 @@ in {
     devices = mkOption {
       type = types.listOf types.str;
       default = [ "/dev/sda" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Device paths to all internal spinning hard drives.
       '';
     };
