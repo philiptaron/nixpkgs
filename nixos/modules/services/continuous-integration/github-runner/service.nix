@@ -4,7 +4,27 @@
 , ...
 }:
 
-with lib;
+let
+  inherit (lib)
+    concatStringsSep
+    escapeShellArg
+    escapeShellArgs
+    flatten
+    flip
+    getAttrs
+    hasAttr
+    mapAttrs'
+    mapAttrsToList
+    mkBefore
+    mkDefault
+    mkIf
+    mkMerge
+    nameValuePair
+    optionalAttrs
+    optionals
+    optionalString
+    ;
+in
 {
   config.assertions = flatten (
     flip mapAttrsToList config.services.github-runners (name: cfg: map (mkIf cfg.enable) [
@@ -190,7 +210,7 @@ with lib;
                 ln -s "$LOGS_DIRECTORY" "$WORK_DIRECTORY/_diag"
 
                 # Link the runner credentials to the work dir
-                ln -s "$STATE_DIRECTORY"/{${lib.concatStringsSep "," runnerCredFiles}} "$WORK_DIRECTORY/"
+                ln -s "$STATE_DIRECTORY"/{${concatStringsSep "," runnerCredFiles}} "$WORK_DIRECTORY/"
               '';
             in
             map (x: "${x} ${escapeShellArgs [ stateDir workDir logsDir ]}") [
@@ -264,7 +284,7 @@ with lib;
           ];
           RestrictAddressFamilies = mkBefore [ "AF_INET" "AF_INET6" "AF_UNIX" "AF_NETLINK" ];
 
-          BindPaths = lib.optionals (cfg.workDir != null) [ cfg.workDir ];
+          BindPaths = optionals (cfg.workDir != null) [ cfg.workDir ];
 
           # Needs network access
           PrivateNetwork = mkDefault false;
