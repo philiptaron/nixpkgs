@@ -1,6 +1,11 @@
 { config, pkgs, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mkDefault
+    mkIf
+    ;
+in
 
 {
 
@@ -27,10 +32,10 @@ with lib;
     services.udev.enable = false;
 
     # containers normally do not need to manage logical volumes
-    services.lvm.enable = lib.mkDefault false;
+    services.lvm.enable = mkDefault false;
 
     # Shut up warnings about not having a boot loader.
-    system.build.installBootLoader = lib.mkDefault "${pkgs.coreutils}/bin/true";
+    system.build.installBootLoader = mkDefault "${pkgs.coreutils}/bin/true";
 
     # Not supported in systemd-nspawn containers.
     security.audit.enable = false;
