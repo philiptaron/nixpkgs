@@ -2,9 +2,20 @@
 
 { config, lib, options, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkDefault
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalAttrs
+    optionalString
+    teams
+    types
+    ;
+
   cfg = config.services.buildbot-worker;
   opt = options.services.buildbot-worker;
 
@@ -43,86 +54,87 @@ let
     s.setServiceParent(application)
   '';
 
-in {
+in
+{
   options = {
     services.buildbot-worker = {
 
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to enable the Buildbot Worker.";
+        description = mdDoc "Whether to enable the Buildbot Worker.";
       };
 
       user = mkOption {
         default = "bbworker";
         type = types.str;
-        description = lib.mdDoc "User the buildbot Worker should execute under.";
+        description = mdDoc "User the buildbot Worker should execute under.";
       };
 
       group = mkOption {
         default = "bbworker";
         type = types.str;
-        description = lib.mdDoc "Primary group of buildbot Worker user.";
+        description = mdDoc "Primary group of buildbot Worker user.";
       };
 
       extraGroups = mkOption {
         type = types.listOf types.str;
         default = [];
-        description = lib.mdDoc "List of extra groups that the Buildbot Worker user should be a part of.";
+        description = mdDoc "List of extra groups that the Buildbot Worker user should be a part of.";
       };
 
       home = mkOption {
         default = "/home/bbworker";
         type = types.path;
-        description = lib.mdDoc "Buildbot home directory.";
+        description = mdDoc "Buildbot home directory.";
       };
 
       buildbotDir = mkOption {
         default = "${cfg.home}/worker";
         defaultText = literalExpression ''"''${config.${opt.home}}/worker"'';
         type = types.path;
-        description = lib.mdDoc "Specifies the Buildbot directory.";
+        description = mdDoc "Specifies the Buildbot directory.";
       };
 
       workerUser = mkOption {
         default = "example-worker";
         type = types.str;
-        description = lib.mdDoc "Specifies the Buildbot Worker user.";
+        description = mdDoc "Specifies the Buildbot Worker user.";
       };
 
       workerPass = mkOption {
         default = "pass";
         type = types.str;
-        description = lib.mdDoc "Specifies the Buildbot Worker password.";
+        description = mdDoc "Specifies the Buildbot Worker password.";
       };
 
       workerPassFile = mkOption {
         type = types.path;
-        description = lib.mdDoc "File used to store the Buildbot Worker password";
+        description = mdDoc "File used to store the Buildbot Worker password";
       };
 
       hostMessage = mkOption {
         default = null;
         type = types.nullOr types.str;
-        description = lib.mdDoc "Description of this worker";
+        description = mdDoc "Description of this worker";
       };
 
       adminMessage = mkOption {
         default = null;
         type = types.nullOr types.str;
-        description = lib.mdDoc "Name of the administrator of this worker";
+        description = mdDoc "Name of the administrator of this worker";
       };
 
       masterUrl = mkOption {
         default = "localhost:9989";
         type = types.str;
-        description = lib.mdDoc "Specifies the Buildbot Worker connection string.";
+        description = mdDoc "Specifies the Buildbot Worker connection string.";
       };
 
       keepalive = mkOption {
         default = 600;
         type = types.int;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           This is a number that indicates how frequently keepalive messages should be sent
           from the worker to the buildmaster, expressed in seconds.
         '';
@@ -134,7 +146,7 @@ in {
         default = with pkgs; [ git ];
         defaultText = literalExpression "[ pkgs.git ]";
         type = types.listOf types.package;
-        description = lib.mdDoc "Packages to add to PATH for the buildbot process.";
+        description = mdDoc "Packages to add to PATH for the buildbot process.";
       };
     };
   };
@@ -188,6 +200,6 @@ in {
     };
   };
 
-  meta.maintainers = lib.teams.buildbot.members;
+  meta.maintainers = teams.buildbot.members;
 
 }
