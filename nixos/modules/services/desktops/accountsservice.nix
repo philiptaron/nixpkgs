@@ -2,7 +2,17 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    optionalAttrs
+    recursiveUpdate
+    teams
+    types
+    ;
+in
 
 {
 
@@ -19,7 +29,7 @@ with lib;
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable AccountsService, a DBus service for accessing
           the list of user accounts and information attached to those accounts.
         '';
