@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    maintainers
+    mdDoc
+    mkForce
+    mkIf
+    mkOption
+    types
+    ;
 
   inherit (pkgs) ntp;
 
@@ -40,7 +47,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to synchronise your machine's time using ntpd, as a peer in
           the NTP network.
 
@@ -50,7 +57,7 @@ in
 
       restrictDefault = mkOption {
         type = types.listOf types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The restriction flags to be set by default.
 
           The default flags prevent external hosts from using ntpd as a DDoS
@@ -63,7 +70,7 @@ in
 
       restrictSource = mkOption {
         type = types.listOf types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The restriction flags to be set on source.
 
           The default flags allow peers to be added by ntpd from configured
@@ -76,7 +83,7 @@ in
         default = config.networking.timeServers;
         defaultText = literalExpression "config.networking.timeServers";
         type = types.listOf types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The set of NTP servers from which to synchronise.
         '';
       };
@@ -87,14 +94,14 @@ in
         example = ''
           fudge 127.127.1.0 stratum 10
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Additional text appended to {file}`ntp.conf`.
         '';
       };
 
       extraFlags = mkOption {
         type = types.listOf types.str;
-        description = lib.mdDoc "Extra flags passed to the ntpd command.";
+        description = mdDoc "Extra flags passed to the ntpd command.";
         example = literalExpression ''[ "--interface=eth0" ]'';
         default = [];
       };
@@ -107,7 +114,7 @@ in
   ###### implementation
 
   config = mkIf config.services.ntp.enable {
-    meta.maintainers = with lib.maintainers; [ thoughtpolice ];
+    meta.maintainers = with maintainers; [ thoughtpolice ];
 
     # Make tools such as ntpq available in the system path.
     environment.systemPackages = [ pkgs.ntp ];
