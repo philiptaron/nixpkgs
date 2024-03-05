@@ -1,7 +1,23 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    boolToString
+    escapeShellArg
+    flip
+    mapAttrs'
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    nameValuePair
+    optionalString
+    types
+    ;
+
   cfg = config.services.tahoe;
 in
   {
@@ -12,21 +28,21 @@ in
           options = {
             nickname = mkOption {
               type = types.str;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The nickname of this Tahoe introducer.
               '';
             };
             tub.port = mkOption {
               default = 3458;
               type = types.port;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The port on which the introducer will listen.
               '';
             };
             tub.location = mkOption {
               default = null;
               type = types.nullOr types.str;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The external location that the introducer should listen on.
 
                 If specified, the port should be included.
@@ -35,7 +51,7 @@ in
             package = mkPackageOption pkgs "tahoelafs" { };
           };
         });
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The Tahoe introducers.
         '';
       };
@@ -45,14 +61,14 @@ in
           options = {
             nickname = mkOption {
               type = types.str;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The nickname of this Tahoe node.
               '';
             };
             tub.port = mkOption {
               default = 3457;
               type = types.port;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The port on which the tub will listen.
 
                 This is the correct setting to tweak if you want Tahoe's storage
@@ -62,7 +78,7 @@ in
             tub.location = mkOption {
               default = null;
               type = types.nullOr types.str;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The external location that the node should listen on.
 
                 This is the setting to tweak if there are multiple interfaces
@@ -74,7 +90,7 @@ in
             web.port = mkOption {
               default = 3456;
               type = types.port;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The port on which the Web server will listen.
 
                 This is the correct setting to tweak if you want Tahoe's WUI to
@@ -84,7 +100,7 @@ in
             client.introducer = mkOption {
               default = null;
               type = types.nullOr types.str;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The furl for a Tahoe introducer node.
 
                 Like all furls, keep this safe and don't share it.
@@ -93,7 +109,7 @@ in
             client.helper = mkOption {
               default = null;
               type = types.nullOr types.str;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The furl for a Tahoe helper node.
 
                 Like all furls, keep this safe and don't share it.
@@ -102,14 +118,14 @@ in
             client.shares.needed = mkOption {
               default = 3;
               type = types.int;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The number of shares required to reconstitute a file.
               '';
             };
             client.shares.happy = mkOption {
               default = 7;
               type = types.int;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The number of distinct storage nodes required to store
                 a file.
               '';
@@ -117,24 +133,24 @@ in
             client.shares.total = mkOption {
               default = 10;
               type = types.int;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The number of shares required to store a file.
               '';
             };
-            storage.enable = mkEnableOption (lib.mdDoc "storage service");
+            storage.enable = mkEnableOption (mdDoc "storage service");
             storage.reservedSpace = mkOption {
               default = "1G";
               type = types.str;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The amount of filesystem space to not use for storage.
               '';
             };
-            helper.enable = mkEnableOption (lib.mdDoc "helper service");
-            sftpd.enable = mkEnableOption (lib.mdDoc "SFTP service");
+            helper.enable = mkEnableOption (mdDoc "helper service");
+            sftpd.enable = mkEnableOption (mdDoc "SFTP service");
             sftpd.port = mkOption {
               default = null;
               type = types.nullOr types.int;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The port on which the SFTP server will listen.
 
                 This is the correct setting to tweak if you want Tahoe's SFTP
@@ -144,35 +160,35 @@ in
             sftpd.hostPublicKeyFile = mkOption {
               default = null;
               type = types.nullOr types.path;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Path to the SSH host public key.
               '';
             };
             sftpd.hostPrivateKeyFile = mkOption {
               default = null;
               type = types.nullOr types.path;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Path to the SSH host private key.
               '';
             };
             sftpd.accounts.file = mkOption {
               default = null;
               type = types.nullOr types.path;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Path to the accounts file.
               '';
             };
             sftpd.accounts.url = mkOption {
               default = null;
               type = types.nullOr types.str;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 URL of the accounts server.
               '';
             };
             package = mkPackageOption pkgs "tahoelafs" { };
           };
         });
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The Tahoe nodes.
         '';
       };
@@ -221,16 +237,16 @@ in
               # arguments to $(tahoe run). The node directory must come first,
               # and arguments which alter Twisted's behavior come afterwards.
               ExecStart = ''
-                ${settings.package}/bin/tahoe run ${lib.escapeShellArg nodedir} --pidfile=${lib.escapeShellArg pidfile}
+                ${settings.package}/bin/tahoe run ${escapeShellArg nodedir} --pidfile=${escapeShellArg pidfile}
               '';
             };
             preStart = ''
-              if [ ! -d ${lib.escapeShellArg nodedir} ]; then
+              if [ ! -d ${escapeShellArg nodedir} ]; then
                 mkdir -p /var/db/tahoe-lafs
                 # See https://github.com/NixOS/nixpkgs/issues/25273
                 tahoe create-introducer \
                   --hostname="${config.networking.hostName}" \
-                  ${lib.escapeShellArg nodedir}
+                  ${escapeShellArg nodedir}
               fi
 
               # Tahoe has created a predefined tahoe.cfg which we must now
@@ -239,7 +255,7 @@ in
               # we must do this on every prestart. Fixes welcome.
               # rm ${nodedir}/tahoe.cfg
               # ln -s /etc/tahoe-lafs/introducer-${node}.cfg ${nodedir}/tahoe.cfg
-              cp /etc/tahoe-lafs/introducer-"${node}".cfg ${lib.escapeShellArg nodedir}/tahoe.cfg
+              cp /etc/tahoe-lafs/introducer-"${node}".cfg ${escapeShellArg nodedir}/tahoe.cfg
             '';
           });
         users.users = flip mapAttrs' cfg.introducers (node: _:
@@ -324,13 +340,13 @@ in
               # arguments to $(tahoe run). The node directory must come first,
               # and arguments which alter Twisted's behavior come afterwards.
               ExecStart = ''
-                ${settings.package}/bin/tahoe run ${lib.escapeShellArg nodedir} --pidfile=${lib.escapeShellArg pidfile}
+                ${settings.package}/bin/tahoe run ${escapeShellArg nodedir} --pidfile=${escapeShellArg pidfile}
               '';
             };
             preStart = ''
-              if [ ! -d ${lib.escapeShellArg nodedir} ]; then
+              if [ ! -d ${escapeShellArg nodedir} ]; then
                 mkdir -p /var/db/tahoe-lafs
-                tahoe create-node --hostname=localhost ${lib.escapeShellArg nodedir}
+                tahoe create-node --hostname=localhost ${escapeShellArg nodedir}
               fi
 
               # Tahoe has created a predefined tahoe.cfg which we must now
@@ -338,8 +354,8 @@ in
               # XXX I thought that a symlink would work here, but it doesn't, so
               # we must do this on every prestart. Fixes welcome.
               # rm ${nodedir}/tahoe.cfg
-              # ln -s /etc/tahoe-lafs/${lib.escapeShellArg node}.cfg ${nodedir}/tahoe.cfg
-              cp /etc/tahoe-lafs/${lib.escapeShellArg node}.cfg ${lib.escapeShellArg nodedir}/tahoe.cfg
+              # ln -s /etc/tahoe-lafs/${escapeShellArg node}.cfg ${nodedir}/tahoe.cfg
+              cp /etc/tahoe-lafs/${escapeShellArg node}.cfg ${escapeShellArg nodedir}/tahoe.cfg
             '';
           });
         users.users = flip mapAttrs' cfg.nodes (node: _:
