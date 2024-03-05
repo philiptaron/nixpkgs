@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.meilisearch;
 
 in
@@ -14,7 +22,7 @@ in
   ###### interface
 
   options.services.meilisearch = {
-    enable = mkEnableOption (lib.mdDoc "MeiliSearch - a RESTful search API");
+    enable = mkEnableOption (mdDoc "MeiliSearch - a RESTful search API");
 
     package = mkPackageOption pkgs "meilisearch" {
       extraDescription = ''
@@ -23,26 +31,26 @@ in
     };
 
     listenAddress = mkOption {
-      description = lib.mdDoc "MeiliSearch listen address.";
+      description = mdDoc "MeiliSearch listen address.";
       default = "127.0.0.1";
       type = types.str;
     };
 
     listenPort = mkOption {
-      description = lib.mdDoc "MeiliSearch port to listen on.";
+      description = mdDoc "MeiliSearch port to listen on.";
       default = 7700;
       type = types.port;
     };
 
     environment = mkOption {
-      description = lib.mdDoc "Defines the running environment of MeiliSearch.";
+      description = mdDoc "Defines the running environment of MeiliSearch.";
       default = "development";
       type = types.enum [ "development" "production" ];
     };
 
     # TODO change this to LoadCredentials once possible
     masterKeyEnvironmentFile = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path to file which contains the master key.
         By doing so, all routes will be protected and will require a key to be accessed.
         If no master key is provided, all routes can be accessed without requiring any key.
@@ -54,7 +62,7 @@ in
     };
 
     noAnalytics = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Deactivates analytics.
         Analytics allow MeiliSearch to know how many users are using MeiliSearch,
         which versions and which platforms are used.
@@ -65,7 +73,7 @@ in
     };
 
     logLevel = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Defines how much detail should be present in MeiliSearch's logs.
         MeiliSearch currently supports four log levels, listed in order of increasing verbosity:
         - 'ERROR': only log unexpected events indicating MeiliSearch is not functioning as expected
@@ -79,7 +87,7 @@ in
     };
 
     maxIndexSize = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Sets the maximum size of the index.
         Value must be given in bytes or explicitly stating a base unit.
         For example, the default value can be written as 107374182400, '107.7Gb', or '107374 Mb'.
@@ -90,7 +98,7 @@ in
     };
 
     payloadSizeLimit = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Sets the maximum size of accepted JSON payloads.
         Value must be given in bytes or explicitly stating a base unit.
         For example, the default value can be written as 107374182400, '107.7Gb', or '107374 Mb'.
