@@ -1,16 +1,25 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    hasPrefix
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalAttrs
+    recursiveUpdate
+    types
+    ;
 
   isMa1sd =
     package:
-    lib.hasPrefix "ma1sd" package.name;
+    hasPrefix "ma1sd" package.name;
 
   isMxisd =
     package:
-    lib.hasPrefix "mxisd" package.name;
+    hasPrefix "mxisd" package.name;
 
   cfg = config.services.mxisd;
 
@@ -37,14 +46,14 @@ let
 in {
   options = {
     services.mxisd = {
-      enable = mkEnableOption (lib.mdDoc "matrix federated identity server");
+      enable = mkEnableOption (mdDoc "matrix federated identity server");
 
       package = mkPackageOption pkgs "ma1sd" { };
 
       environmentFile = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Path to an environment-file which may contain secrets to be
           substituted via `envsubst`.
         '';
@@ -53,20 +62,20 @@ in {
       dataDir = mkOption {
         type = types.str;
         default = "/var/lib/mxisd";
-        description = lib.mdDoc "Where data mxisd/ma1sd uses resides";
+        description = mdDoc "Where data mxisd/ma1sd uses resides";
       };
 
       extraConfig = mkOption {
         type = types.attrs;
         default = {};
-        description = lib.mdDoc "Extra options merged into the mxisd/ma1sd configuration";
+        description = mdDoc "Extra options merged into the mxisd/ma1sd configuration";
       };
 
       matrix = {
 
         domain = mkOption {
           type = types.str;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             the domain of the matrix homeserver
           '';
         };
@@ -78,7 +87,7 @@ in {
         name = mkOption {
           type = types.nullOr types.str;
           default = null;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Public hostname of mxisd/ma1sd, if different from the Matrix domain.
           '';
         };
@@ -86,7 +95,7 @@ in {
         port = mkOption {
           type = types.nullOr types.int;
           default = null;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             HTTP port to listen on (unencrypted)
           '';
         };
