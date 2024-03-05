@@ -1,7 +1,20 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    elem
+    escapeShellArgs
+    generators
+    maintainers
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.gerrit;
 
   # NixOS option type for git-like configs
@@ -14,11 +27,11 @@ let
     in lazyAttrsOf supersectionType;
 
   gerritConfig = pkgs.writeText "gerrit.conf" (
-    lib.generators.toGitINI cfg.settings
+    generators.toGitINI cfg.settings
   );
 
   replicationConfig = pkgs.writeText "replication.conf" (
-    lib.generators.toGitINI cfg.replicationSettings
+    generators.toGitINI cfg.replicationSettings
   );
 
   # Wrap the gerrit java with all the java options so it can be called
@@ -26,7 +39,7 @@ let
   gerrit-cli = pkgs.writeShellScriptBin "gerrit" ''
     set -euo pipefail
     jvmOpts=(
-      ${lib.escapeShellArgs cfg.jvmOpts}
+      ${escapeShellArgs cfg.jvmOpts}
       -Xmx${cfg.jvmHeapLimit}
     )
     exec ${cfg.jvmPackage}/bin/java \
@@ -59,7 +72,7 @@ in
 {
   options = {
     services.gerrit = {
-      enable = mkEnableOption (lib.mdDoc "Gerrit service");
+      enable = mkEnableOption (mdDoc "Gerrit service");
 
       package = mkPackageOption pkgs "gerrit" { };
 
@@ -71,13 +84,13 @@ in
           "-Dflogger.backend_factory=com.google.common.flogger.backend.log4j.Log4jBackendFactory#getInstance"
           "-Dflogger.logging_context=com.google.gerrit.server.logging.LoggingContext#getInstance"
         ];
-        description = lib.mdDoc "A list of JVM options to start gerrit with.";
+        description = mdDoc "A list of JVM options to start gerrit with.";
       };
 
       jvmHeapLimit = mkOption {
         type = types.str;
         default = "1024m";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           How much memory to allocate to the JVM heap
         '';
       };
@@ -85,7 +98,7 @@ in
       listenAddress = mkOption {
         type = types.str;
         default = "[::]:8080";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           `hostname:port` to listen for HTTP traffic.
 
           This is bound using the systemd socket activation.
@@ -95,7 +108,7 @@ in
       settings = mkOption {
         type = gitIniType;
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Gerrit configuration. This will be generated to the
           `etc/gerrit.config` file.
         '';
@@ -104,7 +117,7 @@ in
       replicationSettings = mkOption {
         type = gitIniType;
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Replication configuration. This will be generated to the
           `etc/replication.config` file.
         '';
@@ -113,7 +126,7 @@ in
       plugins = mkOption {
         type = types.listOf types.package;
         default = [];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of plugins to add to Gerrit. Each derivation is a jar file
           itself where the name of the derivation is the name of plugin.
         '';
@@ -122,7 +135,7 @@ in
       builtinPlugins = mkOption {
         type = types.listOf (types.enum cfg.package.passthru.plugins);
         default = [];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of builtins plugins to install. Those are shipped in the
           `gerrit.war` file.
         '';
@@ -130,7 +143,7 @@ in
 
       serverId = mkOption {
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Set a UUID that uniquely identifies the server.
 
           This can be generated with
@@ -152,11 +165,11 @@ in
     services.gerrit.settings = {
       cache.directory = "/var/cache/gerrit";
       container.heapLimit = cfg.jvmHeapLimit;
-      gerrit.basePath = lib.mkDefault "git";
+      gerrit.basePath = mkDefault "git";
       gerrit.serverId = cfg.serverId;
       httpd.inheritChannel = "true";
-      httpd.listenUrl = lib.mkDefault "http://${cfg.listenAddress}";
-      index.type = lib.mkDefault "lucene";
+      httpd.listenUrl = mkDefault "http://${cfg.listenAddress}";
+      index.type = mkDefault "lucene";
     };
 
     # Add the gerrit CLI to the system to run `gerrit init` and friends.
@@ -226,7 +239,7 @@ in
     };
   };
 
-  meta.maintainers = with lib.maintainers; [ edef zimbatm ];
+  meta.maintainers = with maintainers; [ edef zimbatm ];
   # uses attributes of the linked package
   meta.buildDocsInSandbox = false;
 }
