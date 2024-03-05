@@ -1,25 +1,32 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.sonarr;
 in
 {
   options = {
     services.sonarr = {
-      enable = mkEnableOption (lib.mdDoc "Sonarr");
+      enable = mkEnableOption (mdDoc "Sonarr");
 
       dataDir = mkOption {
         type = types.str;
         default = "/var/lib/sonarr/.config/NzbDrone";
-        description = lib.mdDoc "The directory where Sonarr stores its data files.";
+        description = mdDoc "The directory where Sonarr stores its data files.";
       };
 
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Open ports in the firewall for the Sonarr web interface
         '';
       };
@@ -27,13 +34,13 @@ in
       user = mkOption {
         type = types.str;
         default = "sonarr";
-        description = lib.mdDoc "User account under which Sonaar runs.";
+        description = mdDoc "User account under which Sonaar runs.";
       };
 
       group = mkOption {
         type = types.str;
         default = "sonarr";
-        description = lib.mdDoc "Group under which Sonaar runs.";
+        description = mdDoc "Group under which Sonaar runs.";
       };
 
       package = mkPackageOption pkgs "sonarr" { };
