@@ -1,19 +1,26 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    ;
+
   format = pkgs.formats.yaml { };
+
   cfg = config.services.evdevremapkeys;
 
 in
 {
   options.services.evdevremapkeys = {
-    enable = mkEnableOption (lib.mdDoc ''evdevremapkeys'');
+    enable = mkEnableOption (mdDoc ''evdevremapkeys'');
 
     settings = mkOption {
       type = format.type;
       default = { };
-      description = lib.mdDoc ''
+      description = mdDoc ''
         config.yaml for evdevremapkeys
       '';
     };
