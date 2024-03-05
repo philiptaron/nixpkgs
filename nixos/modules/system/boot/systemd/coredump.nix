@@ -1,8 +1,15 @@
 { config, lib, pkgs, utils, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkDefault
+    mkIf
+    mkMerge
+    mkOption
+    types
+    ;
+
   cfg = config.systemd.coredump;
   systemd = config.systemd.package;
 in {
@@ -10,7 +17,7 @@ in {
     systemd.coredump.enable = mkOption {
       default = true;
       type = types.bool;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether core dumps should be processed by
         {command}`systemd-coredump`. If disabled, core dumps
         appear in the current directory of the crashing process.
@@ -21,7 +28,7 @@ in {
       default = "";
       type = types.lines;
       example = "Storage=journal";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra config options for systemd-coredump. See coredump.conf(5) man page
         for available options.
       '';
