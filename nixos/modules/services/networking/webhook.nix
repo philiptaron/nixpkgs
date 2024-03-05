@@ -1,8 +1,21 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMap
+    concatStringsSep
+    escapeShellArgs
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optional
+    types
+    ;
+
   cfg = config.services.webhook;
   defaultUser = "webhook";
 
@@ -72,7 +85,7 @@ in {
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Open the configured port in the firewall for external ingress traffic.
           Preferably the Webhook server is instead put behind a reverse proxy.
         '';
