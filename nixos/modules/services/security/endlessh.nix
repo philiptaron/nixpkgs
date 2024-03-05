@@ -1,8 +1,17 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionals
+    types
+    ;
+
   cfg = config.services.endlessh;
 in
 {
@@ -33,7 +42,7 @@ in
     openFirewall = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to open a firewall port for the SSH listener.
       '';
     };
