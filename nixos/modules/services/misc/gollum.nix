@@ -1,86 +1,95 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.gollum;
 in
 
 {
   options.services.gollum = {
-    enable = mkEnableOption (lib.mdDoc "Gollum service");
+    enable = mkEnableOption (mdDoc "Gollum service");
 
     address = mkOption {
       type = types.str;
       default = "0.0.0.0";
-      description = lib.mdDoc "IP address on which the web server will listen.";
+      description = mdDoc "IP address on which the web server will listen.";
     };
 
     port = mkOption {
       type = types.port;
       default = 4567;
-      description = lib.mdDoc "Port on which the web server will run.";
+      description = mdDoc "Port on which the web server will run.";
     };
 
     extraConfig = mkOption {
       type = types.lines;
       default = "";
-      description = lib.mdDoc "Content of the configuration file";
+      description = mdDoc "Content of the configuration file";
     };
 
     mathjax = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc "Enable support for math rendering using MathJax";
+      description = mdDoc "Enable support for math rendering using MathJax";
     };
 
     allowUploads = mkOption {
       type = types.nullOr (types.enum [ "dir" "page" ]);
       default = null;
-      description = lib.mdDoc "Enable uploads of external files";
+      description = mdDoc "Enable uploads of external files";
     };
 
     user-icons = mkOption {
       type = types.nullOr (types.enum [ "gravatar" "identicon" ]);
       default = null;
-      description = lib.mdDoc "Enable specific user icons for history view";
+      description = mdDoc "Enable specific user icons for history view";
     };
 
     emoji = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc "Parse and interpret emoji tags";
+      description = mdDoc "Parse and interpret emoji tags";
     };
 
     h1-title = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc "Use the first h1 as page title";
+      description = mdDoc "Use the first h1 as page title";
     };
 
     no-edit = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc "Disable editing pages";
+      description = mdDoc "Disable editing pages";
     };
 
     local-time = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc "Use the browser's local timezone instead of the server's for displaying dates.";
+      description = mdDoc "Use the browser's local timezone instead of the server's for displaying dates.";
     };
 
     branch = mkOption {
       type = types.str;
       default = "master";
       example = "develop";
-      description = lib.mdDoc "Git branch to serve";
+      description = mdDoc "Git branch to serve";
     };
 
     stateDir = mkOption {
       type = types.path;
       default = "/var/lib/gollum";
-      description = lib.mdDoc "Specifies the path of the repository directory. If it does not exist, Gollum will create it on startup.";
+      description = mdDoc "Specifies the path of the repository directory. If it does not exist, Gollum will create it on startup.";
     };
 
     package = mkPackageOption pkgs "gollum" { };
@@ -88,13 +97,13 @@ in
     user = mkOption {
       type = types.str;
       default = "gollum";
-      description = lib.mdDoc "Specifies the owner of the wiki directory";
+      description = mdDoc "Specifies the owner of the wiki directory";
     };
 
     group = mkOption {
       type = types.str;
       default = "gollum";
-      description = lib.mdDoc "Specifies the owner group of the wiki directory";
+      description = mdDoc "Specifies the owner group of the wiki directory";
     };
   };
 
@@ -147,5 +156,5 @@ in
     };
   };
 
-  meta.maintainers = with lib.maintainers; [ erictapen bbenno ];
+  meta.maintainers = with maintainers; [ erictapen bbenno ];
 }
