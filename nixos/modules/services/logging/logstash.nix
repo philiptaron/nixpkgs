@@ -1,10 +1,25 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStringsSep
+    concatStringsSep
+    filter
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    optionalString
+    pipe
+    stringLength
+    types
+    ;
+
   cfg = config.services.logstash;
-  ops = lib.optionalString;
+  ops = optionalString;
   verbosityFlag = "--log.level " + cfg.logLevel;
 
   logstashConf = pkgs.writeText "logstash.conf" ''
@@ -51,7 +66,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Enable logstash.";
+        description = mdDoc "Enable logstash.";
       };
 
       package = mkPackageOption pkgs "logstash" { };
@@ -60,13 +75,13 @@ in
         type = types.listOf types.path;
         default = [ ];
         example = literalExpression "[ pkgs.logstash-contrib ]";
-        description = lib.mdDoc "The paths to find other logstash plugins in.";
+        description = mdDoc "The paths to find other logstash plugins in.";
       };
 
       dataDir = mkOption {
         type = types.str;
         default = "/var/lib/logstash";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A path to directory writable by logstash that it uses to store data.
           Plugins will also have access to this path.
         '';
@@ -75,31 +90,31 @@ in
       logLevel = mkOption {
         type = types.enum [ "debug" "info" "warn" "error" "fatal" ];
         default = "warn";
-        description = lib.mdDoc "Logging verbosity level.";
+        description = mdDoc "Logging verbosity level.";
       };
 
       filterWorkers = mkOption {
         type = types.int;
         default = 1;
-        description = lib.mdDoc "The quantity of filter workers to run.";
+        description = mdDoc "The quantity of filter workers to run.";
       };
 
       listenAddress = mkOption {
         type = types.str;
         default = "127.0.0.1";
-        description = lib.mdDoc "Address on which to start webserver.";
+        description = mdDoc "Address on which to start webserver.";
       };
 
       port = mkOption {
         type = types.str;
         default = "9292";
-        description = lib.mdDoc "Port on which to start webserver.";
+        description = mdDoc "Port on which to start webserver.";
       };
 
       inputConfig = mkOption {
         type = types.lines;
         default = "generator { }";
-        description = lib.mdDoc "Logstash input configuration.";
+        description = mdDoc "Logstash input configuration.";
         example = literalExpression ''
           '''
             # Read from journal
@@ -114,7 +129,7 @@ in
       filterConfig = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc "logstash filter configuration.";
+        description = mdDoc "logstash filter configuration.";
         example = ''
           if [type] == "syslog" {
             # Keep only relevant systemd fields
@@ -132,7 +147,7 @@ in
       outputConfig = mkOption {
         type = types.lines;
         default = "stdout { codec => rubydebug }";
-        description = lib.mdDoc "Logstash output configuration.";
+        description = mdDoc "Logstash output configuration.";
         example = ''
           redis { host => ["localhost"] data_type => "list" key => "logstash" codec => json }
           elasticsearch { }
@@ -142,7 +157,7 @@ in
       extraSettings = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc "Extra Logstash settings in YAML format.";
+        description = mdDoc "Extra Logstash settings in YAML format.";
         example = ''
           pipeline:
             batch:
@@ -154,7 +169,7 @@ in
       extraJvmOptions = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc "Extra JVM options, one per line (jvm.options format).";
+        description = mdDoc "Extra JVM options, one per line (jvm.options format).";
         example = ''
           -Xms2g
           -Xmx2g
