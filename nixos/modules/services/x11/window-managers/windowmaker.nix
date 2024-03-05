@@ -1,14 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    singleton
+    ;
+
   cfg = config.services.xserver.windowManager.windowmaker;
 in
 {
   ###### interface
   options = {
-    services.xserver.windowManager.windowmaker.enable = mkEnableOption (lib.mdDoc "windowmaker");
+    services.xserver.windowManager.windowmaker.enable = mkEnableOption (mdDoc "windowmaker");
   };
 
   ###### implementation
