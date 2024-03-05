@@ -1,15 +1,17 @@
-#
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
 
   cfg = config.services.irqbalance;
 
 in
 {
-  options.services.irqbalance.enable = mkEnableOption (lib.mdDoc "irqbalance daemon");
+  options.services.irqbalance.enable = mkEnableOption (mdDoc "irqbalance daemon");
 
   config = mkIf cfg.enable {
 
