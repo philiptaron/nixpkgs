@@ -5,11 +5,20 @@
   ...
 }:
 
-with lib;
-
 let
+  inherit (lib)
+    filterAttrsRecursive
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.mqtt2influxdb;
+
   filterNull = filterAttrsRecursive (n: v: v != null);
+
   configFile = (pkgs.formats.yaml {}).generate "mqtt2influxdb.config.yaml" (
     filterNull {
       inherit (cfg) mqtt influxdb;
