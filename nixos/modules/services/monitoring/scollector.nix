@@ -1,19 +1,28 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.scollector;
 
   collectors = pkgs.runCommand "collectors" { preferLocalBuild = true; }
     ''
     mkdir -p $out
-    ${lib.concatStringsSep
+    ${concatStringsSep
         "\n"
-        (lib.mapAttrsToList
+        (mapAttrsToList
           (frequency: binaries:
             "mkdir -p $out/${frequency}\n" +
-            (lib.concatStringsSep
+            (concatStringsSep
               "\n"
               (map (path: "ln -s ${path} $out/${frequency}/$(basename ${path})")
                    binaries)))
@@ -35,7 +44,7 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to run scollector.
         '';
       };
@@ -45,7 +54,7 @@ in {
       user = mkOption {
         type = types.str;
         default = "scollector";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           User account under which scollector runs.
         '';
       };
@@ -53,7 +62,7 @@ in {
       group = mkOption {
         type = types.str;
         default = "scollector";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Group account under which scollector runs.
         '';
       };
@@ -61,7 +70,7 @@ in {
       bosunHost = mkOption {
         type = types.str;
         default = "localhost:8070";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Host and port of the bosun server that will store the collected
           data.
         '';
@@ -71,7 +80,7 @@ in {
         type = with types; attrsOf (listOf path);
         default = {};
         example = literalExpression ''{ "0" = [ "''${postgresStats}/bin/collect-stats" ]; }'';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           An attribute set mapping the frequency of collection to a list of
           binaries that should be executed at that frequency. You can use "0"
           to run a binary forever.
@@ -82,7 +91,7 @@ in {
         type = with types; listOf str;
         default = [];
         example = [ "-d" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra scollector command line options
         '';
       };
@@ -90,7 +99,7 @@ in {
       extraConfig = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra scollector configuration added to the end of scollector.toml
         '';
       };
@@ -110,7 +119,7 @@ in {
       serviceConfig = {
         User = cfg.user;
         Group = cfg.group;
-        ExecStart = "${cfg.package}/bin/scollector -conf=${conf} ${lib.concatStringsSep " " cfg.extraOpts}";
+        ExecStart = "${cfg.package}/bin/scollector -conf=${conf} ${concatStringsSep " " cfg.extraOpts}";
       };
     };
 
