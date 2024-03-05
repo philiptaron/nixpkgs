@@ -1,17 +1,24 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.cpupower-gui;
-in {
+
+in
+{
   options = {
     services.cpupower-gui = {
       enable = mkOption {
-        type = lib.types.bool;
+        type = types.bool;
         default = false;
         example = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enables dbus/systemd service needed by cpupower-gui.
           These services are responsible for retrieving and modifying cpu power
           saving settings.
