@@ -1,12 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    mdDoc
+    mkDefault
+    mkIf
+    mkOption
+    optionalAttrs
+    types
+    ;
 
   cfg = config.services.postsrsd;
-
-in {
+in
+{
 
   ###### interface
 
@@ -17,24 +24,24 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to enable the postsrsd SRS server for Postfix.";
+        description = mdDoc "Whether to enable the postsrsd SRS server for Postfix.";
       };
 
       secretsFile = mkOption {
         type = types.path;
         default = "/var/lib/postsrsd/postsrsd.secret";
-        description = lib.mdDoc "Secret keys used for signing and verification";
+        description = mdDoc "Secret keys used for signing and verification";
       };
 
       domain = mkOption {
         type = types.str;
-        description = lib.mdDoc "Domain name for rewrite";
+        description = mdDoc "Domain name for rewrite";
       };
 
       separator = mkOption {
         type = types.enum ["-" "=" "+"];
         default = "=";
-        description = lib.mdDoc "First separator character in generated addresses";
+        description = mdDoc "First separator character in generated addresses";
       };
 
       # bindAddress = mkOption { # uncomment once 1.5 is released
@@ -46,37 +53,37 @@ in {
       forwardPort = mkOption {
         type = types.int;
         default = 10001;
-        description = lib.mdDoc "Port for the forward SRS lookup";
+        description = mdDoc "Port for the forward SRS lookup";
       };
 
       reversePort = mkOption {
         type = types.int;
         default = 10002;
-        description = lib.mdDoc "Port for the reverse SRS lookup";
+        description = mdDoc "Port for the reverse SRS lookup";
       };
 
       timeout = mkOption {
         type = types.int;
         default = 1800;
-        description = lib.mdDoc "Timeout for idle client connections in seconds";
+        description = mdDoc "Timeout for idle client connections in seconds";
       };
 
       excludeDomains = mkOption {
         type = types.listOf types.str;
         default = [];
-        description = lib.mdDoc "Origin domains to exclude from rewriting in addition to primary domain";
+        description = mdDoc "Origin domains to exclude from rewriting in addition to primary domain";
       };
 
       user = mkOption {
         type = types.str;
         default = "postsrsd";
-        description = lib.mdDoc "User for the daemon";
+        description = mdDoc "User for the daemon";
       };
 
       group = mkOption {
         type = types.str;
         default = "postsrsd";
-        description = lib.mdDoc "Group for the daemon";
+        description = mdDoc "Group for the daemon";
       };
 
     };
