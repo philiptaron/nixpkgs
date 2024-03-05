@@ -1,7 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    maintainers
+    mkOption
+    singleton
+    types
+    ;
+
   cfg = config.virtualisation.linodeImage;
   defaultConfigFile = pkgs.writeText "configuration.nix" ''
     _: {
