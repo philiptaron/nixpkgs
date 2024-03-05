@@ -1,6 +1,15 @@
 { config, lib, pkgs, ... }:
-with lib;
+
 let
+  inherit (lib)
+    head
+    mdDoc
+    mkIf
+    mkOption
+    splitString
+    tail
+    types
+    ;
 
   cfg = config.services.tor;
 
@@ -27,7 +36,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to build tsocks wrapper script to relay application traffic via Tor.
 
           ::: {.important}
@@ -44,7 +53,7 @@ in
         type = types.str;
         default = "localhost:9050";
         example = "192.168.0.20";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           IP address of TOR client to use.
         '';
       };
@@ -52,7 +61,7 @@ in
       config = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra configuration. Contents will be added verbatim to TSocks
           configuration file.
         '';
