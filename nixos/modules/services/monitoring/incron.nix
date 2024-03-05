@@ -1,9 +1,16 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    optional
+    types
+    ;
 
   cfg = config.services.incron;
 
@@ -17,7 +24,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the incron daemon.
 
           Note that commands run under incrontab only support common Nix profiles for the {env}`PATH` provided variable.
@@ -27,7 +34,7 @@ in
       allow = mkOption {
         type = types.nullOr (types.listOf types.str);
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Users allowed to use incrontab.
 
           If empty then no user will be allowed to have their own incrontab.
@@ -40,13 +47,13 @@ in
       deny = mkOption {
         type = types.nullOr (types.listOf types.str);
         default = null;
-        description = lib.mdDoc "Users forbidden from using incrontab.";
+        description = mdDoc "Users forbidden from using incrontab.";
       };
 
       systab = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc "The system incrontab contents.";
+        description = mdDoc "The system incrontab contents.";
         example = ''
           /var/mail IN_CLOSE_WRITE abc $@/$#
           /tmp IN_ALL_EVENTS efg $@/$# $&
@@ -57,7 +64,7 @@ in
         type = types.listOf types.package;
         default = [];
         example = literalExpression "[ pkgs.rsync ]";
-        description = lib.mdDoc "Extra packages available to the system incrontab.";
+        description = mdDoc "Extra packages available to the system incrontab.";
       };
 
     };
