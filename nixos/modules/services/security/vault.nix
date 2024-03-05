@@ -1,14 +1,26 @@
 { config, lib, options, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMap
+    escapeShellArgs
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optional
+    optionalString
+    types
+    ;
+
   cfg = config.services.vault;
   opt = options.services.vault;
 
   configFile = pkgs.writeText "vault.hcl" ''
     # vault in dev mode will refuse to start if its configuration sets listener
-    ${lib.optionalString (!cfg.dev) ''
+    ${optionalString (!cfg.dev) ''
     listener "tcp" {
       address = "${cfg.address}"
       ${if (cfg.tlsCertFile == null || cfg.tlsKeyFile == null) then ''
@@ -34,8 +46,8 @@ let
 
   allConfigPaths = [configFile] ++ cfg.extraSettingsPaths;
   configOptions = escapeShellArgs
-    (lib.optional cfg.dev "-dev" ++
-     lib.optional (cfg.dev && cfg.devRootTokenID != null) "-dev-root-token-id=${cfg.devRootTokenID}"
+    (optional cfg.dev "-dev" ++
+     optional (cfg.dev && cfg.devRootTokenID != null) "-dev-root-token-id=${cfg.devRootTokenID}"
       ++ (concatMap (p: ["-config" p]) allConfigPaths));
 
 in
@@ -43,14 +55,14 @@ in
 {
   options = {
     services.vault = {
-      enable = mkEnableOption (lib.mdDoc "Vault daemon");
+      enable = mkEnableOption (mdDoc "Vault daemon");
 
       package = mkPackageOption pkgs "vault" { };
 
       dev = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           In this mode, Vault runs in-memory and starts unsealed. This option is not meant production but for development and testing i.e. for nixos tests.
         '';
       };
@@ -58,7 +70,7 @@ in
       devRootTokenID = mkOption {
         type = types.str;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Initial root token. This only applies when {option}`services.vault.dev` is true
         '';
       };
@@ -66,21 +78,21 @@ in
       address = mkOption {
         type = types.str;
         default = "127.0.0.1:8200";
-        description = lib.mdDoc "The name of the ip interface to listen to";
+        description = mdDoc "The name of the ip interface to listen to";
       };
 
       tlsCertFile = mkOption {
         type = types.nullOr types.str;
         default = null;
         example = "/path/to/your/cert.pem";
-        description = lib.mdDoc "TLS certificate file. TLS will be disabled unless this option is set";
+        description = mdDoc "TLS certificate file. TLS will be disabled unless this option is set";
       };
 
       tlsKeyFile = mkOption {
         type = types.nullOr types.str;
         default = null;
         example = "/path/to/your/key.pem";
-        description = lib.mdDoc "TLS private key file. TLS will be disabled unless this option is set";
+        description = mdDoc "TLS private key file. TLS will be disabled unless this option is set";
       };
 
       listenerExtraConfig = mkOption {
@@ -88,13 +100,13 @@ in
         default = ''
           tls_min_version = "tls12"
         '';
-        description = lib.mdDoc "Extra text appended to the listener section.";
+        description = mdDoc "Extra text appended to the listener section.";
       };
 
       storageBackend = mkOption {
         type = types.enum [ "inmem" "file" "consul" "zookeeper" "s3" "azure" "dynamodb" "etcd" "mssql" "mysql" "postgresql" "swift" "gcs" "raft" ];
         default = "inmem";
-        description = lib.mdDoc "The name of the type of storage backend";
+        description = mdDoc "The name of the type of storage backend";
       };
 
       storagePath = mkOption {
@@ -105,13 +117,13 @@ in
           then "/var/lib/vault"
           else null
         '';
-        description = lib.mdDoc "Data directory for file backend";
+        description = mdDoc "Data directory for file backend";
       };
 
       storageConfig = mkOption {
         type = types.nullOr types.lines;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           HCL configuration to insert in the storageBackend section.
 
           Confidential values should not be specified here because this option's
@@ -124,19 +136,19 @@ in
       telemetryConfig = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc "Telemetry configuration";
+        description = mdDoc "Telemetry configuration";
       };
 
       extraConfig = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc "Extra text appended to {file}`vault.hcl`.";
+        description = mdDoc "Extra text appended to {file}`vault.hcl`.";
       };
 
       extraSettingsPaths = mkOption {
         type = types.listOf types.path;
         default = [];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration files to load besides the immutable one defined by the NixOS module.
           This can be used to avoid putting credentials in the Nix store, which can be read by any user.
 
@@ -209,7 +221,7 @@ in
         ExecReload = "${pkgs.coreutils}/bin/kill -SIGHUP $MAINPID";
         StateDirectory = "vault";
         # In `dev` mode vault will put its token here
-        Environment = lib.optional (cfg.dev) "HOME=/var/lib/vault";
+        Environment = optional (cfg.dev) "HOME=/var/lib/vault";
         PrivateDevices = true;
         PrivateTmp = true;
         ProtectSystem = "full";
