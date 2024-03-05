@@ -1,8 +1,27 @@
 { config, lib, pkgs, utils, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrNames
+    concatStringsSep
+    filterAttrs
+    getExe
+    head
+    length
+    maintainers
+    mapAttrs'
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    nameValuePair
+    optional
+    optionalString
+    pipe
+    types
+    ;
+
   cfg = config.services.kanata;
 
   keyboard = {
