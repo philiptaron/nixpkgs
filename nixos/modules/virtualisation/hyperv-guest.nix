@@ -1,20 +1,27 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    singleton
+    types
+    ;
+
   cfg = config.virtualisation.hypervGuest;
 
 in {
   options = {
     virtualisation.hypervGuest = {
-      enable = mkEnableOption (lib.mdDoc "Hyper-V Guest Support");
+      enable = mkEnableOption (mdDoc "Hyper-V Guest Support");
 
       videoMode = mkOption {
         type = types.str;
         default = "1152x864";
         example = "1024x768";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Resolution at which to initialize the video adapter.
 
           Supports screen resolution up to Full HD 1920x1080 with 32 bit color
@@ -41,7 +48,7 @@ in {
     environment.systemPackages = [ config.boot.kernelPackages.hyperv-daemons.bin ];
 
     # enable hotadding cpu/memory
-    services.udev.packages = lib.singleton (pkgs.writeTextFile {
+    services.udev.packages = singleton (pkgs.writeTextFile {
       name = "hyperv-cpu-and-memory-hotadd-udev-rules";
       destination = "/etc/udev/rules.d/99-hyperv-cpu-and-memory-hotadd.rules";
       text = ''
