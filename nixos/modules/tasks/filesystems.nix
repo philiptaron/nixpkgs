@@ -1,9 +1,37 @@
 { config, lib, pkgs, utils, ... }:
 
-with lib;
-with utils;
-
 let
+  inherit (lib)
+    any
+    attrValues
+    concatMapStrings
+    concatMapStringsSep
+    concatStringsSep
+    elem
+    filter
+    flip
+    head
+    listToAttrs
+    literalExpression
+    mdDoc
+    mkDefault
+    mkForce
+    mkIf
+    mkMerge
+    mkOption
+    nameValuePair
+    optional
+    optionalAttrs
+    optionals
+    optionalString
+    toposort
+    types
+    ;
+
+  inherit (utils)
+    fsBefore
+    fsNeededForBoot
+    ;
 
   addCheckDesc = desc: elemType: check: types.addCheck elemType check
     // { description = "${elemType.description} (with check: ${desc})"; };
@@ -33,12 +61,12 @@ let
       mountPoint = mkOption {
         example = "/mnt/usb";
         type = nonEmptyWithoutTrailingSlash;
-        description = lib.mdDoc "Location of the mounted file system.";
+        description = mdDoc "Location of the mounted file system.";
       };
 
-      stratis.poolUuid = lib.mkOption {
+      stratis.poolUuid = mkOption {
         type = types.uniq (types.nullOr types.str);
-        description = lib.mdDoc ''
+        description = mdDoc ''
           UUID of the stratis pool that the fs is located in
         '';
         example = "04c68063-90a5-4235-b9dd-6180098a20d9";
@@ -49,20 +77,20 @@ let
         default = null;
         example = "/dev/sda";
         type = types.nullOr nonEmptyStr;
-        description = lib.mdDoc "Location of the device.";
+        description = mdDoc "Location of the device.";
       };
 
       fsType = mkOption {
         default = "auto";
         example = "ext3";
         type = nonEmptyStr;
-        description = lib.mdDoc "Type of the file system.";
+        description = mdDoc "Type of the file system.";
       };
 
       options = mkOption {
         default = [ "defaults" ];
         example = [ "data=journal" ];
-        description = lib.mdDoc "Options used to mount the file system.";
+        description = mdDoc "Options used to mount the file system.";
         type = types.nonEmptyListOf nonEmptyStr;
       };
 
@@ -70,7 +98,7 @@ let
         default = [ ];
         example = [ "/persist" ];
         type = types.listOf nonEmptyWithoutTrailingSlash;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of paths that should be mounted before this one. This filesystem's
           {option}`device` and {option}`mountPoint` are always
           checked and do not need to be included explicitly. If a path is added
@@ -97,13 +125,13 @@ let
         default = null;
         example = "root-partition";
         type = types.nullOr nonEmptyStr;
-        description = lib.mdDoc "Label of the device (if any).";
+        description = mdDoc "Label of the device (if any).";
       };
 
       autoFormat = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If the device does not currently contain a filesystem (as
           determined by {command}`blkid`), then automatically
           format it with the filesystem type specified in
@@ -120,7 +148,7 @@ let
       autoResize = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If set, the filesystem is grown to its maximum size before
           being mounted. (This is typically the size of the containing
           partition.) This is currently only supported for ext2/3/4
@@ -131,7 +159,7 @@ let
       noCheck = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc "Disable running fsck on this filesystem.";
+        description = mdDoc "Disable running fsck on this filesystem.";
       };
 
     };
@@ -139,7 +167,7 @@ let
     config.options = mkMerge [
       (mkIf config.autoResize [ "x-systemd.growfs" ])
       (mkIf config.autoFormat [ "x-systemd.makefs" ])
-      (mkIf (utils.fsNeededForBoot config) [ "x-initrd.mount" ])
+      (mkIf (fsNeededForBoot config) [ "x-initrd.mount" ])
     ];
 
   };
@@ -175,7 +203,7 @@ let
         "cifs"
         "prl_fs"
         "vmhgfs"
-      ] ++ lib.optionals (!config.boot.initrd.checkJournalingFS) [
+      ] ++ optionals (!config.boot.initrd.checkJournalingFS) [
         "ext3"
         "ext4"
         "reiserfs"
@@ -198,7 +226,7 @@ let
       + "\n"
     ) fstabFileSystems;
 
-    initrdFstab = pkgs.writeText "initrd-fstab" (makeFstabEntries (filter utils.fsNeededForBoot fileSystems) { });
+    initrdFstab = pkgs.writeText "initrd-fstab" (makeFstabEntries (filter fsNeededForBoot fileSystems) { });
 
 in
 
@@ -222,7 +250,7 @@ in
         }
       '';
       type = types.attrsOf (types.submodule [coreFileSystemOpts fileSystemOpts]);
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The file systems to be mounted.  It must include an entry for
         the root directory (`mountPoint = "/"`).  Each
         entry in the list is an attribute set with the following fields:
@@ -242,24 +270,24 @@ in
     system.fsPackages = mkOption {
       internal = true;
       default = [ ];
-      description = lib.mdDoc "Packages supplying file system mounters and checkers.";
+      description = mdDoc "Packages supplying file system mounters and checkers.";
     };
 
     boot.supportedFilesystems = mkOption {
       default = { };
-      example = lib.literalExpression ''
+      example = literalExpression ''
         {
           btrfs = true;
-          zfs = lib.mkForce false;
+          zfs = mkForce false;
         }
       '';
       type = types.coercedTo
         (types.listOf types.str)
-        (enabled: lib.listToAttrs (map (fs: lib.nameValuePair fs true) enabled))
+        (enabled: listToAttrs (map (fs: nameValuePair fs true) enabled))
         (types.attrsOf types.bool);
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Names of supported filesystem types, or an attribute set of file system types
-        and their state. The set form may be used together with `lib.mkForce` to
+        and their state. The set form may be used together with `mkForce` to
         explicitly disable support for specific filesystems, e.g. to disable ZFS
         with an unsupported kernel.
       '';
@@ -269,7 +297,7 @@ in
       default = {};
       type = types.attrsOf (types.submodule coreFileSystemOpts);
       internal = true;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Special filesystems that are mounted very early during boot.
       '';
     };
@@ -278,7 +306,7 @@ in
       default = "5%";
       example = "32m";
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Size limit for the /dev tmpfs. Look at mount(8), tmpfs size option,
         for the accepted syntax.
       '';
@@ -288,7 +316,7 @@ in
       default = "50%";
       example = "256m";
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Size limit for the /dev/shm tmpfs. Look at mount(8), tmpfs size option,
         for the accepted syntax.
       '';
@@ -298,7 +326,7 @@ in
       default = "25%";
       example = "256m";
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Size limit for the /run tmpfs. Look at mount(8), tmpfs size option,
         for the accepted syntax.
       '';
@@ -329,7 +357,7 @@ in
         in ''
           Mountpoint '${fs.mountPoint}': 'autoResize = true' is not supported for 'fsType = "${fs.fsType}"'
           ${optionalString (fs.fsType == "auto") "fsType has to be explicitly set and"}
-          only the following support it: ${lib.concatStringsSep ", " resizableFSes}.
+          only the following support it: ${concatStringsSep ", " resizableFSes}.
         '';
       }
       {
