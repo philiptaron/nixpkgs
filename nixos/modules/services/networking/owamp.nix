@@ -1,8 +1,12 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.services.owamp;
 in
 {
@@ -10,7 +14,7 @@ in
   ###### interface
 
   options = {
-    services.owamp.enable = mkEnableOption (lib.mdDoc "OWAMP server");
+    services.owamp.enable = mkEnableOption (mdDoc "OWAMP server");
   };
 
 
