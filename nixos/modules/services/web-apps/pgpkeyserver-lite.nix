@@ -1,8 +1,15 @@
 { config, lib, options, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
 
   cfg = config.services.pgpkeyserver-lite;
   sksCfg = config.services.sks;
@@ -18,13 +25,13 @@ in
 
     services.pgpkeyserver-lite = {
 
-      enable = mkEnableOption (lib.mdDoc "pgpkeyserver-lite on a nginx vHost proxying to a gpg keyserver");
+      enable = mkEnableOption (mdDoc "pgpkeyserver-lite on a nginx vHost proxying to a gpg keyserver");
 
       package = mkPackageOption pkgs "pgpkeyserver-lite" { };
 
       hostname = mkOption {
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Which hostname to set the vHost to that is proxying to sks.
         '';
       };
@@ -33,7 +40,7 @@ in
         default = builtins.head sksCfg.hkpAddress;
         defaultText = literalExpression "head config.${sksOpt.hkpAddress}";
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Which IP address the sks-keyserver is listening on.
         '';
       };
@@ -42,7 +49,7 @@ in
         default = sksCfg.hkpPort;
         defaultText = literalExpression "config.${sksOpt.hkpPort}";
         type = types.int;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Which port the sks-keyserver is listening on.
         '';
       };
