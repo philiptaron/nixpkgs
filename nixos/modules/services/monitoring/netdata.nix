@@ -1,8 +1,22 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    generators
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optional
+    optionalAttrs
+    recursiveUpdate
+    types
+    ;
+
   cfg = config.services.netdata;
 
   wrappedPlugins = pkgs.runCommand "wrapped-plugins" { preferLocalBuild = true; } ''
@@ -50,25 +64,25 @@ let
 in {
   options = {
     services.netdata = {
-      enable = mkEnableOption (lib.mdDoc "netdata");
+      enable = mkEnableOption (mdDoc "netdata");
 
       package = mkPackageOption pkgs "netdata" { };
 
       user = mkOption {
         type = types.str;
         default = "netdata";
-        description = lib.mdDoc "User account under which netdata runs.";
+        description = mdDoc "User account under which netdata runs.";
       };
 
       group = mkOption {
         type = types.str;
         default = "netdata";
-        description = lib.mdDoc "Group under which netdata runs.";
+        description = mdDoc "Group under which netdata runs.";
       };
 
       configText = mkOption {
         type = types.nullOr types.lines;
-        description = lib.mdDoc "Verbatim netdata.conf, cannot be combined with config.";
+        description = mdDoc "Verbatim netdata.conf, cannot be combined with config.";
         default = null;
         example = ''
           [global]
@@ -82,7 +96,7 @@ in {
         enable = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Whether to enable python-based plugins
           '';
         };
@@ -97,7 +111,7 @@ in {
               ps.dnspython
             ]
           '';
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Extra python packages available at runtime
             to enable additional python plugins.
           '';
@@ -110,7 +124,7 @@ in {
         example = literalExpression ''
           [ "/path/to/plugins.d" ]
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra paths to add to the netdata global "plugins directory"
           option.  Useful for when you want to include your own
           collection scripts.
@@ -125,7 +139,7 @@ in {
       config = mkOption {
         type = types.attrsOf types.attrs;
         default = {};
-        description = lib.mdDoc "netdata.conf configuration as nix attributes. cannot be combined with configText.";
+        description = mdDoc "netdata.conf configuration as nix attributes. cannot be combined with configText.";
         example = literalExpression ''
           global = {
             "debug log" = "syslog";
@@ -138,7 +152,7 @@ in {
       configDir = mkOption {
         type = types.attrsOf types.path;
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Complete netdata config directory except netdata.conf.
           The default configuration is merged with changes
           defined in this option.
@@ -158,7 +172,7 @@ in {
       claimTokenFile = mkOption {
         type = types.nullOr types.path;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If set, automatically registers the agent using the given claim token
           file.
         '';
@@ -167,7 +181,7 @@ in {
       enableAnalyticsReporting = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable reporting of anonymous usage statistics to Netdata Inc. via either
           Google Analytics (in versions prior to 1.29.4), or Netdata Inc.'s
           self-hosted PostHog (in versions 1.29.4 and later).
@@ -178,7 +192,7 @@ in {
       deadlineBeforeStopSec = mkOption {
         type = types.int;
         default = 120;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           In order to detect when netdata is misbehaving, we run a concurrent task pinging netdata (wait-for-netdata-up)
           in the systemd unit.
 
@@ -215,12 +229,12 @@ in {
           bash
           util-linux # provides logger command; required for syslog health alarms
       ])
-        ++ lib.optional cfg.python.enable (pkgs.python3.withPackages cfg.python.extraPackages)
-        ++ lib.optional config.virtualisation.libvirtd.enable (config.virtualisation.libvirtd.package);
+        ++ optional cfg.python.enable (pkgs.python3.withPackages cfg.python.extraPackages)
+        ++ optional config.virtualisation.libvirtd.enable (config.virtualisation.libvirtd.package);
       environment = {
         PYTHONPATH = "${cfg.package}/libexec/netdata/python.d/python_modules";
         NETDATA_PIPENAME = "/run/netdata/ipc";
-      } // lib.optionalAttrs (!cfg.enableAnalyticsReporting) {
+      } // optionalAttrs (!cfg.enableAnalyticsReporting) {
         DO_NOT_TRACK = "1";
       };
       restartTriggers = [
@@ -276,7 +290,7 @@ in {
         PrivateTmp = true;
         ProtectControlGroups = true;
         PrivateMounts = true;
-      } // (lib.optionalAttrs (cfg.claimTokenFile != null) {
+      } // (optionalAttrs (cfg.claimTokenFile != null) {
         LoadCredential = [
           "netdata_claim_token:${cfg.claimTokenFile}"
         ];
