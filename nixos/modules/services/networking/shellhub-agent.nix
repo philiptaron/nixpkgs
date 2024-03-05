@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.shellhub-agent;
 in
 {
@@ -12,14 +19,14 @@ in
 
     services.shellhub-agent = {
 
-      enable = mkEnableOption (lib.mdDoc "ShellHub Agent daemon");
+      enable = mkEnableOption (mdDoc "ShellHub Agent daemon");
 
       package = mkPackageOption pkgs "shellhub-agent" { };
 
       preferredHostname = mkOption {
         type = types.str;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Set the device preferred hostname. This provides a hint to
           the server to use this as hostname if it is available.
         '';
@@ -28,7 +35,7 @@ in
       keepAliveInterval = mkOption {
         type = types.int;
         default = 30;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Determine the interval to send the keep alive message to
           the server. This has a direct impact of the bandwidth
           used by the device.
@@ -38,7 +45,7 @@ in
       tenantId = mkOption {
         type = types.str;
         example = "ba0a880c-2ada-11eb-a35e-17266ef329d6";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The tenant ID to use when connecting to the ShellHub
           Gateway.
         '';
@@ -47,7 +54,7 @@ in
       server = mkOption {
         type = types.str;
         default = "https://cloud.shellhub.io";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Server address of ShellHub Gateway to connect.
         '';
       };
@@ -55,7 +62,7 @@ in
       privateKey = mkOption {
         type = types.path;
         default = "/var/lib/shellhub-agent/private.key";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Location where to store the ShellHub Agent private
           key.
         '';
