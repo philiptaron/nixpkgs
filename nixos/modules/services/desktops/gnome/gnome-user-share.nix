@@ -2,7 +2,15 @@
 
 { config, pkgs, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkRenamedOptionModule
+    teams
+    ;
+in
 
 {
 
@@ -24,7 +32,7 @@ with lib;
 
     services.gnome.gnome-user-share = {
 
-      enable = mkEnableOption (lib.mdDoc "GNOME User Share, a user-level file sharing service for GNOME");
+      enable = mkEnableOption (mdDoc "GNOME User Share, a user-level file sharing service for GNOME");
 
     };
 
