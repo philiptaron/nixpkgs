@@ -1,19 +1,27 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    singleton
+    types
+    ;
+
   cfg = config.services.xserver.windowManager.wmderland;
 in
 
 {
   options.services.xserver.windowManager.wmderland = {
-    enable = mkEnableOption (lib.mdDoc "wmderland");
+    enable = mkEnableOption (mdDoc "wmderland");
 
     extraSessionCommands = mkOption {
       default = "";
       type = types.lines;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Shell commands executed just before wmderland is started.
       '';
     };
@@ -38,7 +46,7 @@ in
           rxvt-unicode
         ]
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra packages to be installed system wide.
       '';
     };
