@@ -1,14 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    singleton
+    ;
+
   cfg = config.services.xserver.windowManager.yeahwm;
 in
 {
   ###### interface
   options = {
-    services.xserver.windowManager.yeahwm.enable = mkEnableOption (lib.mdDoc "yeahwm");
+    services.xserver.windowManager.yeahwm.enable = mkEnableOption (mdDoc "yeahwm");
   };
 
   ###### implementation
