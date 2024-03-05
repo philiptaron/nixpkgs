@@ -6,7 +6,13 @@
   # test dependencies
   xvfb-run, liberation_ttf, file, tesseract }:
 
-with lib;
+let
+  inherit (lib)
+    fix
+    licenses
+    maintainers
+    ;
+in
 
 perlPackages.buildPerlPackage rec {
   pname = "gscan2pdf";
