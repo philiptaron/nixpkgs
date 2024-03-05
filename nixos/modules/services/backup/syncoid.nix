@@ -1,8 +1,28 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStrings
+    concatStringsSep
+    escapeShellArgs
+    isList
+    literalExpression
+    maintainers
+    mapAttrs'
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    nameValuePair
+    optional
+    optionals
+    optionalString
+    types
+    ;
+
   cfg = config.services.syncoid;
 
   # Extract local dasaset names (so no datasets containing "@")
@@ -13,7 +33,7 @@ let
 
   # Escape as required by: https://www.freedesktop.org/software/systemd/man/systemd.unit.html
   escapeUnitName = name:
-    lib.concatMapStrings (s: if lib.isList s then "-" else s)
+    concatMapStrings (s: if isList s then "-" else s)
       (builtins.split "[^a-zA-Z0-9_.\\-]+" name);
 
   # Function to build "zfs allow" commands for the filesystems we've delegated
@@ -26,21 +46,21 @@ let
       # Here we explicitly use the booted system to guarantee the stable API needed by ZFS
 
       # Run a ZFS list on the dataset to check if it exists
-      if ${lib.escapeShellArgs [
+      if ${escapeShellArgs [
         "/run/booted-system/sw/bin/zfs"
         "list"
         dataset
       ]} 2> /dev/null; then
-        ${lib.escapeShellArgs [
+        ${escapeShellArgs [
           "/run/booted-system/sw/bin/zfs"
           "allow"
           cfg.user
           (concatStringsSep "," permissions)
           dataset
         ]}
-      ${lib.optionalString ((builtins.dirOf dataset) != ".") ''
+      ${optionalString ((builtins.dirOf dataset) != ".") ''
         else
-          ${lib.escapeShellArgs [
+          ${escapeShellArgs [
             "/run/booted-system/sw/bin/zfs"
             "allow"
             cfg.user
@@ -62,14 +82,14 @@ let
   buildUnallowCommand = permissions: dataset: (
     "-+${pkgs.writeShellScript "zfs-unallow-${dataset}" ''
       # Here we explicitly use the booted system to guarantee the stable API needed by ZFS
-      ${lib.escapeShellArgs [
+      ${escapeShellArgs [
         "/run/booted-system/sw/bin/zfs"
         "unallow"
         cfg.user
         (concatStringsSep "," permissions)
         dataset
       ]}
-      ${lib.optionalString ((builtins.dirOf dataset) != ".") (lib.escapeShellArgs [
+      ${optionalString ((builtins.dirOf dataset) != ".") (escapeShellArgs [
         "/run/booted-system/sw/bin/zfs"
         "unallow"
         cfg.user
@@ -85,15 +105,15 @@ in
   # Interface
 
   options.services.syncoid = {
-    enable = mkEnableOption (lib.mdDoc "Syncoid ZFS synchronization service");
+    enable = mkEnableOption (mdDoc "Syncoid ZFS synchronization service");
 
-    package = lib.mkPackageOption pkgs "sanoid" {};
+    package = mkPackageOption pkgs "sanoid" {};
 
     interval = mkOption {
       type = types.str;
       default = "hourly";
       example = "*-*-* *:15:00";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Run syncoid at this interval. The default is to run hourly.
 
         The format is described in
@@ -105,7 +125,7 @@ in
       type = types.str;
       default = "syncoid";
       example = "backup";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The user for the service. ZFS privilege delegation will be
         automatically configured for any local pools used by syncoid if this
         option is set to a user other than root. The user will be given the
@@ -119,13 +139,13 @@ in
       type = types.str;
       default = "syncoid";
       example = "backup";
-      description = lib.mdDoc "The group for the service.";
+      description = mdDoc "The group for the service.";
     };
 
     sshKey = mkOption {
       type = with types; nullOr (coercedTo path toString str);
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         SSH private key file to use to login to the remote system. Can be
         overridden in individual commands.
       '';
@@ -135,7 +155,7 @@ in
       type = types.listOf types.str;
       # Permissions snapshot and destroy are in case --no-sync-snap is not used
       default = [ "bookmark" "hold" "send" "snapshot" "destroy" "mount" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Permissions granted for the {option}`services.syncoid.user` user
         for local source datasets. See
         <https://openzfs.github.io/openzfs-docs/man/8/zfs-allow.8.html>
@@ -147,7 +167,7 @@ in
       type = types.listOf types.str;
       default = [ "change-key" "compression" "create" "mount" "mountpoint" "receive" "rollback" ];
       example = [ "create" "mount" "receive" "rollback" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Permissions granted for the {option}`services.syncoid.user` user
         for local target datasets. See
         <https://openzfs.github.io/openzfs-docs/man/8/zfs-allow.8.html>
@@ -162,7 +182,7 @@ in
       type = types.listOf types.str;
       default = [ ];
       example = [ "--no-sync-snap" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Arguments to add to every syncoid command, unless disabled for that
         command. See
         <https://github.com/jimsalterjrs/sanoid/#syncoid-command-line-options>
@@ -173,7 +193,7 @@ in
     service = mkOption {
       type = types.attrs;
       default = { };
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Systemd configuration common to all syncoid services.
       '';
     };
@@ -184,7 +204,7 @@ in
           source = mkOption {
             type = types.str;
             example = "pool/dataset";
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Source ZFS dataset. Can be either local or remote. Defaults to
               the attribute name.
             '';
@@ -193,18 +213,18 @@ in
           target = mkOption {
             type = types.str;
             example = "user@server:pool/dataset";
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Target ZFS dataset. Can be either local
               («pool/dataset») or remote
               («user@server:pool/dataset»).
             '';
           };
 
-          recursive = mkEnableOption (lib.mdDoc ''the transfer of child datasets'');
+          recursive = mkEnableOption (mdDoc ''the transfer of child datasets'');
 
           sshKey = mkOption {
             type = with types; nullOr (coercedTo path toString str);
-            description = lib.mdDoc ''
+            description = mdDoc ''
               SSH private key file to use to login to the remote system.
               Defaults to {option}`services.syncoid.sshKey` option.
             '';
@@ -212,7 +232,7 @@ in
 
           localSourceAllow = mkOption {
             type = types.listOf types.str;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Permissions granted for the {option}`services.syncoid.user` user
               for local source datasets. See
               <https://openzfs.github.io/openzfs-docs/man/8/zfs-allow.8.html>
@@ -223,7 +243,7 @@ in
 
           localTargetAllow = mkOption {
             type = types.listOf types.str;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Permissions granted for the {option}`services.syncoid.user` user
               for local target datasets. See
               <https://openzfs.github.io/openzfs-docs/man/8/zfs-allow.8.html>
@@ -238,7 +258,7 @@ in
             type = types.separatedString " ";
             default = "";
             example = "Lc e";
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Advanced options to pass to zfs send. Options are specified
               without their leading dashes and separated by spaces.
             '';
@@ -248,7 +268,7 @@ in
             type = types.separatedString " ";
             default = "";
             example = "ux recordsize o compression=lz4";
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Advanced options to pass to zfs recv. Options are specified
               without their leading dashes and separated by spaces.
             '';
@@ -257,7 +277,7 @@ in
           useCommonArgs = mkOption {
             type = types.bool;
             default = true;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Whether to add the configured common arguments to this command.
             '';
           };
@@ -265,7 +285,7 @@ in
           service = mkOption {
             type = types.attrs;
             default = { };
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Systemd configuration specific to this syncoid service.
             '';
           };
@@ -274,7 +294,7 @@ in
             type = types.listOf types.str;
             default = [ ];
             example = [ "--sshport 2222" ];
-            description = lib.mdDoc "Extra syncoid arguments for this command.";
+            description = mdDoc "Extra syncoid arguments for this command.";
           };
         };
         config = {
@@ -290,7 +310,7 @@ in
           "pool/test".target = "root@target:pool/test";
         }
       '';
-      description = lib.mdDoc "Syncoid commands to run.";
+      description = mdDoc "Syncoid commands to run.";
     };
   };
 
@@ -329,7 +349,7 @@ in
               ExecStopPost =
                 (map (buildUnallowCommand c.localSourceAllow) (localDatasetName c.source)) ++
                 (map (buildUnallowCommand c.localTargetAllow) (localDatasetName c.target));
-              ExecStart = lib.escapeShellArgs ([ "${cfg.package}/bin/syncoid" ]
+              ExecStart = escapeShellArgs ([ "${cfg.package}/bin/syncoid" ]
                 ++ optionals c.useCommonArgs cfg.commonArgs
                 ++ optional c.recursive "-r"
                 ++ optionals (c.sshKey != null) [ "--sshkey" c.sshKey ]
