@@ -1,8 +1,12 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    singleton
+    ;
 
   cfg = config.services.xserver.windowManager.twm;
 
@@ -13,7 +17,7 @@ in
   ###### interface
 
   options = {
-    services.xserver.windowManager.twm.enable = mkEnableOption (lib.mdDoc "twm");
+    services.xserver.windowManager.twm.enable = mkEnableOption (mdDoc "twm");
   };
 
 
