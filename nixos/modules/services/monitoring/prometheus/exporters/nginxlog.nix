@@ -1,8 +1,13 @@
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkOption
+    recursiveUpdate
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.nginxlog;
 in {
   port = 9117;
@@ -10,7 +15,7 @@ in {
     settings = mkOption {
       type = types.attrs;
       default = {};
-      description = lib.mdDoc ''
+      description = mdDoc ''
         All settings of nginxlog expressed as an Nix attrset.
 
         Check the official documentation for the corresponding YAML
@@ -24,7 +29,7 @@ in {
     metricsEndpoint = mkOption {
       type = types.str;
       default = "/metrics";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path under which to expose metrics.
       '';
     };
@@ -38,7 +43,7 @@ in {
         metrics_endpoint = cfg.metricsEndpoint;
       };
     };
-    completeConfig = pkgs.writeText "nginxlog-exporter.yaml" (builtins.toJSON (lib.recursiveUpdate listenConfig cfg.settings));
+    completeConfig = pkgs.writeText "nginxlog-exporter.yaml" (builtins.toJSON (recursiveUpdate listenConfig cfg.settings));
   in {
     serviceConfig = {
       ExecStart = ''
