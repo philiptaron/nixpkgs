@@ -1,37 +1,44 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
 
-let cfg = config.services.antennas;
+  cfg = config.services.antennas;
 in
 
 {
   options = {
     services.antennas = {
-      enable = mkEnableOption (lib.mdDoc "Antennas");
+      enable = mkEnableOption (mdDoc "Antennas");
 
       tvheadendUrl = mkOption {
         type        = types.str;
         default     = "http://localhost:9981";
-        description = lib.mdDoc "URL of Tvheadend.";
+        description = mdDoc "URL of Tvheadend.";
       };
 
       antennasUrl = mkOption {
         type        = types.str;
         default     = "http://127.0.0.1:5004";
-        description = lib.mdDoc "URL of Antennas.";
+        description = mdDoc "URL of Antennas.";
       };
 
       tunerCount = mkOption {
         type        = types.int;
         default     = 6;
-        description = lib.mdDoc "Numbers of tuners in tvheadend.";
+        description = mdDoc "Numbers of tuners in tvheadend.";
       };
 
       deviceUUID = mkOption {
         type        = types.str;
         default     = "2f70c0d7-90a3-4429-8275-cbeeee9cd605";
-        description = lib.mdDoc "Device tuner UUID. Change this if you are running multiple instances.";
+        description = mdDoc "Device tuner UUID. Change this if you are running multiple instances.";
       };
     };
   };
