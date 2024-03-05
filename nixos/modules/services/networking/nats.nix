@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    optionalAttrs
+    types
+    ;
 
   cfg = config.services.nats;
 
@@ -16,35 +24,35 @@ in {
 
   options = {
     services.nats = {
-      enable = mkEnableOption (lib.mdDoc "NATS messaging system");
+      enable = mkEnableOption (mdDoc "NATS messaging system");
 
       user = mkOption {
         type = types.str;
         default = "nats";
-        description = lib.mdDoc "User account under which NATS runs.";
+        description = mdDoc "User account under which NATS runs.";
       };
 
       group = mkOption {
         type = types.str;
         default = "nats";
-        description = lib.mdDoc "Group under which NATS runs.";
+        description = mdDoc "Group under which NATS runs.";
       };
 
       serverName = mkOption {
         default = "nats";
         example = "n1-c3";
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Name of the NATS server, must be unique if clustered.
         '';
       };
 
-      jetstream = mkEnableOption (lib.mdDoc "JetStream");
+      jetstream = mkEnableOption (mdDoc "JetStream");
 
       port = mkOption {
         default = 4222;
         type = types.port;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Port on which to listen.
         '';
       };
@@ -52,7 +60,7 @@ in {
       dataDir = mkOption {
         default = "/var/lib/nats";
         type = types.path;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The NATS data directory. Only used if JetStream is enabled, for
           storing stream metadata and messages.
 
@@ -74,7 +82,7 @@ in {
             };
           };
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Declarative NATS configuration. See the
           [
           NATS documentation](https://docs.nats.io/nats-server/configuration) for a list of options.
