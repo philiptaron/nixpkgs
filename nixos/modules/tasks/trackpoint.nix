@@ -1,6 +1,14 @@
 { config, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkMerge
+    mkOption
+    types
+    ;
+in
 
 {
   ###### interface
@@ -12,7 +20,7 @@ with lib;
       enable = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable sensitivity and speed configuration for trackpoints.
         '';
       };
@@ -21,7 +29,7 @@ with lib;
         default = 128;
         example = 255;
         type = types.int;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configure the trackpoint sensitivity. By default, the kernel
           configures 128.
         '';
@@ -31,7 +39,7 @@ with lib;
         default = 97;
         example = 255;
         type = types.int;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configure the trackpoint speed. By default, the kernel
           configures 97.
         '';
@@ -40,7 +48,7 @@ with lib;
       emulateWheel = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable scrolling while holding the middle mouse button.
         '';
       };
@@ -48,7 +56,7 @@ with lib;
       fakeButtons = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Switch to "bare" PS/2 mouse support in case Trackpoint buttons are not recognized
           properly. This can happen for example on models like the L430, T450, T450s, on
           which the Trackpoint buttons are actually a part of the Synaptics touchpad.
@@ -58,7 +66,7 @@ with lib;
       device = mkOption {
         default = "TPPS/2 IBM TrackPoint";
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The device name of the trackpoint. You can check with xinput.
           Some newer devices (example x1c6) use "TPPS/2 Elan TrackPoint".
         '';
