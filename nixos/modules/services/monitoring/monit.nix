@@ -1,20 +1,27 @@
 {config, pkgs, lib, ...}:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.monit;
 in
 
 {
   options.services.monit = {
 
-    enable = mkEnableOption (lib.mdDoc "Monit");
+    enable = mkEnableOption (mdDoc "Monit");
 
     config = mkOption {
       type = types.lines;
       default = "";
-      description = lib.mdDoc "monitrc content";
+      description = mdDoc "monitrc content";
     };
 
   };
