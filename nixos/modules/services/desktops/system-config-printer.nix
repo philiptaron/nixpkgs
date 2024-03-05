@@ -1,6 +1,12 @@
 { config, pkgs, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+in
 
 {
 
@@ -10,7 +16,7 @@ with lib;
 
     services.system-config-printer = {
 
-      enable = mkEnableOption (lib.mdDoc "system-config-printer, a service for CUPS administration used by printing interfaces");
+      enable = mkEnableOption (mdDoc "system-config-printer, a service for CUPS administration used by printing interfaces");
 
     };
 
