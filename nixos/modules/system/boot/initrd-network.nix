@@ -1,16 +1,26 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrNames
+    concatMapStringsSep
+    escapeShellArg
+    filterAttrs
+    mdDoc
+    mkBefore
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
 
   cfg = config.boot.initrd.network;
 
-  dhcpInterfaces = lib.attrNames (lib.filterAttrs (iface: v: v.useDHCP == true) (config.networking.interfaces or {}));
+  dhcpInterfaces = attrNames (filterAttrs (iface: v: v.useDHCP == true) (config.networking.interfaces or {}));
   doDhcp = cfg.udhcpc.enable || dhcpInterfaces != [];
   dhcpIfShellExpr = if config.networking.useDHCP || cfg.udhcpc.enable
                       then "$(ls /sys/class/net/ | grep -v ^lo$)"
-                      else lib.concatMapStringsSep " " lib.escapeShellArg dhcpInterfaces;
+                      else concatMapStringsSep " " escapeShellArg dhcpInterfaces;
 
   udhcpcScript = pkgs.writeScript "udhcp-script"
     ''
@@ -50,7 +60,7 @@ in
     boot.initrd.network.enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Add network connectivity support to initrd. The network may be
         configured using the `ip` kernel parameter,
         as described in [the kernel documentation](https://www.kernel.org/doc/Documentation/filesystems/nfs/nfsroot.txt).
@@ -69,7 +79,7 @@ in
       type = types.bool;
       default = !config.boot.initrd.systemd.enable;
       defaultText = "!config.boot.initrd.systemd.enable";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to clear the configuration of the interfaces that were set up in
         the initrd right before stage 2 takes over. Stage 2 will do the regular network
         configuration based on the NixOS networking options.
@@ -83,7 +93,7 @@ in
       default = config.networking.useDHCP && !config.boot.initrd.systemd.enable;
       defaultText = "networking.useDHCP";
       type = types.bool;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Enables the udhcpc service during stage 1 of the boot process. This
         defaults to {option}`networking.useDHCP`. Therefore, this useful if
         useDHCP is off but the initramfs should do dhcp.
@@ -93,7 +103,7 @@ in
     boot.initrd.network.udhcpc.extraArgs = mkOption {
       default = [];
       type = types.listOf types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Additional command-line arguments passed verbatim to
         udhcpc if {option}`boot.initrd.network.enable` and
         {option}`boot.initrd.network.udhcpc.enable` are enabled.
@@ -103,7 +113,7 @@ in
     boot.initrd.network.postCommands = mkOption {
       default = "";
       type = types.lines;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Shell commands to be executed after stage 1 of the
         boot has initialised the network.
       '';
