@@ -1,15 +1,24 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.teleport;
   settingsYaml = pkgs.formats.yaml { };
 in
 {
   options = {
-    services.teleport = with lib.types; {
-      enable = mkEnableOption (lib.mdDoc "the Teleport service");
+    services.teleport = with types; {
+      enable = mkEnableOption (mdDoc "the Teleport service");
 
       package = mkPackageOption pkgs "teleport" {
         example = "teleport_11";
@@ -37,7 +46,7 @@ in
             auth_service.enabled = false;
           }
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Contents of the `teleport.yaml` config file.
           The `--config` arguments will only be passed if this set is not empty.
 
@@ -45,7 +54,7 @@ in
         '';
       };
 
-      insecure.enable = mkEnableOption (lib.mdDoc ''
+      insecure.enable = mkEnableOption (mdDoc ''
         starting teleport in insecure mode.
 
         This is dangerous!
@@ -56,7 +65,7 @@ in
       '');
 
       diag = {
-        enable = mkEnableOption (lib.mdDoc ''
+        enable = mkEnableOption (mdDoc ''
           endpoints for monitoring purposes.
 
           See <https://goteleport.com/docs/setup/admin/troubleshooting/#troubleshooting/>
@@ -65,13 +74,13 @@ in
         addr = mkOption {
           type = str;
           default = "127.0.0.1";
-          description = lib.mdDoc "Metrics and diagnostics address.";
+          description = mdDoc "Metrics and diagnostics address.";
         };
 
         port = mkOption {
           type = port;
           default = 3000;
-          description = lib.mdDoc "Metrics and diagnostics port.";
+          description = mdDoc "Metrics and diagnostics port.";
         };
       };
     };
