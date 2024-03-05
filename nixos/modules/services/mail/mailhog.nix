@@ -1,17 +1,26 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRemovedOptionModule
+    optional
+    types
+    ;
+
   cfg = config.services.mailhog;
 
-  args = lib.concatStringsSep " " (
+  args = concatStringsSep " " (
     [
       "-api-bind-addr :${toString cfg.apiPort}"
       "-smtp-bind-addr :${toString cfg.smtpPort}"
       "-ui-bind-addr :${toString cfg.uiPort}"
       "-storage ${cfg.storage}"
-    ] ++ lib.optional (cfg.storage == "maildir")
+    ] ++ optional (cfg.storage == "maildir")
       "-maildir-path $STATE_DIRECTORY"
     ++ cfg.extraArgs
   );
@@ -27,36 +36,36 @@ in
   options = {
 
     services.mailhog = {
-      enable = mkEnableOption (lib.mdDoc "MailHog");
+      enable = mkEnableOption (mdDoc "MailHog");
 
       storage = mkOption {
         type = types.enum [ "maildir" "memory" ];
         default = "memory";
-        description = lib.mdDoc "Store mails on disk or in memory.";
+        description = mdDoc "Store mails on disk or in memory.";
       };
 
       apiPort = mkOption {
         type = types.port;
         default = 8025;
-        description = lib.mdDoc "Port on which the API endpoint will listen.";
+        description = mdDoc "Port on which the API endpoint will listen.";
       };
 
       smtpPort = mkOption {
         type = types.port;
         default = 1025;
-        description = lib.mdDoc "Port on which the SMTP endpoint will listen.";
+        description = mdDoc "Port on which the SMTP endpoint will listen.";
       };
 
       uiPort = mkOption {
         type = types.port;
         default = 8025;
-        description = lib.mdDoc "Port on which the HTTP UI will listen.";
+        description = mdDoc "Port on which the HTTP UI will listen.";
       };
 
       extraArgs = mkOption {
         type = types.listOf types.str;
         default = [];
-        description = lib.mdDoc "List of additional arguments to pass to the MailHog process.";
+        description = mdDoc "List of additional arguments to pass to the MailHog process.";
       };
     };
   };
