@@ -1,9 +1,19 @@
 { config, lib, pkgs, ... }:
-with lib;
+
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalAttrs
+    types
+    ;
+
   cfg = config.services.jenkinsSlave;
   masterCfg = config.services.jenkins;
-in {
+in
+{
   options = {
     services.jenkinsSlave = {
       # todo:
@@ -14,7 +24,7 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If true the system will be configured to work as a jenkins slave.
           If the system is also configured to work as a jenkins master then this has no effect.
           In progress: Currently only assures the jenkins user is configured.
@@ -24,7 +34,7 @@ in {
       user = mkOption {
         default = "jenkins";
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           User the jenkins slave agent should execute under.
         '';
       };
@@ -32,7 +42,7 @@ in {
       group = mkOption {
         default = "jenkins";
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If the default slave agent user "jenkins" is configured then this is
           the primary group of that user.
         '';
@@ -41,7 +51,7 @@ in {
       home = mkOption {
         default = "/var/lib/jenkins";
         type = types.path;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The path to use as JENKINS_HOME. If the default user "jenkins" is configured then
           this is the home of the "jenkins" user.
         '';
