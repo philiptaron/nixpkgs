@@ -1,17 +1,26 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    escapeShellArgs
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.lirc;
-in {
+in
+{
 
   ###### interface
 
   options = {
     services.lirc = {
 
-      enable = mkEnableOption (lib.mdDoc "LIRC daemon");
+      enable = mkEnableOption (mdDoc "LIRC daemon");
 
       options = mkOption {
         type = types.lines;
@@ -19,18 +28,18 @@ in {
           [lircd]
           nodaemon = False
         '';
-        description = lib.mdDoc "LIRC default options described in man:lircd(8) ({file}`lirc_options.conf`)";
+        description = mdDoc "LIRC default options described in man:lircd(8) ({file}`lirc_options.conf`)";
       };
 
       configs = mkOption {
         type = types.listOf types.lines;
-        description = lib.mdDoc "Configurations for lircd to load, see man:lircd.conf(5) for details ({file}`lircd.conf`)";
+        description = mdDoc "Configurations for lircd to load, see man:lircd.conf(5) for details ({file}`lircd.conf`)";
       };
 
       extraArguments = mkOption {
         type = types.listOf types.str;
         default = [];
-        description = lib.mdDoc "Extra arguments to lircd.";
+        description = mdDoc "Extra arguments to lircd.";
       };
     };
   };
