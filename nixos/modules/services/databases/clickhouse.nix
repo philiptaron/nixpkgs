@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
+
 let
+  inherit (lib)
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkPackageOption
+    ;
+
   cfg = config.services.clickhouse;
 in
-with lib;
 {
 
   ###### interface
@@ -11,7 +19,7 @@ with lib;
 
     services.clickhouse = {
 
-      enable = mkEnableOption (lib.mdDoc "ClickHouse database server");
+      enable = mkEnableOption (mdDoc "ClickHouse database server");
 
       package = mkPackageOption pkgs "clickhouse" { };
 
