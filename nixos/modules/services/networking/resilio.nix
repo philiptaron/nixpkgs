@@ -1,8 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStringsSep
+    hasAttr
+    licenses
+    literalExpression
+    maintainers
+    mdDoc
+    mkIf
+    mkOption
+    optionalAttrs
+    types
+    ;
+
   cfg = config.services.resilio;
 
   resilioSync = pkgs.resilio-sync;
@@ -57,7 +68,7 @@ let
       ${pkgs.jq}/bin/jq \
         '.shared_folders |= map(.secret = $ARGS.named[.dir])' \
         ${
-          lib.concatMapStringsSep " \\\n  "
+          concatMapStringsSep " \\\n  "
           (entry: ''--arg '${entry.dir}' "$(cat '${entry.secretFile}')"'')
           sharedFoldersSecretFiles
         } \
@@ -76,7 +87,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If enabled, start the Resilio Sync daemon. Once enabled, you can
           interact with the service through the Web UI, or configure it in your
           NixOS configuration.
@@ -88,7 +99,7 @@ in
         example = "Voltron";
         default = config.networking.hostName;
         defaultText = literalExpression "config.networking.hostName";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Name of the Resilio Sync device.
         '';
       };
@@ -97,7 +108,7 @@ in
         type = types.int;
         default = 0;
         example = 44444;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Listening port. Defaults to 0 which randomizes the port.
         '';
       };
@@ -105,7 +116,7 @@ in
       checkForUpdates = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Determines whether to check for updates and alert the user
           about them in the UI.
         '';
@@ -114,7 +125,7 @@ in
       useUpnp = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Use Universal Plug-n-Play (UPnP)
         '';
       };
@@ -123,7 +134,7 @@ in
         type = types.int;
         default = 0;
         example = 1024;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Download speed limit. 0 is unlimited (default).
         '';
       };
@@ -132,7 +143,7 @@ in
         type = types.int;
         default = 0;
         example = 1024;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Upload speed limit. 0 is unlimited (default).
         '';
       };
@@ -141,7 +152,7 @@ in
         type = types.str;
         default = "[::1]";
         example = "0.0.0.0";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           HTTP address to bind to.
         '';
       };
@@ -149,7 +160,7 @@ in
       httpListenPort = mkOption {
         type = types.int;
         default = 9000;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           HTTP port to bind on.
         '';
       };
@@ -158,7 +169,7 @@ in
         type = types.str;
         example = "allyourbase";
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           HTTP web login username.
         '';
       };
@@ -167,7 +178,7 @@ in
         type = types.str;
         example = "arebelongtous";
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           HTTP web login password.
         '';
       };
@@ -175,13 +186,13 @@ in
       encryptLAN = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc "Encrypt LAN data.";
+        description = mdDoc "Encrypt LAN data.";
       };
 
       enableWebUI = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable Web UI for administration. Bound to the specified
           `httpListenAddress` and
           `httpListenPort`.
@@ -191,7 +202,7 @@ in
       storagePath = mkOption {
         type = types.path;
         default = "/var/lib/resilio-sync/";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Where BitTorrent Sync will store it's database files (containing
           things like username info and licenses). Generally, you should not
           need to ever change this.
@@ -201,14 +212,14 @@ in
       apiKey = mkOption {
         type = types.str;
         default = "";
-        description = lib.mdDoc "API key, which enables the developer API.";
+        description = mdDoc "API key, which enables the developer API.";
       };
 
       directoryRoot = mkOption {
         type = types.str;
         default = "";
         example = "/media";
-        description = lib.mdDoc "Default directory to add folders in the web UI.";
+        description = mdDoc "Default directory to add folders in the web UI.";
       };
 
       sharedFolders = mkOption {
@@ -228,7 +239,7 @@ in
               ];
             }
           ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Shared folder list. If enabled, web UI must be
           disabled. Secrets can be generated using `rslsync --generate-secret`.
 
