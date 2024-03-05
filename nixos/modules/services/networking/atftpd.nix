@@ -2,9 +2,15 @@
 
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.services.atftpd;
 
@@ -19,7 +25,7 @@ in
       enable = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the atftpd TFTP server. By default, the server
           binds to address 0.0.0.0.
         '';
@@ -33,7 +39,7 @@ in
             "--verbose=7"
           ]
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra command line arguments to pass to atftp.
         '';
       };
@@ -41,7 +47,7 @@ in
       root = mkOption {
         default = "/srv/tftp";
         type = types.path;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Document root directory for the atftpd.
         '';
       };
@@ -57,7 +63,7 @@ in
       after = [ "network.target" ];
       wantedBy = [ "multi-user.target" ];
       # runs as nobody
-      serviceConfig.ExecStart = "${pkgs.atftp}/sbin/atftpd --daemon --no-fork ${lib.concatStringsSep " " cfg.extraOptions} ${cfg.root}";
+      serviceConfig.ExecStart = "${pkgs.atftp}/sbin/atftpd --daemon --no-fork ${concatStringsSep " " cfg.extraOptions} ${cfg.root}";
     };
 
   };
