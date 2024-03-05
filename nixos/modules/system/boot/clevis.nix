@@ -1,8 +1,22 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    any
+    attrValues
+    elem
+    hasAttr
+    maintainers
+    mapAttrs
+    mapAttrs'
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    nameValuePair
+    types
+    ;
+
   cfg = config.boot.initrd.clevis;
   systemd = config.boot.initrd.systemd;
   supportedFs = [ "zfs" "bcachefs" ];
@@ -12,14 +26,14 @@ in
   meta.doc = ./clevis.md;
 
   options = {
-    boot.initrd.clevis.enable = mkEnableOption (lib.mdDoc "Clevis in initrd");
+    boot.initrd.clevis.enable = mkEnableOption (mdDoc "Clevis in initrd");
 
 
     boot.initrd.clevis.package = mkOption {
       type = types.package;
       default = pkgs.clevis;
       defaultText = "pkgs.clevis";
-      description = lib.mdDoc "Clevis package";
+      description = mdDoc "Clevis package";
     };
 
     boot.initrd.clevis.devices = mkOption {
@@ -27,7 +41,7 @@ in
       default = { };
       type = types.attrsOf (types.submodule ({
         options.secretFile = mkOption {
-          description = lib.mdDoc "Clevis JWE file used to decrypt the device at boot, in concert with the chosen pin (one of TPM2, Tang server, or SSS).";
+          description = mdDoc "Clevis JWE file used to decrypt the device at boot, in concert with the chosen pin (one of TPM2, Tang server, or SSS).";
           type = types.path;
         };
       }));
@@ -84,7 +98,7 @@ in
         sed -i $out/bin/clevis-decrypt-tpm2 -e 's,tpm2_,tpm2 ,'
       '';
 
-      secrets = lib.mapAttrs' (name: value: nameValuePair "/etc/clevis/${name}.jwe" value.secretFile) cfg.devices;
+      secrets = mapAttrs' (name: value: nameValuePair "/etc/clevis/${name}.jwe" value.secretFile) cfg.devices;
 
       systemd = {
         extraBin = mkIf systemd.enable {
