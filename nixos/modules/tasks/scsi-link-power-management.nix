@@ -1,8 +1,15 @@
 { config, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    singleton
+    types
+    versionAtLeast
+    versions
+    ;
 
   cfg = config.powerManagement.scsiLinkPolicy;
 
@@ -25,7 +32,7 @@ in
     powerManagement.scsiLinkPolicy = mkOption {
       default = null;
       type = types.nullOr (types.enum allowedValues);
-      description = lib.mdDoc ''
+      description = mdDoc ''
         SCSI link power management policy. The kernel default is
         "max_performance".
 
