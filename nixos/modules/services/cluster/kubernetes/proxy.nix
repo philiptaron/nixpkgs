@@ -1,8 +1,19 @@
 { config, lib, options, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStringsSep
+    literalExpression
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRenamedOptionModule
+    optionalString
+    types
+    ;
+
   top = config.services.kubernetes;
   otop = options.services.kubernetes;
   cfg = top.proxy;
@@ -13,31 +24,31 @@ in
   ];
 
   ###### interface
-  options.services.kubernetes.proxy = with lib.types; {
+  options.services.kubernetes.proxy = with types; {
 
     bindAddress = mkOption {
-      description = lib.mdDoc "Kubernetes proxy listening address.";
+      description = mdDoc "Kubernetes proxy listening address.";
       default = "0.0.0.0";
       type = str;
     };
 
-    enable = mkEnableOption (lib.mdDoc "Kubernetes proxy");
+    enable = mkEnableOption (mdDoc "Kubernetes proxy");
 
     extraOpts = mkOption {
-      description = lib.mdDoc "Kubernetes proxy extra command line options.";
+      description = mdDoc "Kubernetes proxy extra command line options.";
       default = "";
       type = separatedString " ";
     };
 
     featureGates = mkOption {
-      description = lib.mdDoc "List set of feature gates";
+      description = mdDoc "List set of feature gates";
       default = top.featureGates;
       defaultText = literalExpression "config.${otop.featureGates}";
       type = listOf str;
     };
 
     hostname = mkOption {
-      description = lib.mdDoc "Kubernetes proxy hostname override.";
+      description = mdDoc "Kubernetes proxy hostname override.";
       default = config.networking.hostName;
       defaultText = literalExpression "config.networking.hostName";
       type = str;
@@ -46,7 +57,7 @@ in
     kubeconfig = top.lib.mkKubeConfigOptions "Kubernetes proxy";
 
     verbosity = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Optional glog verbosity level for logging statements. See
         <https://github.com/kubernetes/community/blob/master/contributors/devel/logging.md>
       '';
