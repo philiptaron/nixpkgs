@@ -1,6 +1,12 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+in
 
 {
   #
@@ -8,7 +14,7 @@ with lib;
   #
   options = {
     services.gdomap = {
-      enable = mkEnableOption (lib.mdDoc "GNUstep Distributed Objects name server");
+      enable = mkEnableOption (mdDoc "GNUstep Distributed Objects name server");
    };
   };
 
