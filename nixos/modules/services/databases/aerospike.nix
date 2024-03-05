@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
 
   cfg = config.services.aerospike;
 
@@ -39,14 +46,14 @@ in
   options = {
 
     services.aerospike = {
-      enable = mkEnableOption (lib.mdDoc "Aerospike server");
+      enable = mkEnableOption (mdDoc "Aerospike server");
 
       package = mkPackageOption pkgs "aerospike" { };
 
       workDir = mkOption {
         type = types.str;
         default = "/var/lib/aerospike";
-        description = lib.mdDoc "Location where Aerospike stores its files";
+        description = mdDoc "Location where Aerospike stores its files";
       };
 
       networkConfig = mkOption {
@@ -75,7 +82,7 @@ in
             port 3003
           }
         '';
-        description = lib.mdDoc "network section of configuration file";
+        description = mdDoc "network section of configuration file";
       };
 
       extraConfig = mkOption {
@@ -89,7 +96,7 @@ in
             storage-engine memory
           }
         '';
-        description = lib.mdDoc "Extra configuration";
+        description = mdDoc "Extra configuration";
       };
     };
 
