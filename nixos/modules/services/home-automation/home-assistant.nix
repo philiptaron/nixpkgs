@@ -1,8 +1,40 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    any
+    attrByPath
+    attrValues
+    concatMap
+    converge
+    elem
+    escapeShellArg
+    escapeShellArgs
+    filter
+    filterAttrsRecursive
+    hasAttrByPath
+    isAttrs
+    isDerivation
+    isList
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    optional
+    optionals
+    optionalString
+    recursiveUpdate
+    singleton
+    splitString
+    teams
+    types
+    unique
+    ;
+
   cfg = config.services.home-assistant;
   format = pkgs.formats.yaml {};
 
@@ -11,7 +43,7 @@ let
   # options shown in settings.
   # We post-process the result to add support for YAML functions, like secrets or includes, see e.g.
   # https://www.home-assistant.io/docs/configuration/secrets/
-  filteredConfig = lib.converge (lib.filterAttrsRecursive (_: v: ! elem v [ null ])) (lib.recursiveUpdate customLovelaceModulesResources (cfg.config or {}));
+  filteredConfig = converge (filterAttrsRecursive (_: v: ! elem v [ null ])) (recursiveUpdate customLovelaceModulesResources (cfg.config or {}));
   configFile = pkgs.runCommandLocal "configuration.yaml" { } ''
     cp ${format.generate "configuration.yaml" filteredConfig} $out
     sed -i -e "s/'\!\([a-z_]\+\) \(.*\)'/\!\1 \2/;s/^\!\!/\!/;" $out
@@ -63,7 +95,7 @@ let
     extraComponents = oldArgs.extraComponents or [] ++ extraComponents;
     extraPackages = ps: (oldArgs.extraPackages or (_: []) ps)
       ++ (cfg.extraPackages ps)
-      ++ (lib.concatMap (component: component.propagatedBuildInputs or []) cfg.customComponents);
+      ++ (concatMap (component: component.propagatedBuildInputs or []) cfg.customComponents);
   }));
 
   # Create a directory that holds all lovelace modules
@@ -95,12 +127,12 @@ in {
   options.services.home-assistant = {
     # Running home-assistant on NixOS is considered an installation method that is unsupported by the upstream project.
     # https://github.com/home-assistant/architecture/blob/master/adr/0012-define-supported-installation-method.md#decision
-    enable = mkEnableOption (lib.mdDoc "Home Assistant. Please note that this installation method is unsupported upstream");
+    enable = mkEnableOption (mdDoc "Home Assistant. Please note that this installation method is unsupported upstream");
 
     configDir = mkOption {
       default = "/var/lib/hass";
       type = types.path;
-      description = lib.mdDoc "The config directory, where your {file}`configuration.yaml` is located.";
+      description = mdDoc "The config directory, where your {file}`configuration.yaml` is located.";
     };
 
     defaultIntegrations = mkOption {
@@ -164,7 +196,7 @@ in {
           "wled"
         ]
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         List of [components](https://www.home-assistant.io/integrations/) that have their dependencies included in the package.
 
         The component name can be found in the URL, for example `https://www.home-assistant.io/integrations/ffmpeg/` would map to `ffmpeg`.
@@ -183,7 +215,7 @@ in {
           psycopg2
         ];
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         List of packages to add to propagatedBuildInputs.
 
         A popular example is `python3Packages.psycopg2`
@@ -199,7 +231,7 @@ in {
           prometheus_sensor
         ];
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         List of custom component packages to install.
 
         Available components can be found below `pkgs.home-assistant-custom-components`.
@@ -215,7 +247,7 @@ in {
           mini-media-player
         ];
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         List of custom lovelace card packages to load as lovelace resources.
 
         Available cards can be found below `pkgs.home-assistant-custom-lovelace-modules`.
@@ -240,7 +272,7 @@ in {
               type = types.nullOr types.str;
               default = null;
               example = "Home";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Name of the location where Home Assistant is running.
               '';
             };
@@ -249,7 +281,7 @@ in {
               type = types.nullOr (types.either types.float types.str);
               default = null;
               example = 52.3;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Latitude of your location required to calculate the time the sun rises and sets.
               '';
             };
@@ -258,7 +290,7 @@ in {
               type = types.nullOr (types.either types.float types.str);
               default = null;
               example = 4.9;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Longitude of your location required to calculate the time the sun rises and sets.
               '';
             };
@@ -267,7 +299,7 @@ in {
               type = types.nullOr (types.enum [ "metric" "imperial" ]);
               default = null;
               example = "metric";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The unit system to use. This also sets temperature_unit, Celsius for Metric and Fahrenheit for Imperial.
               '';
             };
@@ -276,7 +308,7 @@ in {
               type = types.nullOr (types.enum [ "C" "F" ]);
               default = null;
               example = "C";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Override temperature unit set by unit_system. `C` for Celsius, `F` for Fahrenheit.
               '';
             };
@@ -288,7 +320,7 @@ in {
                 config.time.timeZone or null
               '';
               example = "Europe/Amsterdam";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Pick your time zone from the column TZ of Wikipedia’s [list of tz database time zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
               '';
             };
@@ -303,7 +335,7 @@ in {
                 "::"
               ];
               example = "::1";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Only listen to incoming requests on specific IP/host. The default listed assumes support for IPv4 and IPv6.
               '';
             };
@@ -311,7 +343,7 @@ in {
             server_port = mkOption {
               default = 8123;
               type = types.port;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The port on which to listen.
               '';
             };
@@ -330,7 +362,7 @@ in {
                 else "storage";
               '';
               example = "yaml";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 In what mode should the main Lovelace panel be, `yaml` or `storage` (UI managed).
               '';
             };
@@ -354,7 +386,7 @@ in {
           feedreader.urls = [ "https://nixos.org/blogs.xml" ];
         }
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Your {file}`configuration.yaml` as a Nix attribute set.
 
         YAML functions like [secrets](https://www.home-assistant.io/docs/configuration/secrets/)
@@ -369,7 +401,7 @@ in {
     configWritable = mkOption {
       default = false;
       type = types.bool;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to make {file}`configuration.yaml` writable.
 
         This will allow you to edit it from Home Assistant's web interface.
@@ -396,7 +428,7 @@ in {
           } ];
         }
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Your {file}`ui-lovelace.yaml` as a Nix attribute set.
         Setting this option will automatically set `lovelace.mode` to `yaml`.
 
@@ -407,7 +439,7 @@ in {
     lovelaceConfigWritable = mkOption {
       default = false;
       type = types.bool;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to make {file}`ui-lovelace.yaml` writable.
 
         This will allow you to edit it from Home Assistant's web interface.
@@ -439,7 +471,7 @@ in {
           ];
         }
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The Home Assistant package to use.
       '';
     };
@@ -447,7 +479,7 @@ in {
     openFirewall = mkOption {
       default = false;
       type = types.bool;
-      description = lib.mdDoc "Whether to open the firewall for the specified port.";
+      description = mdDoc "Whether to open the firewall for the specified port.";
     };
   };
 
@@ -462,12 +494,12 @@ in {
     networking.firewall.allowedTCPPorts = mkIf cfg.openFirewall [ cfg.config.http.server_port ];
 
     # symlink the configuration to /etc/home-assistant
-    environment.etc = lib.mkMerge [
-      (lib.mkIf (cfg.config != null && !cfg.configWritable) {
+    environment.etc = mkMerge [
+      (mkIf (cfg.config != null && !cfg.configWritable) {
         "home-assistant/configuration.yaml".source = configFile;
       })
 
-      (lib.mkIf (cfg.lovelaceConfig != null && !cfg.lovelaceConfigWritable) {
+      (mkIf (cfg.lovelaceConfig != null && !cfg.lovelaceConfigWritable) {
         "home-assistant/ui-lovelace.yaml".source = lovelaceConfigFile;
       })
     ];
@@ -482,8 +514,8 @@ in {
         "mysql.service"
         "postgresql.service"
       ];
-      reloadTriggers = lib.optional (cfg.config != null) configFile
-      ++ lib.optional (cfg.lovelaceConfig != null) lovelaceConfigFile;
+      reloadTriggers = optional (cfg.config != null) configFile
+      ++ optional (cfg.lovelaceConfig != null) lovelaceConfigFile;
 
       preStart = let
         copyConfig = if cfg.configWritable then ''
@@ -531,20 +563,20 @@ in {
       environment.PYTHONPATH = package.pythonPath;
       serviceConfig = let
         # List of capabilities to equip home-assistant with, depending on configured components
-        capabilities = lib.unique ([
+        capabilities = unique ([
           # Empty string first, so we will never accidentally have an empty capability bounding set
           # https://github.com/NixOS/nixpkgs/issues/120617#issuecomment-830685115
           ""
-        ] ++ lib.optionals (builtins.any useComponent componentsUsingBluetooth) [
+        ] ++ optionals (builtins.any useComponent componentsUsingBluetooth) [
           # Required for interaction with hci devices and bluetooth sockets, identified by bluetooth-adapters dependency
           # https://www.home-assistant.io/integrations/bluetooth_le_tracker/#rootless-setup-on-core-installs
           "CAP_NET_ADMIN"
           "CAP_NET_RAW"
-        ] ++ lib.optionals (useComponent "emulated_hue") [
+        ] ++ optionals (useComponent "emulated_hue") [
           # Alexa looks for the service on port 80
           # https://www.home-assistant.io/integrations/emulated_hue
           "CAP_NET_BIND_SERVICE"
-        ] ++ lib.optionals (useComponent "nmap_tracker") [
+        ] ++ optionals (useComponent "nmap_tracker") [
           # https://www.home-assistant.io/integrations/nmap_tracker#linux-capabilities
           "CAP_NET_ADMIN"
           "CAP_NET_BIND_SERVICE"
