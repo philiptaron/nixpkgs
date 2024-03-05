@@ -1,8 +1,15 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.cloudlog;
   dbFile = let
     password = if cfg.database.createLocally
@@ -89,7 +96,7 @@ in
       createLocally = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc "Create the database and database user locally.";
+        description = mdDoc "Create the database and database user locally.";
       };
       host = mkOption {
         type = str;
