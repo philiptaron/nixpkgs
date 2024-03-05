@@ -1,8 +1,36 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    boolToString
+    concatMapAttrs
+    concatStrings
+    elem
+    foldl'
+    head
+    isBool
+    isList
+    last
+    literalExpression
+    lowerChars
+    maintainers
+    mapAttrsToList
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRenamedOptionModule
+    optional
+    optionalAttrs
+    optionalString
+    stringLength
+    substring
+    toUpper
+    types
+    ;
+
   cfg = config.services.vaultwarden;
   user = config.users.users.vaultwarden.name;
   group = config.users.groups.vaultwarden.name;
@@ -39,12 +67,12 @@ in {
   ];
 
   options.services.vaultwarden = with types; {
-    enable = mkEnableOption (lib.mdDoc "vaultwarden");
+    enable = mkEnableOption (mdDoc "vaultwarden");
 
     dbBackend = mkOption {
       type = enum [ "sqlite" "mysql" "postgresql" ];
       default = "sqlite";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Which database backend vaultwarden will be using.
       '';
     };
@@ -52,7 +80,7 @@ in {
     backupDir = mkOption {
       type = nullOr str;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The directory under which vaultwarden will backup its persistent data.
       '';
       example = "/var/backup/vaultwarden";
@@ -101,7 +129,7 @@ in {
           SMTP_FROM_NAME = "example.com Bitwarden server";
         }
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The configuration of vaultwarden is done through environment variables,
         therefore it is recommended to use upper snake case (e.g. {env}`DISABLE_2FA_REMEMBER`).
 
@@ -129,7 +157,7 @@ in {
       type = with types; nullOr path;
       default = null;
       example = "/var/lib/vaultwarden.env";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Additional environment file as defined in {manpage}`systemd.exec(5)`.
 
         Secrets like {env}`ADMIN_TOKEN` and {env}`SMTP_PASSWORD`
@@ -163,7 +191,7 @@ in {
       type = package;
       default = pkgs.vaultwarden.webvault;
       defaultText = literalExpression "pkgs.vaultwarden.webvault";
-      description = lib.mdDoc "Web vault package to use.";
+      description = mdDoc "Web vault package to use.";
     };
   };
 
@@ -240,6 +268,6 @@ in {
   meta = {
     # uses attributes of the linked package
     buildDocsInSandbox = false;
-    maintainers = with lib.maintainers; [ dotlambda SuperSandro2000 ];
+    maintainers = with maintainers; [ dotlambda SuperSandro2000 ];
   };
 }
