@@ -1,14 +1,23 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    getBin
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.nginx.sso;
   pkg = getBin cfg.package;
   configYml = pkgs.writeText "nginx-sso.yml" (builtins.toJSON cfg.configuration);
 in {
   options.services.nginx.sso = {
-    enable = mkEnableOption (lib.mdDoc "nginx-sso service");
+    enable = mkEnableOption (mdDoc "nginx-sso service");
 
     package = mkPackageOption pkgs "nginx-sso" { };
 
@@ -33,7 +42,7 @@ in {
           };
         }
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         nginx-sso configuration
         ([documentation](https://github.com/Luzifer/nginx-sso/wiki/Main-Configuration))
         as a Nix attribute set.
