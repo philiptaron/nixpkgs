@@ -1,8 +1,25 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    filter
+    gvariant
+    makeSearchPath
+    mdDoc
+    mkEnableOption
+    mkForce
+    mkIf
+    mkMerge
+    mkOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    optional
+    optionalAttrs
+    optionals
+    optionalString
+    teams
+    types
+    ;
 
   cfg = config.services.xserver.displayManager;
   gdm = pkgs.gnome.gdm;
@@ -67,15 +84,15 @@ in
 
     services.xserver.displayManager.gdm = {
 
-      enable = mkEnableOption (lib.mdDoc "GDM, the GNOME Display Manager");
+      enable = mkEnableOption (mdDoc "GDM, the GNOME Display Manager");
 
-      debug = mkEnableOption (lib.mdDoc "debugging messages in GDM");
+      debug = mkEnableOption (mdDoc "debugging messages in GDM");
 
       # Auto login options specific to GDM
       autoLogin.delay = mkOption {
         type = types.int;
         default = 0;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Seconds of inactivity after which the autologin will be performed.
         '';
       };
@@ -83,14 +100,14 @@ in
       wayland = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Allow GDM to run on Wayland instead of Xserver.
         '';
       };
 
       autoSuspend = mkOption {
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           On the GNOME Display Manager login screen, suspend the machine after inactivity.
           (Does not affect automatic suspend while logged in, or at lock screen.)
         '';
@@ -105,7 +122,7 @@ in
           bar
           baz
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Optional message to display on the login screen.
         '';
       };
@@ -116,7 +133,7 @@ in
         example = {
           debug.enable = true;
         };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Options passed to the gdm daemon.
           See [here](https://help.gnome.org/admin/gdm/stable/configuration.html.en#daemonconfig) for supported options.
         '';
@@ -153,7 +170,7 @@ in
         environment = {
           GDM_X_SERVER_EXTRA_ARGS = toString
             (filter (arg: arg != "-terminate") cfg.xserverArgs);
-          XDG_DATA_DIRS = lib.makeSearchPath "share" [
+          XDG_DATA_DIRS = makeSearchPath "share" [
             gdm # for gnome-login.session
             cfg.sessionData.desktops
             pkgs.gnome.gnome-control-center # for accessibility icon
@@ -221,7 +238,7 @@ in
     # switch starts multi-user.target, display-manager.service is
     # stopped so plymouth-quit.service can be started.)
     systemd.services.plymouth-quit = mkIf config.boot.plymouth.enable {
-      wantedBy = lib.mkForce [];
+      wantedBy = mkForce [];
     };
 
     systemd.services.display-manager.serviceConfig = {
@@ -244,14 +261,14 @@ in
 
     systemd.user.services.dbus.wantedBy = [ "default.target" ];
 
-    programs.dconf.profiles.gdm.databases = lib.optionals (!cfg.gdm.autoSuspend) [{
+    programs.dconf.profiles.gdm.databases = optionals (!cfg.gdm.autoSuspend) [{
       settings."org/gnome/settings-daemon/plugins/power" = {
         sleep-inactive-ac-type = "nothing";
         sleep-inactive-battery-type = "nothing";
-        sleep-inactive-ac-timeout = lib.gvariant.mkInt32 0;
-        sleep-inactive-battery-timeout = lib.gvariant.mkInt32 0;
+        sleep-inactive-ac-timeout = gvariant.mkInt32 0;
+        sleep-inactive-battery-timeout = gvariant.mkInt32 0;
       };
-    }] ++ lib.optionals (cfg.gdm.banner != null) [{
+    }] ++ optionals (cfg.gdm.banner != null) [{
       settings."org/gnome/login-screen" = {
         banner-message-enable = true;
         banner-message-text = cfg.gdm.banner;
