@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.r53-ddns;
   pkg = pkgs.r53-ddns;
 in
@@ -10,27 +17,27 @@ in
   options = {
     services.r53-ddns = {
 
-      enable = mkEnableOption (lib.mdDoc "r53-ddyns");
+      enable = mkEnableOption (mdDoc "r53-ddyns");
 
       interval = mkOption {
         type = types.str;
         default = "15min";
-        description = lib.mdDoc "How often to update the entry";
+        description = mdDoc "How often to update the entry";
       };
 
       zoneID = mkOption {
         type = types.str;
-        description = lib.mdDoc "The ID of your zone in Route53";
+        description = mdDoc "The ID of your zone in Route53";
       };
 
       domain = mkOption {
         type = types.str;
-        description = lib.mdDoc "The name of your domain in Route53";
+        description = mdDoc "The name of your domain in Route53";
       };
 
       hostname = mkOption {
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Manually specify the hostname. Otherwise the tool will try to use the name
           returned by the OS (Call to gethostname)
         '';
@@ -38,7 +45,7 @@ in
 
       environmentFile = mkOption {
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           File containing the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
           in the format of an EnvironmentFile as described by systemd.exec(5)
         '';
@@ -62,7 +69,7 @@ in
       description = "r53-ddns service";
       serviceConfig = {
         ExecStart = "${pkg}/bin/r53-ddns -zone-id ${cfg.zoneID} -domain ${cfg.domain}"
-          + lib.optionalString (cfg.hostname != null) " -hostname ${cfg.hostname}";
+          + optionalString (cfg.hostname != null) " -hostname ${cfg.hostname}";
         EnvironmentFile = "${cfg.environmentFile}";
         DynamicUser = true;
       };
