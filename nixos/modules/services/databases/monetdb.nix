@@ -1,50 +1,58 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
   cfg = config.services.monetdb;
 
-in {
+in
+{
   meta.maintainers = with maintainers; [ StillerHarpo primeos ];
 
   ###### interface
   options = {
     services.monetdb = {
 
-      enable = mkEnableOption (lib.mdDoc "the MonetDB database server");
+      enable = mkEnableOption (mdDoc "the MonetDB database server");
 
       package = mkPackageOption pkgs "monetdb" { };
 
       user = mkOption {
         type = types.str;
         default = "monetdb";
-        description = lib.mdDoc "User account under which MonetDB runs.";
+        description = mdDoc "User account under which MonetDB runs.";
       };
 
       group = mkOption {
         type = types.str;
         default = "monetdb";
-        description = lib.mdDoc "Group under which MonetDB runs.";
+        description = mdDoc "Group under which MonetDB runs.";
       };
 
       dataDir = mkOption {
         type = types.path;
         default = "/var/lib/monetdb";
-        description = lib.mdDoc "Data directory for the dbfarm.";
+        description = mdDoc "Data directory for the dbfarm.";
       };
 
       port = mkOption {
         type = types.ints.u16;
         default = 50000;
-        description = lib.mdDoc "Port to listen on.";
+        description = mdDoc "Port to listen on.";
       };
 
       listenAddress = mkOption {
         type = types.str;
         default = "127.0.0.1";
         example = "0.0.0.0";
-        description = lib.mdDoc "Address to listen on.";
+        description = mdDoc "Address to listen on.";
       };
     };
   };
