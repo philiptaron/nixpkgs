@@ -1,17 +1,24 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStrings
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.programs.tuxclocker;
 in
 {
   options.programs.tuxclocker = {
-    enable = mkEnableOption (lib.mdDoc ''
+    enable = mkEnableOption (mdDoc ''
       TuxClocker, a hardware control and monitoring program
     '');
 
-    enableAMD = mkEnableOption (lib.mdDoc ''
+    enableAMD = mkEnableOption (mdDoc ''
       AMD GPU controls.
       Sets the `amdgpu.ppfeaturemask` kernel parameter to 0xfffd7fff to enable all TuxClocker controls
     '');
@@ -20,7 +27,7 @@ in
       type = types.listOf types.int;
       default = [ ];
       example = [ 0 1 ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Enable NVIDIA GPU controls for a device by index.
         Sets the `Coolbits` Xorg option to enable all TuxClocker controls.
       '';
@@ -30,7 +37,7 @@ in
       type = types.bool;
       default = false;
       example = true;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to use components requiring unfree dependencies.
         Disabling this allows you to get everything from the binary cache.
       '';
