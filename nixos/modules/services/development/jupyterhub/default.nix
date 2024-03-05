@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    types
+    ;
 
   cfg = config.services.jupyterhub;
 
@@ -26,16 +34,17 @@ let
 
     ${cfg.extraConfig}
   '';
-in {
+in
+{
   meta.maintainers = with maintainers; [ costrouc ];
 
   options.services.jupyterhub = {
-    enable = mkEnableOption (lib.mdDoc "Jupyterhub development server");
+    enable = mkEnableOption (mdDoc "Jupyterhub development server");
 
     authentication = mkOption {
       type = types.str;
       default = "jupyterhub.auth.PAMAuthenticator";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Jupyterhub authentication to use
 
         There are many authenticators available including: oauth, pam,
@@ -46,7 +55,7 @@ in {
     spawner = mkOption {
       type = types.str;
       default = "systemdspawner.SystemdSpawner";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Jupyterhub spawner to use
 
         There are many spawners available including: local process,
@@ -57,7 +66,7 @@ in {
     extraConfig = mkOption {
       type = types.lines;
       default = "";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra contents appended to the jupyterhub configuration
 
         Jupyterhub configuration is a normal python file using
@@ -84,7 +93,7 @@ in {
           jupyterhub-systemdspawner
         ])
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Python environment to run jupyterhub
 
         Customizing will affect the packages available in the hub and
@@ -106,7 +115,7 @@ in {
           jupyterlab
         ])
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Python environment to run jupyterlab
 
         Customizing will affect the packages available in the
@@ -146,7 +155,7 @@ in {
           };
         }
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Declarative kernel config
 
         Kernels can be declared in any language that supports and has
@@ -159,7 +168,7 @@ in {
     port = mkOption {
       type = types.port;
       default = 8000;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Port number Jupyterhub will be listening on
       '';
     };
@@ -167,7 +176,7 @@ in {
     host = mkOption {
       type = types.str;
       default = "0.0.0.0";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Bind IP JupyterHub will be listening on
       '';
     };
@@ -175,7 +184,7 @@ in {
     stateDirectory = mkOption {
       type = types.str;
       default = "jupyterhub";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Directory for jupyterhub state (token + database)
       '';
     };
