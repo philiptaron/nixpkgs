@@ -1,19 +1,27 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
 
-let cfg = config.services.xserver.windowManager.mlvwm;
+  cfg = config.services.xserver.windowManager.mlvwm;
 
 in
 {
 
   options.services.xserver.windowManager.mlvwm = {
-    enable = mkEnableOption (lib.mdDoc "Macintosh-like Virtual Window Manager");
+    enable = mkEnableOption (mdDoc "Macintosh-like Virtual Window Manager");
 
     configFile = mkOption {
       default = null;
       type = with types; nullOr path;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path to the mlvwm configuration file.
         If left at the default value, $HOME/.mlvwmrc will be used.
       '';
