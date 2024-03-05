@@ -1,13 +1,17 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.powerManagement.powertop;
 in {
   ###### interface
 
-  options.powerManagement.powertop.enable = mkEnableOption (lib.mdDoc "powertop auto tuning on startup");
+  options.powerManagement.powertop.enable = mkEnableOption (mdDoc "powertop auto tuning on startup");
 
   ###### implementation
 
