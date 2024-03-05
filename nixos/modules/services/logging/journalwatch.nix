@@ -1,11 +1,24 @@
 { config, lib, pkgs, ... }:
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    filter
+    literalExpression
+    maintainers
+    mdDoc
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.journalwatch;
+
   user = "journalwatch";
+
   # for journal access
   group = "systemd-journal";
+
   dataDir = "/var/lib/${user}";
 
   journalwatchConfig = pkgs.writeText "config" (''
@@ -44,14 +57,14 @@ let
       ln -sf ${journalwatchPatterns} $out/journalwatch/patterns
     '';
 
-
-in {
+in
+{
   options = {
     services.journalwatch = {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If enabled, periodically check the journal with journalwatch and report the results by mail.
         '';
       };
@@ -59,7 +72,7 @@ in {
       priority = mkOption {
         type = types.int;
         default = 6;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Lowest priority of message to be considered.
           A value between 7 ("debug"), and 0 ("emerg"). Defaults to 6 ("info").
           If you don't care about anything with "info" priority, you can reduce
@@ -75,7 +88,7 @@ in {
         type = types.str;
         default = "journalwatch@${config.networking.hostName}";
         defaultText = literalExpression ''"journalwatch@''${config.networking.hostName}"'';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Mail address to send journalwatch reports from.
         '';
       };
@@ -83,7 +96,7 @@ in {
       mailTo = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Mail address to send journalwatch reports to.
         '';
       };
@@ -91,7 +104,7 @@ in {
       mailBinary = mkOption {
         type = types.path;
         default = "/run/wrappers/bin/sendmail";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Sendmail-compatible binary to be used to send the messages.
         '';
       };
@@ -99,7 +112,7 @@ in {
       extraConfig = mkOption {
         type = types.str;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra lines to be added verbatim to the journalwatch/config configuration file.
           You can add any commandline argument to the config, without the '--'.
           See `journalwatch --help` for all arguments and their description.
@@ -112,7 +125,7 @@ in {
            match = mkOption {
               type = types.str;
               example = "SYSLOG_IDENTIFIER = systemd";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Syntax: `field = value`
                 Specifies the log entry `field` this block should apply to.
                 If the `field` of a message matches this `value`,
@@ -129,7 +142,7 @@ in {
                 (Stopped|Stopping|Starting|Started) .*
                 (Reached target|Stopped target) .*
               '';
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The filters to apply on all messages which satisfy {option}`match`.
                 Any of those messages that match any specified filter will be removed from journalwatch's output.
                 Each filter is an extended Python regular expression.
@@ -175,7 +188,7 @@ in {
         ];
 
 
-        description = lib.mdDoc ''
+        description = mdDoc ''
           filterBlocks can be defined to blacklist journal messages which are not errors.
           Each block matches on a log entry field, and the filters in that block then are matched
           against all messages with a matching log entry field.
@@ -191,7 +204,7 @@ in {
       interval = mkOption {
         type = types.str;
         default = "hourly";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           How often to run journalwatch.
 
           The format is described in systemd.time(7).
@@ -200,7 +213,7 @@ in {
       accuracy = mkOption {
         type = types.str;
         default = "10min";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The time window around the interval in which the journalwatch run will be scheduled.
 
           The format is described in systemd.time(7).
@@ -260,6 +273,6 @@ in {
   };
 
   meta = {
-    maintainers = with lib.maintainers; [ florianjacob ];
+    maintainers = with maintainers; [ florianjacob ];
   };
 }
