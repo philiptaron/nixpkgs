@@ -4,9 +4,18 @@
 , options
 }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkMerge
+    mkOption
+    mkRemovedOptionModule
+    optionalAttrs
+    optionalString
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.unbound;
 in
 {
@@ -21,7 +30,7 @@ in
     telemetryPath = mkOption {
       type = types.str;
       default = "/metrics";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path under which to expose metrics.
       '';
     };
@@ -58,7 +67,7 @@ in
         type = types.str;
         default = "tcp://127.0.0.1:8953";
         example = "unix:///run/unbound/unbound.socket";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Path to the unbound control socket. Supports unix domain sockets, as well as the TCP interface.
         '';
       };
