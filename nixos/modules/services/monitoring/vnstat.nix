@@ -1,12 +1,17 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.services.vnstat;
 in {
   options.services.vnstat = {
-    enable = mkEnableOption (lib.mdDoc "update of network usage statistics via vnstatd");
+    enable = mkEnableOption (mdDoc "update of network usage statistics via vnstatd");
   };
 
   config = mkIf cfg.enable {
