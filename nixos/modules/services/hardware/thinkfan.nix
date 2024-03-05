@@ -1,8 +1,23 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStrings
+    elem
+    escapeShellArgs
+    filterAttrs
+    id
+    mapAttrs
+    mdDoc
+    mergeOneOption
+    mkDefault
+    mkIf
+    mkOption
+    mkOptionType
+    optionalAttrs
+    types
+    zipListsWith
+    ;
 
   cfg = config.services.thinkfan;
   settingsFormat = pkgs.formats.yaml { };
@@ -29,7 +44,7 @@ let
     options = {
       type = mkOption {
         type = types.enum [ "hwmon" "atasmart" "tpacpi" "nvml" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The ${name} type, can be
           `hwmon` for standard ${name}s,
 
@@ -43,7 +58,7 @@ let
       };
       query = mkOption {
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The query string used to match one or more ${name}s: can be
           a fullpath to the temperature file (single ${name}) or a fullpath
           to a driver directory (multiple ${name}s).
@@ -57,7 +72,7 @@ let
       indices = mkOption {
         type = with types; nullOr (listOf ints.unsigned);
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A list of ${name}s to pick in case multiple ${name}s match the query.
 
           ::: {.note}
@@ -69,7 +84,7 @@ let
       correction = mkOption {
         type = with types; nullOr (listOf int);
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A list of values to be added to the temperature of each sensor,
           can be used to equalize small discrepancies in temperature ratings.
         '';
@@ -106,7 +121,7 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable thinkfan, a fan control program.
 
           ::: {.note}
@@ -120,7 +135,7 @@ in {
       smartSupport = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to build thinkfan with S.M.A.R.T. support to read temperatures
           directly from hard disks.
         '';
@@ -133,7 +148,7 @@ in {
             query = "/proc/acpi/ibm/thermal";
           }
         ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of temperature sensors thinkfan will monitor.
 
           ${syntaxNote "thermal"}
@@ -147,7 +162,7 @@ in {
             query = "/proc/acpi/ibm/fan";
           }
         ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of fans thinkfan will control.
 
           ${syntaxNote "fan"}
@@ -165,7 +180,7 @@ in {
           [7  60  85]
           ["level auto" 80 32767]
         ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           [LEVEL LOW HIGH]
 
           LEVEL is the fan level to use: it can be an integer (0-7 with thinkpad_acpi),
@@ -181,7 +196,7 @@ in {
         type = types.listOf types.str;
         default = [ ];
         example = [ "-b" "0" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A list of extra command line arguments to pass to thinkfan.
           Check the thinkfan(1) manpage for available arguments.
         '';
@@ -190,7 +205,7 @@ in {
       settings = mkOption {
         type = types.attrsOf settingsFormat.type;
         default = { };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Thinkfan settings. Use this option to configure thinkfan
           settings not exposed in a NixOS option or to bypass one.
           Before changing this, read the `thinkfan.conf(5)`
