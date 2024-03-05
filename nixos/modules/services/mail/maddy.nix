@@ -1,8 +1,21 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStrings
+    concatStringsSep
+    escapeShellArg
+    imap
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalAttrs
+    optionalString
+    types
+    ;
 
   name = "maddy";
 
@@ -138,12 +151,12 @@ in {
   options = {
     services.maddy = {
 
-      enable = mkEnableOption (lib.mdDoc "Maddy, a free an open source mail server");
+      enable = mkEnableOption (mdDoc "Maddy, a free an open source mail server");
 
       user = mkOption {
         default = "maddy";
         type = with types; uniq str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           User account under which maddy runs.
 
           ::: {.note}
@@ -157,7 +170,7 @@ in {
       group = mkOption {
         default = "maddy";
         type = with types; uniq str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Group account under which maddy runs.
 
           ::: {.note}
@@ -172,7 +185,7 @@ in {
         default = "localhost";
         type = with types; uniq str;
         example = ''example.com'';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Hostname to use. It should be FQDN.
         '';
       };
@@ -181,7 +194,7 @@ in {
         default = "localhost";
         type = with types; uniq str;
         example = ''mail.example.com'';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Primary MX domain to use. It should be FQDN.
         '';
       };
@@ -194,7 +207,7 @@ in {
           "example.com"
           "other.example.com"
         ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Define list of allowed domains.
         '';
       };
@@ -202,7 +215,7 @@ in {
       config = mkOption {
         type = with types; nullOr lines;
         default = defaultConfig;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Server configuration, see
           [https://maddy.email](https://maddy.email) for
           more information. The default configuration of this module will setup
@@ -218,7 +231,7 @@ in {
         loader = mkOption {
           type = with types; nullOr (enum [ "off" "file" "acme" ]);
           default = "off";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             TLS certificates are obtained by modules called "certificate
             loaders".
 
@@ -243,27 +256,27 @@ in {
               keyPath = mkOption {
                 type = types.path;
                 example = "/etc/ssl/mx1.example.org.key";
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Path to the private key used for TLS.
                 '';
               };
               certPath = mkOption {
                 type = types.path;
                 example = "/etc/ssl/mx1.example.org.crt";
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Path to the certificate used for TLS.
                 '';
               };
             };
           });
           default = [];
-          example = lib.literalExpression ''
+          example = literalExpression ''
             [{
               keyPath = "/etc/ssl/mx1.example.org.key";
               certPath = "/etc/ssl/mx1.example.org.crt";
             }]
           '';
-          description = lib.mdDoc ''
+          description = mdDoc ''
             A list of attribute sets containing paths to TLS certificates and
             keys. Maddy will use SNI if multiple pairs are selected.
           '';
@@ -271,7 +284,7 @@ in {
 
         extraConfig = mkOption {
           type = with types; nullOr lines;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Arguments for the specified certificate loader.
 
             In case the `tls` loader is set, the defaults are considered secure
@@ -287,7 +300,7 @@ in {
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Open the configured incoming and outgoing mail server ports.
         '';
       };
@@ -295,7 +308,7 @@ in {
       ensureAccounts = mkOption {
         type = with types; listOf str;
         default = [];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of IMAP accounts which get automatically created. Note that for
           a complete setup, user credentials for these accounts are required
           and can be created using the `ensureCredentials` option.
@@ -309,7 +322,7 @@ in {
 
       ensureCredentials = mkOption {
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of user accounts which get automatically created if they don't
           exist yet. Note that for a complete setup, corresponding mail boxes
           have to get created using the `ensureAccounts` option.
@@ -325,7 +338,7 @@ in {
               type = types.path;
               example = "/path/to/file";
               default = null;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Specifies the path to a file containing the
                 clear text password for the user.
               '';
@@ -334,9 +347,9 @@ in {
         });
       };
 
-      secrets = lib.mkOption {
+      secrets = mkOption {
         type = with types; listOf path;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A list of files containing the various secrets. Should be in the format
           expected by systemd's `EnvironmentFile` directory. Secrets can be
           referenced in the format `{env:VAR}`.
