@@ -1,18 +1,27 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    optional
+    optionalAttrs
+    types
+    ;
+
   cfg = config.services.changedetection-io;
 in
 {
   options.services.changedetection-io = {
-    enable = mkEnableOption (lib.mdDoc "changedetection-io");
+    enable = mkEnableOption (mdDoc "changedetection-io");
 
     user = mkOption {
       default = "changedetection-io";
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         User account under which changedetection-io runs.
       '';
     };
@@ -20,7 +29,7 @@ in
     group = mkOption {
       default = "changedetection-io";
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Group account under which changedetection-io runs.
       '';
     };
@@ -28,19 +37,19 @@ in
     listenAddress = mkOption {
       type = types.str;
       default = "localhost";
-      description = lib.mdDoc "Address the server will listen on.";
+      description = mdDoc "Address the server will listen on.";
     };
 
     port = mkOption {
       type = types.port;
       default = 5000;
-      description = lib.mdDoc "Port the server will listen on.";
+      description = mdDoc "Port the server will listen on.";
     };
 
     datastorePath = mkOption {
       type = types.str;
       default = "/var/lib/changedetection-io";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The directory used to store all data for changedetection-io.
       '';
     };
@@ -49,7 +58,7 @@ in
       type = types.nullOr types.str;
       default = null;
       example = "https://changedetection-io.example";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The base url used in notifications and `{base_url}` token.
       '';
     };
@@ -57,7 +66,7 @@ in
     behindProxy = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Enable this option when changedetection-io runs behind a reverse proxy, so that it trusts X-* headers.
         It is recommend to run changedetection-io behind a TLS reverse proxy.
       '';
@@ -67,7 +76,7 @@ in
       type = types.nullOr types.path;
       default = null;
       example = "/run/secrets/changedetection-io.env";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Securely pass environment variabels to changedetection-io.
 
         This can be used to set for example a frontend password reproducible via `SALTED_PASS`
@@ -81,7 +90,7 @@ in
     webDriverSupport = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Enable support for fetching web pages using WebDriver and Chromium.
         This starts a headless chromium controlled by puppeteer in an oci container.
 
@@ -95,7 +104,7 @@ in
     playwrightSupport = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Enable support for fetching web pages using playwright and Chromium.
         This starts a headless Chromium controlled by puppeteer in an oci container.
 
@@ -109,7 +118,7 @@ in
     chromePort = mkOption {
       type = types.port;
       default = 4444;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         A free port on which webDriverSupport or playwrightSupport listen on localhost.
       '';
     };
@@ -139,10 +148,10 @@ in
           StateDirectoryMode = mkIf defaultStateDir "0750";
           WorkingDirectory = cfg.datastorePath;
           Environment = [ "HIDE_REFERER=true" ]
-            ++ lib.optional (cfg.baseURL != null) "BASE_URL=${cfg.baseURL}"
-            ++ lib.optional cfg.behindProxy "USE_X_SETTINGS=1"
-            ++ lib.optional cfg.webDriverSupport "WEBDRIVER_URL=http://127.0.0.1:${toString cfg.chromePort}/wd/hub"
-            ++ lib.optional cfg.playwrightSupport "PLAYWRIGHT_DRIVER_URL=ws://127.0.0.1:${toString cfg.chromePort}/?stealth=1&--disable-web-security=true";
+            ++ optional (cfg.baseURL != null) "BASE_URL=${cfg.baseURL}"
+            ++ optional cfg.behindProxy "USE_X_SETTINGS=1"
+            ++ optional cfg.webDriverSupport "WEBDRIVER_URL=http://127.0.0.1:${toString cfg.chromePort}/wd/hub"
+            ++ optional cfg.playwrightSupport "PLAYWRIGHT_DRIVER_URL=ws://127.0.0.1:${toString cfg.chromePort}/?stealth=1&--disable-web-security=true";
           EnvironmentFile = mkIf (cfg.environmentFile != null) cfg.environmentFile;
           ExecStart = ''
             ${pkgs.changedetection-io}/bin/changedetection.py \
@@ -172,7 +181,7 @@ in
     };
 
     virtualisation = {
-      oci-containers.containers = lib.mkMerge [
+      oci-containers.containers = mkMerge [
         (mkIf cfg.webDriverSupport {
           changedetection-io-webdriver = {
             image = "selenium/standalone-chrome";
