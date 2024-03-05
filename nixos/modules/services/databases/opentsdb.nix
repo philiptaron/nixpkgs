@@ -1,13 +1,21 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.opentsdb;
 
   configFile = pkgs.writeText "opentsdb.conf" cfg.config;
 
-in {
+in
+{
 
   ###### interface
 
@@ -15,14 +23,14 @@ in {
 
     services.opentsdb = {
 
-      enable = mkEnableOption (lib.mdDoc "OpenTSDB");
+      enable = mkEnableOption (mdDoc "OpenTSDB");
 
       package = mkPackageOption pkgs "opentsdb" { };
 
       user = mkOption {
         type = types.str;
         default = "opentsdb";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           User account under which OpenTSDB runs.
         '';
       };
@@ -30,7 +38,7 @@ in {
       group = mkOption {
         type = types.str;
         default = "opentsdb";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Group account under which OpenTSDB runs.
         '';
       };
@@ -38,7 +46,7 @@ in {
       port = mkOption {
         type = types.port;
         default = 4242;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Which port OpenTSDB listens on.
         '';
       };
@@ -49,7 +57,7 @@ in {
           tsd.core.auto_create_metrics = true
           tsd.http.request.enable_chunked  = true
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The contents of OpenTSDB's configuration file
         '';
       };
