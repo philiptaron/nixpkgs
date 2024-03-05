@@ -1,8 +1,21 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStringsSep
+    mdDoc
+    mkChangedOptionModule
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    optionalString
+    singleton
+    types
+    ;
+
   cfg = config.services.sslh;
   user = "sslh";
 
@@ -23,12 +36,12 @@ in
   meta.buildDocsInSandbox = false;
 
   options.services.sslh = {
-    enable = mkEnableOption (lib.mdDoc "sslh, protocol demultiplexer");
+    enable = mkEnableOption (mdDoc "sslh, protocol demultiplexer");
 
     method = mkOption {
       type = types.enum [ "fork" "select" "ev" ];
       default = "fork";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The method to use for handling connections:
 
           - `fork` forks a new process for each incoming connection. It is
@@ -47,13 +60,13 @@ in
     listenAddresses = mkOption {
       type = with types; coercedTo str singleton (listOf str);
       default = [ "0.0.0.0" "[::]" ];
-      description = lib.mdDoc "Listening addresses or hostnames.";
+      description = mdDoc "Listening addresses or hostnames.";
     };
 
     port = mkOption {
       type = types.port;
       default = 443;
-      description = lib.mdDoc "Listening port.";
+      description = mdDoc "Listening port.";
     };
 
     settings = mkOption {
@@ -63,13 +76,13 @@ in
         options.timeout = mkOption {
           type = types.ints.unsigned;
           default = 2;
-          description = lib.mdDoc "Timeout in seconds.";
+          description = mdDoc "Timeout in seconds.";
         };
 
         options.transparent = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Whether the services behind sslh (Apache, sshd and so on) will see the
             external IP and ports as if the external world connected directly to
             them.
@@ -79,7 +92,7 @@ in
         options.verbose-connections = mkOption {
           type = types.ints.between 0 4;
           default = 0;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Where to log connections information. Possible values are:
 
              0. don't log anything
@@ -93,7 +106,7 @@ in
         options.numeric = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Whether to disable reverse DNS lookups, thus keeping IP
             address literals in the log.
           '';
@@ -109,7 +122,7 @@ in
             { name = "tls";     host = "localhost"; port =  "443"; }
             { name = "anyprot"; host = "localhost"; port =  "443"; }
           ];
-          description = lib.mdDoc ''
+          description = mdDoc ''
             List of protocols sslh will probe for and redirect.
             Each protocol entry consists of:
 
@@ -129,7 +142,7 @@ in
           '';
         };
       };
-      description = lib.mdDoc "sslh configuration. See {manpage}`sslh(8)` for available settings.";
+      description = mdDoc "sslh configuration. See {manpage}`sslh(8)` for available settings.";
     };
   };
 
