@@ -1,8 +1,23 @@
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
+  inherit (lib)
+    boolToString
+    concatStringsSep
+    elemAt
+    isBool
+    mapAttrs'
+    mdDoc
+    mkIf
+    mkOption
+    nameValuePair
+    optionalAttrs
+    replaceStrings
+    splitString
+    toUpper
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.restic;
 in
 {
@@ -10,7 +25,7 @@ in
   extraOpts = {
     repository = mkOption {
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         URI pointing to the repository to monitor.
       '';
       example = "sftp:backup@192.168.1.100:/backups/example";
@@ -18,7 +33,7 @@ in
 
     passwordFile = mkOption {
       type = types.path;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         File containing the password to the repository.
       '';
       example = "/etc/nixos/restic-password";
@@ -27,7 +42,7 @@ in
     environmentFile = mkOption {
       type = with types; nullOr path;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         File containing the credentials to access the repository, in the
         format of an EnvironmentFile as described by systemd.exec(5)
       '';
@@ -36,7 +51,7 @@ in
     refreshInterval = mkOption {
       type = types.ints.unsigned;
       default = 60;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Refresh interval for the metrics in seconds.
         Computing the metrics is an expensive task, keep this value as high as possible.
       '';
@@ -45,7 +60,7 @@ in
     rcloneOptions = mkOption {
       type = with types; attrsOf (oneOf [ str bool ]);
       default = { };
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Options to pass to rclone to control its behavior.
         See <https://rclone.org/docs/#options> for
         available options. When specifying option names, strip the
@@ -58,7 +73,7 @@ in
     rcloneConfig = mkOption {
       type = with types; attrsOf (oneOf [ str bool ]);
       default = { };
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Configuration for the rclone remote being used for backup.
         See the remote's specific options under rclone's docs at
         <https://rclone.org/docs/>. When specifying
@@ -79,7 +94,7 @@ in
     rcloneConfigFile = mkOption {
       type = with types; nullOr path;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path to the file containing rclone configuration. This file
         must contain configuration for the remote specified in this backup
         set and also must be readable by root.
@@ -107,7 +122,7 @@ in
         rcloneRemoteName = builtins.elemAt (splitString ":" cfg.repository) 1;
         rcloneAttrToOpt = v: "RCLONE_" + toUpper (builtins.replaceStrings [ "-" ] [ "_" ] v);
         rcloneAttrToConf = v: "RCLONE_CONFIG_" + toUpper (rcloneRemoteName + "_" + v);
-        toRcloneVal = v: if lib.isBool v then lib.boolToString v else v;
+        toRcloneVal = v: if isBool v then boolToString v else v;
       in
       {
         RESTIC_REPOSITORY = cfg.repository;
