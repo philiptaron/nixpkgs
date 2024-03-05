@@ -1,8 +1,11 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
 
   cfg = config.services.xserver.digimend;
 
@@ -16,7 +19,7 @@ in
 
     services.xserver.digimend = {
 
-      enable = mkEnableOption (lib.mdDoc "the digimend drivers for Huion/XP-Pen/etc. tablets");
+      enable = mkEnableOption (mdDoc "the digimend drivers for Huion/XP-Pen/etc. tablets");
 
     };
 
