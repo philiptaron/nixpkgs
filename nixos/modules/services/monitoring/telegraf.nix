@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optional
+    types
+    ;
+
   cfg = config.services.telegraf;
 
   settingsFormat = pkgs.formats.toml {};
@@ -11,7 +19,7 @@ in {
   ###### interface
   options = {
     services.telegraf = {
-      enable = mkEnableOption (lib.mdDoc "telegraf server");
+      enable = mkEnableOption (mdDoc "telegraf server");
 
       package = mkPackageOption pkgs "telegraf" { };
 
@@ -19,7 +27,7 @@ in {
         type = types.listOf types.path;
         default = [];
         example = [ "/run/keys/telegraf.env" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           File to load as environment file. Environment variables from this file
           will be interpolated into the config file using envsubst with this
           syntax: `$ENVIRONMENT` or `''${VARIABLE}`.
@@ -29,7 +37,7 @@ in {
 
       extraConfig = mkOption {
         default = {};
-        description = lib.mdDoc "Extra configuration options for telegraf";
+        description = mdDoc "Extra configuration options for telegraf";
         type = settingsFormat.type;
         example = {
           outputs.influxdb = {
@@ -61,10 +69,10 @@ in {
       wantedBy = [ "multi-user.target" ];
       wants = [ "network-online.target" ];
       after = [ "network-online.target" ];
-      path = lib.optional (config.services.telegraf.extraConfig.inputs ? procstat) pkgs.procps;
+      path = optional (config.services.telegraf.extraConfig.inputs ? procstat) pkgs.procps;
       serviceConfig = {
         EnvironmentFile = config.services.telegraf.environmentFiles;
-        ExecStartPre = lib.optional (config.services.telegraf.environmentFiles != [])
+        ExecStartPre = optional (config.services.telegraf.environmentFiles != [])
           (pkgs.writeShellScript "pre-start" ''
             umask 077
             ${pkgs.envsubst}/bin/envsubst -i "${configFile}" > /var/run/telegraf/config.toml
