@@ -1,13 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkPackageOption
+    ;
+
   cfg = config.services.passSecretService;
 in
 {
   options.services.passSecretService = {
-    enable = mkEnableOption (lib.mdDoc "pass secret service");
+    enable = mkEnableOption (mdDoc "pass secret service");
 
     package = mkPackageOption pkgs "pass-secret-service" {
       example = "pass-secret-service.override { python3 = pkgs.python310 }";
