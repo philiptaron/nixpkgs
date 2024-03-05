@@ -1,8 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    singleton
+    ;
+
   cfg = config.services.xserver.windowManager.fvwm3;
   inherit (pkgs) fvwm3;
 in
@@ -13,7 +18,7 @@ in
 
   options = {
     services.xserver.windowManager.fvwm3 = {
-      enable = mkEnableOption (lib.mdDoc "Fvwm3 window manager");
+      enable = mkEnableOption (mdDoc "Fvwm3 window manager");
     };
   };
 
