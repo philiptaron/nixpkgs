@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkPackageOption
+    teams
+    ;
 
-let cfg = config.services.touchegg;
+  cfg = config.services.touchegg;
 
 in {
   meta = {
@@ -11,7 +18,7 @@ in {
 
   ###### interface
   options.services.touchegg = {
-    enable = mkEnableOption (lib.mdDoc "touchegg, a multi-touch gesture recognizer");
+    enable = mkEnableOption (mdDoc "touchegg, a multi-touch gesture recognizer");
 
     package = mkPackageOption pkgs "touchegg" { };
   };
