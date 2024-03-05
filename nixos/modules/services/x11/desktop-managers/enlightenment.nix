@@ -1,13 +1,21 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    makeSearchPathOutput
+    mdDoc
+    mkDefault
+    mkIf
+    mkOption
+    mkRenamedOptionModule
+    teams
+    types
+    ;
 
   e = pkgs.enlightenment;
   xcfg = config.services.xserver;
   cfg = xcfg.desktopManager.enlightenment;
-  GST_PLUGIN_PATH = lib.makeSearchPathOutput "lib" "lib/gstreamer-1.0" [
+  GST_PLUGIN_PATH = makeSearchPathOutput "lib" "lib/gstreamer-1.0" [
     pkgs.gst_all_1.gst-plugins-base
     pkgs.gst_all_1.gst-plugins-good
     pkgs.gst_all_1.gst-plugins-bad
@@ -29,7 +37,7 @@ in
     services.xserver.desktopManager.enlightenment.enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc "Enable the Enlightenment desktop environment.";
+      description = mdDoc "Enable the Enlightenment desktop environment.";
     };
 
   };
