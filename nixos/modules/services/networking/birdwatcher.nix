@@ -1,20 +1,29 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    escapeShellArgs
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.birdwatcher;
 in
 {
   options = {
     services.birdwatcher = {
       package = mkPackageOption pkgs "birdwatcher" { };
-      enable = mkEnableOption (lib.mdDoc "Birdwatcher");
+      enable = mkEnableOption (mdDoc "Birdwatcher");
       flags = mkOption {
         default = [ ];
         type = types.listOf types.str;
         example = [ "-worker-pool-size 16" "-6" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Flags to append to the program call
         '';
       };
@@ -22,7 +31,7 @@ in
       settings = mkOption {
         type = types.lines;
         default = { };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           birdwatcher configuration, for configuration options see the example on [github](https://github.com/alice-lg/birdwatcher/blob/master/etc/birdwatcher/birdwatcher.conf)
         '';
         example = literalExpression ''
@@ -73,7 +82,7 @@ in
 
   config =
     let flagsStr = escapeShellArgs cfg.flags;
-    in lib.mkIf cfg.enable {
+    in mkIf cfg.enable {
       environment.etc."birdwatcher/birdwatcher.conf".source = pkgs.writeTextFile {
         name = "birdwatcher.conf";
         text = cfg.settings;
