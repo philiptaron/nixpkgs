@@ -1,7 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    ;
 
   cfg = config.services.qdrant;
 
@@ -11,10 +18,10 @@ in {
 
   options = {
     services.qdrant = {
-      enable = mkEnableOption (lib.mdDoc "Vector Search Engine for the next generation of AI applications");
+      enable = mkEnableOption (mdDoc "Vector Search Engine for the next generation of AI applications");
 
       settings = mkOption {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration for Qdrant
           Refer to <https://github.com/qdrant/qdrant/blob/master/config/config.yaml> for details on supported values.
         '';
