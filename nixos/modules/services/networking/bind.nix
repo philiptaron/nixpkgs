@@ -1,8 +1,20 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrValues
+    concatMapStrings
+    forEach
+    literalExpression
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalString
+    types
+    ;
 
   cfg = config.services.bind;
 
@@ -10,35 +22,35 @@ let
 
   bindUser = "named";
 
-  bindZoneCoerce = list: builtins.listToAttrs (lib.forEach list (zone: { name = zone.name; value = zone; }));
+  bindZoneCoerce = list: builtins.listToAttrs (forEach list (zone: { name = zone.name; value = zone; }));
 
   bindZoneOptions = { name, config, ... }: {
     options = {
       name = mkOption {
         type = types.str;
         default = name;
-        description = lib.mdDoc "Name of the zone.";
+        description = mdDoc "Name of the zone.";
       };
       master = mkOption {
-        description = lib.mdDoc "Master=false means slave server";
+        description = mdDoc "Master=false means slave server";
         type = types.bool;
       };
       file = mkOption {
         type = types.either types.str types.path;
-        description = lib.mdDoc "Zone file resource records contain columns of data, separated by whitespace, that define the record.";
+        description = mdDoc "Zone file resource records contain columns of data, separated by whitespace, that define the record.";
       };
       masters = mkOption {
         type = types.listOf types.str;
-        description = lib.mdDoc "List of servers for inclusion in stub and secondary zones.";
+        description = mdDoc "List of servers for inclusion in stub and secondary zones.";
       };
       slaves = mkOption {
         type = types.listOf types.str;
-        description = lib.mdDoc "Addresses who may request zone transfers.";
+        description = mdDoc "Addresses who may request zone transfers.";
         default = [ ];
       };
       allowQuery = mkOption {
         type = types.listOf types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of address ranges allowed to query this zone. Instead of the address(es), this may instead
           contain the single string "any".
 
@@ -49,7 +61,7 @@ let
       };
       extraConfig = mkOption {
         type = types.str;
-        description = lib.mdDoc "Extra zone config to be appended at the end of the zone section.";
+        description = mdDoc "Extra zone config to be appended at the end of the zone section.";
         default = "";
       };
     };
@@ -115,7 +127,7 @@ in
 
     services.bind = {
 
-      enable = mkEnableOption (lib.mdDoc "BIND domain name server");
+      enable = mkEnableOption (mdDoc "BIND domain name server");
 
 
       package = mkPackageOption pkgs "bind" { };
@@ -123,7 +135,7 @@ in
       cacheNetworks = mkOption {
         default = [ "127.0.0.0/24" ];
         type = types.listOf types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           What networks are allowed to use us as a resolver.  Note
           that this is for recursive queries -- all networks are
           allowed to query zones configured with the `zones` option
@@ -137,7 +149,7 @@ in
       blockedNetworks = mkOption {
         default = [ ];
         type = types.listOf types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           What networks are just blocked.
         '';
       };
@@ -145,7 +157,7 @@ in
       ipv4Only = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Only use ipv4, even if the host supports ipv6.
         '';
       };
@@ -154,7 +166,7 @@ in
         default = config.networking.nameservers;
         defaultText = literalExpression "config.networking.nameservers";
         type = types.listOf types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of servers we should forward requests to.
         '';
       };
@@ -162,7 +174,7 @@ in
       forward = mkOption {
         default = "first";
         type = types.enum ["first" "only"];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to forward 'first' (try forwarding but lookup directly if forwarding fails) or 'only'.
         '';
       };
@@ -170,7 +182,7 @@ in
       listenOn = mkOption {
         default = [ "any" ];
         type = types.listOf types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Interfaces to listen on.
         '';
       };
@@ -178,7 +190,7 @@ in
       listenOnIpv6 = mkOption {
         default = [ "any" ];
         type = types.listOf types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Ipv6 interfaces to listen on.
         '';
       };
@@ -186,13 +198,13 @@ in
       directory = mkOption {
         type = types.str;
         default = "/run/named";
-        description = lib.mdDoc "Working directory of BIND.";
+        description = mdDoc "Working directory of BIND.";
       };
 
       zones = mkOption {
         default = [ ];
         type = with types; coercedTo (listOf attrs) bindZoneCoerce (attrsOf (types.submodule bindZoneOptions));
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of zones we claim authority over.
         '';
         example = {
@@ -209,7 +221,7 @@ in
       extraConfig = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra lines to be added verbatim to the generated named configuration file.
         '';
       };
@@ -217,7 +229,7 @@ in
       extraOptions = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra lines to be added verbatim to the options section of the
           generated named configuration file.
         '';
@@ -227,7 +239,7 @@ in
         type = types.path;
         default = confFile;
         defaultText = literalExpression "confFile";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Overridable config file to use for named. By default, that
           generated by nixos.
         '';
