@@ -1,6 +1,14 @@
 { config, lib, pkgs, ... }:
-with lib;
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkMerge
+    mkOption
+    optionalString
+    types
+    ;
+
   runXdgAutostart = config.services.xserver.desktopManager.runXdgAutostartIfNone;
 in
 {
@@ -8,7 +16,7 @@ in
     services.xserver.desktopManager.runXdgAutostartIfNone = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to run XDG autostart files for sessions without a desktop manager
         (with only a window manager), these sessions usually don't handle XDG
         autostart files by default.
