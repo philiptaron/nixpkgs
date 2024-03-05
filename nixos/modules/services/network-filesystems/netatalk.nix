@@ -1,8 +1,15 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRemovedOptionModule
+    types
+    ;
+
   cfg = config.services.netatalk;
   settingsFormat = pkgs.formats.ini { };
   afpConfFile = settingsFormat.generate "afp.conf" cfg.settings;
@@ -10,12 +17,12 @@ in {
   options = {
     services.netatalk = {
 
-      enable = mkEnableOption (lib.mdDoc "the Netatalk AFP fileserver");
+      enable = mkEnableOption (mdDoc "the Netatalk AFP fileserver");
 
       port = mkOption {
         type = types.port;
         default = 548;
-        description = lib.mdDoc "TCP port to be used for AFP.";
+        description = mdDoc "TCP port to be used for AFP.";
       };
 
       settings = mkOption {
@@ -32,7 +39,7 @@ in {
             "read only" = true;
           };
         };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration for Netatalk. See
           {manpage}`afp.conf(5)`.
         '';
@@ -41,7 +48,7 @@ in {
       extmap = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           File name extension mappings.
           See {manpage}`extmap.conf(5)`. for more information.
         '';
