@@ -1,12 +1,18 @@
 { lib } :
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkOption
+    types
+    ;
+in
 {
   options = {
 
     addr = mkOption {
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         IP address, optionally with a netmask: IPADDR[/MASK]
       '';
     };
@@ -14,7 +20,7 @@ with lib;
     brd = mkOption {
       type = types.nullOr types.str;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The broadcast address on the interface.
       '';
     };
@@ -22,7 +28,7 @@ with lib;
     dev = mkOption {
       type = types.nullOr types.str;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The name of the device to add the address to.
       '';
     };
@@ -30,7 +36,7 @@ with lib;
     scope = mkOption {
       type = types.nullOr types.str;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The scope of the area where this address is valid.
       '';
     };
@@ -38,7 +44,7 @@ with lib;
     label = mkOption {
       type = types.nullOr types.str;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Each address may be tagged with a label string. In order to preserve
         compatibility with Linux-2.0 net aliases, this string must coincide with
         the name of the device or must be prefixed with the device name followed
