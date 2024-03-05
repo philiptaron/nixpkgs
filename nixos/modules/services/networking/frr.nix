@@ -1,8 +1,23 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    any
+    concatStringsSep
+    filter
+    genAttrs
+    listToAttrs
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    nameValuePair
+    optionals
+    optionalString
+    toUpper
+    types
+    ;
 
   cfg = config.services.frr;
 
@@ -52,13 +67,13 @@ let
 
   serviceOptions = service:
     {
-      enable = mkEnableOption (lib.mdDoc "the FRR ${toUpper service} routing protocol");
+      enable = mkEnableOption (mdDoc "the FRR ${toUpper service} routing protocol");
 
       configFile = mkOption {
         type = types.nullOr types.path;
         default = null;
         example = "/etc/frr/${daemonName service}.conf";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration file to use for FRR ${daemonName service}.
           By default the NixOS generated files are used.
         '';
@@ -87,7 +102,7 @@ let
             };
           in
             examples.${service} or "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           ${daemonName service} configuration statements.
         '';
       };
@@ -95,7 +110,7 @@ let
       vtyListenAddress = mkOption {
         type = types.str;
         default = "localhost";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Address to bind to for the VTY interface.
         '';
       };
@@ -103,7 +118,7 @@ let
       vtyListenPort = mkOption {
         type = types.nullOr types.int;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           TCP Port to bind to for the VTY interface.
         '';
       };
@@ -111,7 +126,7 @@ let
       extraOptions = mkOption {
         type = types.listOf types.str;
         default = [];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra options for the daemon.
         '';
       };
@@ -129,7 +144,7 @@ in
           enable = mkOption {
             type = types.bool;
             default = any isEnabled services;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Whether to enable the Zebra routing manager.
 
               The Zebra routing manager is automatically enabled
@@ -186,8 +201,8 @@ in
           in
             nameValuePair daemon ({
               wantedBy = [ "multi-user.target" ];
-              after = [ "network-pre.target" "systemd-sysctl.service" ] ++ lib.optionals (service != "zebra") [ "zebra.service" ];
-              bindsTo = lib.optionals (service != "zebra") [ "zebra.service" ];
+              after = [ "network-pre.target" "systemd-sysctl.service" ] ++ optionals (service != "zebra") [ "zebra.service" ];
+              bindsTo = optionals (service != "zebra") [ "zebra.service" ];
               wants = [ "network.target" ];
 
               description = if service == "zebra" then "FRR Zebra routing manager"
@@ -216,6 +231,6 @@ in
 
   };
 
-  meta.maintainers = with lib.maintainers; [ woffs ];
+  meta.maintainers = with maintainers; [ woffs ];
 
 }
