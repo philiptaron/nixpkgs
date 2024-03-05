@@ -1,8 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionals
+    optionalString
+    types
+    ;
+
   cfg = config.services.frp;
   settingsFormat = pkgs.formats.toml { };
   configFile = settingsFormat.generate "frp.toml" cfg.settings;
