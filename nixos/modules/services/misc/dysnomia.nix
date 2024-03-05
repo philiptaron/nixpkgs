@@ -1,8 +1,19 @@
 {pkgs, lib, config, ...}:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStrings
+    elem
+    isList
+    mdDoc
+    mkIf
+    mkOption
+    optional
+    optionalAttrs
+    recursiveUpdate
+    types
+    ;
+
   cfg = config.dysnomia;
 
   printProperties = properties:
@@ -10,7 +21,7 @@ let
       let
         property = properties.${propertyName};
       in
-      if isList property then "${propertyName}=(${lib.concatMapStrings (elem: "\"${toString elem}\" ") (properties.${propertyName})})\n"
+      if isList property then "${propertyName}=(${concatMapStrings (elem: "\"${toString elem}\" ") (properties.${propertyName})})\n"
       else "${propertyName}=\"${toString property}\"\n"
     ) (builtins.attrNames properties);
 
@@ -87,52 +98,52 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to enable Dysnomia";
+        description = mdDoc "Whether to enable Dysnomia";
       };
 
       enableAuthentication = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to publish privacy-sensitive authentication credentials";
+        description = mdDoc "Whether to publish privacy-sensitive authentication credentials";
       };
 
       package = mkOption {
         type = types.path;
-        description = lib.mdDoc "The Dysnomia package";
+        description = mdDoc "The Dysnomia package";
       };
 
       properties = mkOption {
-        description = lib.mdDoc "An attribute set in which each attribute represents a machine property. Optionally, these values can be shell substitutions.";
+        description = mdDoc "An attribute set in which each attribute represents a machine property. Optionally, these values can be shell substitutions.";
         default = {};
         type = types.attrs;
       };
 
       containers = mkOption {
-        description = lib.mdDoc "An attribute set in which each key represents a container and each value an attribute set providing its configuration properties";
+        description = mdDoc "An attribute set in which each key represents a container and each value an attribute set providing its configuration properties";
         default = {};
         type = types.attrsOf types.attrs;
       };
 
       components = mkOption {
-        description = lib.mdDoc "An attribute set in which each key represents a container and each value an attribute set in which each key represents a component and each value a derivation constructing its initial state";
+        description = mdDoc "An attribute set in which each key represents a container and each value an attribute set in which each key represents a component and each value a derivation constructing its initial state";
         default = {};
         type = types.attrsOf types.attrs;
       };
 
       extraContainerProperties = mkOption {
-        description = lib.mdDoc "An attribute set providing additional container settings in addition to the default properties";
+        description = mdDoc "An attribute set providing additional container settings in addition to the default properties";
         default = {};
         type = types.attrs;
       };
 
       extraContainerPaths = mkOption {
-        description = lib.mdDoc "A list of paths containing additional container configurations that are added to the search folders";
+        description = mdDoc "A list of paths containing additional container configurations that are added to the search folders";
         default = [];
         type = types.listOf types.path;
       };
 
       extraModulePaths = mkOption {
-        description = lib.mdDoc "A list of paths containing additional modules that are added to the search folders";
+        description = mdDoc "A list of paths containing additional modules that are added to the search folders";
         default = [];
         type = types.listOf types.path;
       };
@@ -140,7 +151,7 @@ in
       enableLegacyModules = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc "Whether to enable Dysnomia legacy process and wrapper modules";
+        description = mdDoc "Whether to enable Dysnomia legacy process and wrapper modules";
       };
     };
   };
@@ -161,13 +172,13 @@ in
 
     environment.variables = {
       DYSNOMIA_STATEDIR = "/var/state/dysnomia-nixos";
-      DYSNOMIA_CONTAINERS_PATH = "${lib.concatMapStrings (containerPath: "${containerPath}:") cfg.extraContainerPaths}/etc/dysnomia/containers";
-      DYSNOMIA_MODULES_PATH = "${lib.concatMapStrings (modulePath: "${modulePath}:") cfg.extraModulePaths}/etc/dysnomia/modules";
+      DYSNOMIA_CONTAINERS_PATH = "${concatMapStrings (containerPath: "${containerPath}:") cfg.extraContainerPaths}/etc/dysnomia/containers";
+      DYSNOMIA_MODULES_PATH = "${concatMapStrings (modulePath: "${modulePath}:") cfg.extraModulePaths}/etc/dysnomia/modules";
     };
 
     environment.systemPackages = [ cfg.package ];
 
-    dysnomia.package = pkgs.dysnomia.override (origArgs: dysnomiaFlags // lib.optionalAttrs (cfg.enableLegacyModules) {
+    dysnomia.package = pkgs.dysnomia.override (origArgs: dysnomiaFlags // optionalAttrs (cfg.enableLegacyModules) {
       enableLegacy = builtins.trace ''
         WARNING: Dysnomia has been configured to use the legacy 'process' and 'wrapper'
         modules for compatibility reasons! If you rely on these modules, consider
@@ -211,41 +222,41 @@ in
       ++ optional (dysnomiaFlags.enableSubversionRepository) "subversion-repository";
     };
 
-    dysnomia.containers = lib.recursiveUpdate ({
+    dysnomia.containers = recursiveUpdate ({
       process = {};
       wrapper = {};
     }
-    // lib.optionalAttrs (config.services.httpd.enable) { apache-webapplication = {
+    // optionalAttrs (config.services.httpd.enable) { apache-webapplication = {
       documentRoot = config.services.httpd.virtualHosts.localhost.documentRoot;
     }; }
-    // lib.optionalAttrs (config.services.tomcat.axis2.enable) { axis2-webservice = {}; }
-    // lib.optionalAttrs (config.services.ejabberd.enable) { ejabberd-dump = {
+    // optionalAttrs (config.services.tomcat.axis2.enable) { axis2-webservice = {}; }
+    // optionalAttrs (config.services.ejabberd.enable) { ejabberd-dump = {
       ejabberdUser = config.services.ejabberd.user;
     }; }
-    // lib.optionalAttrs (config.services.mysql.enable) { mysql-database = {
+    // optionalAttrs (config.services.mysql.enable) { mysql-database = {
         mysqlPort = config.services.mysql.settings.mysqld.port;
         mysqlSocket = "/run/mysqld/mysqld.sock";
-      } // lib.optionalAttrs cfg.enableAuthentication {
+      } // optionalAttrs cfg.enableAuthentication {
         mysqlUsername = "root";
       };
     }
-    // lib.optionalAttrs (config.services.postgresql.enable) { postgresql-database = {
-      } // lib.optionalAttrs (cfg.enableAuthentication) {
+    // optionalAttrs (config.services.postgresql.enable) { postgresql-database = {
+      } // optionalAttrs (cfg.enableAuthentication) {
         postgresqlUsername = "postgres";
       };
     }
-    // lib.optionalAttrs (config.services.tomcat.enable) { tomcat-webapplication = {
+    // optionalAttrs (config.services.tomcat.enable) { tomcat-webapplication = {
       tomcatPort = 8080;
     }; }
-    // lib.optionalAttrs (config.services.mongodb.enable) { mongo-database = {}; }
-    // lib.optionalAttrs (config.services.influxdb.enable) {
+    // optionalAttrs (config.services.mongodb.enable) { mongo-database = {}; }
+    // optionalAttrs (config.services.influxdb.enable) {
       influx-database = {
         influxdbUsername = config.services.influxdb.user;
         influxdbDataDir = "${config.services.influxdb.dataDir}/data";
         influxdbMetaDir = "${config.services.influxdb.dataDir}/meta";
       };
     }
-    // lib.optionalAttrs (config.services.svnserve.enable) { subversion-repository = {
+    // optionalAttrs (config.services.svnserve.enable) { subversion-repository = {
       svnBaseDir = config.services.svnserve.svnBaseDir;
     }; }) cfg.extraContainerProperties;
 
