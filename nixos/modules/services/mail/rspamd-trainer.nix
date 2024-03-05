@@ -1,13 +1,21 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.services.rspamd-trainer;
-  format = pkgs.formats.toml { };
 
-in {
+  format = pkgs.formats.toml { };
+in
+{
   options.services.rspamd-trainer = {
 
     enable = mkEnableOption (mdDoc "Spam/ham trainer for rspamd");
@@ -30,9 +38,9 @@ in {
       '';
     };
 
-    secrets = lib.mkOption {
+    secrets = mkOption {
       type = with types; listOf path;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         A list of files containing the various secrets. Should be in the
         format expected by systemd's `EnvironmentFile` directory. For the
         IMAP account password use `PASSWORD = mypassword`.
@@ -71,6 +79,6 @@ in {
 
   };
 
-  meta.maintainers = with lib.maintainers; [ onny ];
+  meta.maintainers = with maintainers; [ onny ];
 
 }
