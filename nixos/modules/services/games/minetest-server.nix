@@ -1,8 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    assertMsg
+    concatStrings
+    escapeShellArgs
+    mapAttrsToList
+    mdDoc
+    mkIf
+    mkOption
+    optionals
+    types
+    ;
+
   CONTAINS_NEWLINE_RE = ".*\n.*";
   # The following values are reserved as complete option values:
   # { - start of a group.
@@ -14,14 +24,14 @@ let
   UNESCAPABLE_RE = ".*\n\"\"\"\n.*";
 
   toConfMultiline = name: value:
-    assert lib.assertMsg
+    assert assertMsg
       ((builtins.match UNESCAPABLE_RE value) == null)
       ''""" can't be on its own line in a minetest config.'';
     "${name} = \"\"\"\n${value}\n\"\"\"\n";
 
   toConf = values:
-    lib.concatStrings
-      (lib.mapAttrsToList
+    concatStrings
+      (mapAttrsToList
         (name: value: {
           bool = "${name} = ${toString value}\n";
           int = "${name} = ${toString value}\n";
@@ -35,7 +45,7 @@ let
         values);
 
   cfg   = config.services.minetest-server;
-  flag  = val: name: lib.optionals (val != null) ["--${name}" "${toString val}"];
+  flag  = val: name: optionals (val != null) ["--${name}" "${toString val}"];
 
   flags = [
     "--server"
@@ -56,13 +66,13 @@ in
       enable = mkOption {
         type        = types.bool;
         default     = false;
-        description = lib.mdDoc "If enabled, starts a Minetest Server.";
+        description = mdDoc "If enabled, starts a Minetest Server.";
       };
 
       gameId = mkOption {
         type        = types.nullOr types.str;
         default     = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Id of the game to use. To list available games run
           `minetestserver --gameid list`.
 
@@ -73,7 +83,7 @@ in
       world = mkOption {
         type        = types.nullOr types.path;
         default     = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Name of the world to use. To list available worlds run
           `minetestserver --world list`.
 
@@ -84,7 +94,7 @@ in
       configPath = mkOption {
         type        = types.nullOr types.path;
         default     = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Path to the config to use.
 
           If set to null, the config of the running user will be used:
@@ -95,7 +105,7 @@ in
       config = mkOption {
         type = types.attrsOf types.anything;
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Settings to add to the minetest config file.
 
           This option is ignored if `configPath` is set.
@@ -105,7 +115,7 @@ in
       logPath = mkOption {
         type        = types.nullOr types.path;
         default     = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Path to logfile for logging.
 
           If set to null, logging will be output to stdout which means
@@ -116,7 +126,7 @@ in
       port = mkOption {
         type        = types.nullOr types.int;
         default     = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Port number to bind to.
 
           If set to null, the default 30000 will be used.
@@ -126,7 +136,7 @@ in
       extraArgs = mkOption {
         type = types.listOf types.str;
         default = [];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Additional command line flags to pass to the minetest executable.
         '';
       };
@@ -155,7 +165,7 @@ in
       script = ''
         cd /var/lib/minetest
 
-        exec ${pkgs.minetest}/bin/minetest ${lib.escapeShellArgs flags}
+        exec ${pkgs.minetest}/bin/minetest ${escapeShellArgs flags}
       '';
     };
   };
