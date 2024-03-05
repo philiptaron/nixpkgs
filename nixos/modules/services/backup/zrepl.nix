@@ -1,7 +1,16 @@
 { config, pkgs, lib, ... }:
 
-with lib;
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.zrepl;
   format = pkgs.formats.yaml { };
   configFile = format.generate "zrepl.yml" cfg.settings;
@@ -11,13 +20,13 @@ in
 
   options = {
     services.zrepl = {
-      enable = mkEnableOption (lib.mdDoc "zrepl");
+      enable = mkEnableOption (mdDoc "zrepl");
 
       package = mkPackageOption pkgs "zrepl" { };
 
       settings = mkOption {
         default = { };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration for zrepl. See <https://zrepl.github.io/configuration.html>
           for more information.
         '';
