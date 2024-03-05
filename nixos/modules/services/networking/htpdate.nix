@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    mdDoc
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
+
   inherit (pkgs) htpdate;
 
   cfg = config.services.htpdate;
@@ -19,7 +26,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable htpdate daemon.
         '';
       };
@@ -27,7 +34,7 @@ in
       extraOptions = mkOption {
         type = types.str;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Additional command line arguments to pass to htpdate.
         '';
       };
@@ -35,7 +42,7 @@ in
       servers = mkOption {
         type = types.listOf types.str;
         default = [ "www.google.com" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           HTTP servers to use for time synchronization.
         '';
       };
@@ -44,7 +51,7 @@ in
         type = types.str;
         default = "";
         example = "127.0.0.1:8118";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           HTTP proxy used for requests.
         '';
       };
