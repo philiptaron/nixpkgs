@@ -1,14 +1,26 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    ;
+
   cfg = config.services.stalwart-mail;
+
   configFormat = pkgs.formats.toml { };
+
   configFile = configFormat.generate "stalwart-mail.toml" cfg.settings;
+
   dataDir = "/var/lib/stalwart-mail";
 
-in {
+in
+{
   options.services.stalwart-mail = {
     enable = mkEnableOption (mdDoc "the Stalwart all-in-one email server");
     package = mkPackageOption pkgs "stalwart-mail" { };
