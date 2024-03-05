@@ -1,8 +1,20 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrValues
+    catAttrs
+    mapAttrs'
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    nameValuePair
+    optional
+    optionalAttrs
+    types
+    ;
+
   cfg = config.services.borgmatic;
   settingsFormat = pkgs.formats.yaml { };
 
