@@ -1,11 +1,22 @@
 { lib, config, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mapAttrs
+    mdDoc
+    mkDefault
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.postfixadmin;
+
   fpm = config.services.phpfpm.pools.postfixadmin;
+
   localDB = cfg.database.host == "localhost";
+
   user = if localDB then cfg.database.username else "nginx";
 in
 {
@@ -13,7 +24,7 @@ in
     enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to enable postfixadmin.
 
         Also enables nginx virtual host management.
@@ -25,13 +36,13 @@ in
     hostName = mkOption {
       type = types.str;
       example = "postfixadmin.example.com";
-      description = lib.mdDoc "Hostname to use for the nginx vhost";
+      description = mdDoc "Hostname to use for the nginx vhost";
     };
 
     adminEmail = mkOption {
       type = types.str;
       example = "postmaster@example.com";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Defines the Site Admin's email address.
         This will be used to send emails from to create mailboxes and
         from Send Email / Broadcast message pages.
@@ -40,7 +51,7 @@ in
 
     setupPasswordFile = mkOption {
       type = types.path;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Password file for the admin.
         Generate with `php -r "echo password_hash('some password here', PASSWORD_DEFAULT);"`
       '';
@@ -50,7 +61,7 @@ in
       username = mkOption {
         type = types.str;
         default = "postfixadmin";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Username for the postgresql connection.
           If `database.host` is set to `localhost`, a unix user and group of the same name will be created as well.
         '';
@@ -58,7 +69,7 @@ in
       host = mkOption {
         type = types.str;
         default = "localhost";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Host of the postgresql server. If this is not set to
           `localhost`, you have to create the
           postgresql user and database yourself, with appropriate
@@ -67,19 +78,19 @@ in
       };
       passwordFile = mkOption {
         type = types.path;
-        description = lib.mdDoc "Password file for the postgresql connection. Must be readable by user `nginx`.";
+        description = mdDoc "Password file for the postgresql connection. Must be readable by user `nginx`.";
       };
       dbname = mkOption {
         type = types.str;
         default = "postfixadmin";
-        description = lib.mdDoc "Name of the postgresql database";
+        description = mdDoc "Name of the postgresql database";
       };
     };
 
     extraConfig = mkOption {
       type = types.lines;
       default = "";
-      description = lib.mdDoc "Extra configuration for the postfixadmin instance, see postfixadmin's config.inc.php for available options.";
+      description = mdDoc "Extra configuration for the postfixadmin instance, see postfixadmin's config.inc.php for available options.";
     };
   };
 
