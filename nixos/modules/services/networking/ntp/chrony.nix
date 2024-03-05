@@ -1,8 +1,23 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStringsSep
+    concatStringsSep
+    literalExpression
+    maintainers
+    mdDoc
+    mkForce
+    mkIf
+    mkOption
+    mkPackageOption
+    optional
+    optionals
+    optionalString
+    splitString
+    types
+    ;
+
   cfg = config.services.chrony;
   chronyPkg = cfg.package;
 
@@ -41,7 +56,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to synchronise your machine's time using chrony.
           Make sure you disable NTP if you enable this service.
         '';
@@ -53,7 +68,7 @@ in
         default = config.networking.timeServers;
         defaultText = literalExpression "config.networking.timeServers";
         type = types.listOf types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The set of NTP servers from which to synchronise.
         '';
       };
@@ -61,7 +76,7 @@ in
       serverOption = mkOption {
         default = "iburst";
         type = types.enum [ "iburst" "offline" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Set option for server directives.
 
           Use "iburst" to rapidly poll on startup. Recommended if your machine
@@ -76,7 +91,7 @@ in
         type = types.bool;
         default = config.environment.memoryAllocator.provider != "graphene-hardened";
         defaultText = ''config.environment.memoryAllocator.provider != "graphene-hardened"'';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to add the `-m` flag to lock memory.
         '';
       };
@@ -84,7 +99,7 @@ in
       enableRTCTrimming = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable tracking of the RTC offset to the system clock and automatic trimming.
           See also [](#opt-services.chrony.autotrimThreshold)
 
@@ -111,7 +126,7 @@ in
       enableNTS = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable Network Time Security authentication.
           Make sure it is supported by your selected NTP server(s).
         '';
@@ -121,7 +136,7 @@ in
         enabled = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Allow chronyd to make a rapid measurement of the system clock error
             at boot time, and to correct the system clock by stepping before
             normal operation begins.
@@ -131,7 +146,7 @@ in
         threshold = mkOption {
           type = types.either types.float types.int;
           default = 1000; # by default, same threshold as 'ntpd -g' (1000s)
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The threshold of system clock error (in seconds) above which the
             clock will be stepped. If the correction required is less than the
             threshold, a slew is used instead.
@@ -142,13 +157,13 @@ in
       directory = mkOption {
         type = types.str;
         default = "/var/lib/chrony";
-        description = lib.mdDoc "Directory where chrony state is stored.";
+        description = mdDoc "Directory where chrony state is stored.";
       };
 
       extraConfig = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra configuration directives that should be added to
           `chrony.conf`
         '';
@@ -158,13 +173,13 @@ in
         default = [ ];
         example = [ "-s" ];
         type = types.listOf types.str;
-        description = lib.mdDoc "Extra flags passed to the chronyd command.";
+        description = mdDoc "Extra flags passed to the chronyd command.";
       };
     };
   };
 
   config = mkIf cfg.enable {
-    meta.maintainers = with lib.maintainers; [ thoughtpolice vifino ];
+    meta.maintainers = with maintainers; [ thoughtpolice vifino ];
 
     environment.systemPackages = [ chronyPkg ];
 
@@ -181,8 +196,8 @@ in
     services.timesyncd.enable = mkForce false;
 
     # If chrony controls and tracks the RTC, writing it externally causes clock error.
-    systemd.services.save-hwclock = lib.mkIf cfg.enableRTCTrimming {
-      enable = lib.mkForce false;
+    systemd.services.save-hwclock = mkIf cfg.enableRTCTrimming {
+      enable = mkForce false;
     };
 
     systemd.services.systemd-timedated.environment = { SYSTEMD_TIMEDATED_NTP_SERVICES = "chronyd.service"; };
@@ -191,7 +206,7 @@ in
       "d ${stateDir} 0750 chrony chrony - -"
       "f ${driftFile} 0640 chrony chrony - -"
       "f ${keyFile} 0640 chrony chrony - -"
-    ] ++ lib.optionals cfg.enableRTCTrimming [
+    ] ++ optionals cfg.enableRTCTrimming [
       "f ${rtcFile} 0640 chrony chrony - -"
     ];
 
@@ -253,7 +268,7 @@ in
 
     assertions = [
       {
-        assertion = !(cfg.enableRTCTrimming && builtins.any (line: (builtins.match "^ *rtcsync" line) != null) (lib.strings.splitString "\n" cfg.extraConfig));
+        assertion = !(cfg.enableRTCTrimming && builtins.any (line: (builtins.match "^ *rtcsync" line) != null) (splitString "\n" cfg.extraConfig));
         message = ''
           The chrony module now configures `rtcfile` and `rtcautotrim` for you.
           These options conflict with `rtcsync` and cause chrony to crash.
