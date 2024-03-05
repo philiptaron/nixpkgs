@@ -1,14 +1,19 @@
 { config , lib , pkgs , ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    singleton
+    ;
+
   cfg = config.services.xserver.windowManager.e16;
 in
 {
   ###### interface
   options = {
-    services.xserver.windowManager.e16.enable = mkEnableOption (lib.mdDoc "e16");
+    services.xserver.windowManager.e16.enable = mkEnableOption (mdDoc "e16");
   };
 
   ###### implementation
