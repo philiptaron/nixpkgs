@@ -1,8 +1,14 @@
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    literalExpression
+    mdDoc
+    mkOption
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.process;
   configFile = pkgs.writeText "process-exporter.yaml" (builtins.toJSON cfg.settings);
 in
@@ -18,7 +24,7 @@ in
           { name = "{{.Matches.Wrapped}} {{ .Matches.Args }}"; cmdline = [ "^/nix/store[^ ]*/(?P<Wrapped>[^ /]*) (?P<Args>.*)" ]; }
         ]
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         All settings expressed as an Nix attrset.
 
         Check the official documentation for the corresponding YAML
