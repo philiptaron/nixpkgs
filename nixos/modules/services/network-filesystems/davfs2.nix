@@ -1,8 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    optionalAttrs
+    types
+    ;
+
   cfg = config.services.davfs2;
   cfgFile = pkgs.writeText "davfs2.conf" ''
     dav_user ${cfg.davUser}
@@ -15,7 +21,7 @@ in
     enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to enable davfs2.
       '';
     };
@@ -23,7 +29,7 @@ in
     davUser = mkOption {
       type = types.str;
       default = "davfs2";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         When invoked by root the mount.davfs daemon will run as this user.
         Value must be given as name, not as numerical id.
       '';
@@ -32,7 +38,7 @@ in
     davGroup = mkOption {
       type = types.str;
       default = "davfs2";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The group of the running mount.davfs daemon. Ordinary users must be
         member of this group in order to mount a davfs2 file system. Value must
         be given as name, not as numerical id.
@@ -47,7 +53,7 @@ in
         proxy foo.bar:8080
         use_locks 0
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra lines appended to the configuration of davfs2.
       ''  ;
     };
