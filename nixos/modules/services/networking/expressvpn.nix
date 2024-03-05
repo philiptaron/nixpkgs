@@ -1,11 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+in
 {
   options.services.expressvpn.enable = mkOption {
     type = types.bool;
     default = false;
-    description = lib.mdDoc ''
+    description = mdDoc ''
       Enable the ExpressVPN daemon.
     '';
   };
