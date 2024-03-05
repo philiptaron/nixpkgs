@@ -1,44 +1,57 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    concatMapStrings
+    concatStrings
+    escapeShellArgs
+    imap0
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.corosync;
 in
 {
   # interface
   options.services.corosync = {
-    enable = mkEnableOption (lib.mdDoc "corosync");
+    enable = mkEnableOption (mdDoc "corosync");
 
     package = mkPackageOption pkgs "corosync" { };
 
     clusterName = mkOption {
       type = types.str;
       default = "nixcluster";
-      description = lib.mdDoc "Name of the corosync cluster.";
+      description = mdDoc "Name of the corosync cluster.";
     };
 
     extraOptions = mkOption {
       type = with types; listOf str;
       default = [];
-      description = lib.mdDoc "Additional options with which to start corosync.";
+      description = mdDoc "Additional options with which to start corosync.";
     };
 
     nodelist = mkOption {
-      description = lib.mdDoc "Corosync nodelist: all cluster members.";
+      description = mdDoc "Corosync nodelist: all cluster members.";
       default = [];
       type = with types; listOf (submodule {
         options = {
           nodeid = mkOption {
             type = int;
-            description = lib.mdDoc "Node ID number";
+            description = mdDoc "Node ID number";
           };
           name = mkOption {
             type = str;
-            description = lib.mdDoc "Node name";
+            description = mdDoc "Node name";
           };
           ring_addrs = mkOption {
             type = listOf str;
-            description = lib.mdDoc "List of addresses, one for each ring.";
+            description = mdDoc "List of addresses, one for each ring.";
           };
         };
       });
@@ -100,8 +113,8 @@ in
       };
     };
 
-    environment.etc."sysconfig/corosync".text = lib.optionalString (cfg.extraOptions != []) ''
-      COROSYNC_OPTIONS="${lib.escapeShellArgs cfg.extraOptions}"
+    environment.etc."sysconfig/corosync".text = optionalString (cfg.extraOptions != []) ''
+      COROSYNC_OPTIONS="${escapeShellArgs cfg.extraOptions}"
     '';
   };
 }
