@@ -2,9 +2,15 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    teams
+    ;
 
   cfg = config.services.gnome.gnome-settings-daemon;
 
@@ -34,7 +40,7 @@ in
 
     services.gnome.gnome-settings-daemon = {
 
-      enable = mkEnableOption (lib.mdDoc "GNOME Settings Daemon");
+      enable = mkEnableOption (mdDoc "GNOME Settings Daemon");
 
     };
 
