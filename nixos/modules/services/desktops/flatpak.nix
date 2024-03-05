@@ -1,9 +1,14 @@
 # flatpak service.
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.services.flatpak;
 in {
   meta = {
@@ -14,7 +19,7 @@ in {
   ###### interface
   options = {
     services.flatpak = {
-      enable = mkEnableOption (lib.mdDoc "flatpak");
+      enable = mkEnableOption (mdDoc "flatpak");
     };
   };
 
