@@ -1,8 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.haveged;
 
 in
@@ -15,7 +21,7 @@ in
 
     services.haveged = {
 
-      enable = mkEnableOption (lib.mdDoc ''
+      enable = mkEnableOption (mdDoc ''
         haveged entropy daemon, which refills /dev/random when low.
         NOTE: does nothing on kernels newer than 5.6.
       '');
@@ -24,7 +30,7 @@ in
       refill_threshold = mkOption {
         type = types.int;
         default = 1024;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The number of bits of available entropy beneath which
           haveged should refill the entropy pool.
         '';
