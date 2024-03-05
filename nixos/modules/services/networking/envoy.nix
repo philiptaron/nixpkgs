@@ -1,28 +1,37 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.envoy;
   format = pkgs.formats.json { };
   conf = format.generate "envoy.json" cfg.settings;
   validateConfig = required: file:
     pkgs.runCommand "validate-envoy-conf" { } ''
-      ${cfg.package}/bin/envoy --log-level error --mode validate -c "${file}" ${lib.optionalString (!required) "|| true"}
+      ${cfg.package}/bin/envoy --log-level error --mode validate -c "${file}" ${optionalString (!required) "|| true"}
       cp "${file}" "$out"
     '';
 in
 
 {
   options.services.envoy = {
-    enable = mkEnableOption (lib.mdDoc "Envoy reverse proxy");
+    enable = mkEnableOption (mdDoc "Envoy reverse proxy");
 
     package = mkPackageOption pkgs "envoy" { };
 
     requireValidConfig = mkOption {
       type = types.bool;
       default = true;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether a failure during config validation at build time is fatal.
         When the config can't be checked during build time, for example when it includes
         other files, disable this option.
@@ -50,7 +59,7 @@ in
           };
         }
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Specify the configuration for Envoy in Nix.
       '';
     };
