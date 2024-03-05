@@ -1,7 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    boolToString
+    isBool
+    literalExpression
+    mapAttrs
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.livebook;
 in
 {
@@ -17,7 +29,7 @@ in
     environment = mkOption {
       type = with types; attrsOf (nullOr (oneOf [ bool int str ]));
       default = { };
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Environment variables to set.
 
         Livebook is configured through the use of environment variables. The
@@ -47,7 +59,7 @@ in
     environmentFile = mkOption {
       type = with types; nullOr types.path;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Additional dnvironment file as defined in {manpage}`systemd.exec(5)`.
 
         Secrets like {env}`LIVEBOOK_PASSWORD` (which is used to specify the
@@ -75,7 +87,7 @@ in
     extraPackages = mkOption {
       type = with types; listOf package;
       default = [ ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra packages to make available to the Livebook service.
       '';
       example = literalExpression "with pkgs; [ gcc gnumake ]";
