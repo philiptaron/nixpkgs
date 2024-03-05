@@ -1,8 +1,17 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStringsSep
+    elem
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.dwm-status;
 
   order = concatMapStringsSep "," (feature: ''"${feature}"'') cfg.order;
@@ -22,7 +31,7 @@ in
 
     services.dwm-status = {
 
-      enable = mkEnableOption (lib.mdDoc "dwm-status user service");
+      enable = mkEnableOption (mdDoc "dwm-status user service");
 
       package = mkPackageOption pkgs "dwm-status" {
         example = "dwm-status.override { enableAlsaUtils = false; }";
@@ -30,7 +39,7 @@ in
 
       order = mkOption {
         type = types.listOf (types.enum [ "audio" "backlight" "battery" "cpu_load" "network" "time" ]);
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of enabled features in order.
         '';
       };
@@ -38,7 +47,7 @@ in
       extraConfig = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra config in TOML format.
         '';
       };
