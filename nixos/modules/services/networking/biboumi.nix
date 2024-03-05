@@ -1,6 +1,21 @@
 { config, lib, pkgs, options, ... }:
-with lib;
+
 let
+  inherit (lib)
+    concatStringsSep
+    generators
+    literalExpression
+    maintainers
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalString
+    removePrefix
+    types
+    ;
+
   cfg = config.services.biboumi;
   inherit (config.environment) etc;
   rootDir = "/run/biboumi/mnt-root";
@@ -8,17 +23,17 @@ let
   settingsFile = pkgs.writeText "biboumi.cfg" (
     generators.toKeyValue {
       mkKeyValue = k: v:
-        lib.optionalString (v != null) (generators.mkKeyValueDefault {} "=" k v);
+        optionalString (v != null) (generators.mkKeyValueDefault {} "=" k v);
     } cfg.settings);
   need_CAP_NET_BIND_SERVICE = cfg.settings.identd_port != 0 && cfg.settings.identd_port < 1024;
 in
 {
   options = {
     services.biboumi = {
-      enable = mkEnableOption (lib.mdDoc "the Biboumi XMPP gateway to IRC");
+      enable = mkEnableOption (mdDoc "the Biboumi XMPP gateway to IRC");
 
       settings = mkOption {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           See [biboumi 8.5](https://lab.louiz.org/louiz/biboumi/blob/8.5/doc/biboumi.1.rst)
           for documentation.
         '';
@@ -33,7 +48,7 @@ in
             default = [];
             example = ["admin@example.org"];
             apply = concatStringsSep ":";
-            description = lib.mdDoc ''
+            description = mdDoc ''
               The bare JID of the gateway administrator. This JID will have more
               privileges than other standard users, for example some administration
               ad-hoc commands will only be available to that JID.
@@ -42,7 +57,7 @@ in
           options.ca_file = mkOption {
             type = types.path;
             default = "/etc/ssl/certs/ca-certificates.crt";
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Specifies which file should be used as the list of trusted CA
               when negotiating a TLS session.
             '';
@@ -50,7 +65,7 @@ in
           options.db_name = mkOption {
             type = with types; either path str;
             default = "${stateDir}/biboumi.sqlite";
-            description = lib.mdDoc ''
+            description = mdDoc ''
               The name of the database to use.
             '';
             example = "postgresql://user:secret@localhost";
@@ -58,7 +73,7 @@ in
           options.hostname = mkOption {
             type = types.str;
             example = "biboumi.example.org";
-            description = lib.mdDoc ''
+            description = mdDoc ''
               The hostname served by the XMPP gateway.
               This domain must be configured in the XMPP server
               as an external component.
@@ -68,21 +83,21 @@ in
             type = types.port;
             default = 113;
             example = 0;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               The TCP port on which to listen for identd queries.
             '';
           };
           options.log_level = mkOption {
             type = types.ints.between 0 3;
             default = 1;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Indicate what type of log messages to write in the logs.
               0 is debug, 1 is info, 2 is warning, 3 is error.
             '';
           };
           options.password = mkOption {
             type = with types; nullOr str;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               The password used to authenticate the XMPP component to your XMPP server.
               This password must be configured in the XMPP server,
               associated with the external component on
@@ -95,7 +110,7 @@ in
           options.persistent_by_default = mkOption {
             type = types.bool;
             default = false;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Whether all rooms will be persistent by default:
               the value of the “persistent” option in the global configuration of each
               user will be “true”, but the value of each individual room will still
@@ -107,7 +122,7 @@ in
             type = types.path;
             default = "${pkgs.biboumi}/etc/biboumi";
             defaultText = literalExpression ''"''${pkgs.biboumi}/etc/biboumi"'';
-            description = lib.mdDoc ''
+            description = mdDoc ''
               A directory that should contain the policy files,
               used to customize Botan’s behaviour
               when negotiating the TLS connections with the IRC servers.
@@ -116,14 +131,14 @@ in
           options.port = mkOption {
             type = types.port;
             default = 5347;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               The TCP port to use to connect to the local XMPP component.
             '';
           };
           options.realname_customization = mkOption {
             type = types.bool;
             default = true;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Whether the users will be able to use
               the ad-hoc commands that lets them configure
               their realname and username.
@@ -132,7 +147,7 @@ in
           options.realname_from_jid = mkOption {
             type = types.bool;
             default = false;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Whether the realname and username of each biboumi
               user will be extracted from their JID.
               Otherwise they will be set to the nick
@@ -142,7 +157,7 @@ in
           options.xmpp_server_ip = mkOption {
             type = types.str;
             default = "127.0.0.1";
-            description = lib.mdDoc ''
+            description = mdDoc ''
               The IP address to connect to the XMPP server on.
               The connection to the XMPP server is unencrypted,
               so the biboumi instance and the server should
@@ -154,7 +169,7 @@ in
 
       credentialsFile = mkOption {
         type = types.path;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Path to a configuration file to be merged with the settings.
           Beware not to surround "=" with spaces when setting biboumi's options in this file.
           Useful to merge a file which is better kept out of the Nix store
@@ -165,7 +180,7 @@ in
         example = "/run/keys/biboumi.cfg";
       };
 
-      openFirewall = mkEnableOption (lib.mdDoc "opening of the identd port in the firewall");
+      openFirewall = mkEnableOption (mdDoc "opening of the identd port in the firewall");
     };
   };
 
