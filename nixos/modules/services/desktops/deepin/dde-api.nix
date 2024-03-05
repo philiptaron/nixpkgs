@@ -1,6 +1,13 @@
 { config, pkgs, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    teams
+    ;
+in
 
 {
 
@@ -14,7 +21,7 @@ with lib;
 
     services.deepin.dde-api = {
 
-      enable = mkEnableOption (lib.mdDoc ''
+      enable = mkEnableOption (mdDoc ''
         some dbus interfaces that is used for screen zone detecting,
         thumbnail generating, and sound playing in Deepin Desktop Environment
       '');
