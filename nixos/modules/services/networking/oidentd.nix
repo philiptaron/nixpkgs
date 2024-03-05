@@ -1,6 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+in
 
 {
 
@@ -11,7 +18,7 @@ with lib;
     services.oidentd.enable = mkOption {
       default = false;
       type = types.bool;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to enable ‘oidentd’, an implementation of the Ident
         protocol (RFC 1413).  It allows remote systems to identify the
         name of the user associated with a TCP connection.
