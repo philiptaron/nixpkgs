@@ -1,7 +1,19 @@
 { config, pkgs, lib, ... }:
 
-with lib;
 let
+  inherit (lib)
+    boolToString
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    optionalAttrs
+    optionalString
+    types
+    ;
+
   cfg = config.services.lifecycled;
 
   # TODO: Add the ability to extend this with an rfc 42-like interface.
@@ -10,14 +22,14 @@ let
   # systemd.services.lifecycled.serviceConfig.Environment
   configFile = pkgs.writeText "lifecycled" ''
     LIFECYCLED_HANDLER=${cfg.handler}
-    ${lib.optionalString (cfg.cloudwatchGroup != null) "LIFECYCLED_CLOUDWATCH_GROUP=${cfg.cloudwatchGroup}"}
-    ${lib.optionalString (cfg.cloudwatchStream != null) "LIFECYCLED_CLOUDWATCH_STREAM=${cfg.cloudwatchStream}"}
-    ${lib.optionalString cfg.debug "LIFECYCLED_DEBUG=${lib.boolToString cfg.debug}"}
-    ${lib.optionalString (cfg.instanceId != null) "LIFECYCLED_INSTANCE_ID=${cfg.instanceId}"}
-    ${lib.optionalString cfg.json "LIFECYCLED_JSON=${lib.boolToString cfg.json}"}
-    ${lib.optionalString cfg.noSpot "LIFECYCLED_NO_SPOT=${lib.boolToString cfg.noSpot}"}
-    ${lib.optionalString (cfg.snsTopic != null) "LIFECYCLED_SNS_TOPIC=${cfg.snsTopic}"}
-    ${lib.optionalString (cfg.awsRegion != null) "AWS_REGION=${cfg.awsRegion}"}
+    ${optionalString (cfg.cloudwatchGroup != null) "LIFECYCLED_CLOUDWATCH_GROUP=${cfg.cloudwatchGroup}"}
+    ${optionalString (cfg.cloudwatchStream != null) "LIFECYCLED_CLOUDWATCH_STREAM=${cfg.cloudwatchStream}"}
+    ${optionalString cfg.debug "LIFECYCLED_DEBUG=${boolToString cfg.debug}"}
+    ${optionalString (cfg.instanceId != null) "LIFECYCLED_INSTANCE_ID=${cfg.instanceId}"}
+    ${optionalString cfg.json "LIFECYCLED_JSON=${boolToString cfg.json}"}
+    ${optionalString cfg.noSpot "LIFECYCLED_NO_SPOT=${boolToString cfg.noSpot}"}
+    ${optionalString (cfg.snsTopic != null) "LIFECYCLED_SNS_TOPIC=${cfg.snsTopic}"}
+    ${optionalString (cfg.awsRegion != null) "AWS_REGION=${cfg.awsRegion}"}
   '';
 in
 {
@@ -25,15 +37,15 @@ in
 
   options = {
     services.lifecycled = {
-      enable = mkEnableOption (lib.mdDoc "lifecycled");
+      enable = mkEnableOption (mdDoc "lifecycled");
 
       queueCleaner = {
-        enable = mkEnableOption (lib.mdDoc "lifecycled-queue-cleaner");
+        enable = mkEnableOption (mdDoc "lifecycled-queue-cleaner");
 
         frequency = mkOption {
           type = types.str;
           default = "hourly";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             How often to trigger the queue cleaner.
 
             NOTE: This string should be a valid value for a systemd
@@ -46,7 +58,7 @@ in
         parallel = mkOption {
           type = types.ints.unsigned;
           default = 20;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The number of parallel deletes to run.
           '';
         };
@@ -55,7 +67,7 @@ in
       instanceId = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The instance ID to listen for events for.
         '';
       };
@@ -63,7 +75,7 @@ in
       snsTopic = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The SNS topic that receives events.
         '';
       };
@@ -71,14 +83,14 @@ in
       noSpot = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Disable the spot termination listener.
         '';
       };
 
       handler = mkOption {
         type = types.path;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The script to invoke to handle events.
         '';
       };
@@ -86,7 +98,7 @@ in
       json = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable JSON logging.
         '';
       };
@@ -94,7 +106,7 @@ in
       cloudwatchGroup = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Write logs to a specific Cloudwatch Logs group.
         '';
       };
@@ -102,7 +114,7 @@ in
       cloudwatchStream = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Write logs to a specific Cloudwatch Logs stream. Defaults to the instance ID.
         '';
       };
@@ -110,7 +122,7 @@ in
       debug = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable debugging information.
         '';
       };
@@ -120,7 +132,7 @@ in
       awsRegion = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The region used for accessing AWS services.
         '';
       };
