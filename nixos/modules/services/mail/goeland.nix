@@ -1,9 +1,21 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    filter
+    hasAttr
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    optionals
+    types
+    ;
+
   cfg = config.services.goeland;
+
   tomlFormat = pkgs.formats.toml { };
 in
 {
