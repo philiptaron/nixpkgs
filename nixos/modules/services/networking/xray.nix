@@ -1,6 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+in
 
 {
   options = {
@@ -9,7 +17,7 @@ with lib;
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to run xray server.
 
           Either `settingsFile` or `settings` must be specified.
@@ -22,7 +30,7 @@ with lib;
         type = types.nullOr types.path;
         default = null;
         example = "/etc/xray/config.json";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The absolute path to the configuration file.
 
           Either `settingsFile` or `settings` must be specified.
@@ -44,7 +52,7 @@ with lib;
             protocol = "freedom";
           }];
         };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The configuration object.
 
           Either `settingsFile` or `settings` must be specified.
