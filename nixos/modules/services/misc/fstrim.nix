@@ -1,22 +1,28 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.services.fstrim;
 
-in {
+in
+{
 
   options = {
 
     services.fstrim = {
-      enable = mkEnableOption (lib.mdDoc "periodic SSD TRIM of mounted partitions in background");
+      enable = mkEnableOption (mdDoc "periodic SSD TRIM of mounted partitions in background");
 
       interval = mkOption {
         type = types.str;
         default = "weekly";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           How often we run fstrim. For most desktop and server systems
           a sufficient trimming frequency is once a week.
 
@@ -40,6 +46,4 @@ in {
     };
 
   };
-
-  meta.maintainers = with maintainers; [ ];
 }
