@@ -1,9 +1,21 @@
 { config, lib, pkgs, ... }:
-with lib;
 let
+  inherit (lib)
+    generators
+    isList
+    mdDoc
+    mkDefault
+    mkIf
+    mkOption
+    optional
+    optionalAttrs
+    types
+    ;
+
   cfg = config.services.tlp;
   enableRDW = config.networking.networkmanager.enable;
   tlp = pkgs.tlp.override { inherit enableRDW; };
+
   # TODO: Use this for having proper parameters in the future
   mkTlpConfig = tlpConfig: generators.toKeyValue {
     mkKeyValue = generators.mkKeyValueDefault {
@@ -20,7 +32,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to enable the TLP power management daemon.";
+        description = mdDoc "Whether to enable the TLP power management daemon.";
       };
 
       settings = mkOption {type = with types; attrsOf (oneOf [bool int float str (listOf str)]);
@@ -29,7 +41,7 @@ in
           SATA_LINKPWR_ON_BAT = "med_power_with_dipm";
           USB_BLACKLIST_PHONE = 1;
         };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Options passed to TLP. See https://linrunner.de/tlp for all supported options..
         '';
       };
@@ -37,7 +49,7 @@ in
       extraConfig = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Verbatim additional configuration variables for TLP.
           DEPRECATED: use services.tlp.settings instead.
         '';
@@ -73,7 +85,7 @@ in
 
     services.tlp.settings = let
       cfg = config.powerManagement;
-      maybeDefault = val: lib.mkIf (val != null) (lib.mkDefault val);
+      maybeDefault = val: mkIf (val != null) (mkDefault val);
     in {
       CPU_SCALING_GOVERNOR_ON_AC = maybeDefault cfg.cpuFreqGovernor;
       CPU_SCALING_GOVERNOR_ON_BAT = maybeDefault cfg.cpuFreqGovernor;
