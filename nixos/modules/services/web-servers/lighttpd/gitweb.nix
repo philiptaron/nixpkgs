@@ -1,8 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    optionalAttrs
+    types
+    ;
+
   cfg = config.services.gitweb;
   package = pkgs.gitweb.override (optionalAttrs cfg.gitwebTheme {
     gitwebTheme = true;
@@ -16,7 +22,7 @@ in
     enable = mkOption {
       default = false;
       type = types.bool;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         If true, enable gitweb in lighttpd. Access it at http://yourserver/gitweb
       '';
     };
