@@ -1,8 +1,20 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    imap1
+    listToAttrs
+    maintainers
+    mdDoc
+    mkIf
+    mkOption
+    nameValuePair
+    optionalString
+    types
+    ;
+
   cfg = config.services.clamsmtp;
+
   clamdSocket = "/run/clamav/clamd.ctl"; # See services/security/clamav.nix
 in
 {
@@ -12,17 +24,17 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to enable clamsmtp.";
+        description = mdDoc "Whether to enable clamsmtp.";
       };
 
       instances = mkOption {
-        description = lib.mdDoc "Instances of clamsmtp to run.";
+        description = mdDoc "Instances of clamsmtp to run.";
         type = types.listOf (types.submodule { options = {
           action = mkOption {
             type = types.enum [ "bounce" "drop" "pass" ];
             default = "drop";
             description =
-              lib.mdDoc ''
+              mdDoc ''
                 Action to take when a virus is detected.
 
                 Note that viruses often spoof sender addresses, so bouncing is
@@ -35,7 +47,7 @@ in
             default = "";
             example = "X-Virus-Scanned: ClamAV using ClamSMTP";
             description =
-              lib.mdDoc ''
+              mdDoc ''
                 A header to add to scanned messages. See clamsmtpd.conf(5) for
                 more details. Empty means no header.
               '';
@@ -45,7 +57,7 @@ in
             type = types.int;
             default = 0;
             description =
-              lib.mdDoc ''
+              mdDoc ''
                 Number of seconds to wait between each NOOP sent to the sending
                 server. 0 to disable.
 
@@ -58,7 +70,7 @@ in
             type = types.str;
             example = "127.0.0.1:10025";
             description =
-              lib.mdDoc ''
+              mdDoc ''
                 Address to wait for incoming SMTP connections on. See
                 clamsmtpd.conf(5) for more details.
               '';
@@ -68,7 +80,7 @@ in
             type = types.bool;
             default = false;
             description =
-              lib.mdDoc ''
+              mdDoc ''
                 Whether to quarantine files that contain viruses by leaving them
                 in the temporary directory.
               '';
@@ -77,13 +89,13 @@ in
           maxConnections = mkOption {
             type = types.int;
             default = 64;
-            description = lib.mdDoc "Maximum number of connections to accept at once.";
+            description = mdDoc "Maximum number of connections to accept at once.";
           };
 
           outAddress = mkOption {
             type = types.str;
             description =
-              lib.mdDoc ''
+              mdDoc ''
                 Address of the SMTP server to send email to once it has been
                 scanned.
               '';
@@ -93,7 +105,7 @@ in
             type = types.str;
             default = "/tmp";
             description =
-              lib.mdDoc ''
+              mdDoc ''
                 Temporary directory that needs to be accessible to both clamd
                 and clamsmtpd.
               '';
@@ -102,20 +114,20 @@ in
           timeout = mkOption {
             type = types.int;
             default = 180;
-            description = lib.mdDoc "Time-out for network connections.";
+            description = mdDoc "Time-out for network connections.";
           };
 
           transparentProxy = mkOption {
             type = types.bool;
             default = false;
-            description = lib.mdDoc "Enable clamsmtp's transparent proxy support.";
+            description = mdDoc "Enable clamsmtp's transparent proxy support.";
           };
 
           virusAction = mkOption {
             type = with types; nullOr path;
             default = null;
             description =
-              lib.mdDoc ''
+              mdDoc ''
                 Command to run when a virus is found. Please see VIRUS ACTION in
                 clamsmtpd(8) for a discussion of this option and its safe use.
               '';
@@ -125,7 +137,7 @@ in
             type = types.bool;
             default = false;
             description =
-              lib.mdDoc ''
+              mdDoc ''
                 Send the XCLIENT command to the receiving server, for forwarding
                 client addresses and connection information if the receiving
                 server supports this feature.
@@ -177,5 +189,5 @@ in
       ) cfg.instances);
     };
 
-  meta.maintainers = with lib.maintainers; [ ekleog ];
+  meta.maintainers = with maintainers; [ ekleog ];
 }
