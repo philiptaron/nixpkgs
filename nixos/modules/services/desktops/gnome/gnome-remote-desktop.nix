@@ -1,7 +1,15 @@
 # Remote desktop daemon using Pipewire.
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkRenamedOptionModule
+    teams
+    ;
+in
 
 {
   meta = {
@@ -19,7 +27,7 @@ with lib;
   ###### interface
   options = {
     services.gnome.gnome-remote-desktop = {
-      enable = mkEnableOption (lib.mdDoc "Remote Desktop support using Pipewire");
+      enable = mkEnableOption (mdDoc "Remote Desktop support using Pipewire");
     };
   };
 
