@@ -1,21 +1,40 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    concatStringsSep
+    mapAttrsToList
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    optional
+    replaceStrings
+    types
+    ;
+
   cfg = config.services.listmonk;
+
   tomlFormat = pkgs.formats.toml { };
+
   cfgFile = tomlFormat.generate "listmonk.toml" cfg.settings;
+
   # Escaping is done according to https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-CONSTANTS
   setDatabaseOption = key: value:
     "UPDATE settings SET value = '${
-      lib.replaceStrings [ "'" ] [ "''" ] (builtins.toJSON value)
+      replaceStrings [ "'" ] [ "''" ] (builtins.toJSON value)
     }' WHERE key = '${key}';";
+
   updateDatabaseConfigSQL = pkgs.writeText "update-database-config.sql"
     (concatStringsSep "\n" (mapAttrsToList setDatabaseOption
       (if (cfg.database.settings != null) then
         cfg.database.settings
       else
         { })));
+
   updateDatabaseConfigScript =
     pkgs.writeShellScriptBin "update-database-config.sh" ''
       ${if cfg.database.mutableSettings then ''
@@ -35,20 +54,20 @@ let
       "app.notify_emails" = mkOption {
         type = listOf str;
         default = [ ];
-        description = lib.mdDoc "Administrator emails for system notifications";
+        description = mdDoc "Administrator emails for system notifications";
       };
 
       "privacy.exportable" = mkOption {
         type = listOf str;
         default = [ "profile" "subscriptions" "campaign_views" "link_clicks" ];
-        description = lib.mdDoc
+        description = mdDoc
           "List of fields which can be exported through an automatic export request";
       };
 
       "privacy.domain_blocklist" = mkOption {
         type = listOf str;
         default = [ ];
-        description = lib.mdDoc
+        description = mdDoc
           "E-mail addresses with these domains are disallowed from subscribing.";
       };
 
@@ -57,30 +76,30 @@ let
           freeformType = with types; attrsOf anything;
 
           options = {
-            enabled = mkEnableOption (lib.mdDoc "this SMTP server for listmonk");
+            enabled = mkEnableOption (mdDoc "this SMTP server for listmonk");
             host = mkOption {
               type = types.str;
-              description = lib.mdDoc "Hostname for the SMTP server";
+              description = mdDoc "Hostname for the SMTP server";
             };
             port = mkOption {
               type = types.port;
-              description = lib.mdDoc "Port for the SMTP server";
+              description = mdDoc "Port for the SMTP server";
             };
             max_conns = mkOption {
               type = types.int;
-              description = lib.mdDoc
+              description = mdDoc
                 "Maximum number of simultaneous connections, defaults to 1";
               default = 1;
             };
             tls_type = mkOption {
               type = types.enum [ "none" "STARTTLS" "TLS" ];
               description =
-                lib.mdDoc "Type of TLS authentication with the SMTP server";
+                mdDoc "Type of TLS authentication with the SMTP server";
             };
           };
         });
 
-        description = lib.mdDoc "List of outgoing SMTP servers";
+        description = mdDoc "List of outgoing SMTP servers";
       };
 
       # TODO: refine this type based on the smtp one.
@@ -88,41 +107,42 @@ let
         type = listOf
           (submodule { freeformType = with types; listOf (attrsOf anything); });
         default = [ ];
-        description = lib.mdDoc "List of bounce mailboxes";
+        description = mdDoc "List of bounce mailboxes";
       };
 
       messengers = mkOption {
         type = listOf str;
         default = [ ];
-        description = lib.mdDoc
+        description = mdDoc
           "List of messengers, see: <https://github.com/knadh/listmonk/blob/master/models/settings.go#L64-L74> for options.";
       };
     };
   };
-in {
+in
+{
   ###### interface
   options = {
     services.listmonk = {
       enable = mkEnableOption
-        (lib.mdDoc "Listmonk, this module assumes a reverse proxy to be set");
+        (mdDoc "Listmonk, this module assumes a reverse proxy to be set");
       database = {
         createLocally = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc
+          description = mdDoc
             "Create the PostgreSQL database and database user locally.";
         };
 
         settings = mkOption {
           default = null;
           type = with types; nullOr (submodule databaseSettingsOpts);
-          description = lib.mdDoc
+          description = mdDoc
             "Dynamic settings in the PostgreSQL database, set by a SQL script, see <https://github.com/knadh/listmonk/blob/master/schema.sql#L177-L230> for details.";
         };
         mutableSettings = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Database settings will be reset to the value set in this module if this is not enabled.
             Enable this if you want to persist changes you have done in the application.
           '';
@@ -131,7 +151,7 @@ in {
       package = mkPackageOption pkgs "listmonk" {};
       settings = mkOption {
         type = types.submodule { freeformType = tomlFormat.type; };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Static settings set in the config.toml, see <https://github.com/knadh/listmonk/blob/master/config.toml.sample> for details.
           You can set secrets using the secretFile option with environment variables following <https://listmonk.app/docs/configuration/#environment-variables>.
         '';
@@ -139,7 +159,7 @@ in {
       secretFile = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc
+        description = mdDoc
           "A file containing secrets as environment variables. See <https://listmonk.app/docs/configuration/#environment-variables> for details on supported values.";
       };
     };
