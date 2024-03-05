@@ -1,11 +1,38 @@
 { config, lib, pkgs, utils, ... }:
-with lib;
+
 let
+  inherit (lib)
+    boolToString
+    concatStringsSep
+    elemAt
+    hasAttr
+    importJSON
+    isList
+    literalExpression
+    maintainers
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRenamedOptionModule
+    optional
+    optionalAttrs
+    optionals
+    optionalString
+    recursiveUpdate
+    splitString
+    tail
+    types
+    versionAtLeast
+    ;
+
   cfg = config.services.kubo;
 
   settingsFormat = pkgs.formats.json {};
 
-  rawDefaultConfig = lib.importJSON (pkgs.runCommand "kubo-default-config" {
+  rawDefaultConfig = importJSON (pkgs.runCommand "kubo-default-config" {
     nativeBuildInputs = [ cfg.package ];
   } ''
     export IPFS_PATH="$TMPDIR"
@@ -18,7 +45,7 @@ let
   # the daemon from starting as that setting can't be changed via ipfs config replace.
   defaultConfig = builtins.removeAttrs rawDefaultConfig [ "Identity" "Pinning" ];
 
-  customizedConfig = lib.recursiveUpdate defaultConfig cfg.settings;
+  customizedConfig = recursiveUpdate defaultConfig cfg.settings;
 
   configFile = settingsFormat.generate "kubo-config.json" customizedConfig;
 
@@ -48,7 +75,7 @@ let
     then "local-discovery"
     else "server";
 
-  splitMulitaddr = addrRaw: lib.tail (lib.splitString "/" addrRaw);
+  splitMulitaddr = addrRaw: tail (splitString "/" addrRaw);
 
   multiaddrsToListenStreams = addrIn:
     let
@@ -76,7 +103,7 @@ let
     else if s 0 == "ip6" && s 2 == "tcp"
     then "[${s 1}]:${s 3}"
     else if s 0 == "unix"
-    then "/${lib.concatStringsSep "/" (lib.tail addr)}"
+    then "/${concatStringsSep "/" (tail addr)}"
     else null; # not valid for listen stream, skip
 
   multiaddrToListenDatagram = addrRaw:
@@ -99,7 +126,7 @@ in
 
     services.kubo = {
 
-      enable = mkEnableOption (lib.mdDoc ''
+      enable = mkEnableOption (mdDoc ''
         the Interplanetary File System (WARNING: may cause severe network degradation).
         NOTE: after enabling this option and rebuilding your system, you need to log out
         and back in for the `IPFS_PATH` environment variable to be present in your shell.
@@ -111,13 +138,13 @@ in
       user = mkOption {
         type = types.str;
         default = "ipfs";
-        description = lib.mdDoc "User under which the Kubo daemon runs";
+        description = mdDoc "User under which the Kubo daemon runs";
       };
 
       group = mkOption {
         type = types.str;
         default = "ipfs";
-        description = lib.mdDoc "Group under which the Kubo daemon runs";
+        description = mdDoc "Group under which the Kubo daemon runs";
       };
 
       dataDir = mkOption {
@@ -131,48 +158,48 @@ in
           then "/var/lib/ipfs"
           else "/var/lib/ipfs/.ipfs"
         '';
-        description = lib.mdDoc "The data dir for Kubo";
+        description = mdDoc "The data dir for Kubo";
       };
 
       defaultMode = mkOption {
         type = types.enum [ "online" "offline" "norouting" ];
         default = "online";
-        description = lib.mdDoc "systemd service that is enabled by default";
+        description = mdDoc "systemd service that is enabled by default";
       };
 
       autoMount = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether Kubo should try to mount /ipfs and /ipns at startup.";
+        description = mdDoc "Whether Kubo should try to mount /ipfs and /ipns at startup.";
       };
 
       autoMigrate = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc "Whether Kubo should try to run the fs-repo-migration at startup.";
+        description = mdDoc "Whether Kubo should try to run the fs-repo-migration at startup.";
       };
 
       enableGC = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to enable automatic garbage collection";
+        description = mdDoc "Whether to enable automatic garbage collection";
       };
 
       emptyRepo = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc "If set to false, the repo will be initialized with help files";
+        description = mdDoc "If set to false, the repo will be initialized with help files";
       };
 
       settings = mkOption {
-        type = lib.types.submodule {
+        type = types.submodule {
           freeformType = settingsFormat.type;
 
           options = {
             Addresses.API = mkOption {
               type = types.oneOf [ types.str (types.listOf types.str) ];
               default = [ ];
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Multiaddr or array of multiaddrs describing the address to serve the local HTTP API on.
                 In addition to the multiaddrs listed here, the daemon will also listen on a Unix domain socket.
                 To allow the ipfs CLI tools to communicate with the daemon over that socket,
@@ -183,7 +210,7 @@ in
             Addresses.Gateway = mkOption {
               type = types.oneOf [ types.str (types.listOf types.str) ];
               default = "/ip4/127.0.0.1/tcp/8080";
-              description = lib.mdDoc "Where the IPFS Gateway can be reached";
+              description = mdDoc "Where the IPFS Gateway can be reached";
             };
 
             Addresses.Swarm = mkOption {
@@ -196,23 +223,23 @@ in
                 "/ip6/::/udp/4001/quic-v1"
                 "/ip6/::/udp/4001/quic-v1/webtransport"
               ];
-              description = lib.mdDoc "Where Kubo listens for incoming p2p connections";
+              description = mdDoc "Where Kubo listens for incoming p2p connections";
             };
 
             Mounts.IPFS = mkOption {
               type = types.str;
               default = "/ipfs";
-              description = lib.mdDoc "Where to mount the IPFS namespace to";
+              description = mdDoc "Where to mount the IPFS namespace to";
             };
 
             Mounts.IPNS = mkOption {
               type = types.str;
               default = "/ipns";
-              description = lib.mdDoc "Where to mount the IPNS namespace to";
+              description = mdDoc "Where to mount the IPNS namespace to";
             };
           };
         };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Attrset of daemon configuration.
           See [https://github.com/ipfs/kubo/blob/master/docs/config.md](https://github.com/ipfs/kubo/blob/master/docs/config.md) for reference.
           You can't set `Identity` or `Pinning`.
@@ -232,13 +259,13 @@ in
 
       extraFlags = mkOption {
         type = types.listOf types.str;
-        description = lib.mdDoc "Extra flags passed to the Kubo daemon";
+        description = mdDoc "Extra flags passed to the Kubo daemon";
         default = [ ];
       };
 
       localDiscovery = mkOption {
         type = types.bool;
-        description = lib.mdDoc ''Whether to enable local discovery for the Kubo daemon.
+        description = mdDoc ''Whether to enable local discovery for the Kubo daemon.
           This will allow Kubo to scan ports on your local network. Some hosting services will ban you if you do this.
         '';
         default = false;
@@ -247,14 +274,14 @@ in
       serviceFdlimit = mkOption {
         type = types.nullOr types.int;
         default = null;
-        description = lib.mdDoc "The fdlimit for the Kubo systemd unit or `null` to have the daemon attempt to manage it";
+        description = mdDoc "The fdlimit for the Kubo systemd unit or `null` to have the daemon attempt to manage it";
         example = 64 * 1024;
       };
 
       startWhenNeeded = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to use socket activation to start Kubo when needed.";
+        description = mdDoc "Whether to use socket activation to start Kubo when needed.";
       };
 
     };
@@ -277,7 +304,7 @@ in
         '';
       }
       {
-        assertion = !((lib.versionAtLeast cfg.package.version "0.21") && (builtins.hasAttr "Experimental" cfg.settings) && (builtins.hasAttr "AcceleratedDHTClient" cfg.settings.Experimental));
+        assertion = !((versionAtLeast cfg.package.version "0.21") && (builtins.hasAttr "Experimental" cfg.settings) && (builtins.hasAttr "AcceleratedDHTClient" cfg.settings.Experimental));
         message = ''
           The `services.kubo.settings.Experimental.AcceleratedDHTClient` option was renamed to `services.kubo.settings.Routing.AcceleratedDHTClient` in Kubo 0.21.
         '';
@@ -326,7 +353,7 @@ in
       else [ cfg.package.systemd_unit_hardened ];
 
     services.kubo.settings = mkIf cfg.autoMount {
-      Mounts.FuseAllowOther = lib.mkDefault true;
+      Mounts.FuseAllowOther = mkDefault true;
     };
 
     systemd.services.ipfs = {
@@ -335,7 +362,7 @@ in
 
       preStart = ''
         if [[ ! -f "$IPFS_PATH/config" ]]; then
-          ipfs init --empty-repo=${lib.boolToString cfg.emptyRepo}
+          ipfs init --empty-repo=${boolToString cfg.emptyRepo}
         else
           # After an unclean shutdown this file may exist which will cause the config command to attempt to talk to the daemon. This will hang forever if systemd is holding our sockets open.
           rm -vf "$IPFS_PATH/api"
@@ -398,7 +425,7 @@ in
   };
 
   meta = {
-    maintainers = with lib.maintainers; [ Luflosi ];
+    maintainers = with maintainers; [ Luflosi ];
   };
 
   imports = [
