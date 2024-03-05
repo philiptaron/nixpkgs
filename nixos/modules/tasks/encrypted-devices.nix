@@ -1,8 +1,20 @@
 { config, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    any
+    concatMap
+    concatMapStrings
+    filter
+    foldr
+    hasPrefix
+    listToAttrs
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   fileSystems = config.system.build.fileSystems ++ config.swapDevices;
   encDevs = filter (dev: dev.encrypted.enable) fileSystems;
 
@@ -30,28 +42,28 @@ let
       enable = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc "The block device is backed by an encrypted one, adds this device as a initrd luks entry.";
+        description = mdDoc "The block device is backed by an encrypted one, adds this device as a initrd luks entry.";
       };
 
       blkDev = mkOption {
         default = null;
         example = "/dev/sda1";
         type = types.nullOr types.str;
-        description = lib.mdDoc "Location of the backing encrypted device.";
+        description = mdDoc "Location of the backing encrypted device.";
       };
 
       label = mkOption {
         default = null;
         example = "rootfs";
         type = types.nullOr types.str;
-        description = lib.mdDoc "Label of the unlocked encrypted device. Set `fileSystems.<name?>.device` to `/dev/mapper/<label>` to mount the unlocked device.";
+        description = mdDoc "Label of the unlocked encrypted device. Set `fileSystems.<name?>.device` to `/dev/mapper/<label>` to mount the unlocked device.";
       };
 
       keyFile = mkOption {
         default = null;
         example = "/mnt-root/root/.swapkey";
         type = types.nullOr types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Path to a keyfile used to unlock the backing encrypted
           device. When systemd stage 1 is not enabled, at the time
           this keyfile is accessed, the `neededForBoot` filesystems
@@ -71,10 +83,10 @@ in
 
   options = {
     fileSystems = mkOption {
-      type = with lib.types; attrsOf (submodule encryptedFSOptions);
+      type = with types; attrsOf (submodule encryptedFSOptions);
     };
     swapDevices = mkOption {
-      type = with lib.types; listOf (submodule encryptedFSOptions);
+      type = with types; listOf (submodule encryptedFSOptions);
     };
   };
 
@@ -90,7 +102,7 @@ in
         assertion =
           config.boot.initrd.systemd.enable -> (
             dev.encrypted.keyFile == null
-            || !lib.any (x: lib.hasPrefix x dev.encrypted.keyFile) ["/mnt-root" "$targetRoot"]
+            || !any (x: hasPrefix x dev.encrypted.keyFile) ["/mnt-root" "$targetRoot"]
           );
         message = ''
           Bad use of '/mnt-root' or '$targetRoot` in 'keyFile'.
@@ -111,7 +123,7 @@ in
         forceLuksSupportInInitrd = true;
       };
       # TODO: systemd stage 1
-      postMountCommands = lib.mkIf (!config.boot.initrd.systemd.enable)
+      postMountCommands = mkIf (!config.boot.initrd.systemd.enable)
         (concatMapStrings (dev:
           "cryptsetup luksOpen --key-file ${dev.encrypted.keyFile} ${dev.encrypted.blkDev} ${dev.encrypted.label};\n"
         ) lateEncDevs);
