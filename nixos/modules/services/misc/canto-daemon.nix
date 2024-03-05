@@ -1,12 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
 
-cfg = config.services.canto-daemon;
-
-in {
+  cfg = config.services.canto-daemon;
+in
+{
 
 ##### interface
 
@@ -16,7 +20,7 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to enable the canto RSS daemon.";
+        description = mdDoc "Whether to enable the canto RSS daemon.";
       };
     };
 
