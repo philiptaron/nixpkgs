@@ -1,15 +1,21 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.psd;
-in {
+in
+{
   options.services.psd = with types; {
     enable = mkOption {
       type = bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to enable the Profile Sync daemon.
       '';
     };
@@ -17,7 +23,7 @@ in {
       type = str;
       default = "1h";
       example = "1h 30min";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The amount of time to wait before syncing browser profiles back to the
         disk.
 
