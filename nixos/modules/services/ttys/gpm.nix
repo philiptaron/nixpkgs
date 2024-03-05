@@ -1,8 +1,12 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.services.gpm;
 
@@ -19,7 +23,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable GPM, the General Purpose Mouse daemon,
           which enables mouse support in virtual consoles.
         '';
@@ -28,7 +32,7 @@ in
       protocol = mkOption {
         type = types.str;
         default = "ps/2";
-        description = lib.mdDoc "Mouse protocol to use.";
+        description = mdDoc "Mouse protocol to use.";
       };
 
     };
