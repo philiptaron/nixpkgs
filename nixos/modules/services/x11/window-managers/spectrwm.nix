@@ -1,15 +1,19 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.services.xserver.windowManager.spectrwm;
 in
 
 {
   options = {
-    services.xserver.windowManager.spectrwm.enable = mkEnableOption (lib.mdDoc "spectrwm");
+    services.xserver.windowManager.spectrwm.enable = mkEnableOption (mdDoc "spectrwm");
   };
 
   config = mkIf cfg.enable {
