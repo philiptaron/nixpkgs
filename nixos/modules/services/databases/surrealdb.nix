@@ -1,20 +1,29 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    escapeShellArgs
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
 
   cfg = config.services.surrealdb;
-in {
+in
+{
 
   options = {
     services.surrealdb = {
-      enable = mkEnableOption (lib.mdDoc "SurrealDB, a scalable, distributed, collaborative, document-graph database, for the realtime web");
+      enable = mkEnableOption (mdDoc "SurrealDB, a scalable, distributed, collaborative, document-graph database, for the realtime web");
 
       package = mkPackageOption pkgs "surrealdb" { };
 
       dbPath = mkOption {
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The path that surrealdb will write data to. Use null for in-memory.
           Can be one of "memory", "file://:path", "tikv://:addr".
         '';
@@ -24,7 +33,7 @@ in {
 
       host = mkOption {
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The host that surrealdb will connect to.
         '';
         default = "127.0.0.1";
@@ -33,7 +42,7 @@ in {
 
       port = mkOption {
         type = types.port;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The port that surrealdb will connect to.
         '';
         default = 8000;
@@ -44,7 +53,7 @@ in {
         type = types.listOf types.str;
         default = [];
         example = [ "--allow-all" "--auth" "--user root" "--pass root" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Specify a list of additional command line flags,
           which get escaped and are then passed to surrealdb.
         '';
