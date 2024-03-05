@@ -1,8 +1,12 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.services.xserver.wacom;
 
@@ -17,7 +21,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the Wacom touchscreen/digitizer/tablet.
           If you ever have any issues such as, try switching to terminal (ctrl-alt-F1) and back
           which will make Xorg reconfigure the device ?
