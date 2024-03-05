@@ -2,9 +2,16 @@
 
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    mkRenamedOptionModule
+    teams
+    types
+    ;
+
   cfg = config.services.gnome.tracker;
 in
 {
@@ -30,7 +37,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable Tracker services, a search engine,
           search tool and metadata storage system.
         '';
@@ -40,7 +47,7 @@ in
         type = types.listOf types.package;
         default = [ ];
         internal = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of packages containing tracker3 subcommands.
         '';
       };
