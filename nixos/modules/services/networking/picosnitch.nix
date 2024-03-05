@@ -1,13 +1,17 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.services.picosnitch;
 in
 {
   options.services.picosnitch = {
-    enable = mkEnableOption (lib.mdDoc "picosnitch daemon");
+    enable = mkEnableOption (mdDoc "picosnitch daemon");
   };
   config = mkIf cfg.enable {
     environment.systemPackages = [ pkgs.picosnitch ];
