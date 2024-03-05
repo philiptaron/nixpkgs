@@ -1,11 +1,24 @@
 { config, lib, pkgs, ...}:
-with lib;
+
 let
+  inherit (lib)
+    concatStringsSep
+    escapeShellArgs
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    types
+    ;
+
   cfg = config.services.hadoop;
+
   hadoopConf = "${import ./conf.nix { inherit cfg pkgs lib; }}/";
+
   restartIfChanged  = mkOption {
     type = types.bool;
-    description = lib.mdDoc ''
+    description = mdDoc ''
       Automatically restart the service on config change.
       This can be set to false to defer restarts on clusters running critical applications.
       Please consider the security implications of inadvertently running an older version,
@@ -16,7 +29,7 @@ let
   extraFlags = mkOption{
     type = with types; listOf str;
     default = [];
-    description = lib.mdDoc "Extra command line flags to pass to the service";
+    description = mdDoc "Extra command line flags to pass to the service";
     example = [
       "-Dcom.sun.management.jmxremote"
       "-Dcom.sun.management.jmxremote.port=8010"
@@ -25,45 +38,45 @@ let
   extraEnv = mkOption{
     type = with types; attrsOf str;
     default = {};
-    description = lib.mdDoc "Extra environment variables";
+    description = mdDoc "Extra environment variables";
   };
 in
 {
   options.services.hadoop.yarn = {
     resourcemanager = {
-      enable = mkEnableOption (lib.mdDoc "Hadoop YARN ResourceManager");
+      enable = mkEnableOption (mdDoc "Hadoop YARN ResourceManager");
       inherit restartIfChanged extraFlags extraEnv;
 
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Open firewall ports for resourcemanager
         '';
       };
     };
     nodemanager = {
-      enable = mkEnableOption (lib.mdDoc "Hadoop YARN NodeManager");
+      enable = mkEnableOption (mdDoc "Hadoop YARN NodeManager");
       inherit restartIfChanged extraFlags extraEnv;
 
       resource = {
         cpuVCores = mkOption {
-          description = lib.mdDoc "Number of vcores that can be allocated for containers.";
+          description = mdDoc "Number of vcores that can be allocated for containers.";
           type = with types; nullOr ints.positive;
           default = null;
         };
         maximumAllocationVCores = mkOption {
-          description = lib.mdDoc "The maximum virtual CPU cores any container can be allocated.";
+          description = mdDoc "The maximum virtual CPU cores any container can be allocated.";
           type = with types; nullOr ints.positive;
           default = null;
         };
         memoryMB = mkOption {
-          description = lib.mdDoc "Amount of physical memory, in MB, that can be allocated for containers.";
+          description = mdDoc "Amount of physical memory, in MB, that can be allocated for containers.";
           type = with types; nullOr ints.positive;
           default = null;
         };
         maximumAllocationMB = mkOption {
-          description = lib.mdDoc "The maximum physical memory any container can be allocated.";
+          description = mdDoc "The maximum physical memory any container can be allocated.";
           type = with types; nullOr ints.positive;
           default = null;
         };
@@ -72,13 +85,13 @@ in
       useCGroups = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Use cgroups to enforce resource limits on containers
         '';
       };
 
       localDir = mkOption {
-        description = lib.mdDoc "List of directories to store localized files in.";
+        description = mdDoc "List of directories to store localized files in.";
         type = with types; nullOr (listOf path);
         example = [ "/var/lib/hadoop/yarn/nm" ];
         default = null;
@@ -87,14 +100,14 @@ in
       addBinBash = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Add /bin/bash. This is needed by the linux container executor's launch script.
         '';
       };
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Open firewall ports for nodemanager.
           Because containers can listen on any ephemeral port, TCP ports 1024–65535 will be opened.
         '';
