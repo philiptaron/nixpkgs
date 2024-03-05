@@ -1,14 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    singleton
+    ;
+
   cfg = config.services.xserver.windowManager.afterstep;
 in
 {
   ###### interface
   options = {
-    services.xserver.windowManager.afterstep.enable = mkEnableOption (lib.mdDoc "afterstep");
+    services.xserver.windowManager.afterstep.enable = mkEnableOption (mdDoc "afterstep");
   };
 
   ###### implementation
