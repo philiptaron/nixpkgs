@@ -1,33 +1,43 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    escapeShellArgs
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.restic.server;
 in
 {
   meta.maintainers = [ maintainers.bachp ];
 
   options.services.restic.server = {
-    enable = mkEnableOption (lib.mdDoc "Restic REST Server");
+    enable = mkEnableOption (mdDoc "Restic REST Server");
 
     listenAddress = mkOption {
       default = ":8000";
       example = "127.0.0.1:8080";
       type = types.str;
-      description = lib.mdDoc "Listen on a specific IP address and port.";
+      description = mdDoc "Listen on a specific IP address and port.";
     };
 
     dataDir = mkOption {
       default = "/var/lib/restic";
       type = types.path;
-      description = lib.mdDoc "The directory for storing the restic repository.";
+      description = mdDoc "The directory for storing the restic repository.";
     };
 
     appendOnly = mkOption {
       default = false;
       type = types.bool;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Enable append only mode.
         This mode allows creation of new backups but prevents deletion and modification of existing backups.
         This can be useful when backing up systems that have a potential of being hacked.
@@ -37,7 +47,7 @@ in
     privateRepos = mkOption {
       default = false;
       type = types.bool;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Enable private repos.
         Grants access only when a subdirectory with the same name as the user is specified in the repository URL.
       '';
@@ -46,13 +56,13 @@ in
     prometheus = mkOption {
       default = false;
       type = types.bool;
-      description = lib.mdDoc "Enable Prometheus metrics at /metrics.";
+      description = mdDoc "Enable Prometheus metrics at /metrics.";
     };
 
     extraFlags = mkOption {
       type = types.listOf types.str;
       default = [];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra commandline options to pass to Restic REST server.
       '';
     };
