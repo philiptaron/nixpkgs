@@ -1,8 +1,28 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    any
+    attrValues
+    collect
+    concatMap
+    concatStringsSep
+    elem
+    escapeShellArg
+    filterAttrsRecursive
+    hasAttrByPath
+    isAttrs
+    isString
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.certmgr;
 
   specs = mapAttrsToList (n: v: rec {
@@ -35,38 +55,38 @@ let
 in
 {
   options.services.certmgr = {
-    enable = mkEnableOption (lib.mdDoc "certmgr");
+    enable = mkEnableOption (mdDoc "certmgr");
 
     package = mkPackageOption pkgs "certmgr" { };
 
     defaultRemote = mkOption {
       type = types.str;
       default = "127.0.0.1:8888";
-      description = lib.mdDoc "The default CA host:port to use.";
+      description = mdDoc "The default CA host:port to use.";
     };
 
     validMin = mkOption {
       default = "72h";
       type = types.str;
-      description = lib.mdDoc "The interval before a certificate expires to start attempting to renew it.";
+      description = mdDoc "The interval before a certificate expires to start attempting to renew it.";
     };
 
     renewInterval = mkOption {
       default = "30m";
       type = types.str;
-      description = lib.mdDoc "How often to check certificate expirations and how often to update the cert_next_expires metric.";
+      description = mdDoc "How often to check certificate expirations and how often to update the cert_next_expires metric.";
     };
 
     metricsAddress = mkOption {
       default = "127.0.0.1";
       type = types.str;
-      description = lib.mdDoc "The address for the Prometheus HTTP endpoint.";
+      description = mdDoc "The address for the Prometheus HTTP endpoint.";
     };
 
     metricsPort = mkOption {
       default = 9488;
       type = types.ints.u16;
-      description = lib.mdDoc "The port for the Prometheus HTTP endpoint.";
+      description = mdDoc "The port for the Prometheus HTTP endpoint.";
     };
 
     specs = mkOption {
@@ -113,38 +133,38 @@ in
           service = mkOption {
             type = nullOr str;
             default = null;
-            description = lib.mdDoc "The service on which to perform \<action\> after fetching.";
+            description = mdDoc "The service on which to perform \<action\> after fetching.";
           };
 
           action = mkOption {
             type = addCheck str (x: cfg.svcManager == "command" || elem x ["restart" "reload" "nop"]);
             default = "nop";
-            description = lib.mdDoc "The action to take after fetching.";
+            description = mdDoc "The action to take after fetching.";
           };
 
           # These ought all to be specified according to certmgr spec def.
           authority = mkOption {
             type = attrs;
-            description = lib.mdDoc "certmgr spec authority object.";
+            description = mdDoc "certmgr spec authority object.";
           };
 
           certificate = mkOption {
             type = nullOr attrs;
-            description = lib.mdDoc "certmgr spec certificate object.";
+            description = mdDoc "certmgr spec certificate object.";
           };
 
           private_key = mkOption {
             type = nullOr attrs;
-            description = lib.mdDoc "certmgr spec private_key object.";
+            description = mdDoc "certmgr spec private_key object.";
           };
 
           request = mkOption {
             type = nullOr attrs;
-            description = lib.mdDoc "certmgr spec request object.";
+            description = mdDoc "certmgr spec request object.";
           };
         };
     }));
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Certificate specs as described by:
         <https://github.com/cloudflare/certmgr#certificate-specs>
         These will be added to the Nix store, so they will be world readable.
@@ -154,7 +174,7 @@ in
     svcManager = mkOption {
       default = "systemd";
       type = types.enum [ "circus" "command" "dummy" "openrc" "systemd" "sysv" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         This specifies the service manager to use for restarting or reloading services.
         See: <https://github.com/cloudflare/certmgr#certmgryaml>.
         For how to use the "command" service manager in particular,
