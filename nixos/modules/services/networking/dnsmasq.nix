@@ -1,8 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    generators
+    literalExpression
+    mdDoc
+    mkDefault
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRenamedOptionModule
+    optional
+    types
+    ;
+
   cfg = config.services.dnsmasq;
   dnsmasq = cfg.package;
   stateDir = "/var/lib/dnsmasq";
@@ -48,7 +59,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to run dnsmasq.
         '';
       };
@@ -58,7 +69,7 @@ in
       resolveLocalQueries = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether dnsmasq should resolve local queries (i.e. add 127.0.0.1 to
           /etc/resolv.conf).
         '';
@@ -67,7 +78,7 @@ in
       alwaysKeepRunning = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If enabled, systemd will always respawn dnsmasq even if shut down manually. The default, disabled, will only restart it on error.
         '';
       };
@@ -81,14 +92,14 @@ in
             type = types.listOf types.str;
             default = [ ];
             example = [ "8.8.8.8" "8.8.4.4" ];
-            description = lib.mdDoc ''
+            description = mdDoc ''
               The DNS servers which dnsmasq should query.
             '';
           };
 
         };
         default = { };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration of dnsmasq. Lists get added one value per line (empty
           lists and false values don't get added, though false values get
           turned to comments). Gets merged with
@@ -110,7 +121,7 @@ in
       extraConfig = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra configuration directives that should be added to
           `dnsmasq.conf`.
 
@@ -127,7 +138,7 @@ in
 
   config = mkIf cfg.enable {
 
-    warnings = lib.optional (cfg.extraConfig != "") "Text based config is deprecated, dnsmasq now supports `services.dnsmasq.settings` for an attribute-set based config";
+    warnings = optional (cfg.extraConfig != "") "Text based config is deprecated, dnsmasq now supports `services.dnsmasq.settings` for an attribute-set based config";
 
     services.dnsmasq.settings = {
       dhcp-leasefile = mkDefault "${stateDir}/dnsmasq.leases";
