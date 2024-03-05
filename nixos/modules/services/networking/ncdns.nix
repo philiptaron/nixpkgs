@@ -1,8 +1,25 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    all
+    flip
+    getAttr
+    id
+    literalExpression
+    maintainers
+    mapAttrs
+    mapAttrsToList
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalAttrs
+    optionalString
+    types
+    ;
+
   cfgs = config.services;
   cfg  = cfgs.ncdns;
 
@@ -50,7 +67,7 @@ in
 
     services.ncdns = {
 
-      enable = mkEnableOption (lib.mdDoc ''
+      enable = mkEnableOption (mdDoc ''
         ncdns, a Go daemon to bridge Namecoin to DNS.
         To resolve .bit domains set `services.namecoind.enable = true;`
         and an RPC username/password
@@ -59,7 +76,7 @@ in
       address = mkOption {
         type = types.str;
         default = "[::1]";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The IP address the ncdns resolver will bind to.  Leave this unchanged
           if you do not wish to directly expose the resolver.
         '';
@@ -68,7 +85,7 @@ in
       port = mkOption {
         type = types.port;
         default = 5333;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The port the ncdns resolver will bind to.
         '';
       };
@@ -78,7 +95,7 @@ in
         default = config.networking.hostName;
         defaultText = literalExpression "config.networking.hostName";
         example = "example.com";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The hostname of this ncdns instance, which defaults to the machine
           hostname. If specified, ncdns lists the hostname as an NS record at
           the zone apex:
@@ -96,7 +113,7 @@ in
         type = types.str;
         default = "";
         example = "root@example.com";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           An email address for the SOA record at the bit zone.
           If you are only using ncdns locally you can ignore this.
         '';
@@ -105,14 +122,14 @@ in
       identity.address = mkOption {
         type = types.str;
         default = "127.127.127.127";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The IP address the hostname specified in
           {option}`services.ncdns.identity.hostname` should resolve to.
           If you are only using ncdns locally you can ignore this.
         '';
       };
 
-      dnssec.enable = mkEnableOption (lib.mdDoc ''
+      dnssec.enable = mkEnableOption (mdDoc ''
         DNSSEC support in ncdns. This will generate KSK and ZSK keypairs
         (unless provided via the options
         {option}`services.ncdns.dnssec.publicKey`,
@@ -123,7 +140,7 @@ in
       dnssec.keys.public = mkOption {
         type = types.path;
         default = defaultFiles.public;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Path to the file containing the KSK public key.
           The key can be generated using the `dnssec-keygen`
           command, provided by the package `bind` as follows:
@@ -136,7 +153,7 @@ in
       dnssec.keys.private = mkOption {
         type = types.path;
         default = defaultFiles.private;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Path to the file containing the KSK private key.
         '';
       };
@@ -144,7 +161,7 @@ in
       dnssec.keys.zonePublic = mkOption {
         type = types.path;
         default = defaultFiles.zonePublic;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Path to the file containing the ZSK public key.
           The key can be generated using the `dnssec-keygen`
           command, provided by the package `bind` as follows:
@@ -157,7 +174,7 @@ in
       dnssec.keys.zonePrivate = mkOption {
         type = types.path;
         default = defaultFiles.zonePrivate;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Path to the file containing the ZSK private key.
         '';
       };
@@ -176,7 +193,7 @@ in
             certstore.nssdbdir = "../../home/alice/.pki/nssdb";
           }
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           ncdns settings. Use this option to configure ncds
           settings not exposed in a NixOS option or to bypass one.
           See the example ncdns.conf file at <https://github.com/namecoin/ncdns/blob/master/_doc/ncdns.conf.example>
@@ -189,7 +206,7 @@ in
     services.pdns-recursor.resolveNamecoin = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Resolve `.bit` top-level domains using ncdns and namecoin.
       '';
     };
@@ -278,6 +295,6 @@ in
 
   };
 
-  meta.maintainers = with lib.maintainers; [ rnhmjoj ];
+  meta.maintainers = with maintainers; [ rnhmjoj ];
 
 }
