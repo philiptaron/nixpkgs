@@ -1,8 +1,20 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mapAttrs
+    mdDoc
+    mkDefault
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    optional
+    optionals
+    optionalString
+    types
+    ;
 
   pkg = config.hardware.sane.backends-package.override {
     scanSnapDriversUnfree = config.hardware.sane.drivers.scanSnap.enable;
@@ -22,7 +34,7 @@ let
     name = "net.conf";
     destination = "/etc/sane.d/net.conf";
     text = ''
-      ${lib.optionalString config.services.saned.enable "localhost"}
+      ${optionalString config.services.saned.enable "localhost"}
       ${config.hardware.sane.netConf}
     '';
   };
@@ -48,7 +60,7 @@ in
     hardware.sane.enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Enable support for SANE scanners.
 
         ::: {.note}
@@ -61,19 +73,19 @@ in
       type = types.package;
       default = pkgs.sane-backends;
       defaultText = literalExpression "pkgs.sane-backends";
-      description = lib.mdDoc "Backends driver package to use.";
+      description = mdDoc "Backends driver package to use.";
     };
 
     hardware.sane.snapshot = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc "Use a development snapshot of SANE scanner drivers.";
+      description = mdDoc "Use a development snapshot of SANE scanner drivers.";
     };
 
     hardware.sane.extraBackends = mkOption {
       type = types.listOf types.path;
       default = [];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Packages providing extra SANE backends to enable.
 
         ::: {.note}
@@ -89,7 +101,7 @@ in
       type = types.listOf types.str;
       default = [];
       example = [ "v4l" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Names of backends which are enabled by default but should be disabled.
         See `$SANE_CONFIG_DIR/dll.conf` for the list of possible names.
       '';
@@ -98,14 +110,14 @@ in
     hardware.sane.configDir = mkOption {
       type = types.str;
       internal = true;
-      description = lib.mdDoc "The value of SANE_CONFIG_DIR.";
+      description = mdDoc "The value of SANE_CONFIG_DIR.";
     };
 
     hardware.sane.netConf = mkOption {
       type = types.lines;
       default = "";
       example = "192.168.0.16";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Network hosts that should be probed for remote scanners.
       '';
     };
@@ -114,7 +126,7 @@ in
       type = types.bool;
       default = false;
       example = true;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to enable drivers for the Fujitsu ScanSnap scanners.
 
         The driver files are unfree and extracted from the Windows driver image.
@@ -133,7 +145,7 @@ in
     hardware.sane.openFirewall = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Open ports needed for discovery of scanners on the local network, e.g.
         needed for Canon scanners (BJNP protocol).
       '';
@@ -142,7 +154,7 @@ in
     services.saned.enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Enable saned network daemon for remote connection to scanners.
 
         saned would be run from `scanner` user; to allow
@@ -155,7 +167,7 @@ in
       type = types.lines;
       default = "";
       example = "192.168.0.0/24";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra saned configuration lines.
       '';
     };
