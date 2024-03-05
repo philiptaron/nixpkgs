@@ -1,14 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.services.do-agent;
 
 in
 {
   options.services.do-agent = {
-    enable = mkEnableOption (lib.mdDoc "do-agent, the DigitalOcean droplet metrics agent");
+    enable = mkEnableOption (mdDoc "do-agent, the DigitalOcean droplet metrics agent");
   };
 
   config = mkIf cfg.enable {
