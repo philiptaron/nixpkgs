@@ -1,9 +1,42 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
-  inherit (lib.options) showOption showFiles;
+  inherit (lib)
+    any
+    attrNames
+    attrValues
+    boolToString
+    concatMapStringsSep
+    concatStringsSep
+    escapeShellArg
+    flatten
+    generators
+    hasAttr
+    isAttrs
+    isBool
+    isInt
+    isList
+    isString
+    literalExpression
+    maintainers
+    mapAttrs
+    mapAttrs'
+    mapAttrsToList
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    nameValuePair
+    optional
+    optionalAttrs
+    showOption
+    showFiles
+    strings
+    types
+    ;
 
   cfg = config.services.dokuwiki;
   eachSite = cfg.sites;
@@ -45,12 +78,12 @@ let
   in
     if isString v then escapeShellArg v
     # NOTE: If any value contains a , (comma) this will not get escaped
-    else if isList v && any lib.strings.isCoercibleToString v then escapeShellArg (concatMapStringsSep "," toString v)
+    else if isList v && any strings.isCoercibleToString v then escapeShellArg (concatMapStringsSep "," toString v)
     else if isInt v then toString v
     else if isBool v then toString (if v then 1 else 0)
-    else if isHasAttr "_file" then "trim(file_get_contents(${lib.escapeShellArg v._file}))"
+    else if isHasAttr "_file" then "trim(file_get_contents(${escapeShellArg v._file}))"
     else if isHasAttr "_raw" then v._raw
-    else abort "The dokuwiki localConf value ${lib.generators.toPretty {} v} can not be encoded."
+    else abort "The dokuwiki localConf value ${generators.toPretty {} v} can not be encoded."
   ;
 
   mkPhpAttrVals = v: flatten (mapAttrsToList mkPhpKeyVal v);
@@ -91,13 +124,13 @@ let
 
       page = mkOption {
         type = types.str;
-        description = lib.mdDoc "Page or namespace to restrict";
+        description = mdDoc "Page or namespace to restrict";
         example = "start";
       };
 
       actor = mkOption {
         type = types.str;
-        description = lib.mdDoc "User or group to restrict";
+        description = mdDoc "User or group to restrict";
         example = "@external";
       };
 
@@ -113,7 +146,7 @@ let
       in mkOption {
         type = types.enum ((attrValues available) ++ (attrNames available));
         apply = x: if isInt x then x else available.${x};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Permission level to restrict the actor(s) to.
           See <https://www.dokuwiki.org/acl#background_info> for explanation
         '';
@@ -126,14 +159,14 @@ let
     {
 
       options = {
-        enable = mkEnableOption (lib.mdDoc "DokuWiki web application");
+        enable = mkEnableOption (mdDoc "DokuWiki web application");
 
         package = mkPackageOption pkgs "dokuwiki" { };
 
         stateDir = mkOption {
           type = types.path;
           default = "/var/lib/dokuwiki/${name}/data";
-          description = lib.mdDoc "Location of the DokuWiki state directory.";
+          description = mdDoc "Location of the DokuWiki state directory.";
         };
 
         acl = mkOption {
@@ -153,7 +186,7 @@ let
               }
             ]
           '';
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Access Control Lists: see <https://www.dokuwiki.org/acl>
             Mutually exclusive with services.dokuwiki.aclFile
             Set this to a value other than null to take precedence over aclFile option.
@@ -166,7 +199,7 @@ let
         aclFile = mkOption {
           type = with types; nullOr str;
           default = if (config.mergedConfig.useacl && config.acl == null) then "/var/lib/dokuwiki/${name}/acl.auth.php" else null;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Location of the dokuwiki acl rules. Mutually exclusive with services.dokuwiki.acl
             Mutually exclusive with services.dokuwiki.acl which is preferred.
             Consult documentation <https://www.dokuwiki.org/acl> for further instructions.
@@ -183,7 +216,7 @@ let
             authmysql = false;
             authpgsql = false;
           };
-          description = lib.mdDoc ''
+          description = mdDoc ''
             List of the dokuwiki (un)loaded plugins.
           '';
         };
@@ -191,7 +224,7 @@ let
         usersFile = mkOption {
           type = with types; nullOr str;
           default = if config.mergedConfig.useacl then "/var/lib/dokuwiki/${name}/users.auth.php" else null;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Location of the dokuwiki users file. List of users. Format:
 
                 login:passwordhash:Real Name:email:groups,comma,separated
@@ -208,7 +241,7 @@ let
         plugins = mkOption {
           type = types.listOf types.path;
           default = [];
-          description = lib.mdDoc ''
+          description = mdDoc ''
                 List of path(s) to respective plugin(s) which are copied from the 'plugin' directory.
 
                 ::: {.note}
@@ -235,7 +268,7 @@ let
         templates = mkOption {
           type = types.listOf types.path;
           default = [];
-          description = lib.mdDoc ''
+          description = mdDoc ''
                 List of path(s) to respective template(s) which are copied from the 'tpl' directory.
 
                 ::: {.note}
@@ -270,7 +303,7 @@ let
             "pm.max_spare_servers" = 4;
             "pm.max_requests" = 500;
           };
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Options for the DokuWiki PHP pool. See the documentation on `php-fpm.conf`
             for details on configuration directives.
           '';
@@ -284,7 +317,7 @@ let
         phpOptions = mkOption {
           type = types.attrsOf types.str;
           default = {};
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Options for PHP's php.ini file for this dokuwiki site.
           '';
           example = literalExpression ''
@@ -304,7 +337,7 @@ let
             useacl = true;
             superuser = "admin";
           };
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Structural DokuWiki configuration.
             Refer to <https://www.dokuwiki.org/config>
             for details and supported values.
@@ -333,7 +366,7 @@ let
               useacl = true;
             }
           '';
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Read only representation of the final configuration.
           '';
         };
@@ -348,13 +381,13 @@ in
       sites = mkOption {
         type = types.attrsOf (types.submodule siteOpts);
         default = {};
-        description = lib.mdDoc "Specification of one or more DokuWiki sites to serve";
+        description = mdDoc "Specification of one or more DokuWiki sites to serve";
       };
 
       webserver = mkOption {
         type = types.enum [ "nginx" "caddy" ];
         default = "nginx";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to use nginx or caddy for virtual host management.
 
           Further nginx configuration can be done by adapting `services.nginx.virtualHosts.<name>`.
@@ -405,8 +438,8 @@ in
       "d ${cfg.stateDir}/meta 0750 ${user} ${webserver.group} - -"
       "d ${cfg.stateDir}/pages 0750 ${user} ${webserver.group} - -"
       "d ${cfg.stateDir}/tmp 0750 ${user} ${webserver.group} - -"
-    ] ++ lib.optional (cfg.aclFile != null) "C ${cfg.aclFile} 0640 ${user} ${webserver.group} - ${pkg hostName cfg}/share/dokuwiki/conf/acl.auth.php.dist"
-    ++ lib.optional (cfg.usersFile != null) "C ${cfg.usersFile} 0640 ${user} ${webserver.group} - ${pkg hostName cfg}/share/dokuwiki/conf/users.auth.php.dist"
+    ] ++ optional (cfg.aclFile != null) "C ${cfg.aclFile} 0640 ${user} ${webserver.group} - ${pkg hostName cfg}/share/dokuwiki/conf/acl.auth.php.dist"
+    ++ optional (cfg.usersFile != null) "C ${cfg.usersFile} 0640 ${user} ${webserver.group} - ${pkg hostName cfg}/share/dokuwiki/conf/users.auth.php.dist"
     ) eachSite);
 
     users.users.${user} = {
