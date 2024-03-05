@@ -1,18 +1,28 @@
 { config, lib, pkgs, ... }:
-with lib;
 let
+  inherit (lib)
+    getExe
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.auto-cpufreq;
   cfgFilename = "auto-cpufreq.conf";
   cfgFile = format.generate cfgFilename cfg.settings;
 
   format = pkgs.formats.ini {};
-in {
+in
+{
   options = {
     services.auto-cpufreq = {
-      enable = mkEnableOption (lib.mdDoc "auto-cpufreq daemon");
+      enable = mkEnableOption (mdDoc "auto-cpufreq daemon");
 
       settings = mkOption {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration for `auto-cpufreq`.
 
           The available options can be found in [the example configuration file](https://github.com/AdnanHodzic/auto-cpufreq/blob/v${pkgs.auto-cpufreq.version}/auto-cpufreq.conf-example).
@@ -37,7 +47,7 @@ in {
         serviceConfig.WorkingDirectory = "";
         serviceConfig.ExecStart = [
           ""
-          "${lib.getExe pkgs.auto-cpufreq} --daemon --config ${cfgFile}"
+          "${getExe pkgs.auto-cpufreq} --daemon --config ${cfgFile}"
         ];
       };
     };
@@ -46,6 +56,6 @@ in {
   # uses attributes of the linked package
   meta = {
     buildDocsInSandbox = false;
-    maintainers = with lib.maintainers; [ nicoo ];
+    maintainers = with maintainers; [ nicoo ];
   };
 }
