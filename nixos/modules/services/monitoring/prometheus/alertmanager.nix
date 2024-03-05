@@ -1,8 +1,23 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    getBin
+    length
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    mkRemovedOptionModule
+    optional
+    optionalString
+    singleton
+    types
+    ;
+
   cfg = config.services.prometheus.alertmanager;
   mkConfigFile = pkgs.writeText "alertmanager.yml" (builtins.toJSON cfg.configuration);
 
@@ -30,7 +45,8 @@ let
     ) ++ (optional (cfg.logFormat != null)
       "--log.format ${cfg.logFormat}"
   );
-in {
+in
+{
   imports = [
     (mkRemovedOptionModule [ "services" "prometheus" "alertmanager" "user" ] "The alertmanager service is now using systemd's DynamicUser mechanism which obviates a user setting.")
     (mkRemovedOptionModule [ "services" "prometheus" "alertmanager" "group" ] "The alertmanager service is now using systemd's DynamicUser mechanism which obviates a group setting.")
@@ -42,14 +58,14 @@ in {
 
   options = {
     services.prometheus.alertmanager = {
-      enable = mkEnableOption (lib.mdDoc "Prometheus Alertmanager");
+      enable = mkEnableOption (mdDoc "Prometheus Alertmanager");
 
       package = mkPackageOption pkgs "prometheus-alertmanager" { };
 
       configuration = mkOption {
         type = types.nullOr types.attrs;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Alertmanager configuration as nix attribute set.
         '';
       };
@@ -57,7 +73,7 @@ in {
       configText = mkOption {
         type = types.nullOr types.lines;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Alertmanager configuration as YAML text. If non-null, this option
           defines the text that is written to alertmanager.yml. If null, the
           contents of alertmanager.yml is generated from the structured config
@@ -68,7 +84,7 @@ in {
       checkConfig = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Check configuration with `amtool check-config`. The call to `amtool` is
           subject to sandboxing by Nix.
 
@@ -82,7 +98,7 @@ in {
       logFormat = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If set use a syslog logger or JSON logging.
         '';
       };
@@ -90,7 +106,7 @@ in {
       logLevel = mkOption {
         type = types.enum ["debug" "info" "warn" "error" "fatal"];
         default = "warn";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Only log messages with the given severity or above.
         '';
       };
@@ -98,7 +114,7 @@ in {
       webExternalUrl = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The URL under which Alertmanager is externally reachable (for example, if Alertmanager is served via a reverse proxy).
           Used for generating relative and absolute links back to Alertmanager itself.
           If the URL has a path portion, it will be used to prefix all HTTP endoints served by Alertmanager.
@@ -109,7 +125,7 @@ in {
       listenAddress = mkOption {
         type = types.str;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Address to listen on for the web interface and API. Empty string will listen on all interfaces.
           "localhost" will listen on 127.0.0.1 (but not ::1).
         '';
@@ -118,7 +134,7 @@ in {
       port = mkOption {
         type = types.port;
         default = 9093;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Port to listen on for the web interface and API.
         '';
       };
@@ -126,7 +142,7 @@ in {
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Open port in firewall for incoming connections.
         '';
       };
@@ -134,7 +150,7 @@ in {
       clusterPeers = mkOption {
         type = types.listOf types.str;
         default = [];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Initial peers for HA cluster.
         '';
       };
@@ -142,7 +158,7 @@ in {
       extraFlags = mkOption {
         type = types.listOf types.str;
         default = [];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra commandline options when launching the Alertmanager.
         '';
       };
@@ -151,7 +167,7 @@ in {
         type = types.nullOr types.path;
         default = null;
         example = "/root/alertmanager.env";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           File to load as environment file. Environment variables
           from this file will be interpolated into the config file
           using envsubst with this syntax:
@@ -177,14 +193,14 @@ in {
         wants    = [ "network-online.target" ];
         after    = [ "network-online.target" ];
         preStart = ''
-           ${lib.getBin pkgs.envsubst}/bin/envsubst -o "/tmp/alert-manager-substituted.yaml" \
+           ${getBin pkgs.envsubst}/bin/envsubst -o "/tmp/alert-manager-substituted.yaml" \
                                                     -i "${alertmanagerYml}"
         '';
         serviceConfig = {
           Restart  = "always";
           StateDirectory = "alertmanager";
           DynamicUser = true; # implies PrivateTmp
-          EnvironmentFile = lib.mkIf (cfg.environmentFile != null) cfg.environmentFile;
+          EnvironmentFile = mkIf (cfg.environmentFile != null) cfg.environmentFile;
           WorkingDirectory = "/tmp";
           ExecStart = "${cfg.package}/bin/alertmanager" +
             optionalString (length cmdlineArgs != 0) (" \\\n  " +
