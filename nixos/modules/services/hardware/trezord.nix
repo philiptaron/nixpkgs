@@ -1,9 +1,17 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.trezord;
-in {
+in
+{
 
   ### docs
 
@@ -18,7 +26,7 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable Trezor bridge daemon, for use with Trezor hardware bitcoin wallets.
         '';
       };
@@ -26,7 +34,7 @@ in {
       emulator.enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable Trezor emulator support.
           '';
        };
@@ -34,7 +42,7 @@ in {
       emulator.port = mkOption {
         type = types.port;
         default = 21324;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Listening port for the Trezor emulator.
           '';
       };
