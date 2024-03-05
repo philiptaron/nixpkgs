@@ -1,6 +1,13 @@
 { lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkOption
+    mkRenamedOptionModule
+    types
+    ;
+in
 
 {
   imports = [
@@ -12,7 +19,7 @@ with lib;
         boot.loader.timeout =  mkOption {
             default = 5;
             type = types.nullOr types.int;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Timeout (in seconds) until loader boots the default menu item. Use null if the loader menu should be displayed indefinitely.
             '';
         };
