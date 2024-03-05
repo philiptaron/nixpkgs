@@ -1,9 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
-    cfg = config.services.elasticsearch-curator;
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
+  cfg = config.services.elasticsearch-curator;
     curatorConfig = pkgs.writeTextFile {
       name = "config.yaml";
       text = ''
@@ -37,24 +43,24 @@ in {
 
   options.services.elasticsearch-curator = {
 
-    enable = mkEnableOption (lib.mdDoc "elasticsearch curator");
+    enable = mkEnableOption (mdDoc "elasticsearch curator");
     interval = mkOption {
-      description = lib.mdDoc "The frequency to run curator, a systemd.time such as 'hourly'";
+      description = mdDoc "The frequency to run curator, a systemd.time such as 'hourly'";
       default = "hourly";
       type = types.str;
     };
     hosts = mkOption {
-      description = lib.mdDoc "a list of elasticsearch hosts to connect to";
+      description = mdDoc "a list of elasticsearch hosts to connect to";
       type = types.listOf types.str;
       default = ["localhost"];
     };
     port = mkOption {
-      description = lib.mdDoc "the port that elasticsearch is listening on";
+      description = mdDoc "the port that elasticsearch is listening on";
       type = types.port;
       default = 9200;
     };
     actionYAML = mkOption {
-      description = lib.mdDoc "curator action.yaml file contents, alternatively use curator-cli which takes a simple action command";
+      description = mdDoc "curator action.yaml file contents, alternatively use curator-cli which takes a simple action command";
       type = types.lines;
       example = ''
         ---
