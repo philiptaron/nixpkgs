@@ -1,8 +1,16 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mapAttrs
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.plikd;
 
   format = pkgs.formats.toml {};
@@ -11,18 +19,18 @@ in
 {
   options = {
     services.plikd = {
-      enable = mkEnableOption (lib.mdDoc "the plikd server");
+      enable = mkEnableOption (mdDoc "the plikd server");
 
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Open ports in the firewall for the plikd.";
+        description = mdDoc "Open ports in the firewall for the plikd.";
       };
 
       settings = mkOption {
         type = format.type;
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration for plikd, see <https://github.com/root-gg/plik/blob/master/server/plikd.cfg>
           for supported values.
         '';
