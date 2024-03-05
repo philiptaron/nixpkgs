@@ -1,8 +1,14 @@
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    literalExpression
+    mdDoc
+    mkOption
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.script;
   configFile = pkgs.writeText "script-exporter.yaml" (builtins.toJSON cfg.settings);
 in
@@ -15,18 +21,18 @@ in
           name = mkOption {
             type = str;
             example = "sleep";
-            description = lib.mdDoc "Name of the script.";
+            description = mdDoc "Name of the script.";
           };
           script = mkOption {
             type = str;
             example = "sleep 5";
-            description = lib.mdDoc "Shell script to execute when metrics are requested.";
+            description = mdDoc "Shell script to execute when metrics are requested.";
           };
           timeout = mkOption {
             type = nullOr int;
             default = null;
             example = 60;
-            description = lib.mdDoc "Optional timeout for the script in seconds.";
+            description = mdDoc "Optional timeout for the script in seconds.";
           };
         };
       });
@@ -37,7 +43,7 @@ in
           ];
         }
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         All settings expressed as an Nix attrset.
 
         Check the official documentation for the corresponding YAML
