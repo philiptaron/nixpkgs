@@ -1,7 +1,12 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    mdDoc
+    mkOption
+    types
+    ;
+
   cfg = config.virtualisation.azureImage;
 in
 {
@@ -12,14 +17,14 @@ in
       type = with types; either (enum [ "auto" ]) int;
       default = "auto";
       example = 2048;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Size of disk image. Unit is MB.
       '';
     };
     virtualisation.azureImage.contents = mkOption {
       type = with types; listOf attrs;
       default = [ ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra contents to add to the image.
       '';
     };
