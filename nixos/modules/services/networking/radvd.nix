@@ -2,9 +2,14 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
 
   cfg = config.services.radvd;
 
@@ -22,7 +27,7 @@ in
       type = types.bool;
       default = false;
       description =
-        lib.mdDoc ''
+        mdDoc ''
           Whether to enable the Router Advertisement Daemon
           ({command}`radvd`), which provides link-local
           advertisements of IPv6 router addresses and prefixes using
@@ -44,7 +49,7 @@ in
           };
         '';
       description =
-        lib.mdDoc ''
+        mdDoc ''
           The contents of the radvd configuration file.
         '';
     };
