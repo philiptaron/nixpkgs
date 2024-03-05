@@ -1,14 +1,25 @@
 { config, lib, pkgs, ... }:
-with lib;
 
 let
+  inherit (lib)
+    literalExpression
+    maintainers
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.greetd;
   tty = "tty${toString cfg.vt}";
   settingsFormat = pkgs.formats.toml { };
 in
 {
   options.services.greetd = {
-    enable = mkEnableOption (lib.mdDoc "greetd");
+    enable = mkEnableOption (mdDoc "greetd");
 
     package = mkPackageOption pkgs [ "greetd" "greetd" ] { };
 
@@ -21,7 +32,7 @@ in
           };
         }
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         greetd configuration ([documentation](https://man.sr.ht/~kennylevinsen/greetd/))
         as a Nix attribute set.
       '';
@@ -30,7 +41,7 @@ in
     vt = mkOption {
       type = types.int;
       default = 1;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The virtual console (tty) that greetd should use. This option also disables getty on that tty.
       '';
     };
@@ -39,7 +50,7 @@ in
       type = types.bool;
       default = !(cfg.settings ? initial_session);
       defaultText = literalExpression "!(config.services.greetd.settings ? initial_session)";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to restart greetd when it terminates (e.g. on failure).
         This is usually desirable so a user can always log in, but should be disabled when using 'settings.initial_session' (autologin),
         because every greetd restart will trigger the autologin again.
