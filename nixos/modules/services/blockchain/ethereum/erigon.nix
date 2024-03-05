@@ -1,7 +1,17 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    escapeShellArgs
+    literalExpression
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
 
   cfg = config.services.erigon;
 
@@ -11,19 +21,19 @@ in {
 
   options = {
     services.erigon = {
-      enable = mkEnableOption (lib.mdDoc "Ethereum implementation on the efficiency frontier");
+      enable = mkEnableOption (mdDoc "Ethereum implementation on the efficiency frontier");
 
       package = mkPackageOption pkgs "erigon" { };
 
       extraArgs = mkOption {
         type = types.listOf types.str;
-        description = lib.mdDoc "Additional arguments passed to Erigon";
+        description = mdDoc "Additional arguments passed to Erigon";
         default = [ ];
       };
 
       secretJwtPath = mkOption {
         type = types.path;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Path to the secret jwt used for the http api authentication.
         '';
         default = "";
@@ -31,7 +41,7 @@ in {
       };
 
       settings = mkOption {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration for Erigon
           Refer to <https://github.com/ledgerwatch/erigon#usage> for details on supported values.
         '';
@@ -94,7 +104,7 @@ in {
 
       serviceConfig = {
         LoadCredential = "ERIGON_JWT:${cfg.secretJwtPath}";
-        ExecStart = "${cfg.package}/bin/erigon --config ${configFile} --authrpc.jwtsecret=%d/ERIGON_JWT ${lib.escapeShellArgs cfg.extraArgs}";
+        ExecStart = "${cfg.package}/bin/erigon --config ${configFile} --authrpc.jwtsecret=%d/ERIGON_JWT ${escapeShellArgs cfg.extraArgs}";
         DynamicUser = true;
         Restart = "on-failure";
         StateDirectory = "erigon";
