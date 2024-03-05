@@ -2,9 +2,22 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkDefault
+    mkIf
+    mkMerge
+    mkOption
+    mkOverride
+    mkPackageOption
+    mkRemovedOptionModule
+    optional
+    optionals
+    types
+    versionAtLeast
+    ;
 
   cfg = config.virtualisation.docker;
   proxy_env = config.networking.proxy.envVars;
@@ -21,7 +34,7 @@ in
         type = types.bool;
         default = false;
         description =
-          lib.mdDoc ''
+          mdDoc ''
             This option enables docker, a daemon that manages
             linux containers. Users in the "docker" group can interact with
             the daemon (e.g. to start or stop containers) using the
@@ -34,7 +47,7 @@ in
         type = types.listOf types.str;
         default = ["/run/docker.sock"];
         description =
-          lib.mdDoc ''
+          mdDoc ''
             A list of unix and tcp docker should listen to. The format follows
             ListenStream as described in systemd.socket(5).
           '';
@@ -45,7 +58,7 @@ in
         type = types.bool;
         default = true;
         description =
-          lib.mdDoc ''
+          mdDoc ''
             When enabled dockerd is started on boot. This is required for
             containers which are created with the
             `--restart=always` flag to work. If this option is
@@ -61,7 +74,7 @@ in
           ipv6 = true;
           "fixed-cidr-v6" = "fd00::/80";
         };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration for docker daemon. The attributes are serialized to JSON used as daemon.conf.
           See https://docs.docker.com/engine/reference/commandline/dockerd/#daemon-configuration-file
         '';
@@ -71,7 +84,7 @@ in
       mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           **Deprecated**, please use virtualisation.containers.cdi.dynamic.nvidia.enable instead.
 
           Enable nvidia-docker wrapper, supporting NVIDIA GPUs inside docker containers.
@@ -83,7 +96,7 @@ in
         type = types.bool;
         default = true;
         description =
-          lib.mdDoc ''
+          mdDoc ''
             Allow dockerd to be restarted without affecting running container.
             This option is incompatible with docker swarm.
           '';
@@ -94,7 +107,7 @@ in
         type = types.nullOr (types.enum ["aufs" "btrfs" "devicemapper" "overlay" "overlay2" "zfs"]);
         default = null;
         description =
-          lib.mdDoc ''
+          mdDoc ''
             This option determines which Docker
             [storage driver](https://docs.docker.com/storage/storagedriver/select-storage-driver/)
             to use.
@@ -115,7 +128,7 @@ in
         type = types.enum ["none" "json-file" "syslog" "journald" "gelf" "fluentd" "awslogs" "splunk" "etwlogs" "gcplogs" "local"];
         default = "journald";
         description =
-          lib.mdDoc ''
+          mdDoc ''
             This option determines which Docker log driver to use.
           '';
       };
@@ -125,7 +138,7 @@ in
         type = types.separatedString " ";
         default = "";
         description =
-          lib.mdDoc ''
+          mdDoc ''
             The extra command-line options to pass to
             {command}`docker` daemon.
           '';
@@ -135,7 +148,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to periodically prune Docker resources. If enabled, a
           systemd timer will run `docker system prune -f`
           as specified by the `dates` option.
@@ -146,7 +159,7 @@ in
         type = types.listOf types.str;
         default = [];
         example = [ "--all" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Any additional flags passed to {command}`docker system prune`.
         '';
       };
@@ -154,7 +167,7 @@ in
       dates = mkOption {
         default = "weekly";
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Specification (in the format described by
           {manpage}`systemd.time(7)`) of the time at
           which the prune will occur.
@@ -168,7 +181,7 @@ in
       type = types.listOf types.package;
       default = [ ];
       example = literalExpression "with pkgs; [ criu ]";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra packages to add to PATH for the docker daemon process.
       '';
     };
@@ -191,7 +204,7 @@ in
       # (https://docs.docker.com/engine/release-notes/25.0/#new). Encourage
       # moving to CDI as opposed to having deprecated runtime
       # wrappers.
-      warnings = lib.optionals (cfg.enableNvidia && (lib.strings.versionAtLeast cfg.package.version "25")) [
+      warnings = optionals (cfg.enableNvidia && (versionAtLeast cfg.package.version "25")) [
         ''
           You have set virtualisation.docker.enableNvidia. This option is deprecated, please set virtualisation.containers.cdi.dynamic.nvidia.enable instead.
         ''
