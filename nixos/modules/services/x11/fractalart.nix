@@ -1,6 +1,13 @@
 { config, lib, pkgs, ... }:
-with lib;
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.fractalart;
 in {
   options.services.fractalart = {
@@ -8,21 +15,21 @@ in {
       type = types.bool;
       default = false;
       example = true;
-      description = lib.mdDoc "Enable FractalArt for generating colorful wallpapers on login";
+      description = mdDoc "Enable FractalArt for generating colorful wallpapers on login";
     };
 
     width = mkOption {
       type = types.nullOr types.int;
       default = null;
       example = 1920;
-      description = lib.mdDoc "Screen width";
+      description = mdDoc "Screen width";
     };
 
     height = mkOption {
       type = types.nullOr types.int;
       default = null;
       example = 1080;
-      description = lib.mdDoc "Screen height";
+      description = mdDoc "Screen height";
     };
   };
 
