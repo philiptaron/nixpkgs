@@ -1,17 +1,23 @@
 { pkgs, lib, config, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.gotify;
 in {
   options = {
     services.gotify = {
-      enable = mkEnableOption (lib.mdDoc "Gotify webserver");
+      enable = mkEnableOption (mdDoc "Gotify webserver");
 
       port = mkOption {
         type = types.port;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Port the server listens to.
         '';
       };
@@ -19,7 +25,7 @@ in {
       stateDirectoryName = mkOption {
         type = types.str;
         default = "gotify-server";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The name of the directory below {file}`/var/lib` where
           gotify stores its runtime data.
         '';
