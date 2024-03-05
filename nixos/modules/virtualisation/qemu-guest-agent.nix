@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.qemuGuest;
 in {
 
@@ -10,7 +17,7 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to enable the qemu guest agent.";
+        description = mdDoc "Whether to enable the qemu guest agent.";
       };
       package = mkPackageOption pkgs [ "qemu_kvm" "ga" ] { };
   };
