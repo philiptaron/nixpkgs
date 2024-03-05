@@ -1,8 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optional
+    recursiveUpdate
+    types
+    ;
+
   cfg = config.services.traefik;
   jsonValue = with types;
     let
@@ -55,20 +65,20 @@ let
     else "/run/traefik/config.toml";
 in {
   options.services.traefik = {
-    enable = mkEnableOption (lib.mdDoc "Traefik web server");
+    enable = mkEnableOption (mdDoc "Traefik web server");
 
     staticConfigFile = mkOption {
       default = null;
       example = literalExpression "/path/to/static_config.toml";
       type = types.nullOr types.path;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path to traefik's static configuration to use.
         (Using that option has precedence over `staticConfigOptions` and `dynamicConfigOptions`)
       '';
     };
 
     staticConfigOptions = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Static configuration for Traefik.
       '';
       type = jsonValue;
@@ -85,14 +95,14 @@ in {
       default = null;
       example = literalExpression "/path/to/dynamic_config.toml";
       type = types.nullOr types.path;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path to traefik's dynamic configuration to use.
         (Using that option has precedence over `dynamicConfigOptions`)
       '';
     };
 
     dynamicConfigOptions = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Dynamic configuration for Traefik.
       '';
       type = jsonValue;
@@ -111,7 +121,7 @@ in {
     dataDir = mkOption {
       default = "/var/lib/traefik";
       type = types.path;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Location for any persistent data traefik creates, ie. acme
       '';
     };
@@ -120,7 +130,7 @@ in {
       default = "traefik";
       type = types.str;
       example = "docker";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Set the group that traefik runs under.
         For the docker backend this needs to be set to `docker` instead.
       '';
@@ -132,7 +142,7 @@ in {
       default = [];
       type = types.listOf types.path;
       example = [ "/run/secrets/traefik.env" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Files to load as environment file. Environment variables from this file
         will be substituted into the static configuration file using envsubst.
       '';
@@ -151,7 +161,7 @@ in {
       startLimitBurst = 5;
       serviceConfig = {
         EnvironmentFile = cfg.environmentFiles;
-        ExecStartPre = lib.optional (cfg.environmentFiles != [])
+        ExecStartPre = optional (cfg.environmentFiles != [])
           (pkgs.writeShellScript "pre-start" ''
             umask 077
             ${pkgs.envsubst}/bin/envsubst -i "${staticConfigFile}" > "${finalStaticConfigFile}"
