@@ -1,8 +1,18 @@
 { config, lib, pkgs, ...}:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    makeSearchPathOutput
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.varnish;
 
   commandLine = "-f ${pkgs.writeText "default.vcl" cfg.config}" +
@@ -11,23 +21,23 @@ in
 {
   options = {
     services.varnish = {
-      enable = mkEnableOption (lib.mdDoc "Varnish Server");
+      enable = mkEnableOption (mdDoc "Varnish Server");
 
-      enableConfigCheck = mkEnableOption (lib.mdDoc "checking the config during build time") // { default = true; };
+      enableConfigCheck = mkEnableOption (mdDoc "checking the config during build time") // { default = true; };
 
       package = mkPackageOption pkgs "varnish" { };
 
       http_address = mkOption {
         type = types.str;
         default = "*:6081";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           HTTP listen address and port.
         '';
       };
 
       config = mkOption {
         type = types.lines;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Verbatim default.vcl configuration.
         '';
       };
@@ -36,7 +46,7 @@ in
         type = types.path;
         default = "/var/spool/varnish/${config.networking.hostName}";
         defaultText = literalExpression ''"/var/spool/varnish/''${config.networking.hostName}"'';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Directory holding all state for Varnish to run.
         '';
       };
@@ -45,7 +55,7 @@ in
         type = types.listOf types.package;
         default = [];
         example = literalExpression "[ pkgs.varnishPackages.geoip ]";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Varnish modules (except 'std').
         '';
       };
@@ -54,7 +64,7 @@ in
         type = types.str;
         default = "";
         example = "-s malloc,256M";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Command line switches for varnishd (run 'varnishd -?' to get list of options)
         '';
       };
