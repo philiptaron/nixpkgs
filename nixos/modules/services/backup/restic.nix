@@ -1,21 +1,43 @@
 { config, lib, pkgs, utils, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    boolToString
+    concatMapStrings
+    concatStringsSep
+    elemAt
+    filterAttrs
+    isBool
+    mapAttrs'
+    mapAttrsToList
+    mdDoc
+    mkOption
+    mkPackageOption
+    nameValuePair
+    optional
+    optionalAttrs
+    optionals
+    optionalString
+    pipe
+    replaceStrings
+    splitString
+    toUpper
+    types
+    ;
+
   # Type for a valid systemd unit option. Needed for correctly passing "timerConfig" to "systemd.timers"
   inherit (utils.systemdUtils.unitOptions) unitOption;
 in
 {
   options.services.restic.backups = mkOption {
-    description = lib.mdDoc ''
+    description = mdDoc ''
       Periodic backups to create with Restic.
     '';
     type = types.attrsOf (types.submodule ({ config, name, ... }: {
       options = {
         passwordFile = mkOption {
           type = types.str;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Read the repository password from a file.
           '';
           example = "/etc/nixos/restic-password";
@@ -24,7 +46,7 @@ in
         environmentFile = mkOption {
           type = with types; nullOr str;
           default = null;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             file containing the credentials to access the repository, in the
             format of an EnvironmentFile as described by systemd.exec(5)
           '';
@@ -33,7 +55,7 @@ in
         rcloneOptions = mkOption {
           type = with types; nullOr (attrsOf (oneOf [ str bool ]));
           default = null;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Options to pass to rclone to control its behavior.
             See <https://rclone.org/docs/#options> for
             available options. When specifying option names, strip the
@@ -50,7 +72,7 @@ in
         rcloneConfig = mkOption {
           type = with types; nullOr (attrsOf (oneOf [ str bool ]));
           default = null;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Configuration for the rclone remote being used for backup.
             See the remote's specific options under rclone's docs at
             <https://rclone.org/docs/>. When specifying
@@ -74,7 +96,7 @@ in
         rcloneConfigFile = mkOption {
           type = with types; nullOr path;
           default = null;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Path to the file containing rclone configuration. This file
             must contain configuration for the remote specified in this backup
             set and also must be readable by root. Options set in
@@ -86,7 +108,7 @@ in
         repository = mkOption {
           type = with types; nullOr str;
           default = null;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             repository to backup to.
           '';
           example = "sftp:backup@192.168.1.100:/backups/${name}";
@@ -95,7 +117,7 @@ in
         repositoryFile = mkOption {
           type = with types; nullOr path;
           default = null;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Path to the file containing the repository location to backup to.
           '';
         };
@@ -105,7 +127,7 @@ in
           # after some time has passed since this comment was added.
           type = types.nullOr (types.listOf types.str);
           default = [ ];
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Which paths to backup, in addition to ones specified via
             `dynamicFilesFrom`.  If null or an empty array and
             `dynamicFilesFrom` is also null, no backup command will be run.
@@ -120,7 +142,7 @@ in
         exclude = mkOption {
           type = types.listOf types.str;
           default = [ ];
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Patterns to exclude when backing up. See
             https://restic.readthedocs.io/en/latest/040_backup.html#excluding-files for
             details on syntax.
@@ -138,7 +160,7 @@ in
             OnCalendar = "daily";
             Persistent = true;
           };
-          description = lib.mdDoc ''
+          description = mdDoc ''
             When to run the backup. See {manpage}`systemd.timer(5)` for
             details. If null no timer is created and the backup will only
             run when explicitly started.
@@ -153,7 +175,7 @@ in
         user = mkOption {
           type = types.str;
           default = "root";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             As which user the backup should run.
           '';
           example = "postgresql";
@@ -162,7 +184,7 @@ in
         extraBackupArgs = mkOption {
           type = types.listOf types.str;
           default = [ ];
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Extra arguments passed to restic backup.
           '';
           example = [
@@ -173,7 +195,7 @@ in
         extraOptions = mkOption {
           type = types.listOf types.str;
           default = [ ];
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Extra extended options to be passed to the restic --option flag.
           '';
           example = [
@@ -184,7 +206,7 @@ in
         initialize = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Create the repository if it doesn't exist.
           '';
         };
@@ -192,7 +214,7 @@ in
         pruneOpts = mkOption {
           type = types.listOf types.str;
           default = [ ];
-          description = lib.mdDoc ''
+          description = mdDoc ''
             A list of options (--keep-\* et al.) for 'restic forget
             --prune', to automatically prune old snapshots.  The
             'forget' command is run *after* the 'backup' command, so
@@ -209,7 +231,7 @@ in
         checkOpts = mkOption {
           type = types.listOf types.str;
           default = [ ];
-          description = lib.mdDoc ''
+          description = mdDoc ''
             A list of options for 'restic check', which is run after
             pruning.
           '';
@@ -221,7 +243,7 @@ in
         dynamicFilesFrom = mkOption {
           type = with types; nullOr str;
           default = null;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             A script that produces a list of files to back up.  The
             results of this command are given to the '--files-from'
             option. The result is merged with paths specified via `paths`.
@@ -232,7 +254,7 @@ in
         backupPrepareCommand = mkOption {
           type = with types; nullOr str;
           default = null;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             A script that must run before starting the backup process.
           '';
         };
@@ -240,15 +262,15 @@ in
         backupCleanupCommand = mkOption {
           type = with types; nullOr str;
           default = null;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             A script that must run after finishing the backup process.
           '';
         };
 
         package = mkPackageOption pkgs "restic" { };
 
-        createWrapper = lib.mkOption {
-          type = lib.types.bool;
+        createWrapper = mkOption {
+          type = types.bool;
           default = true;
           description = ''
             Whether to generate and add a script to the system path, that has the same environment variables set
@@ -304,7 +326,7 @@ in
             rcloneRemoteName = builtins.elemAt (splitString ":" backup.repository) 1;
             rcloneAttrToOpt = v: "RCLONE_" + toUpper (builtins.replaceStrings [ "-" ] [ "_" ] v);
             rcloneAttrToConf = v: "RCLONE_CONFIG_" + toUpper (rcloneRemoteName + "_" + v);
-            toRcloneVal = v: if lib.isBool v then lib.boolToString v else v;
+            toRcloneVal = v: if isBool v then boolToString v else v;
           in
           nameValuePair "restic-backups-${name}" ({
             environment = {
@@ -376,21 +398,21 @@ in
         (filterAttrs (_: backup: backup.timerConfig != null) config.services.restic.backups);
 
     # generate wrapper scripts, as described in the createWrapper option
-    environment.systemPackages = lib.mapAttrsToList (name: backup: let
-      extraOptions = lib.concatMapStrings (arg: " -o ${arg}") backup.extraOptions;
+    environment.systemPackages = mapAttrsToList (name: backup: let
+      extraOptions = concatMapStrings (arg: " -o ${arg}") backup.extraOptions;
       resticCmd = "${backup.package}/bin/restic${extraOptions}";
     in pkgs.writeShellScriptBin "restic-${name}" ''
       set -a  # automatically export variables
-      ${lib.optionalString (backup.environmentFile != null) "source ${backup.environmentFile}"}
+      ${optionalString (backup.environmentFile != null) "source ${backup.environmentFile}"}
       # set same environment variables as the systemd service
-      ${lib.pipe config.systemd.services."restic-backups-${name}".environment [
-        (lib.filterAttrs (n: v: v != null && n != "PATH"))
-        (lib.mapAttrsToList (n: v: "${n}=${v}"))
-        (lib.concatStringsSep "\n")
+      ${pipe config.systemd.services."restic-backups-${name}".environment [
+        (filterAttrs (n: v: v != null && n != "PATH"))
+        (mapAttrsToList (n: v: "${n}=${v}"))
+        (concatStringsSep "\n")
       ]}
       PATH=${config.systemd.services."restic-backups-${name}".environment.PATH}:$PATH
 
       exec ${resticCmd} $@
-    '') (lib.filterAttrs (_: v: v.createWrapper) config.services.restic.backups);
+    '') (filterAttrs (_: v: v.createWrapper) config.services.restic.backups);
   };
 }
