@@ -1,8 +1,19 @@
 { config, lib, pkgs, utils, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optional
+    optionalAttrs
+    optionals
+    types
+    ;
+
   cfg = config.services.cockroachdb;
   crdb = cfg.package;
 
@@ -27,21 +38,21 @@ let
       # Certificate/security settings.
       (if cfg.insecure then "--insecure" else "--certs-dir=${cfg.certsDir}")
     ]
-    ++ lib.optional (cfg.join != null) "--join=${cfg.join}"
-    ++ lib.optional (cfg.locality != null) "--locality=${cfg.locality}"
+    ++ optional (cfg.join != null) "--join=${cfg.join}"
+    ++ optional (cfg.locality != null) "--locality=${cfg.locality}"
     ++ cfg.extraArgs);
 
   addressOption = descr: defaultPort: {
     address = mkOption {
       type = types.str;
       default = "localhost";
-      description = lib.mdDoc "Address to bind to for ${descr}";
+      description = mdDoc "Address to bind to for ${descr}";
     };
 
     port = mkOption {
       type = types.port;
       default = defaultPort;
-      description = lib.mdDoc "Port to bind to for ${descr}";
+      description = mdDoc "Port to bind to for ${descr}";
     };
   };
 in
@@ -49,7 +60,7 @@ in
 {
   options = {
     services.cockroachdb = {
-      enable = mkEnableOption (lib.mdDoc "CockroachDB Server");
+      enable = mkEnableOption (mdDoc "CockroachDB Server");
 
       listen = addressOption "intra-cluster communication" 26257;
 
@@ -58,7 +69,7 @@ in
       locality = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           An ordered, comma-separated list of key-value pairs that describe the
           topography of the machine. Topography might include country,
           datacenter or rack designations. Data is automatically replicated to
@@ -80,43 +91,43 @@ in
       join = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc "The addresses for connecting the node to a cluster.";
+        description = mdDoc "The addresses for connecting the node to a cluster.";
       };
 
       insecure = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Run in insecure mode.";
+        description = mdDoc "Run in insecure mode.";
       };
 
       certsDir = mkOption {
         type = types.nullOr types.path;
         default = null;
-        description = lib.mdDoc "The path to the certificate directory.";
+        description = mdDoc "The path to the certificate directory.";
       };
 
       user = mkOption {
         type = types.str;
         default = "cockroachdb";
-        description = lib.mdDoc "User account under which CockroachDB runs";
+        description = mdDoc "User account under which CockroachDB runs";
       };
 
       group = mkOption {
         type = types.str;
         default = "cockroachdb";
-        description = lib.mdDoc "User account under which CockroachDB runs";
+        description = mdDoc "User account under which CockroachDB runs";
       };
 
       openPorts = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Open firewall ports for cluster communication by default";
+        description = mdDoc "Open firewall ports for cluster communication by default";
       };
 
       cache = mkOption {
         type = types.str;
         default = "25%";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The total size for caches.
 
           This can be a percentage, expressed with a fraction sign or as a
@@ -132,7 +143,7 @@ in
       maxSqlMemory = mkOption {
         type = types.str;
         default = "25%";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The maximum in-memory storage capacity available to store temporary
           data for SQL queries.
 
@@ -157,7 +168,7 @@ in
         type = types.listOf types.str;
         default = [];
         example = [ "--advertise-addr" "[fe80::f6f2:::]" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra CLI arguments passed to {command}`cockroach start`.
           For the full list of supported arguments, check <https://www.cockroachlabs.com/docs/stable/cockroach-start.html#flags>
         '';
@@ -186,7 +197,7 @@ in
       cockroachdb.gid = config.ids.gids.cockroachdb;
     };
 
-    networking.firewall.allowedTCPPorts = lib.optionals cfg.openPorts
+    networking.firewall.allowedTCPPorts = optionals cfg.openPorts
       [ cfg.http.port cfg.listen.port ];
 
     systemd.services.cockroachdb =
@@ -216,5 +227,5 @@ in
       };
   };
 
-  meta.maintainers = with lib.maintainers; [ thoughtpolice ];
+  meta.maintainers = with maintainers; [ thoughtpolice ];
 }
