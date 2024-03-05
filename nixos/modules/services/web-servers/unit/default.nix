@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalAttrs
+    types
+    ;
+
   cfg = config.services.unit;
 
   configFile = pkgs.writeText "unit.json" cfg.config;
@@ -10,27 +18,27 @@ let
 in {
   options = {
     services.unit = {
-      enable = mkEnableOption (lib.mdDoc "Unit App Server");
+      enable = mkEnableOption (mdDoc "Unit App Server");
       package = mkPackageOption pkgs "unit" { };
       user = mkOption {
         type = types.str;
         default = "unit";
-        description = lib.mdDoc "User account under which unit runs.";
+        description = mdDoc "User account under which unit runs.";
       };
       group = mkOption {
         type = types.str;
         default = "unit";
-        description = lib.mdDoc "Group account under which unit runs.";
+        description = mdDoc "Group account under which unit runs.";
       };
       stateDir = mkOption {
         type = types.path;
         default = "/var/spool/unit";
-        description = lib.mdDoc "Unit data directory.";
+        description = mdDoc "Unit data directory.";
       };
       logDir = mkOption {
         type = types.path;
         default = "/var/log/unit";
-        description = lib.mdDoc "Unit log directory.";
+        description = mdDoc "Unit log directory.";
       };
       config = mkOption {
         type = types.str;
@@ -70,7 +78,7 @@ in {
             }
           }
         '';
-        description = lib.mdDoc "Unit configuration in JSON format. More details here https://unit.nginx.org/configuration";
+        description = mdDoc "Unit configuration in JSON format. More details here https://unit.nginx.org/configuration";
       };
     };
   };
