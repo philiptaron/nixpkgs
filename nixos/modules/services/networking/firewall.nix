@@ -1,13 +1,24 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    literalMD
+    mapAttrs
+    mdDoc
+    mkIf
+    mkOption
+    optional
+    optionalString
+    types
+    unique
+    versionOlder
+    ;
 
   cfg = config.networking.firewall;
 
   canonicalizePortList =
-    ports: lib.unique (builtins.sort builtins.lessThan ports);
+    ports: unique (builtins.sort builtins.lessThan ports);
 
   commonOptions = {
     allowedTCPPorts = mkOption {
@@ -15,7 +26,7 @@ let
       default = [ ];
       apply = canonicalizePortList;
       example = [ 22 80 ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         List of TCP ports on which incoming connections are
         accepted.
       '';
@@ -25,7 +36,7 @@ let
       type = types.listOf (types.attrsOf types.port);
       default = [ ];
       example = [{ from = 8999; to = 9003; }];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         A range of TCP ports on which incoming connections are
         accepted.
       '';
@@ -36,7 +47,7 @@ let
       default = [ ];
       apply = canonicalizePortList;
       example = [ 53 ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         List of open UDP ports.
       '';
     };
@@ -45,7 +56,7 @@ let
       type = types.listOf (types.attrsOf types.port);
       default = [ ];
       example = [{ from = 60000; to = 61000; }];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Range of open UDP ports.
       '';
     };
@@ -61,7 +72,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the firewall.  This is a simple stateful
           firewall that blocks connection attempts to unauthorised TCP
           or UDP ports on this machine.
@@ -73,7 +84,7 @@ in
         default = if config.networking.nftables.enable then pkgs.nftables else pkgs.iptables;
         defaultText = literalExpression ''if config.networking.nftables.enable then "pkgs.nftables" else "pkgs.iptables"'';
         example = literalExpression "pkgs.iptables-legacy";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The package to use for running the firewall service.
         '';
       };
@@ -81,7 +92,7 @@ in
       logRefusedConnections = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to log rejected or dropped incoming connections.
           Note: The logs are found in the kernel logs, i.e. dmesg
           or journalctl -k.
@@ -91,7 +102,7 @@ in
       logRefusedPackets = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to log all rejected or dropped incoming packets.
           This tends to give a lot of log messages, so it's mostly
           useful for debugging.
@@ -103,7 +114,7 @@ in
       logRefusedUnicastsOnly = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If {option}`networking.firewall.logRefusedPackets`
           and this option are enabled, then only log packets
           specifically directed at this machine, i.e., not broadcasts
@@ -114,7 +125,7 @@ in
       rejectPackets = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If set, refused packets are rejected rather than dropped
           (ignored).  This means that an ICMP "port unreachable" error
           message is sent back to the client (or a TCP RST packet in
@@ -127,7 +138,7 @@ in
         type = types.listOf types.str;
         default = [ ];
         example = [ "enp0s2" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Traffic coming in from these interfaces will be accepted
           unconditionally.  Traffic from the loopback (lo) interface
           will always be accepted.
@@ -137,7 +148,7 @@ in
       allowPing = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to respond to incoming ICMPv4 echo requests
           ("pings").  ICMPv6 pings are always allowed because the
           larger address space of IPv6 makes network scanning much
@@ -149,7 +160,7 @@ in
         type = types.nullOr (types.separatedString " ");
         default = null;
         example = "--limit 1/minute --limit-burst 5";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If pings are allowed, this allows setting rate limits on them.
 
           For the iptables based firewall, it should be set like
@@ -165,7 +176,7 @@ in
         default = true;
         defaultText = literalMD "`true` except if the iptables based firewall is in use and the kernel lacks rpfilter support";
         example = "loose";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Performs a reverse path filter test on a packet.  If a reply
           to the packet would not be sent via the same interface that
           the packet arrived on, it is refused.
@@ -183,7 +194,7 @@ in
       logReversePathDrops = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Logs dropped packets failing the reverse path filter test if
           the option networking.firewall.checkReversePath is enabled.
         '';
@@ -192,7 +203,7 @@ in
       filterForward = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable filtering in IP forwarding.
 
           This option only works with the nftables based firewall.
@@ -203,7 +214,7 @@ in
         type = types.listOf types.str;
         default = [ ];
         example = [ "ftp" "irc" "sane" "sip" "tftp" "amanda" "h323" "netbios_sn" "pptp" "snmp" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of connection-tracking helpers that are auto-loaded.
           The complete list of possible values is given in the example.
 
@@ -222,7 +233,7 @@ in
       autoLoadConntrackHelpers = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to auto-load connection-tracking helpers.
           See the description at networking.firewall.connectionTrackingModules
 
@@ -234,7 +245,7 @@ in
         type = types.listOf types.package;
         default = [ ];
         example = literalExpression "[ pkgs.ipset ]";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Additional packages to be included in the environment of the system
           as well as the path of networking.firewall.extraCommands.
         '';
@@ -243,7 +254,7 @@ in
       interfaces = mkOption {
         default = { };
         type = with types; attrsOf (submodule [{ options = commonOptions; }]);
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Interface-specific open ports.
         '';
       };
@@ -253,7 +264,7 @@ in
         visible = false;
         default = { default = mapAttrs (name: value: cfg.${name}) commonOptions; } // cfg.interfaces;
         type = with types; attrsOf (submodule [{ options = commonOptions; }]);
-        description = lib.mdDoc ''
+        description = mdDoc ''
           All open ports.
         '';
       };
@@ -270,7 +281,7 @@ in
         message = "filterForward only works with the nftables based firewall";
       }
       {
-        assertion = cfg.autoLoadConntrackHelpers -> lib.versionOlder config.boot.kernelPackages.kernel.version "6";
+        assertion = cfg.autoLoadConntrackHelpers -> versionOlder config.boot.kernelPackages.kernel.version "6";
         message = "conntrack helper autoloading has been removed from kernel 6.0 and newer";
       }
     ];
