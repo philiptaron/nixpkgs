@@ -1,8 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   WorkingDirectory = "/var/lib/tox-bootstrapd";
   PIDFile = "${WorkingDirectory}/pid";
 
@@ -23,7 +28,7 @@ in
             type = types.bool;
             default = false;
             description =
-              lib.mdDoc ''
+              mdDoc ''
                 Whether to enable the Tox DHT bootstrap daemon.
               '';
           };
@@ -31,20 +36,20 @@ in
           port = mkOption {
             type = types.port;
             default = 33445;
-            description = lib.mdDoc "Listening port (UDP).";
+            description = mdDoc "Listening port (UDP).";
           };
 
           keysFile = mkOption {
             type = types.str;
             default = "${WorkingDirectory}/keys";
-            description = lib.mdDoc "Node key file.";
+            description = mdDoc "Node key file.";
           };
 
           extraConfig = mkOption {
             type = types.lines;
             default = "";
             description =
-              lib.mdDoc ''
+              mdDoc ''
                 Configuration for bootstrap daemon.
                 See <https://github.com/irungentoo/toxcore/blob/master/other/bootstrap_daemon/tox-bootstrapd.conf>
                 and <https://wiki.tox.chat/users/nodes>.
