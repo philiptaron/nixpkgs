@@ -1,16 +1,23 @@
 { config, lib, pkgs, ... }:
-with lib;
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.sysstat;
 in {
   options = {
     services.sysstat = {
-      enable = mkEnableOption (lib.mdDoc "sar system activity collection");
+      enable = mkEnableOption (mdDoc "sar system activity collection");
 
       collect-frequency = mkOption {
         type = types.str;
         default = "*:00/10";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           OnCalendar specification for sysstat-collect
         '';
       };
@@ -18,7 +25,7 @@ in {
       collect-args = mkOption {
         type = types.str;
         default = "1 1";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Arguments to pass sa1 when collecting statistics
         '';
       };
