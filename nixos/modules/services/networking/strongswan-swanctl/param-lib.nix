@@ -1,8 +1,18 @@
-lib :
+lib:
 
-with lib;
+let
+  inherit (lib)
+    attrByPath
+    attrNames
+    concatMapStringsSep
+    concatStrings
+    filterAttrs
+    foldl'
+    isAttrs
+    mapAttrs
+    optionalAttrs
+    ;
 
-rec {
   paramsToConf = cfg : ps : mkConf 0 (paramsToRenderedStrings cfg ps);
 
   # mkConf takes an indentation level (which usually starts at 0) and a nested
@@ -79,4 +89,16 @@ rec {
   paramsToOptions = ps :
     mapParamsRecursive (_path: name: param: { ${name} = param.option; }) ps;
 
+in {
+  inherit
+    filterEmptySets
+    mapAttrs''
+    mapAttrsRecursiveCond'
+    mapParamsRecursive
+    mkConf
+    paramsToConf
+    paramsToOptions
+    paramsToRenderedStrings
+    replicate
+    ;
 }
