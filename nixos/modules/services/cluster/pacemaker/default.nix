@@ -1,13 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkPackageOption
+    ;
+
   cfg = config.services.pacemaker;
 in
 {
   # interface
   options.services.pacemaker = {
-    enable = mkEnableOption (lib.mdDoc "pacemaker");
+    enable = mkEnableOption (mdDoc "pacemaker");
 
     package = mkPackageOption pkgs "pacemaker" { };
   };
