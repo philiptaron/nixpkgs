@@ -6,9 +6,44 @@
 
 { config, lib, pkgs, options, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatLists
+    concatMapStrings
+    concatMapStringsSep
+    concatStringsSep
+    flip
+    generators
+    getExe
+    hasPrefix
+    imap
+    imap0
+    imap1
+    literalExpression
+    lowerChars
+    makeBinPath
+    mapAttrs'
+    mapAttrsToList
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    mkVMOverride
+    modules
+    optional
+    optionals
+    optionalString
+    range
+    reverseList
+    stringToCharacters
+    types
+    upperChars
+    ;
 
   qemu-common = import ../../lib/qemu-common.nix { inherit lib pkgs; };
 
@@ -20,7 +55,7 @@ let
 
   hostPkgs = cfg.host.pkgs;
 
-  consoles = lib.concatMapStringsSep " " (c: "console=${c}") cfg.qemu.consoles;
+  consoles = concatMapStringsSep " " (c: "console=${c}") cfg.qemu.consoles;
 
   driveOpts = { ... }: {
 
@@ -28,26 +63,26 @@ let
 
       file = mkOption {
         type = types.str;
-        description = lib.mdDoc "The file image used for this drive.";
+        description = mdDoc "The file image used for this drive.";
       };
 
       driveExtraOpts = mkOption {
         type = types.attrsOf types.str;
         default = {};
-        description = lib.mdDoc "Extra options passed to drive flag.";
+        description = mdDoc "Extra options passed to drive flag.";
       };
 
       deviceExtraOpts = mkOption {
         type = types.attrsOf types.str;
         default = {};
-        description = lib.mdDoc "Extra options passed to device flag.";
+        description = mdDoc "Extra options passed to device flag.";
       };
 
       name = mkOption {
         type = types.nullOr types.str;
         default = null;
         description =
-          lib.mdDoc "A name for the drive. Must be unique in the drives list. Not passed to qemu.";
+          mdDoc "A name for the drive. Must be unique in the drives list. Not passed to qemu.";
       };
 
     };
@@ -135,7 +170,7 @@ let
           TMPDIR=$(mktemp -d nix-vm.XXXXXXXXXX --tmpdir)
       fi
 
-      ${lib.optionalString (cfg.useNixStoreImage)
+      ${optionalString (cfg.useNixStoreImage)
         (if cfg.writableStore
           then ''
             # Create a writable copy/snapshot of the store image.
@@ -166,7 +201,7 @@ let
       # Create a directory for exchanging data with the VM.
       mkdir -p "$TMPDIR/xchg"
 
-      ${lib.optionalString cfg.useHostCerts
+      ${optionalString cfg.useHostCerts
       ''
         mkdir -p "$TMPDIR/certs"
         if [ -e "$NIX_SSL_CERT_FILE" ]; then
@@ -176,7 +211,7 @@ let
         fi
       ''}
 
-      ${lib.optionalString cfg.useEFIBoot
+      ${optionalString cfg.useEFIBoot
       ''
         # Expose EFI variables, it's useful even when we are not using a bootloader (!).
         # We might be interested in having EFI variable storage present even if we aren't booting via UEFI, hence
@@ -198,10 +233,10 @@ let
         fi
       ''}
 
-      ${lib.optionalString cfg.tpm.enable ''
+      ${optionalString cfg.tpm.enable ''
         NIX_SWTPM_DIR=$(readlink -f "''${NIX_SWTPM_DIR:-${config.system.name}-swtpm}")
         mkdir -p "$NIX_SWTPM_DIR"
-        ${lib.getExe cfg.tpm.package} \
+        ${getExe cfg.tpm.package} \
           socket \
           --tpmstate dir="$NIX_SWTPM_DIR" \
           --ctrl type=unixio,path="$NIX_SWTPM_DIR"/socket,terminate \
@@ -225,7 +260,7 @@ let
         # will stop it.
         coproc waitingswtpm {
           read || :
-          echo "" | ${lib.getExe hostPkgs.socat} STDIO UNIX-CONNECT:"$NIX_SWTPM_DIR"/socket
+          echo "" | ${getExe hostPkgs.socat} STDIO UNIX-CONNECT:"$NIX_SWTPM_DIR"/socket
         }
         # Clear `FD_CLOEXEC` on the coprocess' file descriptor stdin.
         fdflags -s-cloexec ''${waitingswtpm[1]}
@@ -233,7 +268,7 @@ let
 
       cd "$TMPDIR"
 
-      ${lib.optionalString (cfg.emptyDiskImages != []) "idx=0"}
+      ${optionalString (cfg.emptyDiskImages != []) "idx=0"}
       ${flip concatMapStrings cfg.emptyDiskImages (size: ''
         if ! test -e "empty$idx.qcow2"; then
             ${qemu}/bin/qemu-img create -f qcow2 "empty$idx.qcow2" "${toString size}M"
@@ -334,7 +369,7 @@ in
         type = types.ints.positive;
         default = 1024;
         description =
-          lib.mdDoc ''
+          mdDoc ''
             The memory size in megabytes of the virtual machine.
           '';
       };
@@ -344,7 +379,7 @@ in
         type = types.ints.positive;
         default = 16384;
         description =
-          lib.mdDoc ''
+          mdDoc ''
             The msize (maximum packet size) option passed to 9p file systems, in
             bytes. Increasing this should increase performance significantly,
             at the cost of higher RAM usage.
@@ -356,7 +391,7 @@ in
         type = types.nullOr types.ints.positive;
         default = 1024;
         description =
-          lib.mdDoc ''
+          mdDoc ''
             The disk size in megabytes of the virtual machine.
           '';
       };
@@ -367,7 +402,7 @@ in
         default = "./${config.system.name}.qcow2";
         defaultText = literalExpression ''"./''${config.system.name}.qcow2"'';
         description =
-          lib.mdDoc ''
+          mdDoc ''
             Path to the disk image containing the root filesystem.
             The image will be created on startup if it does not
             exist.
@@ -384,7 +419,7 @@ in
         defaultText = literalExpression ''/dev/disk/by-id/virtio-${rootDriveSerialAttr}'';
         example = "/dev/disk/by-id/virtio-boot-loader-device";
         description =
-          lib.mdDoc ''
+          mdDoc ''
             The path (inside th VM) to the device to boot from when legacy booting.
           '';
         };
@@ -396,7 +431,7 @@ in
         defaultText = literalExpression ''if cfg.useEFIBoot then "/dev/disk/by-label/${espFilesystemLabel}" else null'';
         example = "/dev/disk/by-label/esp";
         description =
-          lib.mdDoc ''
+          mdDoc ''
             The path (inside the VM) to the device containing the EFI System Partition (ESP).
 
             If you are *not* booting from a UEFI firmware, this value is, by
@@ -411,7 +446,7 @@ in
         defaultText = literalExpression ''/dev/disk/by-label/${rootFilesystemLabel}'';
         example = "/dev/disk/by-label/nixos";
         description =
-          lib.mdDoc ''
+          mdDoc ''
             The path (inside the VM) to the device containing the root filesystem.
           '';
       };
@@ -421,7 +456,7 @@ in
         type = types.listOf types.ints.positive;
         default = [];
         description =
-          lib.mdDoc ''
+          mdDoc ''
             Additional disk images to provide to the VM. The value is
             a list of size in megabytes of each disk. These disks are
             writeable by the VM.
@@ -433,7 +468,7 @@ in
         type = types.bool;
         default = true;
         description =
-          lib.mdDoc ''
+          mdDoc ''
             Whether to run QEMU with a graphics window, or in nographic mode.
             Serial console will be enabled on both settings, but this will
             change the preferred console.
@@ -445,7 +480,7 @@ in
         type = options.services.xserver.resolutions.type.nestedTypes.elemType;
         default = { x = 1024; y = 768; };
         description =
-          lib.mdDoc ''
+          mdDoc ''
             The resolution of the virtual machine display.
           '';
       };
@@ -455,7 +490,7 @@ in
         type = types.ints.positive;
         default = 1;
         description =
-          lib.mdDoc ''
+          mdDoc ''
             Specify the number of cores the guest is permitted to use.
             The number can be higher than the available cores on the
             host system.
@@ -468,11 +503,11 @@ in
           (types.submodule {
             options.source = mkOption {
               type = types.str;
-              description = lib.mdDoc "The path of the directory to share, can be a shell variable";
+              description = mdDoc "The path of the directory to share, can be a shell variable";
             };
             options.target = mkOption {
               type = types.path;
-              description = lib.mdDoc "The mount point of the directory inside the virtual machine";
+              description = mdDoc "The mount point of the directory inside the virtual machine";
             };
           });
         default = { };
@@ -480,7 +515,7 @@ in
           my-share = { source = "/path/to/be/shared"; target = "/mnt/shared"; };
         };
         description =
-          lib.mdDoc ''
+          mdDoc ''
             An attributes set of directories that will be shared with the
             virtual machine using VirtFS (9P filesystem over VirtIO).
             The attribute name will be used as the 9P mount tag.
@@ -492,7 +527,7 @@ in
         type = types.listOf types.path;
         default = [];
         description =
-          lib.mdDoc ''
+          mdDoc ''
             A list of paths whose closure should be made available to
             the VM.
 
@@ -514,7 +549,7 @@ in
             type = types.enum [ "host" "guest" ];
             default = "host";
             description =
-              lib.mdDoc ''
+              mdDoc ''
                 Controls the direction in which the ports are mapped:
 
                 - `"host"` means traffic from the host ports
@@ -526,29 +561,29 @@ in
           options.proto = mkOption {
             type = types.enum [ "tcp" "udp" ];
             default = "tcp";
-            description = lib.mdDoc "The protocol to forward.";
+            description = mdDoc "The protocol to forward.";
           };
           options.host.address = mkOption {
             type = types.str;
             default = "";
-            description = lib.mdDoc "The IPv4 address of the host.";
+            description = mdDoc "The IPv4 address of the host.";
           };
           options.host.port = mkOption {
             type = types.port;
-            description = lib.mdDoc "The host port to be mapped.";
+            description = mdDoc "The host port to be mapped.";
           };
           options.guest.address = mkOption {
             type = types.str;
             default = "";
-            description = lib.mdDoc "The IPv4 address on the guest VLAN.";
+            description = mdDoc "The IPv4 address on the guest VLAN.";
           };
           options.guest.port = mkOption {
             type = types.port;
-            description = lib.mdDoc "The guest port to be mapped.";
+            description = mdDoc "The guest port to be mapped.";
           };
         });
       default = [];
-      example = lib.literalExpression
+      example = literalExpression
         ''
         [ # forward local port 2222 -> 22, to ssh into the VM
           { from = "host"; host.port = 2222; guest.port = 22; }
@@ -561,7 +596,7 @@ in
         ]
         '';
       description =
-        lib.mdDoc ''
+        mdDoc ''
           When using the SLiRP user networking (default), this option allows to
           forward ports to/from the host/guest.
 
@@ -583,7 +618,7 @@ in
         default = false;
         example = true;
         description =
-          lib.mdDoc ''
+          mdDoc ''
             If this option is enabled, the guest will be isolated, i.e. it will
             not be able to contact the host and no guest IP packets will be
             routed over the host to the outside. This option does not affect
@@ -595,10 +630,10 @@ in
       mkOption {
         type = types.listOf types.ints.unsigned;
         default = if config.virtualisation.interfaces == {} then [ 1 ] else [ ];
-        defaultText = lib.literalExpression ''if config.virtualisation.interfaces == {} then [ 1 ] else [ ]'';
+        defaultText = literalExpression ''if config.virtualisation.interfaces == {} then [ 1 ] else [ ]'';
         example = [ 1 2 ];
         description =
-          lib.mdDoc ''
+          mdDoc ''
             Virtual networks to which the VM is connected.  Each
             number «N» in this list causes
             the VM to have a virtual Ethernet interface attached to a
@@ -615,14 +650,14 @@ in
       example = {
         enp1s0.vlan = 1;
       };
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Network interfaces to add to the VM.
       '';
       type = with types; attrsOf (submodule {
         options = {
           vlan = mkOption {
             type = types.ints.unsigned;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               VLAN to which the network interface is connected.
             '';
           };
@@ -630,7 +665,7 @@ in
           assignIP = mkOption {
             type = types.bool;
             default = false;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Automatically assign an IP address to the network interface using the same scheme as
               virtualisation.vlans.
             '';
@@ -645,7 +680,7 @@ in
         default = cfg.mountHostNixStore;
         defaultText = literalExpression "cfg.mountHostNixStore";
         description =
-          lib.mdDoc ''
+          mdDoc ''
             If enabled, the Nix store in the VM is made writable by
             layering an overlay filesystem on top of the host's Nix
             store.
@@ -659,7 +694,7 @@ in
         type = types.bool;
         default = true;
         description =
-          lib.mdDoc ''
+          mdDoc ''
             Use a tmpfs for the writable store instead of writing to the VM's
             own filesystem.
           '';
@@ -670,7 +705,7 @@ in
         type = types.str;
         default = "";
         internal = true;
-        description = lib.mdDoc "Primary IP address used in /etc/hosts.";
+        description = mdDoc "Primary IP address used in /etc/hosts.";
       };
 
     virtualisation.host.pkgs = mkOption {
@@ -680,7 +715,7 @@ in
       example = literalExpression ''
         import pkgs.path { system = "x86_64-darwin"; }
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Package set to use for the host-specific packages of the VM runner.
         Changing this to e.g. a Darwin package set allows running NixOS VMs on Darwin.
       '';
@@ -693,7 +728,7 @@ in
           default = if hostPkgs.stdenv.hostPlatform.qemuArch == pkgs.stdenv.hostPlatform.qemuArch then hostPkgs.qemu_kvm else hostPkgs.qemu;
           defaultText = literalExpression "if hostPkgs.stdenv.hostPlatform.qemuArch == pkgs.stdenv.hostPlatform.qemuArch then config.virtualisation.host.pkgs.qemu_kvm else config.virtualisation.host.pkgs.qemu";
           example = literalExpression "pkgs.qemu_test";
-          description = lib.mdDoc "QEMU package to use.";
+          description = mdDoc "QEMU package to use.";
         };
 
       options =
@@ -701,7 +736,7 @@ in
           type = types.listOf types.str;
           default = [];
           example = [ "-vga std" ];
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Options passed to QEMU.
             See [QEMU User Documentation](https://www.qemu.org/docs/master/system/qemu-manpage) for a complete list.
           '';
@@ -713,7 +748,7 @@ in
           consoles = [ "${qemu-common.qemuSerialDevice},115200n8" "tty0" ];
         in if cfg.graphics then consoles else reverseList consoles;
         example = [ "console=tty1" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The output console devices to pass to the kernel command line via the
           `console` parameter, the primary console is the last
           item of this list.
@@ -732,7 +767,7 @@ in
             "-net nic,netdev=user.0,model=virtio"
             "-netdev user,id=user.0,\${QEMU_NET_OPTS:+,$QEMU_NET_OPTS}"
           ];
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Networking-related command-line options that should be passed to qemu.
             The default is to use userspace networking (SLiRP).
             See the [QEMU Wiki on Networking](https://wiki.qemu.org/Documentation/Networking) for details.
@@ -746,7 +781,7 @@ in
       drives =
         mkOption {
           type = types.listOf (types.submodule driveOpts);
-          description = lib.mdDoc "Drives passed to qemu.";
+          description = mdDoc "Drives passed to qemu.";
         };
 
       diskInterface =
@@ -754,14 +789,14 @@ in
           type = types.enum [ "virtio" "scsi" "ide" ];
           default = "virtio";
           example = "scsi";
-          description = lib.mdDoc "The interface used for the virtual hard disks.";
+          description = mdDoc "The interface used for the virtual hard disks.";
         };
 
       guestAgent.enable =
         mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Enable the Qemu guest agent.
           '';
         };
@@ -770,7 +805,7 @@ in
         mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Enable the virtio-keyboard device.
           '';
         };
@@ -780,7 +815,7 @@ in
       mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Build and use a disk image for the Nix store, instead of
           accessing the host's one through 9p.
 
@@ -800,7 +835,7 @@ in
         type = types.bool;
         default = !cfg.useNixStoreImage && !cfg.useBootLoader;
         defaultText = literalExpression "!cfg.useNixStoreImage && !cfg.useBootLoader";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Mount the host Nix store as a 9p mount.
         '';
       };
@@ -812,7 +847,7 @@ in
           default = !cfg.useBootLoader;
           defaultText = "!cfg.useBootLoader";
           description =
-            lib.mdDoc ''
+            mdDoc ''
               If enabled, the virtual machine will boot directly into the kernel instead of through a bootloader.
               Read more about this feature in the [QEMU documentation on Direct Linux Boot](https://qemu-project.gitlab.io/qemu/system/linuxboot.html)
 
@@ -834,7 +869,7 @@ in
           default = "${config.system.build.initialRamdisk}/${config.system.boot.loader.initrdFile}";
           defaultText = "\${config.system.build.initialRamdisk}/\${config.system.boot.loader.initrdFile}";
           description =
-            lib.mdDoc ''
+            mdDoc ''
               In direct boot situations, you may want to influence the initrd to load
               to use your own customized payload.
 
@@ -849,7 +884,7 @@ in
         type = types.bool;
         default = false;
         description =
-          lib.mdDoc ''
+          mdDoc ''
             Use a boot loader to boot the system.
             This allows, among other things, testing the boot loader.
 
@@ -865,7 +900,7 @@ in
         type = types.bool;
         default = false;
         description =
-          lib.mdDoc ''
+          mdDoc ''
             If enabled, the virtual machine will provide a EFI boot
             manager.
             useEFIBoot is ignored if useBootLoader == false.
@@ -882,7 +917,7 @@ in
           secureBoot = cfg.useSecureBoot;
         }).fd'';
         description =
-        lib.mdDoc "OVMF firmware package, defaults to OVMF configured with secure boot if needed.";
+        mdDoc "OVMF firmware package, defaults to OVMF configured with secure boot if needed.";
       };
 
       firmware = mkOption {
@@ -890,7 +925,7 @@ in
         default = cfg.efi.OVMF.firmware;
         defaultText = literalExpression "cfg.efi.OVMF.firmware";
         description =
-          lib.mdDoc ''
+          mdDoc ''
             Firmware binary for EFI implementation, defaults to OVMF.
           '';
       };
@@ -900,7 +935,7 @@ in
         default = cfg.efi.OVMF.variables;
         defaultText = literalExpression "cfg.efi.OVMF.variables";
         description =
-          lib.mdDoc ''
+          mdDoc ''
             Platform-specific flash binary for EFI variables, implementation-dependent to the EFI firmware.
             Defaults to OVMF.
           '';
@@ -929,7 +964,7 @@ in
           - `tpm-tis-device` for (armv7, aarch64)
         '';
         example = "tpm-tis-device";
-        description = lib.mdDoc "QEMU device model for the TPM, uses the appropriate default based on th guest platform system and the package passed.";
+        description = mdDoc "QEMU device model for the TPM, uses the appropriate default based on th guest platform system and the package passed.";
       };
     };
 
@@ -938,7 +973,7 @@ in
         type = types.bool;
         default = true;
         description =
-          lib.mdDoc ''
+          mdDoc ''
             If enabled, the boot disk of the virtual machine will be
             formatted and mounted with the default filesystems for
             testing. Swap devices and LUKS will be disabled.
@@ -953,7 +988,7 @@ in
         type = types.bool;
         default = false;
         description =
-          lib.mdDoc ''
+          mdDoc ''
             Enable Secure Boot support in the EFI firmware.
           '';
       };
@@ -963,7 +998,7 @@ in
         type = types.nullOr types.package;
         default = null;
         description =
-          lib.mdDoc ''
+          mdDoc ''
             An alternate BIOS (such as `qboot`) with which to start the VM.
             Should contain a file named `bios.bin`.
             If `null`, QEMU's builtin SeaBIOS will be used.
@@ -975,7 +1010,7 @@ in
         type = types.bool;
         default = false;
         description =
-          lib.mdDoc ''
+          mdDoc ''
             If enabled, when `NIX_SSL_CERT_FILE` is set on the host,
             pass the CA certificates from the host to the VM.
           '';
@@ -986,7 +1021,7 @@ in
   config = {
 
     assertions =
-      lib.concatLists (lib.flip lib.imap cfg.forwardPorts (i: rule:
+      concatLists (flip imap cfg.forwardPorts (i: rule:
         [
           { assertion = rule.from == "guest" -> rule.proto == "tcp";
             message =
@@ -995,7 +1030,7 @@ in
                   Guest forwarding supports only TCP connections.
               '';
           }
-          { assertion = rule.from == "guest" -> lib.hasPrefix "10.0.2." rule.guest.address;
+          { assertion = rule.from == "guest" -> hasPrefix "10.0.2." rule.guest.address;
             message =
               ''
                 Invalid virtualisation.forwardPorts.<entry ${toString i}>.guest.address:
@@ -1026,7 +1061,7 @@ in
       optional (
         cfg.writableStore &&
         cfg.useNixStoreImage &&
-        opt.writableStore.highestPrio > lib.modules.defaultOverridePriority)
+        opt.writableStore.highestPrio > modules.defaultOverridePriority)
         ''
           You have enabled ${opt.useNixStoreImage} = true,
           without setting ${opt.writableStore} = false.
@@ -1058,7 +1093,7 @@ in
 
     boot.loader.supportsInitrdSecrets = mkIf (!cfg.useBootLoader) (mkVMOverride false);
 
-    boot.initrd.postMountCommands = lib.mkIf (!config.boot.initrd.systemd.enable)
+    boot.initrd.postMountCommands = mkIf (!config.boot.initrd.systemd.enable)
       ''
         # Mark this as a NixOS machine.
         mkdir -p $targetRoot/etc
@@ -1077,7 +1112,7 @@ in
         ''}
       '';
 
-    systemd.tmpfiles.settings."10-qemu-vm" = lib.mkIf config.boot.initrd.systemd.enable {
+    systemd.tmpfiles.settings."10-qemu-vm" = mkIf config.boot.initrd.systemd.enable {
       "/etc/NIXOS".f = {
         mode = "0644";
         user = "root";
@@ -1097,7 +1132,7 @@ in
     # allow `system.build.toplevel' to be included.  (If we had a direct
     # reference to ${regInfo} here, then we would get a cyclic
     # dependency.)
-    boot.postBootCommands = lib.mkIf config.nix.enable
+    boot.postBootCommands = mkIf config.nix.enable
       ''
         if [[ "$(cat /proc/cmdline)" =~ regInfo=([^ ]*) ]]; then
           ${config.nix.package.out}/bin/nix-store --load-db < ''${BASH_REMATCH[1]}
@@ -1142,7 +1177,7 @@ in
               else "'guestfwd=${proto}:${guest.address}:${toString guest.port}-" +
                    "cmd:${pkgs.netcat}/bin/nc ${host.address} ${toString host.port}',"
           );
-        restrictNetworkOption = lib.optionalString cfg.restrictNetwork "restrict=on,";
+        restrictNetworkOption = optionalString cfg.restrictNetwork "restrict=on,";
       in
       [
         "-net nic,netdev=user.0,model=virtio"
@@ -1214,8 +1249,8 @@ in
     # `nixos-rebuild build-vm`) of a system configuration, where the regular
     # value for the `fileSystems' attribute should be disregarded (since those
     # filesystems don't necessarily exist in the VM). You can disable this
-    # override by setting `virtualisation.fileSystems = lib.mkForce { };`.
-    fileSystems = lib.mkIf (cfg.fileSystems != { }) (mkVMOverride cfg.fileSystems);
+    # override by setting `virtualisation.fileSystems = mkForce { };`.
+    fileSystems = mkIf (cfg.fileSystems != { }) (mkVMOverride cfg.fileSystems);
 
     virtualisation.fileSystems = let
       mkSharedDir = tag: share:
@@ -1229,36 +1264,36 @@ in
           value.neededForBoot = true;
           value.options =
             [ "trans=virtio" "version=9p2000.L"  "msize=${toString cfg.msize}" ]
-            ++ lib.optional (tag == "nix-store") "cache=loose";
+            ++ optional (tag == "nix-store") "cache=loose";
         };
-    in lib.mkMerge [
-      (lib.mapAttrs' mkSharedDir cfg.sharedDirectories)
+    in mkMerge [
+      (mapAttrs' mkSharedDir cfg.sharedDirectories)
       {
-        "/" = lib.mkIf cfg.useDefaultFilesystems (if cfg.diskImage == null then {
+        "/" = mkIf cfg.useDefaultFilesystems (if cfg.diskImage == null then {
           device = "tmpfs";
           fsType = "tmpfs";
         } else {
           device = cfg.rootDevice;
           fsType = "ext4";
         });
-        "/tmp" = lib.mkIf config.boot.tmp.useTmpfs {
+        "/tmp" = mkIf config.boot.tmp.useTmpfs {
           device = "tmpfs";
           fsType = "tmpfs";
           neededForBoot = true;
           # Sync with systemd's tmp.mount;
           options = [ "mode=1777" "strictatime" "nosuid" "nodev" "size=${toString config.boot.tmp.tmpfsSize}" ];
         };
-        "/nix/${if cfg.writableStore then ".ro-store" else "store"}" = lib.mkIf cfg.useNixStoreImage {
+        "/nix/${if cfg.writableStore then ".ro-store" else "store"}" = mkIf cfg.useNixStoreImage {
           device = "/dev/disk/by-label/${nixStoreFilesystemLabel}";
           neededForBoot = true;
           options = [ "ro" ];
         };
-        "/nix/.rw-store" = lib.mkIf (cfg.writableStore && cfg.writableStoreUseTmpfs) {
+        "/nix/.rw-store" = mkIf (cfg.writableStore && cfg.writableStoreUseTmpfs) {
           fsType = "tmpfs";
           options = [ "mode=0755" ];
           neededForBoot = true;
         };
-        "/boot" = lib.mkIf (cfg.useBootLoader && cfg.bootPartition != null) {
+        "/boot" = mkIf (cfg.useBootLoader && cfg.bootPartition != null) {
           device = cfg.bootPartition;
           fsType = "vfat";
           noCheck = true; # fsck fails on a r/o filesystem
@@ -1266,7 +1301,7 @@ in
       }
     ];
 
-    boot.initrd.systemd = lib.mkIf (config.boot.initrd.systemd.enable && cfg.writableStore) {
+    boot.initrd.systemd = mkIf (config.boot.initrd.systemd.enable && cfg.writableStore) {
       mounts = [{
         where = "/sysroot/nix/store";
         what = "overlay";
