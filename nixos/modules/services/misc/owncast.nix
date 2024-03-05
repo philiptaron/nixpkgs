@@ -1,16 +1,28 @@
 { lib, pkgs, config, ... }:
-with lib;
-let cfg = config.services.owncast;
+
+let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    optional
+    types
+    ;
+
+  cfg = config.services.owncast;
 in {
 
   options.services.owncast = {
 
-    enable = mkEnableOption (lib.mdDoc "owncast");
+    enable = mkEnableOption (mdDoc "owncast");
 
     dataDir = mkOption {
       type = types.str;
       default = "/var/lib/owncast";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The directory where owncast stores its data files. If left as the default value this directory will automatically be created before the owncast server starts, otherwise the sysadmin is responsible for ensuring the directory exists with appropriate ownership and permissions.
       '';
     };
@@ -18,7 +30,7 @@ in {
     openFirewall = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Open the appropriate ports in the firewall for owncast.
       '';
     };
@@ -26,26 +38,26 @@ in {
     user = mkOption {
       type = types.str;
       default = "owncast";
-      description = lib.mdDoc "User account under which owncast runs.";
+      description = mdDoc "User account under which owncast runs.";
     };
 
     group = mkOption {
       type = types.str;
       default = "owncast";
-      description = lib.mdDoc "Group under which owncast runs.";
+      description = mdDoc "Group under which owncast runs.";
     };
 
     listen = mkOption {
       type = types.str;
       default = "127.0.0.1";
       example = "0.0.0.0";
-      description = lib.mdDoc "The IP address to bind the owncast web server to.";
+      description = mdDoc "The IP address to bind the owncast web server to.";
     };
 
     port = mkOption {
       type = types.port;
       default = 8080;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         TCP port where owncast web-gui listens.
       '';
     };
@@ -53,7 +65,7 @@ in {
     rtmp-port = mkOption {
       type = types.port;
       default = 1935;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         TCP port where owncast rtmp service listens.
       '';
     };
@@ -94,5 +106,5 @@ in {
       mkIf cfg.openFirewall { allowedTCPPorts = [ cfg.rtmp-port ] ++ optional (cfg.listen != "127.0.0.1") cfg.port; };
 
   };
-  meta = { maintainers = with lib.maintainers; [ MayNiklas ]; };
+  meta = { maintainers = with maintainers; [ MayNiklas ]; };
 }
