@@ -2,9 +2,12 @@
 
 { paths, disabledDefaultBackends ? [] }:
 
-with lib;
 let
-installSanePath = path: ''
+  inherit (lib)
+    concatMapStrings
+    ;
+
+  installSanePath = path: ''
       if [ -e "${path}/lib/sane" ]; then
         find "${path}/lib/sane" -maxdepth 1 -not -type d | while read backend; do
           symlink "$backend" "$out/lib/sane/$(basename "$backend")"
