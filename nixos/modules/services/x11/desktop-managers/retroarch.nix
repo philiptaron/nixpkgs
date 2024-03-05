@@ -1,12 +1,22 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    escapeShellArgs
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
 
-let cfg = config.services.xserver.desktopManager.retroarch;
+  cfg = config.services.xserver.desktopManager.retroarch;
 
 in {
   options.services.xserver.desktopManager.retroarch = {
-    enable = mkEnableOption (lib.mdDoc "RetroArch");
+    enable = mkEnableOption (mdDoc "RetroArch");
 
     package = mkPackageOption pkgs "retroarch" {
       example = "retroarch-full";
@@ -16,7 +26,7 @@ in {
       type = types.listOf types.str;
       default = [ ];
       example = [ "--verbose" "--host" ];
-      description = lib.mdDoc "Extra arguments to pass to RetroArch.";
+      description = mdDoc "Extra arguments to pass to RetroArch.";
     };
   };
 
