@@ -1,13 +1,21 @@
 { config, pkgs, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
 
-let cfg = config.services.ombi;
+  cfg = config.services.ombi;
 
-in {
+in
+{
   options = {
     services.ombi = {
-      enable = mkEnableOption (lib.mdDoc ''
+      enable = mkEnableOption (mdDoc ''
         Ombi.
         Optionally see <https://docs.ombi.app/info/reverse-proxy>
         on how to set up a reverse proxy
@@ -16,31 +24,31 @@ in {
       dataDir = mkOption {
         type = types.str;
         default = "/var/lib/ombi";
-        description = lib.mdDoc "The directory where Ombi stores its data files.";
+        description = mdDoc "The directory where Ombi stores its data files.";
       };
 
       port = mkOption {
         type = types.port;
         default = 5000;
-        description = lib.mdDoc "The port for the Ombi web interface.";
+        description = mdDoc "The port for the Ombi web interface.";
       };
 
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Open ports in the firewall for the Ombi web interface.";
+        description = mdDoc "Open ports in the firewall for the Ombi web interface.";
       };
 
       user = mkOption {
         type = types.str;
         default = "ombi";
-        description = lib.mdDoc "User account under which Ombi runs.";
+        description = mdDoc "User account under which Ombi runs.";
       };
 
       group = mkOption {
         type = types.str;
         default = "ombi";
-        description = lib.mdDoc "Group under which Ombi runs.";
+        description = mdDoc "Group under which Ombi runs.";
       };
     };
   };
