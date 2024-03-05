@@ -1,11 +1,19 @@
 { config, lib, pkgs, ... }:
-with lib;
+
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+in
 {
   options.services.sdrplayApi = {
     enable = mkOption {
       default = false;
       example = true;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to enable the SDRplay API service and udev rules.
 
         ::: {.note}
@@ -13,7 +21,7 @@ with lib;
         `soapysdr-with-plugins = super.soapysdr.override { extraPackages = [ super.soapysdrplay ]; };`
         :::
       '';
-      type = lib.types.bool;
+      type = types.bool;
     };
   };
 
