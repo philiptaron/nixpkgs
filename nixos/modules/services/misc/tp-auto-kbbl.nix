@@ -1,22 +1,33 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    concatStringsSep
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
 
-let cfg = config.services.tp-auto-kbbl;
+  cfg = config.services.tp-auto-kbbl;
 
-in {
+in
+{
   meta.maintainers = with maintainers; [ sebtm ];
 
   options = {
     services.tp-auto-kbbl = {
-      enable = mkEnableOption (lib.mdDoc "auto toggle keyboard back-lighting on Thinkpads (and maybe other laptops) for Linux");
+      enable = mkEnableOption (mdDoc "auto toggle keyboard back-lighting on Thinkpads (and maybe other laptops) for Linux");
 
       package = mkPackageOption pkgs "tp-auto-kbbl" { };
 
       arguments = mkOption {
         type = types.listOf types.str;
         default = [ ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of arguments appended to `./tp-auto-kbbl --device [device] [arguments]`
         '';
       };
@@ -24,7 +35,7 @@ in {
       device = mkOption {
         type = types.str;
         default = "/dev/input/event0";
-        description = lib.mdDoc "Device watched for activities.";
+        description = mdDoc "Device watched for activities.";
       };
 
     };
