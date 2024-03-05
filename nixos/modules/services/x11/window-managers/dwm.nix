@@ -1,8 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkPackageOption
+    singleton
+    ;
 
   cfg = config.services.xserver.windowManager.dwm;
 
@@ -14,7 +19,7 @@ in
 
   options = {
     services.xserver.windowManager.dwm = {
-      enable = mkEnableOption (lib.mdDoc "dwm");
+      enable = mkEnableOption (mdDoc "dwm");
       package = mkPackageOption pkgs "dwm" {
         example = ''
           pkgs.dwm.overrideAttrs (oldAttrs: rec {
