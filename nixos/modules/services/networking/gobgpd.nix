@@ -1,19 +1,25 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    ;
+
   cfg = config.services.gobgpd;
   format = pkgs.formats.toml { };
   confFile = format.generate "gobgpd.conf" cfg.settings;
 in {
   options.services.gobgpd = {
-    enable = mkEnableOption (lib.mdDoc "GoBGP Routing Daemon");
+    enable = mkEnableOption (mdDoc "GoBGP Routing Daemon");
 
     settings = mkOption {
       type = format.type;
       default = { };
-      description = lib.mdDoc ''
+      description = mdDoc ''
         GoBGP configuration. Refer to
         <https://github.com/osrg/gobgp#documentation>
         for details on supported values.
