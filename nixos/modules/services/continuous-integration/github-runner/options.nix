@@ -3,7 +3,15 @@
 , ...
 }:
 
-with lib;
+let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkOption
+    mkPackageOption
+    types
+    ;
+in
 {
   options.services.github-runners = mkOption {
     description = mdDoc ''
