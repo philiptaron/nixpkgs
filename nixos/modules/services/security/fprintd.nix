@@ -1,8 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.services.fprintd;
   fprintdPkg = if cfg.tod.enable then pkgs.fprintd-tod else pkgs.fprintd;
@@ -18,25 +24,25 @@ in
 
     services.fprintd = {
 
-      enable = mkEnableOption (lib.mdDoc "fprintd daemon and PAM module for fingerprint readers handling");
+      enable = mkEnableOption (mdDoc "fprintd daemon and PAM module for fingerprint readers handling");
 
       package = mkOption {
         type = types.package;
         default = fprintdPkg;
         defaultText = literalExpression "if config.services.fprintd.tod.enable then pkgs.fprintd-tod else pkgs.fprintd";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           fprintd package to use.
         '';
       };
 
       tod = {
 
-        enable = mkEnableOption (lib.mdDoc "Touch OEM Drivers library support");
+        enable = mkEnableOption (mdDoc "Touch OEM Drivers library support");
 
         driver = mkOption {
           type = types.package;
           example = literalExpression "pkgs.libfprint-2-tod1-goodix";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Touch OEM Drivers (TOD) package to use.
           '';
         };
