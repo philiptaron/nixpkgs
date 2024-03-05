@@ -1,8 +1,20 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrValues
+    filter
+    getBin
+    listToAttrs
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.pppd;
 in
 {
@@ -12,13 +24,13 @@ in
 
   options = {
     services.pppd = {
-      enable = mkEnableOption (lib.mdDoc "pppd");
+      enable = mkEnableOption (mdDoc "pppd");
 
       package = mkPackageOption pkgs "ppp" { };
 
       peers = mkOption {
         default = {};
-        description = lib.mdDoc "pppd peers.";
+        description = mdDoc "pppd peers.";
         type = types.attrsOf (types.submodule (
           { name, ... }:
           {
@@ -27,27 +39,27 @@ in
                 type = types.str;
                 default = name;
                 example = "dialup";
-                description = lib.mdDoc "Name of the PPP peer.";
+                description = mdDoc "Name of the PPP peer.";
               };
 
               enable = mkOption {
                 type = types.bool;
                 default = true;
                 example = false;
-                description = lib.mdDoc "Whether to enable this PPP peer.";
+                description = mdDoc "Whether to enable this PPP peer.";
               };
 
               autostart = mkOption {
                 type = types.bool;
                 default = true;
                 example = false;
-                description = lib.mdDoc "Whether the PPP session is automatically started at boot time.";
+                description = mdDoc "Whether the PPP session is automatically started at boot time.";
               };
 
               config = mkOption {
                 type = types.lines;
                 default = "";
-                description = lib.mdDoc "pppd configuration for this peer, see the pppd(8) man page.";
+                description = mdDoc "pppd configuration for this peer, see the pppd(8) man page.";
               };
             };
           }));
