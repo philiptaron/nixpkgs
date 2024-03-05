@@ -1,8 +1,22 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    filterAttrs
+    getAttrFromPath
+    maintainers
+    mapAttrsToList
+    mdDoc
+    mkChangedOptionModule
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalAttrs
+    optionalString
+    types
+    ;
 
   cfg = config.services.calibre-server;
 
@@ -32,13 +46,13 @@ in
   options = {
     services.calibre-server = {
 
-      enable = mkEnableOption (lib.mdDoc "calibre-server");
-      package = lib.mkPackageOption pkgs "calibre" { };
+      enable = mkEnableOption (mdDoc "calibre-server");
+      package = mkPackageOption pkgs "calibre" { };
 
       libraries = mkOption {
         type = types.listOf types.path;
         default = [ "/var/lib/calibre-server" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Make sure each library path is initialized before service startup.
           The directories of the libraries to serve. They must be readable for the user under which the server runs.
           See the [calibredb documentation](${documentationLink}/generated/en/calibredb.html#add) for details.
@@ -48,20 +62,20 @@ in
       user = mkOption {
         type = types.str;
         default = "calibre-server";
-        description = lib.mdDoc "The user under which calibre-server runs.";
+        description = mdDoc "The user under which calibre-server runs.";
       };
 
       group = mkOption {
         type = types.str;
         default = "calibre-server";
-        description = lib.mdDoc "The group under which calibre-server runs.";
+        description = mdDoc "The group under which calibre-server runs.";
       };
 
       host = mkOption {
         type = types.str;
         default = "0.0.0.0";
         example = "::1";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The interface on which to listen for connections.
           See the [calibre-server documentation](${generatedDocumentationLink}#cmdoption-calibre-server-listen-on) for details.
         '';
@@ -70,7 +84,7 @@ in
       port = mkOption {
         default = 8080;
         type = types.port;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The port on which to listen for connections.
           See the [calibre-server documentation](${generatedDocumentationLink}#cmdoption-calibre-server-port) for details.
         '';
@@ -80,7 +94,7 @@ in
         enable = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Password based authentication to access the server.
             See the [calibre-server documentation](${generatedDocumentationLink}#cmdoption-calibre-server-enable-auth) for details.
           '';
@@ -89,7 +103,7 @@ in
         mode = mkOption {
           type = types.enum [ "auto" "basic" "digest" ];
           default = "auto";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Choose the type of authentication used.
             Set the HTTP authentication mode used by the server.
             See the [calibre-server documentation](${generatedDocumentationLink}#cmdoption-calibre-server-auth-mode) for details.
@@ -99,7 +113,7 @@ in
         userDb = mkOption {
           default = null;
           type = types.nullOr types.path;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Choose users database file to use for authentication.
             Make sure users database file is initialized before service startup.
             See the [calibre-server documentation](${documentationLink}/server.html#managing-user-accounts-from-the-command-line-only) for details.
@@ -118,7 +132,7 @@ in
       serviceConfig = {
         User = cfg.user;
         Restart = "always";
-        ExecStart = "${cfg.package}/bin/calibre-server ${lib.concatStringsSep " " cfg.libraries} ${execFlags}";
+        ExecStart = "${cfg.package}/bin/calibre-server ${concatStringsSep " " cfg.libraries} ${execFlags}";
       };
 
     };
@@ -142,5 +156,5 @@ in
 
   };
 
-  meta.maintainers = with lib.maintainers; [ gaelreyrol ];
+  meta.maintainers = with maintainers; [ gaelreyrol ];
 }
