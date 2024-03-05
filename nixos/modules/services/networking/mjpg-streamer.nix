@@ -1,8 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalAttrs
+    types
+    ;
 
   cfg = config.services.mjpg-streamer;
 
@@ -12,12 +18,12 @@ in {
 
     services.mjpg-streamer = {
 
-      enable = mkEnableOption (lib.mdDoc "mjpg-streamer webcam streamer");
+      enable = mkEnableOption (mdDoc "mjpg-streamer webcam streamer");
 
       inputPlugin = mkOption {
         type = types.str;
         default = "input_uvc.so";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Input plugin. See plugins documentation for more information.
         '';
       };
@@ -25,7 +31,7 @@ in {
       outputPlugin = mkOption {
         type = types.str;
         default = "output_http.so -w @www@ -n -p 5050";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Output plugin. `@www@` is substituted for default mjpg-streamer www directory.
           See plugins documentation for more information.
         '';
@@ -34,13 +40,13 @@ in {
       user = mkOption {
         type = types.str;
         default = "mjpg-streamer";
-        description = lib.mdDoc "mjpg-streamer user name.";
+        description = mdDoc "mjpg-streamer user name.";
       };
 
       group = mkOption {
         type = types.str;
         default = "video";
-        description = lib.mdDoc "mjpg-streamer group name.";
+        description = mdDoc "mjpg-streamer group name.";
       };
 
     };
