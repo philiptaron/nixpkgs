@@ -1,8 +1,13 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.services.ocserv;
 
@@ -10,12 +15,12 @@ in
 
 {
   options.services.ocserv = {
-    enable = mkEnableOption (lib.mdDoc "ocserv");
+    enable = mkEnableOption (mdDoc "ocserv");
 
     config = mkOption {
       type = types.lines;
 
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Configuration content to start an OCServ server.
 
         For a full configuration reference,please refer to the online documentation
