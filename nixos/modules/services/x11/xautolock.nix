@@ -1,16 +1,27 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    forEach
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionals
+    substring
+    types
+    ;
+
   cfg = config.services.xserver.xautolock;
 in
   {
     options = {
       services.xserver.xautolock = {
-        enable = mkEnableOption (lib.mdDoc "xautolock");
-        enableNotifier = mkEnableOption (lib.mdDoc "xautolock.notify") // {
-          description = lib.mdDoc ''
+        enable = mkEnableOption (mdDoc "xautolock");
+        enableNotifier = mkEnableOption (mdDoc "xautolock.notify") // {
+          description = mdDoc ''
             Whether to enable the notifier feature of xautolock.
             This publishes a notification before the autolock.
           '';
@@ -20,7 +31,7 @@ in
           default = 15;
           type = types.int;
 
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Idle time (in minutes) to wait until xautolock locks the computer.
           '';
         };
@@ -31,7 +42,7 @@ in
           example = literalExpression ''"''${pkgs.i3lock}/bin/i3lock -i /path/to/img"'';
           type = types.str;
 
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The script to use when automatically locking the computer.
           '';
         };
@@ -41,7 +52,7 @@ in
           example = literalExpression ''"''${pkgs.i3lock}/bin/i3lock -i /path/to/img"'';
           type = types.nullOr types.str;
 
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The script to use when manually locking the computer with {command}`xautolock -locknow`.
           '';
         };
@@ -50,7 +61,7 @@ in
           default = 10;
           type = types.int;
 
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Time (in seconds) before the actual lock when the notification about the pending lock should be published.
           '';
         };
@@ -60,7 +71,7 @@ in
           example = literalExpression ''"''${pkgs.libnotify}/bin/notify-send 'Locking in 10 seconds'"'';
           type = types.nullOr types.str;
 
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Notification script to be used to warn about the pending autolock.
           '';
         };
@@ -70,7 +81,7 @@ in
           example = "/run/current-system/systemd/bin/systemctl suspend";
           type = types.nullOr types.str;
 
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The script to use when nothing has happened for as long as {option}`killtime`
           '';
         };
@@ -79,7 +90,7 @@ in
           default = 20; # default according to `man xautolock`
           type = types.int;
 
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Minutes xautolock waits until it executes the script specified in {option}`killer`
             (Has to be at least 10 minutes)
           '';
@@ -89,7 +100,7 @@ in
           type = types.listOf types.str;
           default = [ ];
           example = [ "-detectsleep" ];
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Additional command-line arguments to pass to
             {command}`xautolock`.
           '';
@@ -104,7 +115,7 @@ in
         wantedBy = [ "graphical-session.target" ];
         partOf = [ "graphical-session.target" ];
         serviceConfig = with lib; {
-          ExecStart = strings.concatStringsSep " " ([
+          ExecStart = concatStringsSep " " ([
             "${pkgs.xautolock}/bin/xautolock"
             "-noclose"
             "-time ${toString cfg.time}"
@@ -130,7 +141,7 @@ in
           assertion = cfg.killer != null -> cfg.killtime >= 10;
           message = "killtime has to be at least 10 minutes according to `man xautolock`";
         }
-      ] ++ (lib.forEach [ "locker" "notifier" "nowlocker" "killer" ]
+      ] ++ (forEach [ "locker" "notifier" "nowlocker" "killer" ]
         (option:
         {
           assertion = cfg.${option} != null -> builtins.substring 0 1 cfg.${option} == "/";
