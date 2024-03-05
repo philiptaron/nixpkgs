@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkDefault
+    mkIf
+    mkOption
+    optional
+    types
+    ;
+
   cfg = config.services.cloud-init;
   path = with pkgs; [
     cloud-init
