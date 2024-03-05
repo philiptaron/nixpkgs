@@ -1,25 +1,32 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
 
-let cfg     = config.services.tvheadend;
+  cfg     = config.services.tvheadend;
     pidFile = "${config.users.users.tvheadend.home}/tvheadend.pid";
 in
 
 {
   options = {
     services.tvheadend = {
-      enable = mkEnableOption (lib.mdDoc "Tvheadend");
+      enable = mkEnableOption (mdDoc "Tvheadend");
       httpPort = mkOption {
         type        = types.int;
         default     = 9981;
-        description = lib.mdDoc "Port to bind HTTP to.";
+        description = mdDoc "Port to bind HTTP to.";
       };
 
       htspPort = mkOption {
         type        = types.int;
         default     = 9982;
-        description = lib.mdDoc "Port to bind HTSP to.";
+        description = mdDoc "Port to bind HTSP to.";
       };
     };
   };
