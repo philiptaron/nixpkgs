@@ -1,18 +1,31 @@
 { lib, pkgs, config, ... }:
-with lib;
 let
+  inherit (lib)
+    concatStringsSep
+    escapeShellArgs
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    optional
+    optionalString
+    types
+    ;
+
   cfg = config.services.hledger-web;
 in {
   options.services.hledger-web = {
 
-    enable = mkEnableOption (lib.mdDoc "hledger-web service");
+    enable = mkEnableOption (mdDoc "hledger-web service");
 
-    serveApi = mkEnableOption (lib.mdDoc "serving only the JSON web API, without the web UI");
+    serveApi = mkEnableOption (mdDoc "serving only the JSON web API, without the web UI");
 
     host = mkOption {
       type = types.str;
       default = "127.0.0.1";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Address to listen on.
       '';
     };
@@ -21,7 +34,7 @@ in {
       type = types.port;
       default = 5000;
       example = 80;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Port to listen on.
       '';
     };
@@ -30,21 +43,21 @@ in {
       view = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable the view capability.
         '';
       };
       add = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable the add capability.
         '';
       };
       manage = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable the manage capability.
         '';
       };
@@ -53,7 +66,7 @@ in {
     stateDir = mkOption {
       type = types.path;
       default = "/var/lib/hledger-web";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path the service has access to. If left as the default value this
         directory will automatically be created before the hledger-web server
         starts, otherwise the sysadmin is responsible for ensuring the
@@ -64,7 +77,7 @@ in {
     journalFiles = mkOption {
       type = types.listOf types.str;
       default = [ ".hledger.journal" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Paths to journal files relative to {option}`services.hledger-web.stateDir`.
       '';
     };
@@ -73,7 +86,7 @@ in {
       type = with types; nullOr str;
       default = null;
       example = "https://example.org";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Base URL, when sharing over a network.
       '';
     };
@@ -82,7 +95,7 @@ in {
       type = types.listOf types.str;
       default = [];
       example = [ "--forecast" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra command line arguments to pass to hledger-web.
       '';
     };
@@ -138,5 +151,5 @@ in {
 
   };
 
-  meta.maintainers = with lib.maintainers; [ marijanp erictapen ];
+  meta.maintainers = with maintainers; [ marijanp erictapen ];
 }
