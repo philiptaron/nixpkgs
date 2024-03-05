@@ -1,8 +1,13 @@
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    mdDoc
+    mkOption
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.influxdb;
 in
 {
@@ -12,13 +17,13 @@ in
       type = types.str;
       default = "5m";
       example = "10m";
-      description = lib.mdDoc "How long a sample is valid for";
+      description = mdDoc "How long a sample is valid for";
     };
     udpBindAddress = mkOption {
       type = types.str;
       default = ":9122";
       example = "192.0.2.1:9122";
-      description = lib.mdDoc "Address on which to listen for udp packets";
+      description = mdDoc "Address on which to listen for udp packets";
     };
   };
   serviceOpts = {
