@@ -1,9 +1,14 @@
 { config, pkgs, lib, ... }:
 
 with pkgs;
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.services.riemann-tools;
 
@@ -23,21 +28,21 @@ in {
       enableHealth = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable the riemann-health daemon.
         '';
       };
       riemannHost = mkOption {
         type = types.str;
         default = "127.0.0.1";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Address of the host riemann node. Defaults to localhost.
         '';
       };
       extraArgs = mkOption {
         type = types.listOf types.str;
         default = [];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A list of commandline-switches forwarded to a riemann-tool.
           See for example `riemann-health --help` for available options.
         '';
