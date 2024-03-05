@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    boolToString
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
 
   cfg = config.services.ircdHybrid;
 
@@ -36,12 +44,12 @@ in
 
     services.ircdHybrid = {
 
-      enable = mkEnableOption (lib.mdDoc "IRCD");
+      enable = mkEnableOption (mdDoc "IRCD");
 
       serverName = mkOption {
         default = "hades.arpa";
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           IRCD server name.
         '';
       };
@@ -49,7 +57,7 @@ in
       sid = mkOption {
         default = "0NL";
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           IRCD server unique ID in a net of servers.
         '';
       };
@@ -57,7 +65,7 @@ in
       description = mkOption {
         default = "Hybrid-7 IRC server.";
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           IRCD server description.
         '';
       };
@@ -66,7 +74,7 @@ in
         default = null;
         example = literalExpression "/root/certificates/irc.key";
         type = types.nullOr types.path;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           IRCD server RSA key.
         '';
       };
@@ -75,7 +83,7 @@ in
         default = null;
         example = literalExpression "/root/certificates/irc.pem";
         type = types.nullOr types.path;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           IRCD server SSL certificate. There are some limitations - read manual.
         '';
       };
@@ -84,7 +92,7 @@ in
         default = "<bit-bucket@example.com>";
         type = types.str;
         example = "<name@domain.tld>";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           IRCD server administrator e-mail.
         '';
       };
@@ -93,7 +101,7 @@ in
         default = [];
         example = ["127.0.0.1"];
         type = types.listOf types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra IP's to bind.
         '';
       };
@@ -101,7 +109,7 @@ in
       extraPort = mkOption {
         default = "7117";
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra port to avoid filtering.
         '';
       };
