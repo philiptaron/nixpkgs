@@ -5,10 +5,20 @@
   ...
 }:
 
-with lib;
-
 let
+  inherit (lib)
+    filterAttrsRecursive
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optional
+    types
+    ;
+
   cfg = config.services.bcg;
+
   configFile = (pkgs.formats.yaml {}).generate "bcg.conf.yaml" (
     filterAttrsRecursive (n: v: v != null) {
       inherit (cfg) device name mqtt;
@@ -154,7 +164,7 @@ in
     in {
       description = "BigClown Gateway";
       wantedBy = [ "multi-user.target" ];
-      wants = [ "network-online.target" ] ++ lib.optional config.services.mosquitto.enable "mosquitto.service";
+      wants = [ "network-online.target" ] ++ optional config.services.mosquitto.enable "mosquitto.service";
       after = [ "network-online.target" ];
       preStart = ''
         umask 077
