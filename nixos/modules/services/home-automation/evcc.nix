@@ -4,9 +4,17 @@
 , ...
 }:
 
-with lib;
-
 let
+  inherit (lib)
+    escapeShellArgs
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.evcc;
 
   format = pkgs.formats.yaml {};
@@ -16,22 +24,22 @@ let
 in
 
 {
-  meta.maintainers = with lib.maintainers; [ hexa ];
+  meta.maintainers = with maintainers; [ hexa ];
 
   options.services.evcc = with types; {
-    enable = mkEnableOption (lib.mdDoc "EVCC, the extensible EV Charge Controller with PV integration");
+    enable = mkEnableOption (mdDoc "EVCC, the extensible EV Charge Controller with PV integration");
 
     extraArgs = mkOption {
       type = listOf str;
       default = [];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra arguments to pass to the evcc executable.
       '';
     };
 
     settings = mkOption {
       type = format.type;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         evcc configuration as a Nix attribute set.
 
         Check for possible options in the sample [evcc.dist.yaml](https://github.com/andig/evcc/blob/${package.version}/evcc.dist.yaml].
