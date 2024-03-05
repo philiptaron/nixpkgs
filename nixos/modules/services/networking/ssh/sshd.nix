@@ -1,8 +1,42 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrNames
+    attrValues
+    concatMap
+    concatMapStrings
+    concatMapStringsSep
+    concatStringsSep
+    elem
+    escapeShellArg
+    filter
+    filterAttrs
+    flip
+    forEach
+    generators
+    groupBy
+    isInt
+    isList
+    isString
+    length
+    listToAttrs
+    literalExpression
+    mapAttrs
+    mdDoc
+    mkAliasOptionModuleMD
+    mkDefault
+    mkIf
+    mkOption
+    mkOrder
+    mkRenamedOptionModule
+    nameValuePair
+    optional
+    optionals
+    optionalString
+    toLower
+    types
+    ;
 
   # The splicing information needed for nativeBuildInputs isn't available
   # on the derivations likely to be used as `cfgc.package`.
@@ -21,10 +55,10 @@ let
             else if isString   v then v
             else if true  ==   v then "yes"
             else if false ==   v then "no"
-            else throw "unsupported type ${builtins.typeOf v}: ${(lib.generators.toPretty {}) v}";
+            else throw "unsupported type ${builtins.typeOf v}: ${(generators.toPretty {}) v}";
 
       base = pkgs.formats.keyValue {
-        mkKeyValue = lib.generators.mkKeyValueDefault { inherit mkValueString; } " ";
+        mkKeyValue = generators.mkKeyValueDefault { inherit mkValueString; } " ";
       };
       # OpenSSH is very inconsistent with options that can take multiple values.
       # For some of them, they can simply appear multiple times and are appended, for others the
@@ -41,7 +75,7 @@ let
           if isList val then
             if elem key commaSeparated then concatStringsSep "," val
             else if elem key spaceSeparated then concatStringsSep " " val
-            else throw "list value for unknown key ${key}: ${(lib.generators.toPretty {}) val}"
+            else throw "list value for unknown key ${key}: ${(generators.toPretty {}) val}"
           else
             val
           ) value;
@@ -68,7 +102,7 @@ let
       keys = mkOption {
         type = types.listOf types.singleLineStr;
         default = [];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A list of verbatim OpenSSH public keys that should be added to the
           user's authorized keys. The keys are added to a file that the SSH
           daemon reads in addition to the the user's authorized_keys file.
@@ -86,7 +120,7 @@ let
       keyFiles = mkOption {
         type = types.listOf types.path;
         default = [];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A list of files each containing one OpenSSH public key that should be
           added to the user's authorized keys. The contents of the files are
           read at build time and added to a file that the SSH daemon reads in
@@ -116,7 +150,7 @@ let
       mode = "0444";
       source = pkgs.writeText "${u.name}-authorized_keys" ''
         ${concatStringsSep "\n" u.openssh.authorizedKeys.keys}
-        ${concatMapStrings (f: readFile f + "\n") u.openssh.authorizedKeys.keyFiles}
+        ${concatMapStrings (f: builtins.readFile f + "\n") u.openssh.authorizedKeys.keyFiles}
       '';
     };
     usersWithKeys = attrValues (flip filterAttrs config.users.users (n: u:
@@ -163,7 +197,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the OpenSSH secure shell daemon, which
           allows secure remote logins.
         '';
@@ -172,7 +206,7 @@ in
       startWhenNeeded = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If set, {command}`sshd` is socket-activated; that
           is, instead of having it permanently running as a daemon,
           systemd will start an instance for each incoming connection.
@@ -182,7 +216,7 @@ in
       allowSFTP = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the SFTP subsystem in the SSH daemon.  This
           enables the use of commands such as {command}`sftp` and
           {command}`sshfs`.
@@ -192,7 +226,7 @@ in
       sftpServerExecutable = mkOption {
         type = types.str;
         example = "internal-sftp";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The sftp server executable.  Can be a path or "internal-sftp" to use
           the sftp server built into the sshd binary.
         '';
@@ -202,7 +236,7 @@ in
         type = with types; listOf str;
         default = [];
         example = [ "-f AUTHPRIV" "-l INFO" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Commandline flags to add to sftp-server.
         '';
       };
@@ -210,7 +244,7 @@ in
       ports = mkOption {
         type = types.listOf types.port;
         default = [22];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Specifies on which ports the SSH daemon listens.
         '';
       };
@@ -218,7 +252,7 @@ in
       openFirewall = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to automatically open the specified ports in the firewall.
         '';
       };
@@ -229,14 +263,14 @@ in
             addr = mkOption {
               type = types.nullOr types.str;
               default = null;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Host, IPv4 or IPv6 address to listen to.
               '';
             };
             port = mkOption {
               type = types.nullOr types.int;
               default = null;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Port to listen to.
               '';
             };
@@ -244,7 +278,7 @@ in
         });
         default = [];
         example = [ { addr = "192.168.3.1"; port = 22; } { addr = "0.0.0.0"; port = 64022; } ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of addresses and ports to listen on (ListenAddress directive
           in config). If port is not specified for address sshd will listen
           on all ports specified by `ports` option.
@@ -264,7 +298,7 @@ in
           [ { type = "rsa"; bits = 4096; path = "/etc/ssh/ssh_host_rsa_key"; rounds = 100; openSSHFormat = true; }
             { type = "ed25519"; path = "/etc/ssh/ssh_host_ed25519_key"; rounds = 100; comment = "key comment"; }
           ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           NixOS can automatically generate SSH host keys.  This option
           specifies the path, type and size of each key.  See
           {manpage}`ssh-keygen(1)` for supported types
@@ -275,7 +309,7 @@ in
       banner = mkOption {
         type = types.nullOr types.lines;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Message to display to the remote user before authentication is allowed.
         '';
       };
@@ -283,7 +317,7 @@ in
       authorizedKeysFiles = mkOption {
         type = types.listOf types.str;
         default = [];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Specify the rules for which files to read on the host.
 
           This is an advanced option. If you're looking to configure user
@@ -299,7 +333,7 @@ in
       authorizedKeysCommand = mkOption {
         type = types.str;
         default = "none";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Specifies a program to be used to look up the user's public
           keys. The program must be owned by root, not writable by group
           or others and specified by an absolute path.
@@ -309,7 +343,7 @@ in
       authorizedKeysCommandUser = mkOption {
         type = types.str;
         default = "nobody";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Specifies the user under whose account the AuthorizedKeysCommand
           is run. It is recommended to use a dedicated user that has no
           other role on the host than running authorized keys commands.
@@ -319,7 +353,7 @@ in
 
 
       settings = mkOption {
-        description = lib.mdDoc "Configuration for `sshd_config(5)`.";
+        description = mdDoc "Configuration for `sshd_config(5)`.";
         default = { };
         example = literalExpression ''
           {
@@ -333,7 +367,7 @@ in
             AuthorizedPrincipalsFile = mkOption {
               type = types.str;
               default = "none"; # upstream default
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Specifies a file that lists principal names that are accepted for certificate authentication. The default
                 is `"none"`, i.e. not to use	a principals file.
               '';
@@ -341,7 +375,7 @@ in
             LogLevel = mkOption {
               type = types.enum [ "QUIET" "FATAL" "ERROR" "INFO" "VERBOSE" "DEBUG" "DEBUG1" "DEBUG2" "DEBUG3" ];
               default = "INFO"; # upstream default
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Gives the verbosity level that is used when logging messages from sshd(8). Logging with a DEBUG level
                 violates the privacy of users and is not recommended.
               '';
@@ -350,7 +384,7 @@ in
               type = types.bool;
               # apply if cfg.useDns then "yes" else "no"
               default = false;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Specifies whether sshd(8) should look up the remote host name, and to check that the resolved host name for
                 the remote IP address maps back to the very same IP address.
                 If this option is set to no (the default) then only addresses and not host names may be used in
@@ -360,35 +394,35 @@ in
             X11Forwarding = mkOption {
               type = types.bool;
               default = false;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Whether to allow X11 connections to be forwarded.
               '';
             };
             PasswordAuthentication = mkOption {
               type = types.bool;
               default = true;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Specifies whether password authentication is allowed.
               '';
             };
             PermitRootLogin = mkOption {
               default = "prohibit-password";
               type = types.enum ["yes" "without-password" "prohibit-password" "forced-commands-only" "no"];
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Whether the root user can login using ssh.
               '';
             };
             KbdInteractiveAuthentication = mkOption {
               type = types.bool;
               default = true;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Specifies whether keyboard-interactive authentication is allowed.
               '';
             };
             GatewayPorts = mkOption {
               type = types.str;
               default = "no";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Specifies whether remote hosts are allowed to connect to
                 ports forwarded for the client.  See
                 {manpage}`sshd_config(5)`.
@@ -402,7 +436,7 @@ in
                 "curve25519-sha256@libssh.org"
                 "diffie-hellman-group-exchange-sha256"
               ];
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Allowed key exchange algorithms
 
                 Uses the lower bound recommended in both
@@ -418,7 +452,7 @@ in
                 "hmac-sha2-256-etm@openssh.com"
                 "umac-128-etm@openssh.com"
               ];
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Allowed MACs
 
                 Defaults to recommended settings from both
@@ -430,7 +464,7 @@ in
             StrictModes = mkOption {
               type = types.bool;
               default = true;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Whether sshd should check file modes and ownership of directories
               '';
             };
@@ -444,7 +478,7 @@ in
                 "aes192-ctr"
                 "aes128-ctr"
               ];
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Allowed ciphers
 
                 Defaults to recommended settings from both
@@ -456,7 +490,7 @@ in
             AllowUsers = mkOption {
               type = with types; nullOr (listOf str);
               default = null;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 If specified, login is allowed only for the listed users.
                 See {manpage}`sshd_config(5)` for details.
               '';
@@ -464,7 +498,7 @@ in
             DenyUsers = mkOption {
               type = with types; nullOr (listOf str);
               default = null;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 If specified, login is denied for all listed users. Takes
                 precedence over [](#opt-services.openssh.settings.AllowUsers).
                 See {manpage}`sshd_config(5)` for details.
@@ -473,7 +507,7 @@ in
             AllowGroups = mkOption {
               type = with types; nullOr (listOf str);
               default = null;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 If specified, login is allowed only for users part of the
                 listed groups.
                 See {manpage}`sshd_config(5)` for details.
@@ -482,7 +516,7 @@ in
             DenyGroups = mkOption {
               type = with types; nullOr (listOf str);
               default = null;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 If specified, login is denied for all users part of the listed
                 groups. Takes precedence over
                 [](#opt-services.openssh.settings.AllowGroups). See
@@ -496,13 +530,13 @@ in
       extraConfig = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc "Verbatim contents of {file}`sshd_config`.";
+        description = mdDoc "Verbatim contents of {file}`sshd_config`.";
       };
 
       moduliFile = mkOption {
         example = "/etc/my-local-ssh-moduli;";
         type = types.path;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Path to `moduli` file to install in
           `/etc/ssh/moduli`. If this option is unset, then
           the `moduli` file shipped with OpenSSH will be used.
@@ -693,17 +727,17 @@ in
                   (let
                     duplicates =
                       # Filter out the groups with more than 1 element
-                      lib.filter (l: lib.length l > 1) (
+                      filter (l: length l > 1) (
                         # Grab the groups, we don't care about the group identifiers
-                        lib.attrValues (
+                        attrValues (
                           # Group the settings that are the same in lower case
-                          lib.groupBy lib.strings.toLower (attrNames cfg.settings)
+                          groupBy toLower (attrNames cfg.settings)
                         )
                       );
-                    formattedDuplicates = lib.concatMapStringsSep ", " (dupl: "(${lib.concatStringsSep ", " dupl})") duplicates;
+                    formattedDuplicates = concatMapStringsSep ", " (dupl: "(${concatStringsSep ", " dupl})") duplicates;
                   in
                   {
-                    assertion = lib.length duplicates == 0;
+                    assertion = length duplicates == 0;
                     message = ''Duplicate sshd config key; does your capitalization match the option's? Duplicate keys: ${formattedDuplicates}'';
                   })]
       ++ forEach cfg.listenAddresses ({ addr, ... }: {
