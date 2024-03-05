@@ -1,22 +1,31 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalString
+    singleton
+    types
+    ;
+
   cfg = config.services.xserver.windowManager.herbstluftwm;
 in
 
 {
   options = {
     services.xserver.windowManager.herbstluftwm = {
-      enable = mkEnableOption (lib.mdDoc "herbstluftwm");
+      enable = mkEnableOption (mdDoc "herbstluftwm");
 
       package = mkPackageOption pkgs "herbstluftwm" { };
 
       configFile = mkOption {
         default     = null;
         type        = with types; nullOr path;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Path to the herbstluftwm configuration file.  If left at the
           default value, $XDG_CONFIG_HOME/herbstluftwm/autostart will
           be used.
