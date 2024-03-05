@@ -151,8 +151,6 @@ information about the change to the exporter definition similar to
 ```
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
   cfg = config.services.prometheus.exporters.nginx;
 in
