@@ -1,8 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    escapeShellArgs
+    literalExpression
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.prometheus.alertmanagerIrcRelay;
 
   configFormat = pkgs.formats.yaml { };
