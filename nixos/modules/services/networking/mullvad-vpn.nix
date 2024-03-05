@@ -1,14 +1,23 @@
 { config, lib, pkgs, ... }:
 let
   cfg = config.services.mullvad-vpn;
+
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    optional
+    types
+    ;
 in
-with lib;
 {
   options.services.mullvad-vpn = {
     enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         This option enables Mullvad VPN daemon.
         This sets {option}`networking.firewall.checkReversePath` to "loose", which might be undesirable for security.
       '';
@@ -17,7 +26,7 @@ with lib;
     enableExcludeWrapper = mkOption {
       type = types.bool;
       default = true;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         This option activates the wrapper that allows the use of mullvad-exclude.
         Might have minor security impact, so consider disabling if you do not use the feature.
       '';
@@ -64,7 +73,7 @@ with lib;
         # Needed for ping
         "/run/wrappers"
         # See https://github.com/NixOS/nixpkgs/issues/262681
-      ] ++ (lib.optional config.networking.resolvconf.enable
+      ] ++ (optional config.networking.resolvconf.enable
         config.networking.resolvconf.package);
       startLimitBurst = 5;
       startLimitIntervalSec = 20;
