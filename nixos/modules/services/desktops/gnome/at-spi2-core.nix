@@ -2,7 +2,17 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkMerge
+    mkOption
+    mkRenamedOptionModule
+    teams
+    types
+    ;
+in
 
 {
 
@@ -27,7 +37,7 @@ with lib;
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable at-spi2-core, a service for the Assistive Technologies
           available on the GNOME platform.
 
