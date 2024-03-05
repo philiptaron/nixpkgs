@@ -1,8 +1,16 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRemovedOptionModule
+    types
+    ;
+
   cfg = config.services.rsyncd;
   settingsFormat = pkgs.formats.ini { };
   configFile = settingsFormat.generate "rsyncd.conf" cfg.settings;
@@ -10,12 +18,12 @@ in {
   options = {
     services.rsyncd = {
 
-      enable = mkEnableOption (lib.mdDoc "the rsync daemon");
+      enable = mkEnableOption (mdDoc "the rsync daemon");
 
       port = mkOption {
         default = 873;
         type = types.port;
-        description = lib.mdDoc "TCP port the daemon will listen on.";
+        description = mdDoc "TCP port the daemon will listen on.";
       };
 
       settings = mkOption {
@@ -39,7 +47,7 @@ in {
             "secrets file" = "/etc/rsyncd.secrets";
           };
         };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration for rsyncd. See
           {manpage}`rsyncd.conf(5)`.
         '';
@@ -49,7 +57,7 @@ in {
         default = false;
         type = types.bool;
         description =
-          lib.mdDoc "If enabled Rsync will be socket-activated rather than run persistently.";
+          mdDoc "If enabled Rsync will be socket-activated rather than run persistently.";
       };
 
     };
@@ -120,7 +128,7 @@ in {
 
   };
 
-  meta.maintainers = with lib.maintainers; [ ehmry ];
+  meta.maintainers = with maintainers; [ ehmry ];
 
   # TODO: socket activated rsyncd
 
