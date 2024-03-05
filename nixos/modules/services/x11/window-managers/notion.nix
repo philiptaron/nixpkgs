@@ -1,14 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.services.xserver.windowManager.notion;
 in
 
 {
   options = {
-    services.xserver.windowManager.notion.enable = mkEnableOption (lib.mdDoc "notion");
+    services.xserver.windowManager.notion.enable = mkEnableOption (mdDoc "notion");
   };
 
   config = mkIf cfg.enable {
