@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.flexget;
   pkg = cfg.package;
   ymlFile = pkgs.writeText "flexget.yml" ''
@@ -14,7 +22,7 @@ let
 in {
   options = {
     services.flexget = {
-      enable = mkEnableOption (lib.mdDoc "FlexGet daemon");
+      enable = mkEnableOption (mdDoc "FlexGet daemon");
 
       package = mkPackageOption pkgs "flexget" {};
 
@@ -22,34 +30,34 @@ in {
         default = "deluge";
         example = "some_user";
         type = types.str;
-        description = lib.mdDoc "The user under which to run flexget.";
+        description = mdDoc "The user under which to run flexget.";
       };
 
       homeDir = mkOption {
         default = "/var/lib/deluge";
         example = "/home/flexget";
         type = types.path;
-        description = lib.mdDoc "Where files live.";
+        description = mdDoc "Where files live.";
       };
 
       interval = mkOption {
         default = "10m";
         example = "1h";
         type = types.str;
-        description = lib.mdDoc "When to perform a {command}`flexget` run. See {command}`man 7 systemd.time` for the format.";
+        description = mdDoc "When to perform a {command}`flexget` run. See {command}`man 7 systemd.time` for the format.";
       };
 
       systemScheduler = mkOption {
         default = true;
         example = false;
         type = types.bool;
-        description = lib.mdDoc "When true, execute the runs via the flexget-runner.timer. If false, you have to specify the settings yourself in the YML file.";
+        description = mdDoc "When true, execute the runs via the flexget-runner.timer. If false, you have to specify the settings yourself in the YML file.";
       };
 
       config = mkOption {
         default = "";
         type = types.lines;
-        description = lib.mdDoc "The YAML configuration for FlexGet.";
+        description = mdDoc "The YAML configuration for FlexGet.";
       };
     };
   };
