@@ -1,8 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkDefault
+    mkIf
+    mkOption
+    types
+    ;
 
   dmcfg = config.services.xserver.displayManager;
   ldmcfg = dmcfg.lightdm;
@@ -55,7 +60,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable lightdm-mini-greeter as the lightdm greeter.
 
           Note that this greeter starts only the default X session.
@@ -67,7 +72,7 @@ in
       user = mkOption {
         type = types.str;
         default = "root";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The user to login as.
         '';
       };
@@ -75,7 +80,7 @@ in
       extraConfig = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra configuration that should be put in the lightdm-mini-greeter.conf
           configuration file.
         '';
