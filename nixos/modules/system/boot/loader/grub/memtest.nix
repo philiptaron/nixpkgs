@@ -1,9 +1,14 @@
 # This module adds Memtest86+ to the GRUB boot menu.
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   memtest86 = pkgs.memtest86plus;
   cfg = config.boot.loader.grub.memtest86;
 in
@@ -16,7 +21,7 @@ in
       enable = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Make Memtest86+, a memory testing program, available from the GRUB
           boot menu.
         '';
@@ -26,7 +31,7 @@ in
         default = [];
         example = [ "console=ttyS0,115200" ];
         type = types.listOf types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Parameters added to the Memtest86+ command line. As of memtest86+ 5.01
           the following list of (apparently undocumented) parameters are
           accepted:
