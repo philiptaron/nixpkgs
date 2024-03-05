@@ -1,13 +1,29 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    escapeShellArg
+    isInt
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRemovedOptionModule
+    types
+    ;
+
   cfg = config.services.nzbget;
+
   pkg = pkgs.nzbget;
+
   stateDir = "/var/lib/nzbget";
+
   configFile = "${stateDir}/nzbget.conf";
+
   configOpts = concatStringsSep " " (mapAttrsToList (name: value: "-o ${name}=${escapeShellArg (toStr value)}") cfg.settings);
+
   toStr = v:
     if v == true then "yes"
     else if v == false then "no"
@@ -25,24 +41,24 @@ in
 
   options = {
     services.nzbget = {
-      enable = mkEnableOption (lib.mdDoc "NZBGet");
+      enable = mkEnableOption (mdDoc "NZBGet");
 
       user = mkOption {
         type = types.str;
         default = "nzbget";
-        description = lib.mdDoc "User account under which NZBGet runs";
+        description = mdDoc "User account under which NZBGet runs";
       };
 
       group = mkOption {
         type = types.str;
         default = "nzbget";
-        description = lib.mdDoc "Group under which NZBGet runs";
+        description = mdDoc "Group under which NZBGet runs";
       };
 
       settings = mkOption {
         type = with types; attrsOf (oneOf [ bool int str ]);
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           NZBGet configuration, passed via command line using switch -o. Refer to
           <https://github.com/nzbget/nzbget/blob/master/nzbget.conf>
           for details on supported values.
