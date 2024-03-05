@@ -1,25 +1,33 @@
 { config, pkgs, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
 
-let cfg = config.services.nzbhydra2;
+  cfg = config.services.nzbhydra2;
 
 in {
   options = {
     services.nzbhydra2 = {
-      enable = mkEnableOption (lib.mdDoc "NZBHydra2");
+      enable = mkEnableOption (mdDoc "NZBHydra2");
 
       dataDir = mkOption {
         type = types.str;
         default = "/var/lib/nzbhydra2";
-        description = lib.mdDoc "The directory where NZBHydra2 stores its data files.";
+        description = mdDoc "The directory where NZBHydra2 stores its data files.";
       };
 
       openFirewall = mkOption {
         type = types.bool;
         default = false;
         description =
-          lib.mdDoc "Open ports in the firewall for the NZBHydra2 web interface.";
+          mdDoc "Open ports in the firewall for the NZBHydra2 web interface.";
       };
 
       package = mkPackageOption pkgs "nzbhydra2" { };
