@@ -1,8 +1,14 @@
 {pkgs, config, lib, ...}:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.hologram-agent;
 
   cfgFile = pkgs.writeText "hologram-agent.json" (builtins.toJSON {
@@ -14,19 +20,19 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to enable the Hologram agent for AWS instance credentials";
+        description = mdDoc "Whether to enable the Hologram agent for AWS instance credentials";
       };
 
       dialAddress = mkOption {
         type        = types.str;
         default     = "localhost:3100";
-        description = lib.mdDoc "Hologram server and port.";
+        description = mdDoc "Hologram server and port.";
       };
 
       httpPort = mkOption {
         type        = types.str;
         default     = "80";
-        description = lib.mdDoc "Port for metadata service to listen on.";
+        description = mdDoc "Port for metadata service to listen on.";
       };
 
     };
@@ -54,5 +60,5 @@ in {
 
   };
 
-  meta.maintainers = with lib.maintainers; [ ];
+  meta.maintainers = with maintainers; [ ];
 }
