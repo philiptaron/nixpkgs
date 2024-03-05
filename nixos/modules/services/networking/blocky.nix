@@ -1,8 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    ;
+
   cfg = config.services.blocky;
 
   format = pkgs.formats.yaml { };
@@ -10,12 +15,12 @@ let
 in
 {
   options.services.blocky = {
-    enable = mkEnableOption (lib.mdDoc "blocky, a fast and lightweight DNS proxy as ad-blocker for local network with many features");
+    enable = mkEnableOption (mdDoc "blocky, a fast and lightweight DNS proxy as ad-blocker for local network with many features");
 
     settings = mkOption {
       type = format.type;
       default = { };
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Blocky configuration. Refer to
         <https://0xerr0r.github.io/blocky/configuration/>
         for details on supported values.
