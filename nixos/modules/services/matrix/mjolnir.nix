@@ -1,7 +1,24 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    concatImapStringsSep
+    concatStringsSep
+    filterAttrs
+    fold
+    generators
+    literalExpression
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionals
+    optionalString
+    recursiveUpdate
+    types
+    ;
+
   cfg = config.services.mjolnir;
 
   yamlConfig = {
@@ -65,12 +82,12 @@ let
 in
 {
   options.services.mjolnir = {
-    enable = mkEnableOption (lib.mdDoc "Mjolnir, a moderation tool for Matrix");
+    enable = mkEnableOption (mdDoc "Mjolnir, a moderation tool for Matrix");
 
     homeserverUrl = mkOption {
       type = types.str;
       default = "https://matrix.org";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Where the homeserver is located (client-server URL).
 
         If `pantalaimon.enable` is `true`, this option will become the homeserver to which `pantalaimon` connects.
@@ -81,13 +98,13 @@ in
     accessTokenFile = mkOption {
       type = with types; nullOr path;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         File containing the matrix access token for the `mjolnir` user.
       '';
     };
 
     pantalaimon = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         `pantalaimon` options (enables E2E Encryption support).
 
         This will create a `pantalaimon` instance with the name "mjolnir".
@@ -95,20 +112,20 @@ in
       default = { };
       type = types.submodule {
         options = {
-          enable = mkEnableOption (lib.mdDoc ''
+          enable = mkEnableOption (mdDoc ''
             ignoring the accessToken. If true, accessToken is ignored and the username/password below will be
             used instead. The access token of the bot will be stored in the dataPath
           '');
 
           username = mkOption {
             type = types.str;
-            description = lib.mdDoc "The username to login with.";
+            description = mdDoc "The username to login with.";
           };
 
           passwordFile = mkOption {
             type = with types; nullOr path;
             default = null;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               File containing the matrix password for the `mjolnir` user.
             '';
           };
@@ -116,7 +133,7 @@ in
           options = mkOption {
             type = types.submodule (import ./pantalaimon-options.nix);
             default = { };
-            description = lib.mdDoc ''
+            description = mdDoc ''
               passthrough additional options to the `pantalaimon` service.
             '';
           };
@@ -127,7 +144,7 @@ in
     dataPath = mkOption {
       type = types.path;
       default = "/var/lib/mjolnir";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The directory the bot should store various bits of information in.
       '';
     };
@@ -135,7 +152,7 @@ in
     managementRoom = mkOption {
       type = types.str;
       default = "#moderators:example.org";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The room ID where people can use the bot. The bot has no access controls, so
         anyone in this room can use the bot - secure your room!
         This should be a room alias or room ID - not a matrix.to URL.
@@ -152,7 +169,7 @@ in
           "https://matrix.to/#/#anotherroom:example.org"
         ]
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         A list of rooms to protect (matrix.to URLs).
       '';
     };
@@ -166,7 +183,7 @@ in
           automaticallyRedactForReasons = [ "spam" "advertising" ];
         }
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Additional settings (see [mjolnir default config](https://github.com/matrix-org/mjolnir/blob/main/config/default.yaml) for available settings). These settings will override settings made by the module config.
       '';
     };
