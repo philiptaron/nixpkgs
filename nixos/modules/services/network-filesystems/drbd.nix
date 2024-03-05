@@ -2,9 +2,15 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
 
-let cfg = config.services.drbd; in
+  cfg = config.services.drbd; in
 
 {
 
@@ -15,7 +21,7 @@ let cfg = config.services.drbd; in
     services.drbd.enable = mkOption {
       default = false;
       type = types.bool;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to enable support for DRBD, the Distributed Replicated
         Block Device.
       '';
@@ -24,7 +30,7 @@ let cfg = config.services.drbd; in
     services.drbd.config = mkOption {
       default = "";
       type = types.lines;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Contents of the {file}`drbd.conf` configuration file.
       '';
     };
