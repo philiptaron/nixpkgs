@@ -1,12 +1,22 @@
 { pkgs, lib, config, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalMD
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionals
+    types
+    ;
+
   cfg = config.services.hardware.openrgb;
 in {
   options.services.hardware.openrgb = {
-    enable = mkEnableOption (lib.mdDoc "OpenRGB server");
+    enable = mkEnableOption (mdDoc "OpenRGB server");
 
     package = mkPackageOption pkgs "openrgb" { };
 
@@ -20,13 +30,13 @@ in {
         else if config.hardware.cpu.amd.updateMicrocode then "amd"
         else null;
       '';
-      description = lib.mdDoc "CPU family of motherboard. Allows for addition motherboard i2c support.";
+      description = mdDoc "CPU family of motherboard. Allows for addition motherboard i2c support.";
     };
 
     server.port = mkOption {
       type = types.port;
       default = 6742;
-      description = lib.mdDoc "Set server port of openrgb.";
+      description = mdDoc "Set server port of openrgb.";
     };
 
   };
@@ -36,8 +46,8 @@ in {
     services.udev.packages = [ cfg.package ];
 
     boot.kernelModules = [ "i2c-dev" ]
-     ++ lib.optionals (cfg.motherboard == "amd") [ "i2c-piix4" ]
-     ++ lib.optionals (cfg.motherboard == "intel") [ "i2c-i801" ];
+     ++ optionals (cfg.motherboard == "amd") [ "i2c-piix4" ]
+     ++ optionals (cfg.motherboard == "intel") [ "i2c-i801" ];
 
     systemd.services.openrgb = {
       description = "OpenRGB server daemon";
@@ -51,5 +61,5 @@ in {
     };
   };
 
-  meta.maintainers = with lib.maintainers; [ jonringer ];
+  meta.maintainers = with maintainers; [ jonringer ];
 }
