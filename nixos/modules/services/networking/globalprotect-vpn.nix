@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    generators
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.globalprotect;
 
   execStart =
@@ -14,10 +22,10 @@ in
 
 {
   options.services.globalprotect = {
-    enable = mkEnableOption (lib.mdDoc "globalprotect");
+    enable = mkEnableOption (mdDoc "globalprotect");
 
     settings = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         GlobalProtect-openconnect configuration. For more information, visit
         <https://github.com/yuezk/GlobalProtect-openconnect/wiki/Configuration>.
       '';
@@ -31,7 +39,7 @@ in
     };
 
     csdWrapper = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         A script that will produce a Host Integrity Protection (HIP) report,
         as described at <https://www.infradead.org/openconnect/hip.html>
       '';
@@ -44,7 +52,7 @@ in
   config = mkIf cfg.enable {
     services.dbus.packages = [ pkgs.globalprotect-openconnect ];
 
-    environment.etc."gpservice/gp.conf".text = lib.generators.toINI { } cfg.settings;
+    environment.etc."gpservice/gp.conf".text = generators.toINI { } cfg.settings;
 
     systemd.services.gpservice = {
       description = "GlobalProtect openconnect DBus service";
