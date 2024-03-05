@@ -1,33 +1,47 @@
 { config, lib, pkgs, ... }:
-with lib;
 
 let
-  cfg = config.services.mbpfan;
-  verbose = optionalString cfg.verbose "v";
-  settingsFormat = pkgs.formats.ini {};
-  settingsFile = settingsFormat.generate "mbpfan.ini" cfg.settings;
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRenamedOptionModule
+    optionalString
+    types
+    ;
 
-in {
+  cfg = config.services.mbpfan;
+
+  verbose = optionalString cfg.verbose "v";
+
+  settingsFormat = pkgs.formats.ini {};
+
+  settingsFile = settingsFormat.generate "mbpfan.ini" cfg.settings;
+in
+{
   options.services.mbpfan = {
-    enable = mkEnableOption (lib.mdDoc "mbpfan, fan controller daemon for Apple Macs and MacBooks");
+    enable = mkEnableOption (mdDoc "mbpfan, fan controller daemon for Apple Macs and MacBooks");
 
     package = mkPackageOption pkgs "mbpfan" { };
 
     verbose = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc "If true, sets the log level to verbose.";
+      description = mdDoc "If true, sets the log level to verbose.";
     };
 
     aggressive = mkOption {
       type = types.bool;
       default = true;
-      description = lib.mdDoc "If true, favors higher default fan speeds.";
+      description = mdDoc "If true, favors higher default fan speeds.";
     };
 
     settings = mkOption {
       default = {};
-      description = lib.mdDoc "INI configuration for Mbpfan.";
+      description = mdDoc "INI configuration for Mbpfan.";
       type = types.submodule {
         freeformType = settingsFormat.type;
 
@@ -35,24 +49,24 @@ in {
           type = types.int;
           default = (if cfg.aggressive then 55 else 63);
           defaultText = literalExpression "55";
-          description = lib.mdDoc "If temperature is below this, fans will run at minimum speed.";
+          description = mdDoc "If temperature is below this, fans will run at minimum speed.";
         };
         options.general.high_temp = mkOption {
           type = types.int;
           default = (if cfg.aggressive then 58 else 66);
           defaultText = literalExpression "58";
-          description = lib.mdDoc "If temperature is above this, fan speed will gradually increase.";
+          description = mdDoc "If temperature is above this, fan speed will gradually increase.";
         };
         options.general.max_temp = mkOption {
           type = types.int;
           default = (if cfg.aggressive then 78 else 86);
           defaultText = literalExpression "78";
-          description = lib.mdDoc "If temperature is above this, fans will run at maximum speed.";
+          description = mdDoc "If temperature is above this, fans will run at maximum speed.";
         };
         options.general.polling_interval = mkOption {
           type = types.int;
           default = 1;
-          description = lib.mdDoc "The polling interval.";
+          description = mdDoc "The polling interval.";
         };
       };
     };
