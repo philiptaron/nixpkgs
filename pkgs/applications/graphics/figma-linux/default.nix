@@ -7,7 +7,15 @@
 , wrapGAppsHook
 , ...
 }:
-with lib;
+
+let
+  inherit (lib)
+    licenses
+    maintainers
+    platforms
+    ;
+in
+
 stdenv.mkDerivation (finalAttrs: {
   pname = "figma-linux";
   version = "0.11.3";
