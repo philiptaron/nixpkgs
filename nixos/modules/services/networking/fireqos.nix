@@ -1,8 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.fireqos;
   fireqosConfig = pkgs.writeText "fireqos.conf" "${cfg.config}";
 in {
@@ -10,7 +15,7 @@ in {
     enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         If enabled, FireQOS will be launched with the specified
         configuration given in `config`.
       '';
@@ -28,7 +33,7 @@ in {
           class web commit 50kbit
             match tcp ports 80,443
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The FireQOS configuration goes here.
       '';
     };
