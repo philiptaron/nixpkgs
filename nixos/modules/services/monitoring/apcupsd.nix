@@ -1,8 +1,20 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    all
+    attrNames
+    concatStringsSep
+    elem
+    getAttr
+    getBin
+    hasAttr
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.apcupsd;
 
   configFile = pkgs.writeText "apcupsd.conf" ''
@@ -66,7 +78,7 @@ let
   wrappedBinaries = pkgs.runCommandLocal "apcupsd-wrapped-binaries"
     { nativeBuildInputs = [ pkgs.makeWrapper ]; }
     ''
-      for p in "${lib.getBin pkgs.apcupsd}/bin/"*; do
+      for p in "${getBin pkgs.apcupsd}/bin/"*; do
           bname=$(basename "$p")
           makeWrapper "$p" "$out/bin/$bname" --add-flags "-f ${configFile}"
       done
@@ -90,7 +102,7 @@ in
       enable = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the APC UPS daemon. apcupsd monitors your UPS and
           permits orderly shutdown of your computer in the event of a power
           failure. User manual: http://www.apcupsd.com/manual/manual.html.
@@ -107,7 +119,7 @@ in
           MINUTES 5
         '';
         type = types.lines;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Contents of the runtime configuration file, apcupsd.conf. The default
           settings makes apcupsd autodetect USB UPSes, limit network access to
           localhost and shutdown the system when the battery level is below 50
@@ -122,7 +134,7 @@ in
           doshutdown = "# shell commands to notify that the computer is shutting down";
         };
         type = types.attrsOf types.lines;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Each attribute in this option names an apcupsd event and the string
           value it contains will be executed in a shell, in response to that
           event (prior to the default action). See "man apccontrol" for the
