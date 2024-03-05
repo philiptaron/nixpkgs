@@ -1,6 +1,13 @@
 { config, pkgs, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    teams
+    ;
+in
 
 {
 
@@ -14,7 +21,7 @@ with lib;
 
     services.deepin.dde-daemon = {
 
-      enable = mkEnableOption (lib.mdDoc "daemon for handling the deepin session settings");
+      enable = mkEnableOption (mdDoc "daemon for handling the deepin session settings");
 
     };
 
