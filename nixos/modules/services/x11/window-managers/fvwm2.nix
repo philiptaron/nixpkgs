@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRenamedOptionModule
+    singleton
+    types
+    ;
+
   cfg = config.services.xserver.windowManager.fvwm2;
   fvwm2 = pkgs.fvwm2.override { enableGestures = cfg.gestures; };
 in
@@ -19,12 +27,12 @@ in
 
   options = {
     services.xserver.windowManager.fvwm2 = {
-      enable = mkEnableOption (lib.mdDoc "Fvwm2 window manager");
+      enable = mkEnableOption (mdDoc "Fvwm2 window manager");
 
       gestures = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc "Whether or not to enable libstroke for gesture support";
+        description = mdDoc "Whether or not to enable libstroke for gesture support";
       };
     };
   };
