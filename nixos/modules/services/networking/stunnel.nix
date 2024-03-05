@@ -1,8 +1,24 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrValues
+    concatLists
+    filterAttrs
+    generators
+    hasAttr
+    id
+    length
+    maintainers
+    mapAttrs
+    mapAttrsToList
+    mdDoc
+    mkIf
+    mkOption
+    optionalString
+    singleton
+    types
+    ;
 
   cfg = config.services.stunnel;
   yesNo = val: if val then "yes" else "no";
@@ -42,42 +58,42 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to enable the stunnel TLS tunneling service.";
+        description = mdDoc "Whether to enable the stunnel TLS tunneling service.";
       };
 
       user = mkOption {
         type = with types; nullOr str;
         default = "nobody";
-        description = lib.mdDoc "The user under which stunnel runs.";
+        description = mdDoc "The user under which stunnel runs.";
       };
 
       group = mkOption {
         type = with types; nullOr str;
         default = "nogroup";
-        description = lib.mdDoc "The group under which stunnel runs.";
+        description = mdDoc "The group under which stunnel runs.";
       };
 
       logLevel = mkOption {
         type = types.enum [ "emerg" "alert" "crit" "err" "warning" "notice" "info" "debug" ];
         default = "info";
-        description = lib.mdDoc "Verbosity of stunnel output.";
+        description = mdDoc "Verbosity of stunnel output.";
       };
 
       fipsMode = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Enable FIPS 140-2 mode required for compliance.";
+        description = mdDoc "Enable FIPS 140-2 mode required for compliance.";
       };
 
       enableInsecureSSLv3 = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Enable support for the insecure SSLv3 protocol.";
+        description = mdDoc "Enable support for the insecure SSLv3 protocol.";
       };
 
 
       servers = mkOption {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Define the server configurations.
 
           See "SERVICE-LEVEL OPTIONS" in {manpage}`stunnel(8)`.
@@ -94,7 +110,7 @@ in
       };
 
       clients = mkOption {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Define the client configurations.
 
           By default, verifyChain and OCSPaia are enabled and a CAFile is provided from pkgs.cacert.
