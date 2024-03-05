@@ -1,12 +1,26 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStrings
+    escapeShellArg
+    literalExpression
+    mdDoc
+    mkIf
+    mkMerge
+    mkOption
+    optional
+    optionalString
+    removeSuffix
+    types
+    ;
+
   cfg = config.services.gitolite;
+
   # Use writeTextDir to not leak Nix store hash into file name
   pubkeyFile = (pkgs.writeTextDir "gitolite-admin.pub" cfg.adminPubkey) + "/gitolite-admin.pub";
-  hooks = lib.concatMapStrings (hook: "${hook} ") cfg.commonHooks;
+
+  hooks = concatMapStrings (hook: "${hook} ") cfg.commonHooks;
 in
 {
   options = {
@@ -14,7 +28,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable gitolite management under the
           `gitolite` user. After
           switching to a configuration with Gitolite enabled, you can
@@ -25,7 +39,7 @@ in
       dataDir = mkOption {
         type = types.str;
         default = "/var/lib/gitolite";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The gitolite home directory used to store all repositories. If left as the default value
           this directory will automatically be created before the gitolite server starts, otherwise
           the sysadmin is responsible for ensuring the directory exists with appropriate ownership
@@ -35,7 +49,7 @@ in
 
       adminPubkey = mkOption {
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Initial administrative public key for Gitolite. This should
           be an SSH Public Key. Note that this key will only be used
           once, upon the first initialization of the Gitolite user.
@@ -46,7 +60,7 @@ in
       enableGitAnnex = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable git-annex support. Uses the `extraGitoliteRc` option
           to apply the necessary configuration.
         '';
@@ -55,7 +69,7 @@ in
       commonHooks = mkOption {
         type = types.listOf types.path;
         default = [];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A list of custom git hooks that get copied to `~/.gitolite/hooks/common`.
         '';
       };
@@ -71,7 +85,7 @@ in
             @{$RC{ENABLE}} = grep { $_ ne 'desc' } @{$RC{ENABLE}}; # disable the command/feature
           '''
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra configuration to append to the default `~/.gitolite.rc`.
 
           This should be Perl code that modifies the `%RC`
@@ -96,7 +110,7 @@ in
       user = mkOption {
         type = types.str;
         default = "gitolite";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Gitolite user account. This is the username of the gitolite endpoint.
         '';
       };
@@ -104,7 +118,7 @@ in
       description = mkOption {
         type = types.str;
         default = "Gitolite user";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Gitolite user account's description.
         '';
       };
@@ -112,7 +126,7 @@ in
       group = mkOption {
         type = types.str;
         default = "gitolite";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Primary group of the Gitolite user account.
         '';
       };
