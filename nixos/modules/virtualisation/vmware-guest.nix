@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRenamedOptionModule
+    optionals
+    types
+    ;
+
   cfg = config.virtualisation.vmware.guest;
   open-vm-tools = if cfg.headless then pkgs.open-vm-tools-headless else pkgs.open-vm-tools;
   xf86inputvmmouse = pkgs.xorg.xf86inputvmmouse;
@@ -13,12 +21,12 @@ in
   ];
 
   options.virtualisation.vmware.guest = {
-    enable = mkEnableOption (lib.mdDoc "VMWare Guest Support");
+    enable = mkEnableOption (mdDoc "VMWare Guest Support");
     headless = mkOption {
       type = types.bool;
       default = !config.services.xserver.enable;
       defaultText = "!config.services.xserver.enable";
-      description = lib.mdDoc "Whether to disable X11-related features.";
+      description = mdDoc "Whether to disable X11-related features.";
     };
   };
 
@@ -29,7 +37,7 @@ in
     } ];
 
     boot.initrd.availableKernelModules = [ "mptspi" ];
-    boot.initrd.kernelModules = lib.optionals pkgs.stdenv.hostPlatform.isx86 [ "vmw_pvscsi" ];
+    boot.initrd.kernelModules = optionals pkgs.stdenv.hostPlatform.isx86 [ "vmw_pvscsi" ];
 
     environment.systemPackages = [ open-vm-tools ];
 
