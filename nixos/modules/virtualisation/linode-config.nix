@@ -1,5 +1,12 @@
 { config, lib, pkgs, ... }:
-with lib;
+
+let
+  inherit (lib)
+    mkDefault
+    mkForce
+    ;
+in
+
 {
   imports = [ ../profiles/qemu-guest.nix ];
 
@@ -55,7 +62,7 @@ with lib;
     loader = {
       # Increase Timeout to Allow LISH Connection
       # NOTE: The image generator tries to set a timeout of 0, so we must force
-      timeout = lib.mkForce 10;
+      timeout = mkForce 10;
 
       grub = {
         enable = true;
