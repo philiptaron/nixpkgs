@@ -1,14 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    singleton
+    ;
+
   cfg = config.services.xserver.windowManager.leftwm;
 in
 {
   ###### interface
   options = {
-    services.xserver.windowManager.leftwm.enable = mkEnableOption (lib.mdDoc "leftwm");
+    services.xserver.windowManager.leftwm.enable = mkEnableOption (mdDoc "leftwm");
   };
 
   ###### implementation
