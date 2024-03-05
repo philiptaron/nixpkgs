@@ -1,38 +1,45 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.jackett;
 
 in
 {
   options = {
     services.jackett = {
-      enable = mkEnableOption (lib.mdDoc "Jackett");
+      enable = mkEnableOption (mdDoc "Jackett");
 
       dataDir = mkOption {
         type = types.str;
         default = "/var/lib/jackett/.config/Jackett";
-        description = lib.mdDoc "The directory where Jackett stores its data files.";
+        description = mdDoc "The directory where Jackett stores its data files.";
       };
 
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Open ports in the firewall for the Jackett web interface.";
+        description = mdDoc "Open ports in the firewall for the Jackett web interface.";
       };
 
       user = mkOption {
         type = types.str;
         default = "jackett";
-        description = lib.mdDoc "User account under which Jackett runs.";
+        description = mdDoc "User account under which Jackett runs.";
       };
 
       group = mkOption {
         type = types.str;
         default = "jackett";
-        description = lib.mdDoc "Group under which Jackett runs.";
+        description = mdDoc "Group under which Jackett runs.";
       };
 
       package = mkPackageOption pkgs "jackett" { };
