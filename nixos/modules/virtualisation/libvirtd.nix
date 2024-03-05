@@ -1,8 +1,24 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrNames
+    concatLists
+    concatMapStringsSep
+    concatStringsSep
+    escapeShellArgs
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    optional
+    optionalString
+    types
+    ;
 
   cfg = config.virtualisation.libvirtd;
   vswitch = config.virtualisation.vswitch;
@@ -29,7 +45,7 @@ let
       enable = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Allows libvirtd to take advantage of OVMF when creating new
           QEMU VMs with UEFI boot.
         '';
@@ -47,7 +63,7 @@ let
         default = [ pkgs.OVMF.fd ];
         defaultText = literalExpression "[ pkgs.OVMF.fd ]";
         example = literalExpression "[ pkgs.OVMFFull.fd pkgs.pkgsCross.aarch64-multiplatform.OVMF.fd ]";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of OVMF packages to use. Each listed package must contain files names FV/OVMF_CODE.fd and FV/OVMF_VARS.fd or FV/AAVMF_CODE.fd and FV/AAVMF_VARS.fd
         '';
       };
@@ -59,7 +75,7 @@ let
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Allows libvirtd to use swtpm to create an emulated TPM.
         '';
       };
@@ -80,7 +96,7 @@ let
       runAsRoot = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If true,  libvirtd runs qemu as root.
           If false, libvirtd runs qemu as unprivileged user qemu-libvirtd.
           Changing this option to false may cause file permission issues
@@ -94,7 +110,7 @@ let
         default = ''
           namespaces = []
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Contents written to the qemu configuration file, qemu.conf.
           Make sure to include a proper namespace configuration when
           supplying custom configuration.
@@ -104,7 +120,7 @@ let
       ovmf = mkOption {
         type = ovmfModule;
         default = { };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           QEMU's OVMF options.
         '';
       };
@@ -112,7 +128,7 @@ let
       swtpm = mkOption {
         type = swtpmModule;
         default = { };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           QEMU's swtpm options.
         '';
       };
@@ -120,8 +136,8 @@ let
       vhostUserPackages = mkOption {
         type = types.listOf types.package;
         default = [ ];
-        example = lib.literalExpression "[ pkgs.virtiofsd ]";
-        description = lib.mdDoc ''
+        example = literalExpression "[ pkgs.virtiofsd ]";
+        description = mdDoc ''
           Packages containing out-of-tree vhost-user drivers.
         '';
       };
@@ -133,7 +149,7 @@ let
       daemon = mkOption {
         type = types.attrsOf types.path;
         default = { };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Hooks that will be placed under /var/lib/libvirt/hooks/daemon.d/
           and called for daemon start/shutdown/SIGHUP events.
           Please see https://libvirt.org/hooks.html for documentation.
@@ -143,7 +159,7 @@ let
       qemu = mkOption {
         type = types.attrsOf types.path;
         default = { };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Hooks that will be placed under /var/lib/libvirt/hooks/qemu.d/
           and called for qemu domains begin/end/migrate events.
           Please see https://libvirt.org/hooks.html for documentation.
@@ -153,7 +169,7 @@ let
       lxc = mkOption {
         type = types.attrsOf types.path;
         default = { };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Hooks that will be placed under /var/lib/libvirt/hooks/lxc.d/
           and called for lxc domains begin/end events.
           Please see https://libvirt.org/hooks.html for documentation.
@@ -163,7 +179,7 @@ let
       libxl = mkOption {
         type = types.attrsOf types.path;
         default = { };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Hooks that will be placed under /var/lib/libvirt/hooks/libxl.d/
           and called for libxl-handled xen domains begin/end events.
           Please see https://libvirt.org/hooks.html for documentation.
@@ -173,7 +189,7 @@ let
       network = mkOption {
         type = types.attrsOf types.path;
         default = { };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Hooks that will be placed under /var/lib/libvirt/hooks/lxc.d/
           and called for networks begin/end events.
           Please see https://libvirt.org/hooks.html for documentation.
@@ -187,7 +203,7 @@ let
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           This option enables the older libvirt NSS module. This method uses
           DHCP server records, therefore is dependent on the hostname provided
           by the guest.
@@ -198,7 +214,7 @@ let
       enableGuest = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           This option enables the newer libvirt_guest NSS module. This module
           uses the libvirt guest name instead of the hostname of the guest.
           Please see https://libvirt.org/nss.html for more information.
@@ -239,7 +255,7 @@ in
     enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         This option enables libvirtd, a daemon that manages
         virtual machines. Users in the "libvirtd" group can interact with
         the daemon (e.g. to start or stop VMs) using the
@@ -252,7 +268,7 @@ in
     extraConfig = mkOption {
       type = types.lines;
       default = "";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra contents appended to the libvirtd configuration file,
         libvirtd.conf.
       '';
@@ -262,7 +278,7 @@ in
       type = types.listOf types.str;
       default = [ ];
       example = [ "--verbose" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra command line arguments passed to libvirtd on startup.
       '';
     };
@@ -270,7 +286,7 @@ in
     onBoot = mkOption {
       type = types.enum [ "start" "ignore" ];
       default = "start";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Specifies the action to be done to / on the guests when the host boots.
         The "start" option starts all guests that were running prior to shutdown
         regardless of their autostart settings. The "ignore" option will not
@@ -282,7 +298,7 @@ in
     onShutdown = mkOption {
       type = types.enum [ "shutdown" "suspend" ];
       default = "suspend";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         When shutting down / restarting the host what method should
         be used to gracefully halt the guests. Setting to "shutdown"
         will cause an ACPI shutdown of each guest. "suspend" will
@@ -293,7 +309,7 @@ in
     parallelShutdown = mkOption {
       type = types.ints.unsigned;
       default = 0;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Number of guests that will be shutdown concurrently, taking effect when onShutdown
         is set to "shutdown". If set to 0, guests will be shutdown one after another.
         Number of guests on shutdown at any time will not exceed number set in this
@@ -304,7 +320,7 @@ in
     allowedBridges = mkOption {
       type = types.listOf types.str;
       default = [ "virbr0" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         List of bridge devices that can be used by qemu:///session
       '';
     };
@@ -312,7 +328,7 @@ in
     qemu = mkOption {
       type = qemuModule;
       default = { };
-      description = lib.mdDoc ''
+      description = mdDoc ''
         QEMU related options.
       '';
     };
@@ -320,7 +336,7 @@ in
     hooks = mkOption {
       type = hooksModule;
       default = { };
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Hooks related options.
       '';
     };
@@ -328,7 +344,7 @@ in
     nss = mkOption {
       type = nssModule;
       default = { };
-      description = lib.mdDoc ''
+      description = mdDoc ''
         libvirt NSS module options.
       '';
     };
@@ -355,7 +371,7 @@ in
 
     environment = {
       # this file is expected in /etc/qemu and not sysconfdir (/var/lib)
-      etc."qemu/bridge.conf".text = lib.concatMapStringsSep "\n"
+      etc."qemu/bridge.conf".text = concatMapStringsSep "\n"
         (e:
           "allow ${e}")
         cfg.allowedBridges;
