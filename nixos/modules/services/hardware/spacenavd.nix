@@ -1,14 +1,20 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
 
-let cfg = config.hardware.spacenavd;
+  cfg = config.hardware.spacenavd;
 
-in {
+in
+{
 
   options = {
     hardware.spacenavd = {
-      enable = mkEnableOption (lib.mdDoc "spacenavd to support 3DConnexion devices");
+      enable = mkEnableOption (mdDoc "spacenavd to support 3DConnexion devices");
     };
   };
 
