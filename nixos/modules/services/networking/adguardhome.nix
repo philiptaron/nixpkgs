@@ -1,8 +1,20 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    hasAttrByPath
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRenamedOptionModuleWith
+    optionals
+    optionalString
+    types
+    ;
+
   cfg = config.services.adguardhome;
 
   args = concatStringsSep " " ([
@@ -31,12 +43,12 @@ in
     ];
 
   options.services.adguardhome = with types; {
-    enable = mkEnableOption (lib.mdDoc "AdGuard Home network-wide ad blocker");
+    enable = mkEnableOption (mdDoc "AdGuard Home network-wide ad blocker");
 
     openFirewall = mkOption {
       default = false;
       type = bool;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Open ports in the firewall for the AdGuard Home web interface. Does not
         open the port needed to access the DNS resolver.
       '';
@@ -46,7 +58,7 @@ in
       default = cfg.settings.dhcp.enabled or false;
       defaultText = literalExpression ''config.services.adguardhome.settings.dhcp.enabled or false'';
       type = bool;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Allows AdGuard Home to open raw sockets (`CAP_NET_RAW`), which is
         required for the integrated DHCP server.
 
@@ -59,7 +71,7 @@ in
     mutableSettings = mkOption {
       default = true;
       type = bool;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Allow changes made on the AdGuard Home web interface to persist between
         service restarts.
       '';
@@ -74,7 +86,7 @@ in
             default = pkgs.adguardhome.schema_version;
             defaultText = literalExpression "pkgs.adguardhome.schema_version";
             type = int;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Schema version for the configuration.
               Defaults to the `schema_version` supplied by `pkgs.adguardhome`.
             '';
@@ -82,20 +94,20 @@ in
           bind_host = mkOption {
             default = "0.0.0.0";
             type = str;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Host address to bind HTTP server to.
             '';
           };
           bind_port = mkOption {
             default = defaultBindPort;
             type = port;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Port to serve HTTP pages on.
             '';
           };
         };
       });
-      description = lib.mdDoc ''
+      description = mdDoc ''
         AdGuard Home configuration. Refer to
         <https://github.com/AdguardTeam/AdGuardHome/wiki/Configuration#configuration-file>
         for details on supported values.
@@ -115,7 +127,7 @@ in
     extraArgs = mkOption {
       default = [ ];
       type = listOf str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra command line parameters to be passed to the adguardhome binary.
       '';
     };
