@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalAttrs
+    recursiveUpdate
+    types
+    ;
 
   cfg = config.services.octoprint;
 
@@ -29,12 +37,12 @@ in
 
     services.octoprint = {
 
-      enable = mkEnableOption (lib.mdDoc "OctoPrint, web interface for 3D printers");
+      enable = mkEnableOption (mdDoc "OctoPrint, web interface for 3D printers");
 
       host = mkOption {
         type = types.str;
         default = "0.0.0.0";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Host to bind OctoPrint to.
         '';
       };
@@ -42,7 +50,7 @@ in
       port = mkOption {
         type = types.port;
         default = 5000;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Port to bind OctoPrint to.
         '';
       };
@@ -50,25 +58,25 @@ in
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Open ports in the firewall for OctoPrint.";
+        description = mdDoc "Open ports in the firewall for OctoPrint.";
       };
 
       user = mkOption {
         type = types.str;
         default = "octoprint";
-        description = lib.mdDoc "User for the daemon.";
+        description = mdDoc "User for the daemon.";
       };
 
       group = mkOption {
         type = types.str;
         default = "octoprint";
-        description = lib.mdDoc "Group for the daemon.";
+        description = mdDoc "Group for the daemon.";
       };
 
       stateDir = mkOption {
         type = types.path;
         default = "/var/lib/octoprint";
-        description = lib.mdDoc "State directory of the daemon.";
+        description = mdDoc "State directory of the daemon.";
       };
 
       plugins = mkOption {
@@ -76,13 +84,13 @@ in
         default = plugins: [ ];
         defaultText = literalExpression "plugins: []";
         example = literalExpression "plugins: with plugins; [ themeify stlviewer ]";
-        description = lib.mdDoc "Additional plugins to be used. Available plugins are passed through the plugins input.";
+        description = mdDoc "Additional plugins to be used. Available plugins are passed through the plugins input.";
       };
 
       extraConfig = mkOption {
         type = types.attrs;
         default = { };
-        description = lib.mdDoc "Extra options which are added to OctoPrint's YAML configuration file.";
+        description = mdDoc "Extra options which are added to OctoPrint's YAML configuration file.";
       };
 
     };
