@@ -1,8 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRenamedOptionModule
+    ;
+
   cfg = config.services.prometheus.xmpp-alerts;
   settingsFormat = pkgs.formats.yaml {};
   configFile = settingsFormat.generate "prometheus-xmpp-alerts.yml" cfg.settings;
@@ -15,13 +21,13 @@ in
   ];
 
   options.services.prometheus.xmpp-alerts = {
-    enable = mkEnableOption (lib.mdDoc "XMPP Web hook service for Alertmanager");
+    enable = mkEnableOption (mdDoc "XMPP Web hook service for Alertmanager");
 
     settings = mkOption {
       type = settingsFormat.type;
       default = {};
 
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Configuration for prometheus xmpp-alerts, see
         <https://github.com/jelmer/prometheus-xmpp-alerts/blob/master/xmpp-alerts.yml.example>
         for supported values.
