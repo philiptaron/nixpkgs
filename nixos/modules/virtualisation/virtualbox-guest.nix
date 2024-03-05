@@ -2,9 +2,15 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    makeBinPath
+    mdDoc
+    mkIf
+    mkMerge
+    mkOption
+    types
+    ;
 
   cfg = config.virtualisation.virtualbox.guest;
   kernel = config.boot.kernelPackages;
@@ -19,13 +25,13 @@ in
     enable = mkOption {
       default = false;
       type = types.bool;
-      description = lib.mdDoc "Whether to enable the VirtualBox service and other guest additions.";
+      description = mdDoc "Whether to enable the VirtualBox service and other guest additions.";
     };
 
     x11 = mkOption {
       default = true;
       type = types.bool;
-      description = lib.mdDoc "Whether to enable x11 graphics";
+      description = mdDoc "Whether to enable x11 graphics";
     };
   };
 
