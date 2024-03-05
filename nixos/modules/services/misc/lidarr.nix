@@ -1,19 +1,26 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.lidarr;
 in
 {
   options = {
     services.lidarr = {
-      enable = mkEnableOption (lib.mdDoc "Lidarr");
+      enable = mkEnableOption (mdDoc "Lidarr");
 
       dataDir = mkOption {
         type = types.str;
         default = "/var/lib/lidarr/.config/Lidarr";
-        description = lib.mdDoc "The directory where Lidarr stores its data files.";
+        description = mdDoc "The directory where Lidarr stores its data files.";
       };
 
       package = mkPackageOption pkgs "lidarr" { };
@@ -21,7 +28,7 @@ in
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Open ports in the firewall for Lidarr
         '';
       };
@@ -29,7 +36,7 @@ in
       user = mkOption {
         type = types.str;
         default = "lidarr";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           User account under which Lidarr runs.
         '';
       };
@@ -37,7 +44,7 @@ in
       group = mkOption {
         type = types.str;
         default = "lidarr";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Group under which Lidarr runs.
         '';
       };
