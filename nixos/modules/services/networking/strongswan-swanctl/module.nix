@@ -1,24 +1,38 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-with (import ./param-lib.nix lib);
-
 let
+  inherit (lib)
+    concatMapStrings
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
+  inherit (import ./param-lib.nix lib)
+    paramsToConf
+    paramsToOptions
+    ;
+
   cfg = config.services.strongswan-swanctl;
+
   configFile = pkgs.writeText "swanctl.conf"
       ( (paramsToConf cfg.swanctl swanctlParams)
       + (concatMapStrings (i: "\ninclude ${i}") cfg.includes));
   swanctlParams = import ./swanctl-params.nix lib;
-in  {
+in
+ {
   options.services.strongswan-swanctl = {
-    enable = mkEnableOption (lib.mdDoc "strongswan-swanctl service");
+    enable = mkEnableOption (mdDoc "strongswan-swanctl service");
 
     package = mkPackageOption pkgs "strongswan" { };
 
     strongswan.extraConfig = mkOption {
       type = types.str;
       default = "";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Contents of the `strongswan.conf` file.
       '';
     };
