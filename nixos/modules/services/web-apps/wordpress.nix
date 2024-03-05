@@ -1,8 +1,41 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    any
+    attrValues
+    boolToString
+    concatMapStringsSep
+    concatStringsSep
+    escapeShellArg
+    flatten
+    generators
+    hasAttr
+    isAttrs
+    isBool
+    isInt
+    isList
+    isString
+    listToAttrs
+    literalExpression
+    mapAttrs
+    mapAttrs'
+    mapAttrsToList
+    mdDoc
+    mkDefault
+    mkForce
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    nameValuePair
+    optional
+    optionalAttrs
+    strings
+    types
+    warn
+    ;
+
   cfg = config.services.wordpress;
   eachSite = cfg.sites;
   user = "wordpress";
@@ -78,12 +111,12 @@ let
   in
     if isString v then escapeShellArg v
     # NOTE: If any value contains a , (comma) this will not get escaped
-    else if isList v && any lib.strings.isCoercibleToString v then escapeShellArg (concatMapStringsSep "," toString v)
+    else if isList v && any strings.isCoercibleToString v then escapeShellArg (concatMapStringsSep "," toString v)
     else if isInt v then toString v
     else if isBool v then boolToString v
-    else if isHasAttr "_file" then "trim(file_get_contents(${lib.escapeShellArg v._file}))"
+    else if isHasAttr "_file" then "trim(file_get_contents(${escapeShellArg v._file}))"
     else if isHasAttr "_raw" then v._raw
-    else abort "The Wordpress config value ${lib.generators.toPretty {} v} can not be encoded."
+    else abort "The Wordpress config value ${generators.toPretty {} v} can not be encoded."
   ;
 
   secretsVars = [ "AUTH_KEY" "SECURE_AUTH_KEY" "LOGGED_IN_KEY" "NONCE_KEY" "AUTH_SALT" "SECURE_AUTH_SALT" "LOGGED_IN_SALT" "NONCE_SALT" ];
@@ -109,7 +142,7 @@ let
         uploadsDir = mkOption {
           type = types.path;
           default = "/var/lib/wordpress/${name}/uploads";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             This directory is used for uploads of pictures. The directory passed here is automatically
             created and permissions adjusted as required.
           '';
@@ -118,7 +151,7 @@ let
         fontsDir = mkOption {
           type = types.path;
           default = "/var/lib/wordpress/${name}/fonts";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             This directory is used to download fonts from a remote location, e.g.
             to host google fonts locally.
           '';
@@ -131,7 +164,7 @@ let
               listToAttrs (map (p: nameValuePair (p.name or (throw "${p} does not have a name")) p) l))
             (attrsOf path);
           default = {};
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Path(s) to respective plugin(s) which are copied from the 'plugins' directory.
 
             ::: {.note}
@@ -153,7 +186,7 @@ let
             (attrsOf path);
           default = { inherit (pkgs.wordpressPackages.themes) twentytwentythree; };
           defaultText = literalExpression "{ inherit (pkgs.wordpressPackages.themes) twentytwentythree; }";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Path(s) to respective theme(s) which are copied from the 'theme' directory.
 
             ::: {.note}
@@ -170,7 +203,7 @@ let
         languages = mkOption {
           type = types.listOf types.path;
           default = [];
-          description = lib.mdDoc ''
+          description = mdDoc ''
             List of path(s) to respective language(s) which are copied from the 'languages' directory.
           '';
           example = literalExpression ''
@@ -197,32 +230,32 @@ let
           host = mkOption {
             type = types.str;
             default = "localhost";
-            description = lib.mdDoc "Database host address.";
+            description = mdDoc "Database host address.";
           };
 
           port = mkOption {
             type = types.port;
             default = 3306;
-            description = lib.mdDoc "Database host port.";
+            description = mdDoc "Database host port.";
           };
 
           name = mkOption {
             type = types.str;
             default = "wordpress";
-            description = lib.mdDoc "Database name.";
+            description = mdDoc "Database name.";
           };
 
           user = mkOption {
             type = types.str;
             default = "wordpress";
-            description = lib.mdDoc "Database user.";
+            description = mdDoc "Database user.";
           };
 
           passwordFile = mkOption {
             type = types.nullOr types.path;
             default = null;
             example = "/run/keys/wordpress-dbpassword";
-            description = lib.mdDoc ''
+            description = mdDoc ''
               A file containing the password corresponding to
               {option}`database.user`.
             '';
@@ -231,7 +264,7 @@ let
           tablePrefix = mkOption {
             type = types.str;
             default = "wp_";
-            description = lib.mdDoc ''
+            description = mdDoc ''
               The $table_prefix is the value placed in the front of your database tables.
               Change the value if you want to use something other than wp_ for your database
               prefix. Typically this is changed if you are installing multiple WordPress blogs
@@ -245,13 +278,13 @@ let
             type = types.nullOr types.path;
             default = null;
             defaultText = literalExpression "/run/mysqld/mysqld.sock";
-            description = lib.mdDoc "Path to the unix socket file to use for authentication.";
+            description = mdDoc "Path to the unix socket file to use for authentication.";
           };
 
           createLocally = mkOption {
             type = types.bool;
             default = true;
-            description = lib.mdDoc "Create the database and database user locally.";
+            description = mdDoc "Create the database and database user locally.";
           };
         };
 
@@ -264,7 +297,7 @@ let
               enableACME = true;
             }
           '';
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Apache configuration can be done by adapting {option}`services.httpd.virtualHosts`.
           '';
         };
@@ -279,7 +312,7 @@ let
             "pm.max_spare_servers" = 4;
             "pm.max_requests" = 500;
           };
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Options for the WordPress PHP pool. See the documentation on `php-fpm.conf`
             for details on configuration directives.
           '';
@@ -288,7 +321,7 @@ let
         settings = mkOption {
           type = types.attrsOf types.anything;
           default = {};
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Structural Wordpress configuration.
             Refer to <https://developer.wordpress.org/apis/wp-config-php>
             for details and supported values.
@@ -316,7 +349,7 @@ let
               AUTOMATIC_UPDATER_DISABLED = true;
             }
           '';
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Read only representation of the final configuration.
           '';
         };
@@ -324,7 +357,7 @@ let
         extraConfig = mkOption {
           type = types.lines;
           default = "";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Any additional text to be appended to the wp-config.php
             configuration file. This is a PHP script. For configuration
             settings, see <https://codex.wordpress.org/Editing_wp-config.php>.
@@ -351,13 +384,13 @@ in
       sites = mkOption {
         type = types.attrsOf (types.submodule siteOpts);
         default = {};
-        description = lib.mdDoc "Specification of one or more WordPress sites to serve";
+        description = mdDoc "Specification of one or more WordPress sites to serve";
       };
 
       webserver = mkOption {
         type = types.enum [ "httpd" "nginx" "caddy" ];
         default = "httpd";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to use apache2 or nginx for virtual host management.
 
           Further nginx configuration can be done by adapting `services.nginx.virtualHosts.<name>`.
