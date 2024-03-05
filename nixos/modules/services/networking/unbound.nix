@@ -1,7 +1,33 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    concatMapStringsSep
+    concatStringsSep
+    getAttrFromPath
+    isAttrs
+    isBool
+    isInt
+    isList
+    isString
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkChangedOptionModule
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    optional
+    optionalAttrs
+    optionalString
+    traceSeq
+    types
+    ;
+
   cfg = config.services.unbound;
 
   yesOrNo = v: if v then "yes" else "no";
@@ -52,33 +78,33 @@ in {
   options = {
     services.unbound = {
 
-      enable = mkEnableOption (lib.mdDoc "Unbound domain name server");
+      enable = mkEnableOption (mdDoc "Unbound domain name server");
 
       package = mkPackageOption pkgs "unbound-with-systemd" { };
 
       user = mkOption {
         type = types.str;
         default = "unbound";
-        description = lib.mdDoc "User account under which unbound runs.";
+        description = mdDoc "User account under which unbound runs.";
       };
 
       group = mkOption {
         type = types.str;
         default = "unbound";
-        description = lib.mdDoc "Group under which unbound runs.";
+        description = mdDoc "Group under which unbound runs.";
       };
 
       stateDir = mkOption {
         type = types.path;
         default = "/var/lib/unbound";
-        description = lib.mdDoc "Directory holding all state for unbound to run.";
+        description = mdDoc "Directory holding all state for unbound to run.";
       };
 
       checkconf = mkOption {
         type = types.bool;
         default = !cfg.settings ? include;
         defaultText = "!config.services.unbound.settings ? include";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Wether to check the resulting config file with unbound checkconf for syntax errors.
 
           If settings.include is used, then this options is disabled, as the import can likely not be resolved at build time.
@@ -88,7 +114,7 @@ in {
       resolveLocalQueries = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether unbound should resolve local queries (i.e. add 127.0.0.1 to
           /etc/resolv.conf).
         '';
@@ -97,7 +123,7 @@ in {
       enableRootTrustAnchor = mkOption {
         default = true;
         type = types.bool;
-        description = lib.mdDoc "Use and update root trust anchor for DNSSEC validation.";
+        description = mdDoc "Use and update root trust anchor for DNSSEC validation.";
       };
 
       localControlSocketPath = mkOption {
@@ -108,7 +134,7 @@ in {
         # but I haven't verified yet.
         type = types.nullOr types.str;
         example = "/run/unbound/unbound.ctl";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           When not set to `null` this option defines the path
           at which the unbound remote control socket should be created at. The
           socket will be owned by the unbound user (`unbound`)
@@ -168,7 +194,7 @@ in {
             remote-control.control-enable = true;
           };
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Declarative Unbound configuration
           See the {manpage}`unbound.conf(5)` manpage for a list of
           available options.
