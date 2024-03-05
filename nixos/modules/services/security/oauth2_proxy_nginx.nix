@@ -1,6 +1,16 @@
 { config, lib, ... }:
-with lib;
 let
+  inherit (lib)
+    hasPrefix
+    literalExpression
+    mdDoc
+    mkIf
+    mkMerge
+    mkOption
+    optional
+    types
+    ;
+
   cfg = config.services.oauth2_proxy.nginx;
 in
 {
@@ -9,14 +19,14 @@ in
       type = types.str;
       default = config.services.oauth2_proxy.httpAddress;
       defaultText = literalExpression "config.services.oauth2_proxy.httpAddress";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The address of the reverse proxy endpoint for oauth2_proxy
       '';
     };
     virtualHosts = mkOption {
       type = types.listOf types.str;
       default = [];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         A list of nginx virtual hosts to put behind the oauth2 proxy
       '';
     };
