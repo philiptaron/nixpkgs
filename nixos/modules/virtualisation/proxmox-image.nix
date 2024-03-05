@@ -1,6 +1,17 @@
 { config, pkgs, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    concatStrings
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkDefault
+    mkIf
+    mkOption
+    types
+    ;
+in
 
 {
   options.proxmox = {
@@ -10,7 +21,7 @@ with lib;
         type = types.str;
         default = "";
         example = "order=scsi0;net0";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Default boot device. PVE will try all devices in its default order if this value is empty.
         '';
       };
@@ -18,7 +29,7 @@ with lib;
         type = types.str;
         default = "virtio-scsi-pci";
         example = "lsi";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           SCSI controller type. Must be one of the supported values given in
           <https://pve.proxmox.com/wiki/Qemu/KVM_Virtual_Machines>
         '';
@@ -27,7 +38,7 @@ with lib;
         type = types.str;
         default = "local-lvm:vm-9999-disk-0";
         example = "ceph:vm-123-disk-0";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration for the default virtio disk. It can be used as a cue for PVE to autodetect the target storage.
           This parameter is required by PVE even if it isn't used.
         '';
@@ -35,21 +46,21 @@ with lib;
       ostype = mkOption {
         type = types.str;
         default = "l26";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Guest OS type
         '';
       };
       cores = mkOption {
         type = types.ints.positive;
         default = 1;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Guest core count
         '';
       };
       memory = mkOption {
         type = types.ints.positive;
         default = 1024;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Guest memory in MB
         '';
       };
@@ -65,7 +76,7 @@ with lib;
       name = mkOption {
         type = types.str;
         default = "nixos-${config.system.nixos.label}";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           VM name
         '';
       };
@@ -73,7 +84,7 @@ with lib;
         type = types.str;
         default = "512M";
         example = "2048M";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           additional disk space to be added to the image if diskSize "auto"
           is used.
         '';
@@ -82,7 +93,7 @@ with lib;
         type = types.str;
         default = "256M";
         example = "512M";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Size of the boot partition. Is only used if partitionTableType is
           either "efi" or "hybrid".
         '';
@@ -91,7 +102,7 @@ with lib;
         type = types.str;
         default = "auto";
         example = "20480";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The size of the disk, in megabytes.
           if "auto" size is calculated based on the contents copied to it and
           additionalSpace is taken into account.
@@ -100,7 +111,7 @@ with lib;
       net0 = mkOption {
         type = types.commas;
         default = "virtio=00:00:00:00:00:00,bridge=vmbr0,firewall=1";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration for the default interface. When restoring from VMA, check the
           "unique" box to ensure device mac is randomized.
         '';
@@ -109,7 +120,7 @@ with lib;
         type = types.str;
         default = "socket";
         example = "/dev/ttyS0";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Create a serial device inside the VM (n is 0 to 3), and pass through a host serial device (i.e. /dev/ttyS0),
           or create a unix socket on the host side (use qm terminal to open a terminal connection).
         '';
@@ -118,7 +129,7 @@ with lib;
         type = types.bool;
         apply = x: if x then "1" else "0";
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Expect guest to have qemu agent running
         '';
       };
@@ -132,7 +143,7 @@ with lib;
           onboot = 1;
         }
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Additional options appended to qemu-server.conf
       '';
     };
@@ -144,14 +155,14 @@ with lib;
         Use 'hybrid' to build grub-based hybrid bios+efi images.
       '';
       default = if config.proxmox.qemuConf.bios == "seabios" then "legacy" else "efi";
-      defaultText = lib.literalExpression ''if config.proxmox.qemuConf.bios == "seabios" then "legacy" else "efi"'';
+      defaultText = literalExpression ''if config.proxmox.qemuConf.bios == "seabios" then "legacy" else "efi"'';
       example = "hybrid";
     };
     filenameSuffix = mkOption {
       type = types.str;
       default = config.proxmox.qemuConf.name;
       example = "999-nixos_template";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Filename of the image will be vzdump-qemu-''${filenameSuffix}.vma.zstd.
         This will also determine the default name of the VM on restoring the VMA.
         Start this value with a number if you want the VMA to be detected as a backup of
@@ -168,7 +179,7 @@ with lib;
     virtio0Storage = builtins.head (builtins.split ":" cfg.qemuConf.virtio0);
     cfgFile = fileName: properties: pkgs.writeTextDir fileName ''
       # generated by NixOS
-      ${lib.concatStrings (lib.mapAttrsToList cfgLine properties)}
+      ${concatStrings (mapAttrsToList cfgLine properties)}
       #qmdump#map:virtio0:drive-virtio0:${virtio0Storage}:raw:
     '';
     inherit (cfg) partitionTableType;
@@ -273,15 +284,15 @@ with lib;
       growPartition = true;
       kernelParams = [ "console=ttyS0" ];
       loader.grub = {
-        device = lib.mkDefault (if (hasNoFsPartition || supportBios) then
+        device = mkDefault (if (hasNoFsPartition || supportBios) then
           # Even if there is a separate no-fs partition ("/dev/disk/by-partlabel/no-fs" i.e. "/dev/vda2"),
           # which will be used the bootloader, do not set it as loader.grub.device.
           # GRUB installation fails, unless the whole disk is selected.
           "/dev/vda"
         else
           "nodev");
-        efiSupport = lib.mkDefault supportEfi;
-        efiInstallAsRemovable = lib.mkDefault supportEfi;
+        efiSupport = mkDefault supportEfi;
+        efiInstallAsRemovable = mkDefault supportEfi;
       };
 
       loader.timeout = 0;
@@ -293,11 +304,11 @@ with lib;
       autoResize = true;
       fsType = "ext4";
     };
-    fileSystems."/boot" = lib.mkIf hasBootPartition {
+    fileSystems."/boot" = mkIf hasBootPartition {
       device = "/dev/disk/by-label/ESP";
       fsType = "vfat";
     };
 
-    services.qemuGuest.enable = lib.mkDefault true;
+    services.qemuGuest.enable = mkDefault true;
   };
 }
