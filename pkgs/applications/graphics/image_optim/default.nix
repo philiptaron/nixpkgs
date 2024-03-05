@@ -13,9 +13,17 @@
   withSvgo ? true,           svgo
 }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    escapeShellArg
+    licenses
+    maintainers
+    makeBinPath
+    optional
+    platforms
+    ;
+
   optionalDepsPath = optional withPngcrush pngcrush
     ++ optional withPngout pngout
     ++ optional withAdvpng advancecomp
@@ -53,8 +61,8 @@ bundlerApp {
 
   postBuild = ''
     wrapProgram $out/bin/image_optim \
-      --prefix PATH : ${lib.escapeShellArg (makeBinPath optionalDepsPath)} \
-      --add-flags "${lib.concatStringsSep " " disabledWorkersFlags}"
+      --prefix PATH : ${escapeShellArg (makeBinPath optionalDepsPath)} \
+      --add-flags "${concatStringsSep " " disabledWorkersFlags}"
   '';
 
   passthru.updateScript = bundlerUpdateScript "image_optim";
