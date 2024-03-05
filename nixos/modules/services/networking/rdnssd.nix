@@ -3,8 +3,14 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   mergeHook = pkgs.writeScript "rdnssd-merge-hook" ''
     #! ${pkgs.runtimeShell} -e
     ${pkgs.openresolv}/bin/resolvconf -u
@@ -21,7 +27,7 @@ in
       default = false;
       #default = config.networking.enableIPv6;
       description =
-        lib.mdDoc ''
+        mdDoc ''
           Whether to enable the RDNSS daemon
           ({command}`rdnssd`), which configures DNS servers in
           {file}`/etc/resolv.conf` from RDNSS
