@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
 
   cfg = config.services.nexus;
 
@@ -10,40 +18,40 @@ in
 {
   options = {
     services.nexus = {
-      enable = mkEnableOption (lib.mdDoc "Sonatype Nexus3 OSS service");
+      enable = mkEnableOption (mdDoc "Sonatype Nexus3 OSS service");
 
-      package = lib.mkPackageOption pkgs "nexus" { };
+      package = mkPackageOption pkgs "nexus" { };
 
-      jdkPackage = lib.mkPackageOption pkgs "openjdk8" { };
+      jdkPackage = mkPackageOption pkgs "openjdk8" { };
 
       user = mkOption {
         type = types.str;
         default = "nexus";
-        description = lib.mdDoc "User which runs Nexus3.";
+        description = mdDoc "User which runs Nexus3.";
       };
 
       group = mkOption {
         type = types.str;
         default = "nexus";
-        description = lib.mdDoc "Group which runs Nexus3.";
+        description = mdDoc "Group which runs Nexus3.";
       };
 
       home = mkOption {
         type = types.str;
         default = "/var/lib/sonatype-work";
-        description = lib.mdDoc "Home directory of the Nexus3 instance.";
+        description = mdDoc "Home directory of the Nexus3 instance.";
       };
 
       listenAddress = mkOption {
         type = types.str;
         default = "127.0.0.1";
-        description = lib.mdDoc "Address to listen on.";
+        description = mdDoc "Address to listen on.";
       };
 
       listenPort = mkOption {
         type = types.int;
         default = 8081;
-        description = lib.mdDoc "Port to listen on.";
+        description = mdDoc "Port to listen on.";
       };
 
       jvmOpts = mkOption {
@@ -89,7 +97,7 @@ in
           '''
         '';
 
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Options for the JVM written to `nexus.jvmopts`.
           Please refer to the docs (https://help.sonatype.com/repomanager3/installation/configuring-the-runtime-environment)
           for further information.
@@ -148,5 +156,5 @@ in
     };
   };
 
-  meta.maintainers = with lib.maintainers; [ ironpinguin ];
+  meta.maintainers = with maintainers; [ ironpinguin ];
 }
