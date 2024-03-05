@@ -1,6 +1,13 @@
 { config, options, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+in
 
 {
 
@@ -14,7 +21,7 @@ with lib;
         type = types.nullOr options.security.wrappers.type.nestedTypes.elemType;
         default = null;
         internal = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration for the sendmail setuid wapper.
         '';
       };
