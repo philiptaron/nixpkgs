@@ -1,8 +1,15 @@
 { config, lib, pkgs, utils, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
 
   xcfg = config.services.xserver;
   cfg = xcfg.desktopManager.mate;
@@ -16,17 +23,17 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Enable the MATE desktop environment";
+        description = mdDoc "Enable the MATE desktop environment";
       };
 
-      debug = mkEnableOption (lib.mdDoc "mate-session debug messages");
+      debug = mkEnableOption (mdDoc "mate-session debug messages");
     };
 
     environment.mate.excludePackages = mkOption {
       default = [];
       example = literalExpression "[ pkgs.mate.mate-terminal pkgs.mate.pluma ]";
       type = types.listOf types.package;
-      description = lib.mdDoc "Which MATE packages to exclude from the default environment";
+      description = mdDoc "Which MATE packages to exclude from the default environment";
     };
 
   };
