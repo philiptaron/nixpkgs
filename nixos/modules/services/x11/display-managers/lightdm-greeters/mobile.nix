@@ -1,7 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    ;
+
   dmcfg = config.services.xserver.displayManager;
   ldmcfg = dmcfg.lightdm;
   cfg = ldmcfg.greeters.mobile;
@@ -9,7 +15,7 @@ in
 {
   options = {
     services.xserver.displayManager.lightdm.greeters.mobile = {
-      enable = mkEnableOption (lib.mdDoc
+      enable = mkEnableOption (mdDoc
         "lightdm-mobile-greeter as the lightdm greeter"
       );
     };
