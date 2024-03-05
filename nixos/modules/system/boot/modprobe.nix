@@ -1,13 +1,24 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    concatMapStrings
+    flip
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    stringAfter
+    types
+    ;
+in
 
 {
 
   ###### interface
 
   options = {
-    boot.modprobeConfig.enable = mkEnableOption (lib.mdDoc "modprobe config. This is useful for systems like containers which do not require a kernel") // {
+    boot.modprobeConfig.enable = mkEnableOption (mdDoc "modprobe config. This is useful for systems like containers which do not require a kernel") // {
       default = true;
     };
 
@@ -15,7 +26,7 @@ with lib;
       type = types.listOf types.str;
       default = [];
       example = [ "cirrusfb" "i2c_piix4" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         List of names of kernel modules that should not be loaded
         automatically by the hardware probing code.
       '';
@@ -27,7 +38,7 @@ with lib;
         ''
           options parport_pc io=0x378 irq=7 dma=1
         '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Any additional configuration to be appended to the generated
         {file}`modprobe.conf`.  This is typically used to
         specify module options.  See
