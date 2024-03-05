@@ -1,14 +1,45 @@
 { config, lib, pkgs, utils, ... }:
 
-with utils;
-with systemdUtils.unitOptions;
-with lib;
-
 let
+  inherit (lib)
+    concatLists
+    concatStrings
+    concatStringsSep
+    elem
+    escapeShellArg
+    filter
+    filterAttrs
+    generators
+    hasAttr
+    listToAttrs
+    literalExpression
+    makeBinPath
+    mapAttrs
+    mapAttrs'
+    mapAttrsToList
+    min
+    mkAfter
+    mkDefault
+    mkIf
+    mkMerge
+    mkOption
+    mkOrder
+    mkPackageOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    nameValuePair
+    optional
+    optionals
+    optionalString
+    types
+    ;
 
-  cfg = config.systemd;
+  inherit (utils)
+    escapeSystemdPath
+    systemdUtils
+    ;
 
-  inherit (systemdUtils.lib)
+  inherit (utils.systemdUtils.lib)
     generateUnits
     targetToUnit
     serviceToUnit
@@ -17,7 +48,10 @@ let
     pathToUnit
     mountToUnit
     automountToUnit
-    sliceToUnit;
+    sliceToUnit
+    ;
+
+  cfg = config.systemd;
 
   upstreamSystemUnits =
     [ # Targets.
@@ -125,7 +159,7 @@ let
       "final.target"
       "kexec.target"
       "systemd-kexec.service"
-    ] ++ lib.optional cfg.package.withUtmp "systemd-update-utmp.service" ++ [
+    ] ++ optional cfg.package.withUtmp "systemd-update-utmp.service" ++ [
 
       # Password entry.
       "systemd-ask-password-console.path"
@@ -430,11 +464,11 @@ in
   config = {
 
     warnings = let
-      mkOneNetOnlineWarn = typeStr: name: def: lib.optional
-        (lib.elem "network-online.target" def.after && !(lib.elem "network-online.target" (def.wants ++ def.requires ++ def.bindsTo)))
+      mkOneNetOnlineWarn = typeStr: name: def: optional
+        (elem "network-online.target" def.after && !(elem "network-online.target" (def.wants ++ def.requires ++ def.bindsTo)))
         "${name}.${typeStr} is ordered after 'network-online.target' but doesn't depend on it";
-      mkNetOnlineWarns = typeStr: defs: lib.concatLists (lib.mapAttrsToList (mkOneNetOnlineWarn typeStr) defs);
-      mkMountNetOnlineWarns = typeStr: defs: lib.concatLists (map (m: mkOneNetOnlineWarn typeStr m.what m) defs);
+      mkNetOnlineWarns = typeStr: defs: concatLists (mapAttrsToList (mkOneNetOnlineWarn typeStr) defs);
+      mkMountNetOnlineWarns = typeStr: defs: concatLists (map (m: mkOneNetOnlineWarn typeStr m.what m) defs);
     in concatLists (
       mapAttrsToList
         (name: service:
@@ -530,7 +564,7 @@ in
 
       "systemd/system.conf".text = ''
         [Manager]
-        ManagerEnvironment=${lib.concatStringsSep " " (lib.mapAttrsToList (n: v: "${n}=${lib.escapeShellArg v}") cfg.managerEnvironment)}
+        ManagerEnvironment=${concatStringsSep " " (mapAttrsToList (n: v: "${n}=${escapeShellArg v}") cfg.managerEnvironment)}
         ${optionalString cfg.enableCgroupAccounting ''
           DefaultCPUAccounting=yes
           DefaultIOAccounting=yes
@@ -609,11 +643,11 @@ in
       systemd.managerEnvironment = {
         # Doesn't contain systemd itself - everything works so it seems to use the compiled-in value for its tools
         # util-linux is needed for the main fsck utility wrapping the fs-specific ones
-        PATH = lib.makeBinPath (config.system.fsPackages ++ [cfg.package.util-linux]);
+        PATH = makeBinPath (config.system.fsPackages ++ [cfg.package.util-linux]);
         LOCALE_ARCHIVE = "/run/current-system/sw/lib/locale/locale-archive";
         TZDIR = "/etc/zoneinfo";
         # If SYSTEMD_UNIT_PATH ends with an empty component (":"), the usual unit load path will be appended to the contents of the variable
-        SYSTEMD_UNIT_PATH = lib.mkIf (config.boot.extraSystemdUnitPaths != []) "${builtins.concatStringsSep ":" config.boot.extraSystemdUnitPaths}:";
+        SYSTEMD_UNIT_PATH = mkIf (config.boot.extraSystemdUnitPaths != []) "${builtins.concatStringsSep ":" config.boot.extraSystemdUnitPaths}:";
       };
 
 
@@ -671,7 +705,7 @@ in
 
     # Increase numeric PID range (set directly instead of copying a one-line file from systemd)
     # https://github.com/systemd/systemd/pull/12226
-    boot.kernel.sysctl."kernel.pid_max" = mkIf pkgs.stdenv.is64bit (lib.mkDefault 4194304);
+    boot.kernel.sysctl."kernel.pid_max" = mkIf pkgs.stdenv.is64bit (mkDefault 4194304);
 
     boot.kernelParams = optional (!cfg.enableUnifiedCgroupHierarchy) "systemd.unified_cgroup_hierarchy=0";
 
