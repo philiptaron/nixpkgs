@@ -4,9 +4,22 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStrings
+    elemAt
+    filter
+    mdDoc
+    mkBefore
+    mkIf
+    mkMerge
+    mkOption
+    optionalString
+    replaceStrings
+    splitString
+    types
+    ;
+
   cfg = config.networking.nat;
 
   mkDest = externalIP:
@@ -17,7 +30,7 @@ let
   destIPv6 = mkDest cfg.externalIPv6;
 
   # Whether given IP (plus optional port) is an IPv6.
-  isIPv6 = ip: builtins.length (lib.splitString ":" ip) > 2;
+  isIPv6 = ip: builtins.length (splitString ":" ip) > 2;
 
   helpers = import ./helpers.nix { inherit config lib; };
 
@@ -135,7 +148,7 @@ in
       type = types.lines;
       default = "";
       example = "iptables -A INPUT -p icmp -j ACCEPT";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Additional shell commands executed as part of the nat
         initialisation script.
 
@@ -147,7 +160,7 @@ in
       type = types.lines;
       default = "";
       example = "iptables -D INPUT -p icmp -j ACCEPT || true";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Additional shell commands executed as part of the nat
         teardown script.
 
