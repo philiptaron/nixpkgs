@@ -4,9 +4,15 @@
 , options
 }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    literalExpression
+    mdDoc
+    mkOption
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.kea;
 in {
   port = 9547;
@@ -19,7 +25,7 @@ in {
           "/run/kea/kea-dhcp6.socket"
         ]
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Paths to kea control sockets
       '';
     };
