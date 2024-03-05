@@ -1,24 +1,33 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optional
+    optionalAttrs
+    optionals
+    types
+    ;
+
   format = pkgs.formats.yaml {};
 in
 {
   options.services.pomerium = {
-    enable = mkEnableOption (lib.mdDoc "the Pomerium authenticating reverse proxy");
+    enable = mkEnableOption (mdDoc "the Pomerium authenticating reverse proxy");
 
     configFile = mkOption {
       type = with types; nullOr path;
       default = null;
-      description = lib.mdDoc "Path to Pomerium config YAML. If set, overrides services.pomerium.settings.";
+      description = mdDoc "Path to Pomerium config YAML. If set, overrides services.pomerium.settings.";
     };
 
     useACMEHost = mkOption {
       type = with types; nullOr str;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         If set, use a NixOS-generated ACME certificate with the specified name.
 
         Note that this will require you to use a non-HTTP-based challenge, or
@@ -32,7 +41,7 @@ in
     };
 
     settings = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The contents of Pomerium's config.yaml, in Nix expressions.
 
         Specifying configFile will override this in its entirety.
@@ -48,7 +57,7 @@ in
     secretsFile = mkOption {
       type = with types; nullOr path;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path to file containing secrets for Pomerium, in systemd
         EnvironmentFile format. See the systemd.exec(5) man page.
       '';
