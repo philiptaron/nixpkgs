@@ -1,8 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    hasPrefix
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionals
+    types
+    ;
+
   cfg = config.services.ebusd;
 
   package = pkgs.ebusd;
@@ -21,17 +31,17 @@ let
     "--log=bus:${cfg.logs.bus}"
     "--log=update:${cfg.logs.update}"
     "--log=other:${cfg.logs.other}"
-  ] ++ lib.optionals cfg.readonly [
+  ] ++ optionals cfg.readonly [
     "--readonly"
-  ] ++ lib.optionals cfg.mqtt.enable [
+  ] ++ optionals cfg.mqtt.enable [
     "--mqtthost=${cfg.mqtt.host}"
     "--mqttport=${toString cfg.mqtt.port}"
     "--mqttuser=${cfg.mqtt.user}"
     "--mqttpass=${cfg.mqtt.password}"
-  ] ++ lib.optionals cfg.mqtt.home-assistant [
+  ] ++ optionals cfg.mqtt.home-assistant [
     "--mqttint=${package}/etc/ebusd/mqtt-hassio.cfg"
     "--mqttjson"
-  ] ++ lib.optionals cfg.mqtt.retain [
+  ] ++ optionals cfg.mqtt.retain [
     "--mqttretain"
   ] ++ cfg.extraArguments;
 
@@ -44,13 +54,13 @@ in
   meta.maintainers = with maintainers; [ nathan-gs ];
 
   options.services.ebusd = {
-    enable = mkEnableOption (lib.mdDoc "ebusd service");
+    enable = mkEnableOption (mdDoc "ebusd service");
 
     device = mkOption {
       type = types.str;
       default = "";
       example = "IP:PORT";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Use DEV as eBUS device [/dev/ttyUSB0].
         This can be either:
           enh:DEVICE or enh:IP:PORT for enhanced device (only adapter v3 and newer),
@@ -64,7 +74,7 @@ in
     port = mkOption {
       default = 8888;
       type = types.port;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The port on which to listen on
       '';
     };
@@ -72,7 +82,7 @@ in
     readonly = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
          Only read from device, never write to it
       '';
     };
@@ -80,7 +90,7 @@ in
     configpath = mkOption {
       type = types.str;
       default = "https://cfg.ebusd.eu/";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Read CSV config files from PATH (local folder or HTTPS URL) [https://cfg.ebusd.eu/]
       '';
     };
@@ -88,7 +98,7 @@ in
     scanconfig = mkOption {
       type = types.str;
       default = "full";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Pick CSV config files matching initial scan ("none" or empty for no initial scan message, "full" for full scan, or a single hex address to scan, default is to send a broadcast ident message).
         If combined with --checkconfig, you can add scan message data as arguments for checking a particular scan configuration, e.g. "FF08070400/0AB5454850303003277201". For further details on this option,
         see [Automatic configuration](https://github.com/john30/ebusd/wiki/4.7.-Automatic-configuration).
@@ -99,7 +109,7 @@ in
       main = mkOption {
         type = types.enum [ "error" "notice" "info" "debug"];
         default = "info";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Only write log for matching AREAs (main|network|bus|update|other|all) below or equal to LEVEL (error|notice|info|debug) [all:notice].
         '';
       };
@@ -107,7 +117,7 @@ in
       network = mkOption {
         type = types.enum [ "error" "notice" "info" "debug"];
         default = "info";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Only write log for matching AREAs (main|network|bus|update|other|all) below or equal to LEVEL (error|notice|info|debug) [all:notice].
         '';
       };
@@ -115,7 +125,7 @@ in
       bus = mkOption {
         type = types.enum [ "error" "notice" "info" "debug"];
         default = "info";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Only write log for matching AREAs (main|network|bus|update|other|all) below or equal to LEVEL (error|notice|info|debug) [all:notice].
         '';
       };
@@ -123,7 +133,7 @@ in
       update = mkOption {
         type = types.enum [ "error" "notice" "info" "debug"];
         default = "info";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Only write log for matching AREAs (main|network|bus|update|other|all) below or equal to LEVEL (error|notice|info|debug) [all:notice].
         '';
       };
@@ -131,7 +141,7 @@ in
       other = mkOption {
         type = types.enum [ "error" "notice" "info" "debug"];
         default = "info";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Only write log for matching AREAs (main|network|bus|update|other|all) below or equal to LEVEL (error|notice|info|debug) [all:notice].
         '';
       };
@@ -139,7 +149,7 @@ in
       all = mkOption {
         type = types.enum [ "error" "notice" "info" "debug"];
         default = "info";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Only write log for matching AREAs (main|network|bus|update|other|all) below or equal to LEVEL (error|notice|info|debug) [all:notice].
         '';
       };
@@ -150,7 +160,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Adds support for MQTT
         '';
       };
@@ -158,7 +168,7 @@ in
       host = mkOption {
         type = types.str;
         default = "localhost";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Connect to MQTT broker on HOST.
         '';
       };
@@ -166,7 +176,7 @@ in
       port = mkOption {
         default = 1883;
         type = types.port;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The port on which to connect to MQTT
         '';
       };
@@ -174,7 +184,7 @@ in
       home-assistant = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Adds the Home Assistant topics to MQTT, read more at [MQTT Integration](https://github.com/john30/ebusd/wiki/MQTT-integration)
         '';
       };
@@ -182,21 +192,21 @@ in
       retain = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Set the retain flag on all topics instead of only selected global ones
         '';
       };
 
       user = mkOption {
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The MQTT user to use
         '';
       };
 
       password = mkOption {
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The MQTT password.
         '';
       };
@@ -206,7 +216,7 @@ in
     extraArguments = mkOption {
       type = types.listOf types.str;
       default = [];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra arguments to the ebus daemon
       '';
     };
@@ -226,7 +236,7 @@ in
 
         # Hardening
         CapabilityBoundingSet = "";
-        DeviceAllow = lib.optionals usesDev [
+        DeviceAllow = optionals usesDev [
           cfg.device
         ] ;
         DevicePolicy = "closed";
