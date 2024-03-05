@@ -1,6 +1,15 @@
 { config, lib, pkgs, ... }:
-with lib;
+
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkMerge
+    mkOption
+    optional
+    types
+    ;
+
   inherit (config.security) wrapperDir;
   cfg = config.services.kbfs;
 
@@ -15,13 +24,13 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to mount the Keybase filesystem.";
+        description = mdDoc "Whether to mount the Keybase filesystem.";
       };
 
       enableRedirector = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the Keybase root redirector service, allowing
           any user to access KBFS files via `/keybase`,
           which will show different contents depending on the requester.
@@ -32,7 +41,7 @@ in {
         type = types.str;
         default = "%h/keybase";
         example = "/keybase";
-        description = lib.mdDoc "Mountpoint for the Keybase filesystem.";
+        description = mdDoc "Mountpoint for the Keybase filesystem.";
       };
 
       extraFlags = mkOption {
@@ -42,7 +51,7 @@ in {
           "-label kbfs"
           "-mount-type normal"
         ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Additional flags to pass to the Keybase filesystem on launch.
         '';
       };
