@@ -1,8 +1,16 @@
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
+  inherit (lib)
+    any
+    concatMapStringsSep
+    concatStringsSep
+    mdDoc
+    mkOption
+    optionals
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.node;
   collectorIsEnabled = final: any (collector: (final == collector)) cfg.enabledCollectors;
   collectorIsDisabled = final: any (collector: (final == collector)) cfg.disabledCollectors;
@@ -14,7 +22,7 @@ in
       type = types.listOf types.str;
       default = [];
       example = [ "systemd" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Collectors to enable. The collectors listed here are enabled in addition to the default ones.
       '';
     };
@@ -22,7 +30,7 @@ in
       type = types.listOf types.str;
       default = [];
       example = [ "timex" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Collectors to disable which are enabled by default.
       '';
     };
