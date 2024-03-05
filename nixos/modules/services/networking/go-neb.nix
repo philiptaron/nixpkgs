@@ -1,19 +1,27 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optional
+    types
+    ;
+
   cfg = config.services.go-neb;
 
   settingsFormat = pkgs.formats.yaml {};
   configFile = settingsFormat.generate "config.yaml" cfg.config;
 in {
   options.services.go-neb = {
-    enable = mkEnableOption (lib.mdDoc "an extensible matrix bot written in Go");
+    enable = mkEnableOption (mdDoc "an extensible matrix bot written in Go");
 
     bindAddress = mkOption {
       type = types.str;
-      description = lib.mdDoc "Port (and optionally address) to listen on.";
+      description = mdDoc "Port (and optionally address) to listen on.";
       default = ":4050";
     };
 
@@ -21,7 +29,7 @@ in {
       type = types.nullOr types.path;
       default = null;
       example = "/run/keys/go-neb.env";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Environment variables from this file will be interpolated into the
         final config file using envsubst with this syntax: `$ENVIRONMENT`
         or `''${VARIABLE}`.
@@ -32,12 +40,12 @@ in {
 
     baseUrl = mkOption {
       type = types.str;
-      description = lib.mdDoc "Public-facing endpoint that can receive webhooks.";
+      description = mdDoc "Public-facing endpoint that can receive webhooks.";
     };
 
     config = mkOption {
       inherit (settingsFormat) type;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Your {file}`config.yaml` as a Nix attribute set.
         See [config.sample.yaml](https://github.com/matrix-org/go-neb/blob/master/config.sample.yaml)
         for possible options.
@@ -59,7 +67,7 @@ in {
       };
 
       serviceConfig = {
-        ExecStartPre = lib.optional (cfg.secretFile != null)
+        ExecStartPre = optional (cfg.secretFile != null)
           ("+" + pkgs.writeShellScript "pre-start" ''
             umask 077
             export $(xargs < ${cfg.secretFile})
