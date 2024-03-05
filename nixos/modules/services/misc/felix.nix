@@ -1,9 +1,15 @@
 # Felix server
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.services.felix;
 
@@ -17,25 +23,25 @@ in
 
     services.felix = {
 
-      enable = mkEnableOption (lib.mdDoc "the Apache Felix OSGi service");
+      enable = mkEnableOption (mdDoc "the Apache Felix OSGi service");
 
       bundles = mkOption {
         type = types.listOf types.package;
         default = [ pkgs.felix_remoteshell ];
         defaultText = literalExpression "[ pkgs.felix_remoteshell ]";
-        description = lib.mdDoc "List of bundles that should be activated on startup";
+        description = mdDoc "List of bundles that should be activated on startup";
       };
 
       user = mkOption {
         type = types.str;
         default = "osgi";
-        description = lib.mdDoc "User account under which Apache Felix runs.";
+        description = mdDoc "User account under which Apache Felix runs.";
       };
 
       group = mkOption {
         type = types.str;
         default = "osgi";
-        description = lib.mdDoc "Group account under which Apache Felix runs.";
+        description = mdDoc "Group account under which Apache Felix runs.";
       };
 
     };
