@@ -1,11 +1,20 @@
 { config, pkgs, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    getExe
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    optional
+    ;
+in
 
 {
   options = {
     services.v2raya = {
-      enable = options.mkEnableOption (mdDoc "the v2rayA service");
+      enable = mkEnableOption (mdDoc "the v2rayA service");
     };
   };
 
