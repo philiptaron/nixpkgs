@@ -1,7 +1,20 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    literalExpression
+    mapAttrs
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optional
+    optionals
+    types
+    ;
+
   cfg = config.services.miniflux;
 
   defaultAddress = "localhost:8080";
@@ -16,12 +29,12 @@ in
 {
   options = {
     services.miniflux = {
-      enable = mkEnableOption (lib.mdDoc "miniflux");
+      enable = mkEnableOption (mdDoc "miniflux");
 
       package = mkPackageOption pkgs "miniflux" { };
 
-      createDatabaseLocally = lib.mkOption {
-        type = lib.types.bool;
+      createDatabaseLocally = mkOption {
+        type = types.bool;
         default = true;
         description = ''
           Whether a PostgreSQL database should be automatically created and
@@ -38,7 +51,7 @@ in
             LISTEN_ADDR = "localhost:8080";
           }
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration for Miniflux, refer to
           <https://miniflux.app/docs/configuration.html>
           for documentation on the supported values.
@@ -50,7 +63,7 @@ in
 
       adminCredentialsFile = mkOption {
         type = types.path;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           File containing the ADMIN_USERNAME and
           ADMIN_PASSWORD (length >= 6) in the format of
           an EnvironmentFile=, as described by systemd.exec(5).
@@ -63,12 +76,12 @@ in
   config = mkIf cfg.enable {
     services.miniflux.config = {
       LISTEN_ADDR = mkDefault defaultAddress;
-      DATABASE_URL = lib.mkIf cfg.createDatabaseLocally "user=miniflux host=/run/postgresql dbname=miniflux";
+      DATABASE_URL = mkIf cfg.createDatabaseLocally "user=miniflux host=/run/postgresql dbname=miniflux";
       RUN_MIGRATIONS = 1;
       CREATE_ADMIN = 1;
     };
 
-    services.postgresql = lib.mkIf cfg.createDatabaseLocally {
+    services.postgresql = mkIf cfg.createDatabaseLocally {
       enable = true;
       ensureUsers = [ {
         name = "miniflux";
@@ -77,7 +90,7 @@ in
       ensureDatabases = [ "miniflux" ];
     };
 
-    systemd.services.miniflux-dbsetup = lib.mkIf cfg.createDatabaseLocally {
+    systemd.services.miniflux-dbsetup = mkIf cfg.createDatabaseLocally {
       description = "Miniflux database setup";
       requires = [ "postgresql.service" ];
       after = [ "network.target" "postgresql.service" ];
@@ -91,9 +104,9 @@ in
     systemd.services.miniflux = {
       description = "Miniflux service";
       wantedBy = [ "multi-user.target" ];
-      requires = lib.optional cfg.createDatabaseLocally "miniflux-dbsetup.service";
+      requires = optional cfg.createDatabaseLocally "miniflux-dbsetup.service";
       after = [ "network.target" ]
-        ++ lib.optionals cfg.createDatabaseLocally [ "postgresql.service" "miniflux-dbsetup.service" ];
+        ++ optionals cfg.createDatabaseLocally [ "postgresql.service" "miniflux-dbsetup.service" ];
 
       serviceConfig = {
         ExecStart = "${cfg.package}/bin/miniflux";
@@ -127,7 +140,7 @@ in
         UMask = "0077";
       };
 
-      environment = lib.mapAttrs (_: toString) cfg.config;
+      environment = mapAttrs (_: toString) cfg.config;
     };
     environment.systemPackages = [ cfg.package ];
 
