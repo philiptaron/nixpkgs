@@ -3,7 +3,19 @@
 , pkgs
 , ...
 }:
-with lib; let
+
+let
+  inherit (lib)
+    getExe
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.handheld-daemon;
 in
 {
@@ -13,7 +25,7 @@ in
 
     user = mkOption {
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The user to run Handheld Daemon with.
       '';
     };
@@ -32,7 +44,7 @@ in
       restartIfChanged = true;
 
       serviceConfig = {
-        ExecStart = "${ lib.getExe cfg.package } --user ${ cfg.user }";
+        ExecStart = "${ getExe cfg.package } --user ${ cfg.user }";
         Nice = "-12";
         Restart = "on-failure";
         RestartSec = "10";
