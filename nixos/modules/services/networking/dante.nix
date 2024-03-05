@@ -1,7 +1,14 @@
 { config, lib, pkgs, ... }:
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.dante;
   confFile = pkgs.writeText "dante-sockd.conf" ''
     user.privileged: root
@@ -19,11 +26,11 @@ in
 
   options = {
     services.dante = {
-      enable = mkEnableOption (lib.mdDoc "Dante SOCKS proxy");
+      enable = mkEnableOption (mdDoc "Dante SOCKS proxy");
 
       config = mkOption {
         type        = types.lines;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Contents of Dante's configuration file.
           NOTE: user.privileged, user.unprivileged and logoutput are set by the service.
         '';
