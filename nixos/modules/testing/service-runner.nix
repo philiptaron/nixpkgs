@@ -1,8 +1,14 @@
 { lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStrings
+    concatStringsSep
+    mapAttrsToList
+    mdDoc
+    mkOption
+    types
+    ;
 
   makeScript = name: service: pkgs.writeScript "${name}-runner"
     ''
@@ -107,7 +113,7 @@ let
   opts = { config, name, ... }: {
     options.runner = mkOption {
     internal = true;
-    description = lib.mdDoc ''
+    description = mdDoc ''
         A script that runs the service outside of systemd,
         useful for testing or for using NixOS services outside
         of NixOS.
