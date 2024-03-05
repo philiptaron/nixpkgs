@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.audiobookshelf;
 in
 {
@@ -13,7 +20,7 @@ in
       package = mkPackageOption pkgs "audiobookshelf" { };
 
       dataDir = mkOption {
-        description = "Path to Audiobookshelf config and metadata inside of /var/lib.";
+        description = "Path to Audiobookshelf config and metadata inside of `/var/lib`.";
         default = "audiobookshelf";
         type = types.str;
       };
