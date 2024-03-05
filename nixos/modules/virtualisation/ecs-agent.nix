@@ -1,23 +1,30 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.ecs-agent;
 in {
   options.services.ecs-agent = {
-    enable = mkEnableOption (lib.mdDoc "Amazon ECS agent");
+    enable = mkEnableOption (mdDoc "Amazon ECS agent");
 
     package = mkPackageOption pkgs "ecs-agent" { };
 
     extra-environment = mkOption {
       type = types.attrsOf types.str;
-      description = lib.mdDoc "The environment the ECS agent should run with. See the ECS agent documentation for keys that work here.";
+      description = mdDoc "The environment the ECS agent should run with. See the ECS agent documentation for keys that work here.";
       default = {};
     };
   };
 
-  config = lib.mkIf cfg.enable {
+  config = mkIf cfg.enable {
     # This service doesn't run if docker isn't running, and unlike potentially remote services like e.g., postgresql, docker has
     # to be running locally so `docker.enable` will always be set if the ECS agent is enabled.
     virtualisation.docker.enable = true;
