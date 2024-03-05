@@ -1,8 +1,45 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    all
+    any
+    attrValues
+    concatLists
+    concatMap
+    concatMapStrings
+    concatMapStringsSep
+    concatStringsSep
+    filter
+    filterAttrs
+    getVersion
+    isAttrs
+    isString
+    listToAttrs
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkBefore
+    mkDefault
+    mkEnableOption
+    mkForce
+    mkIf
+    mkOption
+    mkOverride
+    mkPackageOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    nameValuePair
+    optional
+    optionalAttrs
+    optionals
+    optionalString
+    sortProperties
+    types
+    uniqList
+    unique
+    versions
+    ;
 
   cfg = config.services.httpd;
 
@@ -21,7 +58,7 @@ let
   php = cfg.phpPackage.override { apxs2Support = true; apacheHttpd = pkg; };
 
   phpModuleName = let
-    majorVersion = lib.versions.major (lib.getVersion php);
+    majorVersion = versions.major (getVersion php);
   in (if majorVersion == "8" then "php" else "php${majorVersion}");
 
   mod_perl = pkgs.apacheHttpdPackages.mod_perl.override { apacheHttpd = pkg; };
@@ -404,7 +441,7 @@ in
 
     services.httpd = {
 
-      enable = mkEnableOption (lib.mdDoc "the Apache HTTP Server");
+      enable = mkEnableOption (mdDoc "the Apache HTTP Server");
 
       package = mkPackageOption pkgs "apacheHttpd" { };
 
@@ -413,7 +450,7 @@ in
         default = confFile;
         defaultText = literalExpression "confFile";
         example = literalExpression ''pkgs.writeText "httpd.conf" "# my custom config file ..."'';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Override the configuration file used by Apache. By default,
           NixOS generates one automatically.
         '';
@@ -422,7 +459,7 @@ in
       extraConfig = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration lines appended to the generated Apache
           configuration file. Note that this mechanism will not work
           when {option}`configFile` is overridden.
@@ -438,7 +475,7 @@ in
             { name = "jk"; path = "''${pkgs.tomcat_connectors}/modules/mod_jk.so"; }
           ]
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Additional Apache modules to be used. These can be
           specified as a string in the case of modules distributed
           with Apache, or as an attribute set specifying the
@@ -451,14 +488,14 @@ in
         type = types.nullOr types.str;
         example = "admin@example.org";
         default = null;
-        description = lib.mdDoc "E-mail address of the server administrator.";
+        description = mdDoc "E-mail address of the server administrator.";
       };
 
       logFormat = mkOption {
         type = types.str;
         default = "common";
         example = "combined";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Log format for log files. Possible values are: combined, common, referer, agent, none.
           See <https://httpd.apache.org/docs/2.4/logs.html> for more details.
         '';
@@ -467,7 +504,7 @@ in
       logPerVirtualHost = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If enabled, each virtual host gets its own
           {file}`access.log` and
           {file}`error.log`, namely suffixed by the
@@ -478,13 +515,13 @@ in
       user = mkOption {
         type = types.str;
         default = "wwwrun";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           User account under which httpd children processes run.
 
           If you require the main httpd process to run as
           `root` add the following configuration:
           ```
-          systemd.services.httpd.serviceConfig.User = lib.mkForce "root";
+          systemd.services.httpd.serviceConfig.User = mkForce "root";
           ```
         '';
       };
@@ -492,7 +529,7 @@ in
       group = mkOption {
         type = types.str;
         default = "wwwrun";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Group under which httpd children processes run.
         '';
       };
@@ -500,7 +537,7 @@ in
       logDir = mkOption {
         type = types.path;
         default = "/var/log/httpd";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Directory for Apache's log files. It is created automatically.
         '';
       };
@@ -531,7 +568,7 @@ in
             };
           }
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Specification of the virtual hosts served by Apache. Each
           element should be an attribute set specifying the
           configuration of the virtual host.
@@ -541,13 +578,13 @@ in
       enableMellon = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to enable the mod_auth_mellon module.";
+        description = mdDoc "Whether to enable the mod_auth_mellon module.";
       };
 
       enablePHP = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to enable the PHP module.";
+        description = mdDoc "Whether to enable the PHP module.";
       };
 
       phpPackage = mkPackageOption pkgs "php" { };
@@ -555,7 +592,7 @@ in
       enablePerl = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to enable the Perl module (mod_perl).";
+        description = mdDoc "Whether to enable the Perl module (mod_perl).";
       };
 
       phpOptions = mkOption {
@@ -565,7 +602,7 @@ in
           ''
             date.timezone = "CET"
           '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Options appended to the PHP configuration file {file}`php.ini`.
         '';
       };
@@ -575,7 +612,7 @@ in
         default = "event";
         example = "worker";
         description =
-          lib.mdDoc ''
+          mdDoc ''
             Multi-processing module to be used by Apache. Available
             modules are `prefork` (handles each
             request in a separate child process), `worker`
@@ -590,14 +627,14 @@ in
         type = types.int;
         default = 150;
         example = 8;
-        description = lib.mdDoc "Maximum number of httpd processes (prefork)";
+        description = mdDoc "Maximum number of httpd processes (prefork)";
       };
 
       maxRequestsPerChild = mkOption {
         type = types.int;
         default = 0;
         example = 500;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Maximum number of httpd requests answered per httpd child (prefork), 0 means unlimited.
         '';
       };
@@ -605,14 +642,14 @@ in
       sslCiphers = mkOption {
         type = types.str;
         default = "HIGH:!aNULL:!MD5:!EXP";
-        description = lib.mdDoc "Cipher Suite available for negotiation in SSL proxy handshake.";
+        description = mdDoc "Cipher Suite available for negotiation in SSL proxy handshake.";
       };
 
       sslProtocols = mkOption {
         type = types.str;
         default = "All -SSLv2 -SSLv3 -TLSv1 -TLSv1.1";
         example = "All -SSLv2 -SSLv3";
-        description = lib.mdDoc "Allowed SSL/TLS protocol versions.";
+        description = mdDoc "Allowed SSL/TLS protocol versions.";
       };
     };
 
