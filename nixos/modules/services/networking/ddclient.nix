@@ -1,6 +1,22 @@
 { config, pkgs, lib, ... }:
 
 let
+  inherit (lib)
+    concatStringsSep
+    getAttrFromPath
+    getExe
+    hasPrefix
+    literalExpression
+    mdDoc
+    mkChangedOptionModule
+    mkIf
+    mkOption
+    mkRemovedOptionModule
+    optional
+    optionalString
+    types
+    ;
+
   cfg = config.services.ddclient;
   boolToStr = bool: if bool then "yes" else "no";
   dataDir = "/var/lib/ddclient";
@@ -15,21 +31,21 @@ let
     login=${cfg.username}
     password=${if cfg.protocol == "nsupdate" then "/run/${RuntimeDirectory}/ddclient.key" else "@password_placeholder@"}
     protocol=${cfg.protocol}
-    ${lib.optionalString (cfg.script != "") "script=${cfg.script}"}
-    ${lib.optionalString (cfg.server != "") "server=${cfg.server}"}
-    ${lib.optionalString (cfg.zone != "")   "zone=${cfg.zone}"}
+    ${optionalString (cfg.script != "") "script=${cfg.script}"}
+    ${optionalString (cfg.server != "") "server=${cfg.server}"}
+    ${optionalString (cfg.zone != "")   "zone=${cfg.zone}"}
     ssl=${boolToStr cfg.ssl}
     wildcard=YES
     quiet=${boolToStr cfg.quiet}
     verbose=${boolToStr cfg.verbose}
     ${cfg.extraConfig}
-    ${lib.concatStringsSep "," cfg.domains}
+    ${concatStringsSep "," cfg.domains}
   '';
   configFile = if (cfg.configFile != null) then cfg.configFile else configFile';
 
   preStart = ''
     install --mode=600 --owner=$USER ${configFile} /run/${RuntimeDirectory}/ddclient.conf
-    ${lib.optionalString (cfg.configFile == null) (if (cfg.protocol == "nsupdate") then ''
+    ${optionalString (cfg.configFile == null) (if (cfg.protocol == "nsupdate") then ''
       install --mode=600 --owner=$USER ${cfg.passwordFile} /run/${RuntimeDirectory}/ddclient.key
     '' else if (cfg.passwordFile != null) then ''
       "${pkgs.replace-secret}/bin/replace-secret" "@password_placeholder@" "${cfg.passwordFile}" "/run/${RuntimeDirectory}/ddclient.conf"
@@ -37,10 +53,7 @@ let
       sed -i '/^password=@password_placeholder@$/d' /run/${RuntimeDirectory}/ddclient.conf
     '')}
   '';
-
 in
-
-with lib;
 
 {
 
@@ -58,12 +71,12 @@ with lib;
 
   options = {
 
-    services.ddclient = with lib.types; {
+    services.ddclient = with types; {
 
       enable = mkOption {
         default = false;
         type = bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to synchronise your machine's IP address with a dynamic DNS provider (e.g. dyndns.org).
         '';
       };
@@ -71,8 +84,8 @@ with lib;
       package = mkOption {
         type = package;
         default = pkgs.ddclient;
-        defaultText = lib.literalExpression "pkgs.ddclient";
-        description = lib.mdDoc ''
+        defaultText = literalExpression "pkgs.ddclient";
+        description = mdDoc ''
           The ddclient executable package run by the service.
         '';
       };
@@ -80,17 +93,17 @@ with lib;
       domains = mkOption {
         default = [ "" ];
         type = listOf str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Domain name(s) to synchronize.
         '';
       };
 
       username = mkOption {
         # For `nsupdate` username contains the path to the nsupdate executable
-        default = lib.optionalString (config.services.ddclient.protocol == "nsupdate") "${pkgs.bind.dnsutils}/bin/nsupdate";
+        default = optionalString (config.services.ddclient.protocol == "nsupdate") "${pkgs.bind.dnsutils}/bin/nsupdate";
         defaultText = "";
         type = str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           User name.
         '';
       };
@@ -98,7 +111,7 @@ with lib;
       passwordFile = mkOption {
         default = null;
         type = nullOr str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A file containing the password or a TSIG key in named format when using the nsupdate protocol.
         '';
       };
@@ -106,7 +119,7 @@ with lib;
       interval = mkOption {
         default = "10min";
         type = str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The interval at which to run the check and update.
           See {command}`man 7 systemd.time` for the format.
         '';
@@ -115,7 +128,7 @@ with lib;
       configFile = mkOption {
         default = null;
         type = nullOr path;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Path to configuration file.
           When set this overrides the generated configuration from module options.
         '';
@@ -125,7 +138,7 @@ with lib;
       protocol = mkOption {
         default = "dyndns2";
         type = str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Protocol to use with dynamic DNS provider (see https://ddclient.net/protocols.html ).
         '';
       };
@@ -133,7 +146,7 @@ with lib;
       server = mkOption {
         default = "";
         type = str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Server address.
         '';
       };
@@ -141,7 +154,7 @@ with lib;
       ssl = mkOption {
         default = true;
         type = bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to use SSL/TLS to connect to dynamic DNS provider.
         '';
       };
@@ -149,7 +162,7 @@ with lib;
       quiet = mkOption {
         default = false;
         type = bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Print no messages for unnecessary updates.
         '';
       };
@@ -157,7 +170,7 @@ with lib;
       script = mkOption {
         default = "";
         type = str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           script as required by some providers.
         '';
       };
@@ -165,7 +178,7 @@ with lib;
       use = mkOption {
         default = "web, web=checkip.dyndns.com/, web-skip='Current IP Address: '";
         type = str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Method to determine the IP address to send to the dynamic DNS provider.
         '';
       };
@@ -173,7 +186,7 @@ with lib;
       verbose = mkOption {
         default = false;
         type = bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Print verbose information.
         '';
       };
@@ -181,7 +194,7 @@ with lib;
       zone = mkOption {
         default = "";
         type = str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           zone as required by some providers.
         '';
       };
@@ -189,7 +202,7 @@ with lib;
       extraConfig = mkOption {
         default = "";
         type = lines;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra configuration. Contents will be added verbatim to the configuration file.
 
           ::: {.note}
@@ -209,7 +222,7 @@ with lib;
       wantedBy = [ "multi-user.target" ];
       after = [ "network.target" ];
       restartTriggers = optional (cfg.configFile != null) cfg.configFile;
-      path = lib.optional (lib.hasPrefix "if," cfg.use) pkgs.iproute2;
+      path = optional (hasPrefix "if," cfg.use) pkgs.iproute2;
 
       serviceConfig = {
         DynamicUser = true;
@@ -218,7 +231,7 @@ with lib;
         inherit StateDirectory;
         Type = "oneshot";
         ExecStartPre = [ "!${pkgs.writeShellScript "ddclient-prestart" preStart}" ];
-        ExecStart = "${lib.getExe cfg.package} -file /run/${RuntimeDirectory}/ddclient.conf";
+        ExecStart = "${getExe cfg.package} -file /run/${RuntimeDirectory}/ddclient.conf";
       };
     };
 
