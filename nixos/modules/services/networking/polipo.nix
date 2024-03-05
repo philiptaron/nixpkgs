@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
 
   cfg = config.services.polipo;
 
@@ -23,25 +30,25 @@ in
 
     services.polipo = {
 
-      enable = mkEnableOption (lib.mdDoc "polipo caching web proxy");
+      enable = mkEnableOption (mdDoc "polipo caching web proxy");
 
       proxyAddress = mkOption {
         type = types.str;
         default = "127.0.0.1";
-        description = lib.mdDoc "IP address on which Polipo will listen.";
+        description = mdDoc "IP address on which Polipo will listen.";
       };
 
       proxyPort = mkOption {
         type = types.port;
         default = 8123;
-        description = lib.mdDoc "TCP port on which Polipo will listen.";
+        description = mdDoc "TCP port on which Polipo will listen.";
       };
 
       allowedClients = mkOption {
         type = types.listOf types.str;
         default = [ "127.0.0.1" "::1" ];
         example = [ "127.0.0.1" "::1" "134.157.168.0/24" "2001:660:116::/48" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of IP addresses or network addresses that may connect to Polipo.
         '';
       };
@@ -50,7 +57,7 @@ in
         type = types.str;
         default = "";
         example = "localhost:8124";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Hostname and port number of an HTTP parent proxy;
           it should have the form ‘host:port’.
         '';
@@ -60,7 +67,7 @@ in
         type = types.str;
         default = "";
         example = "localhost:9050";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Hostname and port number of an SOCKS parent proxy;
           it should have the form ‘host:port’.
         '';
@@ -69,7 +76,7 @@ in
       extraConfig = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Polio configuration. Contents will be added
           verbatim to the configuration file.
         '';
