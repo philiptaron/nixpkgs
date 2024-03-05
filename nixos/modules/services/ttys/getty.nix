@@ -1,8 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    escapeShellArgs
+    literalExpression
+    mdDoc
+    mkDefault
+    mkIf
+    mkOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    optionals
+    types
+    ;
+
   cfg = config.services.getty;
 
   baseArgs = [
@@ -34,7 +45,7 @@ in
       autologinUser = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Username of the account that will be automatically logged in at the console.
           If unspecified, a login prompt is shown as usual.
         '';
@@ -44,7 +55,7 @@ in
         type = types.path;
         default = "${pkgs.shadow}/bin/login";
         defaultText = literalExpression ''"''${pkgs.shadow}/bin/login"'';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Path to the login binary executed by agetty.
         '';
       };
@@ -52,7 +63,7 @@ in
       loginOptions = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Template for arguments to be passed to
           {manpage}`login(1)`.
 
@@ -67,7 +78,7 @@ in
       extraArgs = mkOption {
         type = types.listOf types.str;
         default = [ ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Additional arguments passed to agetty.
         '';
         example = [ "--nohostname" ];
@@ -75,7 +86,7 @@ in
 
       greetingLine = mkOption {
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Welcome line printed by agetty.
           The default shows current NixOS version label, machine type and tty.
         '';
@@ -84,7 +95,7 @@ in
       helpLine = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Help line printed by agetty below the welcome line.
           Used by the installation CD to give some hints on
           how to proceed.
