@@ -1,8 +1,15 @@
 { options, config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optional
+    optionalAttrs
+    types
+    ;
 
   cfg = config.services.matterbridge;
 
@@ -17,13 +24,13 @@ in
 {
   options = {
     services.matterbridge = {
-      enable = mkEnableOption (lib.mdDoc "Matterbridge chat platform bridge");
+      enable = mkEnableOption (mdDoc "Matterbridge chat platform bridge");
 
       configPath = mkOption {
         type = with types; nullOr str;
         default = null;
         example = "/etc/nixos/matterbridge.toml";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The path to the matterbridge configuration file.
         '';
       };
@@ -62,7 +69,7 @@ in
               account="mattermost.work"
               channel="off-topic"
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           WARNING: THIS IS INSECURE, as your password will end up in
           {file}`/nix/store`, thus publicly readable. Use
           `services.matterbridge.configPath` instead.
@@ -73,7 +80,7 @@ in
       user = mkOption {
         type = types.str;
         default = "matterbridge";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           User which runs the matterbridge service.
         '';
       };
@@ -81,7 +88,7 @@ in
       group = mkOption {
         type = types.str;
         default = "matterbridge";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Group which runs the matterbridge service.
         '';
       };
