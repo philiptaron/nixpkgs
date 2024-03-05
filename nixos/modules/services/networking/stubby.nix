@@ -1,8 +1,20 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrNames
+    attrValues
+    isString
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRemovedOptionModule
+    optionalString
+    types
+    ;
+
   cfg = config.services.stubby;
   settingsFormat = pkgs.formats.yaml { };
   confFile = settingsFormat.generate "stubby.yml" cfg.settings;
@@ -25,11 +37,11 @@ in {
   options = {
     services.stubby = {
 
-      enable = mkEnableOption (lib.mdDoc "Stubby DNS resolver");
+      enable = mkEnableOption (mdDoc "Stubby DNS resolver");
 
       settings = mkOption {
         type = types.attrsOf settingsFormat.type;
-        example = lib.literalExpression ''
+        example = literalExpression ''
           pkgs.stubby.passthru.settingsExample // {
             upstream_recursive_servers = [{
               address_data = "158.64.1.29";
@@ -41,7 +53,7 @@ in {
             }];
           };
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Content of the Stubby configuration file. All Stubby settings may be set or queried
           here. The default settings are available at
           `pkgs.stubby.passthru.settingsExample`. See
@@ -66,7 +78,7 @@ in {
         default = null;
         type = types.nullOr (types.enum (attrNames logLevels ++ attrValues logLevels));
         apply = v: if isString v then logLevels.${v} else v;
-        description = lib.mdDoc "Log verbosity (syslog keyword or level).";
+        description = mdDoc "Log verbosity (syslog keyword or level).";
       };
 
     };
