@@ -2,7 +2,16 @@
 
 { config, pkgs, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    mkRenamedOptionModule
+    teams
+    types
+    ;
+in
 
 {
 
@@ -27,7 +36,7 @@ with lib;
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable GNOME Online Accounts daemon, a service that provides
           a single sign-on framework for the GNOME desktop.
         '';
