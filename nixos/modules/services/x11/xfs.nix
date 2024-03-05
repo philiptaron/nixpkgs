@@ -1,8 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    singleton
+    types
+    ;
 
   configFile = ./xfs.conf;
 
@@ -19,7 +24,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to enable the X Font Server.";
+        description = mdDoc "Whether to enable the X Font Server.";
       };
 
     };
