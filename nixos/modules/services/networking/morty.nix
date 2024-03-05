@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalString
+    types
+    ;
 
   cfg = config.services.morty;
 
@@ -17,18 +24,18 @@ in
     services.morty = {
 
       enable = mkEnableOption
-        (lib.mdDoc "Morty proxy server. See https://github.com/asciimoo/morty");
+        (mdDoc "Morty proxy server. See https://github.com/asciimoo/morty");
 
       ipv6 = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc "Allow IPv6 HTTP requests?";
+        description = mdDoc "Allow IPv6 HTTP requests?";
       };
 
       key = mkOption {
         type = types.str;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           HMAC url validation key (hexadecimal encoded).
           Leave blank to disable. Without validation key, anyone can
           submit proxy requests. Leave blank to disable.
@@ -39,7 +46,7 @@ in
       timeout = mkOption {
         type = types.int;
         default = 2;
-        description = lib.mdDoc "Request timeout in seconds.";
+        description = mdDoc "Request timeout in seconds.";
       };
 
       package = mkPackageOption pkgs "morty" { };
@@ -47,13 +54,13 @@ in
       port = mkOption {
         type = types.port;
         default = 3000;
-        description = lib.mdDoc "Listing port";
+        description = mdDoc "Listing port";
       };
 
       listenAddress = mkOption {
         type = types.str;
         default = "127.0.0.1";
-        description = lib.mdDoc "The address on which the service listens";
+        description = mdDoc "The address on which the service listens";
       };
 
     };
