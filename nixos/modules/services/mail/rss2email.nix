@@ -1,10 +1,21 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    generators
+    maintainers
+    mapAttrs'
+    mdDoc
+    mkIf
+    mkOption
+    nameValuePair
+    optionalAttrs
+    types
+    ;
+
   cfg = config.services.rss2email;
-in {
+in
+{
 
   ###### interface
 
@@ -15,24 +26,24 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to enable rss2email.";
+        description = mdDoc "Whether to enable rss2email.";
       };
 
       to = mkOption {
         type = types.str;
-        description = lib.mdDoc "Mail address to which to send emails";
+        description = mdDoc "Mail address to which to send emails";
       };
 
       interval = mkOption {
         type = types.str;
         default = "12h";
-        description = lib.mdDoc "How often to check the feeds, in systemd interval format";
+        description = mdDoc "How often to check the feeds, in systemd interval format";
       };
 
       config = mkOption {
         type = with types; attrsOf (oneOf [ str int bool ]);
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The configuration to give rss2email.
 
           Default will use system-wide `sendmail` to send the
@@ -49,18 +60,18 @@ in {
       };
 
       feeds = mkOption {
-        description = lib.mdDoc "The feeds to watch.";
+        description = mdDoc "The feeds to watch.";
         type = types.attrsOf (types.submodule {
           options = {
             url = mkOption {
               type = types.str;
-              description = lib.mdDoc "The URL at which to fetch the feed.";
+              description = mdDoc "The URL at which to fetch the feed.";
             };
 
             to = mkOption {
               type = with types; nullOr str;
               default = null;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Email address to which to send feed items.
 
                 If `null`, this will not be set in the
@@ -102,11 +113,11 @@ in {
     };
 
     systemd.services.rss2email = let
-      conf = pkgs.writeText "rss2email.cfg" (lib.generators.toINI {} ({
+      conf = pkgs.writeText "rss2email.cfg" (generators.toINI {} ({
           DEFAULT = cfg.config;
-        } // lib.mapAttrs' (name: feed: nameValuePair "feed.${name}" (
+        } // mapAttrs' (name: feed: nameValuePair "feed.${name}" (
           { inherit (feed) url; } //
-          lib.optionalAttrs (feed.to != null) { inherit (feed) to; }
+          optionalAttrs (feed.to != null) { inherit (feed) to; }
         )) cfg.feeds
       ));
     in
@@ -132,5 +143,5 @@ in {
     };
   };
 
-  meta.maintainers = with lib.maintainers; [ ekleog ];
+  meta.maintainers = with maintainers; [ ekleog ];
 }
