@@ -1,8 +1,12 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
 
   initScriptBuilder = pkgs.substituteAll {
     src = ./init-script-builder.sh;
@@ -25,7 +29,7 @@ in
       enable = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Some systems require a /sbin/init script which is started.
           Or having it makes starting NixOS easier.
           This applies to some kind of hosting services and user mode linux.
