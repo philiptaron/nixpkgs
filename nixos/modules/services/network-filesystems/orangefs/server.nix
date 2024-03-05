@@ -1,8 +1,19 @@
 { config, lib, pkgs, ...} :
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    imap0
+    length
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.orangefs.server;
 
   aliases = mapAttrsToList (alias: url: alias) cfg.servers;
@@ -74,45 +85,45 @@ in {
 
   options = {
     services.orangefs.server = {
-      enable = mkEnableOption (lib.mdDoc "OrangeFS server");
+      enable = mkEnableOption (mdDoc "OrangeFS server");
 
       logType = mkOption {
         type = with types; enum [ "file" "syslog" ];
         default = "syslog";
-        description = lib.mdDoc "Destination for log messages.";
+        description = mdDoc "Destination for log messages.";
       };
 
       dataStorageSpace = mkOption {
         type = types.nullOr types.str;
         default = null;
         example = "/data/storage";
-        description = lib.mdDoc "Directory for data storage.";
+        description = mdDoc "Directory for data storage.";
       };
 
       metadataStorageSpace = mkOption {
         type = types.nullOr types.str;
         default = null;
         example = "/data/meta";
-        description = lib.mdDoc "Directory for meta data storage.";
+        description = mdDoc "Directory for meta data storage.";
       };
 
       BMIModules = mkOption {
         type = with types; listOf str;
         default = [ "bmi_tcp" ];
         example = [ "bmi_tcp" "bmi_ib"];
-        description = lib.mdDoc "List of BMI modules to load.";
+        description = mdDoc "List of BMI modules to load.";
       };
 
       extraDefaults = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc "Extra config for `<Defaults>` section.";
+        description = mdDoc "Extra config for `<Defaults>` section.";
       };
 
       extraConfig = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc "Extra config for the global section.";
+        description = mdDoc "Extra config for the global section.";
       };
 
       servers = mkOption {
@@ -122,11 +133,11 @@ in {
           node1 = "tcp://node1:3334";
           node2 = "tcp://node2:3334";
         };
-        description = lib.mdDoc "URLs for storage server including port. The attribute names define the server alias.";
+        description = mdDoc "URLs for storage server including port. The attribute names define the server alias.";
       };
 
       fileSystems = mkOption {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           These options will create the `<FileSystem>` sections of config file.
         '';
         default = { orangefs = {}; };
@@ -146,37 +157,37 @@ in {
             id = mkOption {
               type = types.int;
               default = 1;
-              description = lib.mdDoc "File system ID (must be unique within configuration).";
+              description = mdDoc "File system ID (must be unique within configuration).";
             };
 
             rootHandle = mkOption {
               type = types.int;
               default = 3;
-              description = lib.mdDoc "File system root ID.";
+              description = mdDoc "File system root ID.";
             };
 
             extraConfig = mkOption {
               type = types.lines;
               default = "";
-              description = lib.mdDoc "Extra config for `<FileSystem>` section.";
+              description = mdDoc "Extra config for `<FileSystem>` section.";
             };
 
             troveSyncMeta = mkOption {
               type = types.bool;
               default = true;
-              description = lib.mdDoc "Sync meta data.";
+              description = mdDoc "Sync meta data.";
             };
 
             troveSyncData = mkOption {
               type = types.bool;
               default = false;
-              description = lib.mdDoc "Sync data.";
+              description = mdDoc "Sync data.";
             };
 
             extraStorageHints = mkOption {
               type = types.lines;
               default = "";
-              description = lib.mdDoc "Extra config for `<StorageHints>` section.";
+              description = mdDoc "Extra config for `<StorageHints>` section.";
             };
           };
         }));
