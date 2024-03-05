@@ -1,8 +1,17 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.xserver.displayManager.xpra;
   dmcfg = config.services.xserver.displayManager;
 
@@ -16,34 +25,34 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to enable xpra as display manager.";
+        description = mdDoc "Whether to enable xpra as display manager.";
       };
 
       bindTcp = mkOption {
         default = "127.0.0.1:10000";
         example = "0.0.0.0:10000";
         type = types.nullOr types.str;
-        description = lib.mdDoc "Bind xpra to TCP";
+        description = mdDoc "Bind xpra to TCP";
       };
 
       desktop = mkOption {
         type = types.nullOr types.str;
         default = null;
         example = "gnome-shell";
-        description = lib.mdDoc "Start a desktop environment instead of seamless mode";
+        description = mdDoc "Start a desktop environment instead of seamless mode";
       };
 
       auth = mkOption {
         type = types.str;
         default = "pam";
         example = "password:value=mysecret";
-        description = lib.mdDoc "Authentication to use when connecting to xpra";
+        description = mdDoc "Authentication to use when connecting to xpra";
       };
 
-      pulseaudio = mkEnableOption (lib.mdDoc "pulseaudio audio streaming");
+      pulseaudio = mkEnableOption (mdDoc "pulseaudio audio streaming");
 
       extraOptions = mkOption {
-        description = lib.mdDoc "Extra xpra options";
+        description = mdDoc "Extra xpra options";
         default = [];
         type = types.listOf types.str;
       };
