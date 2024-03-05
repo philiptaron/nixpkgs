@@ -1,8 +1,19 @@
 { config, lib, options, pkgs, buildEnv, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    generators
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalAttrs
+    types
+    ;
+
   defaultUser = "healthchecks";
   cfg = config.services.healthchecks;
   opt = options.services.healthchecks;
@@ -13,7 +24,7 @@ let
     STATIC_ROOT = cfg.dataDir + "/static";
   } // cfg.settings;
 
-  environmentFile = pkgs.writeText "healthchecks-environment" (lib.generators.toKeyValue { } environment);
+  environmentFile = pkgs.writeText "healthchecks-environment" (generators.toKeyValue { } environment);
 
   healthchecksManageScript = pkgs.writeShellScriptBin "healthchecks-manage" ''
     sudo=exec
@@ -26,8 +37,8 @@ let
 in
 {
   options.services.healthchecks = {
-    enable = mkEnableOption (lib.mdDoc "healthchecks") // {
-      description = lib.mdDoc ''
+    enable = mkEnableOption (mdDoc "healthchecks") // {
+      description = mdDoc ''
         Enable healthchecks.
         It is expected to be run behind a HTTP reverse proxy.
       '';
@@ -38,7 +49,7 @@ in
     user = mkOption {
       default = defaultUser;
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         User account under which healthchecks runs.
 
         ::: {.note}
@@ -52,7 +63,7 @@ in
     group = mkOption {
       default = defaultUser;
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Group account under which healthchecks runs.
 
         ::: {.note}
@@ -66,19 +77,19 @@ in
     listenAddress = mkOption {
       type = types.str;
       default = "localhost";
-      description = lib.mdDoc "Address the server will listen on.";
+      description = mdDoc "Address the server will listen on.";
     };
 
     port = mkOption {
       type = types.port;
       default = 8000;
-      description = lib.mdDoc "Port the server will listen on.";
+      description = mdDoc "Port the server will listen on.";
     };
 
     dataDir = mkOption {
       type = types.str;
       default = "/var/lib/healthchecks";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The directory used to store all data for healthchecks.
 
         ::: {.note}
@@ -89,8 +100,8 @@ in
       '';
     };
 
-    settings = lib.mkOption {
-      description = lib.mdDoc ''
+    settings = mkOption {
+      description = mdDoc ''
         Environment variables which are read by healthchecks `(local)_settings.py`.
 
         Settings which are explicitly covered in options below, are type-checked and/or transformed
@@ -113,29 +124,29 @@ in
       type = types.submodule (settings: {
         freeformType = types.attrsOf types.str;
         options = {
-          ALLOWED_HOSTS = lib.mkOption {
+          ALLOWED_HOSTS = mkOption {
             type = types.listOf types.str;
             default = [ "*" ];
-            description = lib.mdDoc "The host/domain names that this site can serve.";
-            apply = lib.concatStringsSep ",";
+            description = mdDoc "The host/domain names that this site can serve.";
+            apply = concatStringsSep ",";
           };
 
           SECRET_KEY_FILE = mkOption {
             type = types.path;
-            description = lib.mdDoc "Path to a file containing the secret key.";
+            description = mdDoc "Path to a file containing the secret key.";
           };
 
           DEBUG = mkOption {
             type = types.bool;
             default = false;
-            description = lib.mdDoc "Enable debug mode.";
+            description = mdDoc "Enable debug mode.";
             apply = boolToPython;
           };
 
           REGISTRATION_OPEN = mkOption {
             type = types.bool;
             default = false;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               A boolean that controls whether site visitors can create new accounts.
               Set it to false if you are setting up a private Healthchecks instance,
               but it needs to be publicly accessible (so, for example, your cloud
@@ -149,7 +160,7 @@ in
           DB = mkOption {
             type = types.enum [ "sqlite" "postgres" "mysql" ];
             default = "sqlite";
-            description = lib.mdDoc "Database engine to use.";
+            description = mdDoc "Database engine to use.";
           };
 
           DB_NAME = mkOption {
@@ -158,12 +169,12 @@ in
               if settings.config.DB == "sqlite"
               then "${cfg.dataDir}/healthchecks.sqlite"
               else "hc";
-            defaultText = lib.literalExpression ''
+            defaultText = literalExpression ''
               if config.${settings.options.DB} == "sqlite"
               then "''${config.${opt.dataDir}}/healthchecks.sqlite"
               else "hc"
             '';
-            description = lib.mdDoc "Database name.";
+            description = mdDoc "Database name.";
           };
         };
       });
