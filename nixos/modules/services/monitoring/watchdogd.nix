@@ -1,6 +1,25 @@
 { config, lib, pkgs, ... }:
-with lib;
+
 let
+  inherit (lib)
+    any
+    boolToString
+    concatStringsSep
+    isAttrs
+    isBool
+    isFloat
+    isInt
+    isString
+    maintainers
+    mapAttrsToList
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    pipe
+    types
+    ;
+
   cfg = config.services.watchdogd;
 
   mkPluginOpts = plugin: defWarn: defCrit: {
@@ -106,7 +125,7 @@ in {
       else if any (f: f value) [isString isInt isFloat]
         then "${name} = ${toString value}"
       else throw ''
-        Found invalid type in `services.watchdogd.settings`: '${typeOf value}'
+        Found invalid type in `services.watchdogd.settings`: '${builtins.typeOf value}'
       '';
 
     watchdogdConf = pkgs.writeText "watchdogd.conf" (toConfig cfg.settings);
