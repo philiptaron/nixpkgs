@@ -1,14 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    singleton
+    ;
+
   cfg = config.services.xserver.windowManager.jwm;
 in
 {
   ###### interface
   options = {
-    services.xserver.windowManager.jwm.enable = mkEnableOption (lib.mdDoc "jwm");
+    services.xserver.windowManager.jwm.enable = mkEnableOption (mdDoc "jwm");
   };
 
   ###### implementation
