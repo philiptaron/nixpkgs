@@ -1,8 +1,21 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    escapeShellArgs
+    getBin
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    optional
+    optionals
+    types
+    ;
+
   cfg = config.services.icecream.scheduler;
 in {
 
@@ -11,12 +24,12 @@ in {
   options = {
 
     services.icecream.scheduler = {
-      enable = mkEnableOption (lib.mdDoc "Icecream Scheduler");
+      enable = mkEnableOption (mdDoc "Icecream Scheduler");
 
       netName = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Network name for the icecream scheduler.
 
           Uses the default ICECREAM if null.
@@ -26,14 +39,14 @@ in {
       port = mkOption {
         type = types.port;
         default = 8765;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Server port to listen for icecream daemon requests.
         '';
       };
 
       openFirewall = mkOption {
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to automatically open the daemon port in the firewall.
         '';
       };
@@ -41,7 +54,7 @@ in {
       openTelnet = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to open the telnet TCP port on 8766.
         '';
       };
@@ -49,7 +62,7 @@ in {
       persistentClientConnection = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to prevent clients from connecting to a better scheduler.
         '';
       };
@@ -59,7 +72,7 @@ in {
       extraArgs = mkOption {
         type = types.listOf types.str;
         default = [];
-        description = lib.mdDoc "Additional command line parameters";
+        description = mdDoc "Additional command line parameters";
         example = [ "-v" ];
       };
     };
@@ -92,5 +105,5 @@ in {
     };
   };
 
-  meta.maintainers = with lib.maintainers; [ emantor ];
+  meta.maintainers = with maintainers; [ emantor ];
 }
