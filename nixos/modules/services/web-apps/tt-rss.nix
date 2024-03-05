@@ -1,7 +1,25 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    boolToString
+    concatStringsSep
+    derivations
+    escape
+    last
+    mapAttrs
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRemovedOptionModule
+    optional
+    optionalAttrs
+    optionalString
+    types
+    ;
+
   cfg = config.services.tt-rss;
 
   inherit (cfg) phpPackage;
@@ -123,12 +141,12 @@ let
 
     services.tt-rss = {
 
-      enable = mkEnableOption (lib.mdDoc "tt-rss");
+      enable = mkEnableOption (mdDoc "tt-rss");
 
       root = mkOption {
         type = types.path;
         default = "/var/lib/tt-rss";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Root of the application.
         '';
       };
@@ -136,7 +154,7 @@ let
       user = mkOption {
         type = types.str;
         default = "tt_rss";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           User account under which both the update daemon and the web-application run.
         '';
       };
@@ -144,7 +162,7 @@ let
       pool = mkOption {
         type = types.str;
         default = "${poolName}";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Name of existing phpfpm pool that is used to run web-application.
           If not specified a pool will be created automatically with
           default values.
@@ -154,7 +172,7 @@ let
       virtualHost = mkOption {
         type = types.nullOr types.str;
         default = "tt-rss";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Name of the nginx virtualhost to use and setup. If null, do not setup any virtualhost.
         '';
       };
@@ -163,7 +181,7 @@ let
         type = mkOption {
           type = types.enum ["pgsql" "mysql"];
           default = "pgsql";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Database to store feeds. Supported are pgsql and mysql.
           '';
         };
@@ -171,7 +189,7 @@ let
         host = mkOption {
           type = types.nullOr types.str;
           default = null;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Host of the database. Leave null to use Unix domain socket.
           '';
         };
@@ -179,7 +197,7 @@ let
         name = mkOption {
           type = types.str;
           default = "tt_rss";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Name of the existing database.
           '';
         };
@@ -187,7 +205,7 @@ let
         user = mkOption {
           type = types.str;
           default = "tt_rss";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The database user. The user must exist and has access to
             the specified database.
           '';
@@ -196,7 +214,7 @@ let
         password = mkOption {
           type = types.nullOr types.str;
           default = null;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The database user's password.
           '';
         };
@@ -204,7 +222,7 @@ let
         passwordFile = mkOption {
           type = types.nullOr types.str;
           default = null;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The database user's password.
           '';
         };
@@ -212,7 +230,7 @@ let
         port = mkOption {
           type = types.nullOr types.port;
           default = null;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             The database's port. If not set, the default ports will be provided (5432
             and 3306 for pgsql and mysql respectively).
           '';
@@ -221,7 +239,7 @@ let
         createLocally = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc "Create the database and database user locally.";
+          description = mdDoc "Create the database and database user locally.";
         };
       };
 
@@ -229,7 +247,7 @@ let
         autoCreate = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Allow authentication modules to auto-create users in tt-rss internal
             database when authenticated successfully.
           '';
@@ -238,7 +256,7 @@ let
         autoLogin = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Automatically login user on remote or other kind of externally supplied
             authentication, otherwise redirect to login form as normal.
             If set to true, users won't be able to set application language
@@ -251,7 +269,7 @@ let
         hub = mkOption {
           type = types.str;
           default = "";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             URL to a PubSubHubbub-compatible hub server. If defined, "Published
             articles" generated feed would automatically become PUSH-enabled.
           '';
@@ -260,7 +278,7 @@ let
         enable = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Enable client PubSubHubbub support in tt-rss. When disabled, tt-rss
             won't try to subscribe to PUSH feed updates.
           '';
@@ -271,7 +289,7 @@ let
         server = mkOption {
           type = types.str;
           default = "localhost:9312";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Hostname:port combination for the Sphinx server.
           '';
         };
@@ -279,7 +297,7 @@ let
         index = mkOption {
           type = types.listOf types.str;
           default = ["ttrss" "delta"];
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Index names in Sphinx configuration. Example configuration
             files are available on tt-rss wiki.
           '';
@@ -290,7 +308,7 @@ let
         enable = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Allow users to register themselves. Please be aware that allowing
             random people to access your tt-rss installation is a security risk
             and potentially might lead to data loss or server exploit. Disabled
@@ -301,7 +319,7 @@ let
         notifyAddress = mkOption {
           type = types.str;
           default = "";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Email address to send new user notifications to.
           '';
         };
@@ -309,7 +327,7 @@ let
         maxUsers = mkOption {
           type = types.int;
           default = 0;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Maximum amount of users which will be allowed to register on this
             system. 0 - no limit.
           '';
@@ -321,7 +339,7 @@ let
           type = types.str;
           default = "";
           example = "localhost:25";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Hostname:port combination to send outgoing mail. Blank - use system
             MTA.
           '';
@@ -330,7 +348,7 @@ let
         login = mkOption {
           type = types.str;
           default = "";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             SMTP authentication login used when sending outgoing mail.
           '';
         };
@@ -338,7 +356,7 @@ let
         password = mkOption {
           type = types.str;
           default = "";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             SMTP authentication password used when sending outgoing mail.
           '';
         };
@@ -346,7 +364,7 @@ let
         security = mkOption {
           type = types.enum ["" "ssl" "tls"];
           default = "";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Used to select a secure SMTP connection. Allowed values: ssl, tls,
             or empty.
           '';
@@ -355,7 +373,7 @@ let
         fromName = mkOption {
           type = types.str;
           default = "Tiny Tiny RSS";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Name for sending outgoing mail. This applies to password reset
             notifications, digest emails and any other mail.
           '';
@@ -364,7 +382,7 @@ let
         fromAddress = mkOption {
           type = types.str;
           default = "";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Address for sending outgoing mail. This applies to password reset
             notifications, digest emails and any other mail.
           '';
@@ -373,7 +391,7 @@ let
         digestSubject = mkOption {
           type = types.str;
           default = "[tt-rss] New headlines for last 24 hours";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Subject line for email digests.
           '';
         };
@@ -382,7 +400,7 @@ let
       sessionCookieLifetime = mkOption {
         type = types.int;
         default = 86400;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Default lifetime of a session (e.g. login) cookie. In seconds,
           0 means cookie will be deleted when browser closes.
         '';
@@ -390,7 +408,7 @@ let
 
       selfUrlPath = mkOption {
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Full URL of your tt-rss installation. This should be set to the
           location of tt-rss directory, e.g. http://example.org/tt-rss/
           You need to set this option correctly otherwise several features
@@ -402,7 +420,7 @@ let
       feedCryptKey = mkOption {
         type = types.str;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Key used for encryption of passwords for password-protected feeds
           in the database. A string of 24 random characters. If left blank, encryption
           is not used. Requires mcrypt functions.
@@ -415,7 +433,7 @@ let
         type = types.bool;
         default = false;
 
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Operate in single user mode, disables all functionality related to
           multiple users and authentication. Enabling this assumes you have
           your tt-rss directory protected by other means (e.g. http auth).
@@ -425,7 +443,7 @@ let
       simpleUpdateMode = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enables fallback update mode where tt-rss tries to update feeds in
           background while tt-rss is open in your browser.
           If you don't have a lot of feeds and don't want to or can't run
@@ -439,7 +457,7 @@ let
       forceArticlePurge = mkOption {
         type = types.int;
         default = 0;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           When this option is not 0, users ability to control feed purging
           intervals is disabled and all articles (which are not starred)
           older than this amount of days are purged.
@@ -449,7 +467,7 @@ let
       enableGZipOutput = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Selectively gzip output to improve wire performance. This requires
           PHP Zlib extension on the server.
           Enabling this can break tt-rss in several httpd/php configurations,
@@ -458,11 +476,11 @@ let
         '';
       };
 
-      phpPackage = lib.mkOption {
-        type = lib.types.package;
+      phpPackage = mkOption {
+        type = types.package;
         default = pkgs.php;
         defaultText = "pkgs.php";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           php package to use for php fpm and update daemon.
         '';
       };
@@ -470,7 +488,7 @@ let
       plugins = mkOption {
         type = types.listOf types.str;
         default = ["auth_internal" "note"];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of plugins to load automatically for all users.
           System plugins have to be specified here. Please enable at least one
           authentication plugin here (auth_*).
@@ -484,7 +502,7 @@ let
       pluginPackages = mkOption {
         type = types.listOf types.package;
         default = [];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of plugins to install. The list elements are expected to
           be derivations. All elements in this derivation are automatically
           copied to the `plugins.local` directory.
@@ -494,7 +512,7 @@ let
       themePackages = mkOption {
         type = types.listOf types.package;
         default = [];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of themes to install. The list elements are expected to
           be derivations. All elements in this derivation are automatically
           copied to the `themes.local` directory.
@@ -504,7 +522,7 @@ let
       logDestination = mkOption {
         type = types.enum ["" "sql" "syslog"];
         default = "sql";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Log destination to use. Possible values: sql (uses internal logging
           you can read in Preferences -> System), syslog - logs to system log.
           Setting this to blank uses PHP logging (usually to http server
@@ -515,7 +533,7 @@ let
       extraConfig = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Additional lines to append to `config.php`.
         '';
       };
