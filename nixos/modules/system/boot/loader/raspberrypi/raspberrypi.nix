@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkMerge
+    mkOption
+    optionalString
+    singleton
+    types
+    ;
+
   cfg = config.boot.loader.raspberryPi;
 
   builderUboot = import ./uboot-builder.nix { inherit pkgs configTxt; inherit (cfg) version; };
@@ -18,7 +26,6 @@ let
   timeoutStr = if blCfg.timeout == null then "-1" else toString blCfg.timeout;
 
   isAarch64 = pkgs.stdenv.hostPlatform.isAarch64;
-  optional = pkgs.lib.optionalString;
 
   configTxt =
     pkgs.writeText "config.txt" (''
@@ -29,7 +36,7 @@ let
       # Prevent the firmware from smashing the framebuffer setup done by the mainline kernel
       # when attempting to show low-voltage or overtemperature warnings.
       avoid_warnings=1
-    '' + optional isAarch64 ''
+    '' + optionalString isAarch64 ''
       # Boot in 64-bit mode.
       arm_64bit=1
     '' + (if cfg.uboot.enable then ''
@@ -37,7 +44,7 @@ let
     '' else ''
       kernel=kernel.img
       initramfs initrd followkernel
-    '') + optional (cfg.firmwareConfig != null) cfg.firmwareConfig);
+    '') + optionalString (cfg.firmwareConfig != null) cfg.firmwareConfig);
 
 in
 
@@ -48,7 +55,7 @@ in
       enable = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to create files with the system generations in
           `/boot`.
           `/boot/old` will hold files from old generations.
@@ -62,14 +69,14 @@ in
       version = mkOption {
         default = 2;
         type = types.enum [ 0 1 2 3 4 ];
-        description = lib.mdDoc "";
+        description = mdDoc "";
       };
 
       uboot = {
         enable = mkOption {
           default = false;
           type = types.bool;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Enable using uboot as bootmanager for the raspberry pi.
 
             ::: {.note}
@@ -82,7 +89,7 @@ in
           default = 20;
           example = 10;
           type = types.int;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Maximum number of configurations in the boot menu.
 
             ::: {.note}
@@ -96,7 +103,7 @@ in
       firmwareConfig = mkOption {
         default = null;
         type = types.nullOr types.lines;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra options that will be appended to `/boot/config.txt` file.
           For possible values, see: https://www.raspberrypi.com/documentation/computers/config_txt.html
 
