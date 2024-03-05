@@ -1,8 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    escapeShellArgs
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    mkRenamedOptionModule
+    optional
+    optionalAttrs
+    optionals
+    types
+    ;
 
   cfg = config.services.opendkim;
 
@@ -17,7 +27,8 @@ let
            "-s" cfg.selector
          ] ++ optionals (cfg.configFile != null) [ "-x" cfg.configFile ];
 
-in {
+in
+{
   imports = [
     (mkRenamedOptionModule [ "services" "opendkim" "keyFile" ] [ "services" "opendkim" "keyPath" ])
   ];
@@ -31,25 +42,25 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to enable the OpenDKIM sender authentication system.";
+        description = mdDoc "Whether to enable the OpenDKIM sender authentication system.";
       };
 
       socket = mkOption {
         type = types.str;
         default = defaultSock;
-        description = lib.mdDoc "Socket which is used for communication with OpenDKIM.";
+        description = mdDoc "Socket which is used for communication with OpenDKIM.";
       };
 
       user = mkOption {
         type = types.str;
         default = "opendkim";
-        description = lib.mdDoc "User for the daemon.";
+        description = mdDoc "User for the daemon.";
       };
 
       group = mkOption {
         type = types.str;
         default = "opendkim";
-        description = lib.mdDoc "Group for the daemon.";
+        description = mdDoc "Group for the daemon.";
       };
 
       domains = mkOption {
@@ -57,7 +68,7 @@ in {
         default = "csl:${config.networking.hostName}";
         defaultText = literalExpression ''"csl:''${config.networking.hostName}"'';
         example = "csl:example.com,mydomain.net";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Local domains set (see `opendkim(8)` for more information on datasets).
           Messages from them are signed, not verified.
         '';
@@ -65,7 +76,7 @@ in {
 
       keyPath = mkOption {
         type = types.path;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The path that opendkim should put its generated private keys into.
           The DNS settings will be found in this directory with the name selector.txt.
         '';
@@ -74,13 +85,13 @@ in {
 
       selector = mkOption {
         type = types.str;
-        description = lib.mdDoc "Selector to use when signing.";
+        description = mdDoc "Selector to use when signing.";
       };
 
       configFile = mkOption {
         type = types.nullOr types.path;
         default = null;
-        description = lib.mdDoc "Additional opendkim configuration.";
+        description = mdDoc "Additional opendkim configuration.";
       };
 
     };
