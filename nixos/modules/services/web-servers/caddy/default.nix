@@ -1,8 +1,31 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrValues
+    catAttrs
+    concatMapStringsSep
+    concatStringsSep
+    filter
+    listToAttrs
+    literalExpression
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkForce
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    nameValuePair
+    optional
+    optionalAttrs
+    optionalString
+    types
+    unique
+    ;
+
   cfg = config.services.caddy;
 
   virtualHosts = attrValues cfg.virtualHosts;
@@ -64,12 +87,12 @@ in
 
   # interface
   options.services.caddy = {
-    enable = mkEnableOption (lib.mdDoc "Caddy web server");
+    enable = mkEnableOption (mdDoc "Caddy web server");
 
     user = mkOption {
       default = "caddy";
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         User account under which caddy runs.
 
         ::: {.note}
@@ -83,7 +106,7 @@ in
     group = mkOption {
       default = "caddy";
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Group account under which caddy runs.
 
         ::: {.note}
@@ -99,7 +122,7 @@ in
     dataDir = mkOption {
       type = types.path;
       default = "/var/lib/caddy";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The data directory for caddy.
 
         ::: {.note}
@@ -116,7 +139,7 @@ in
     logDir = mkOption {
       type = types.path;
       default = "/var/log/caddy";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Directory for storing Caddy access logs.
 
         ::: {.note}
@@ -135,7 +158,7 @@ in
       example = literalExpression ''
         mkForce "level INFO";
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Configuration for the default logger. See
         <https://caddyserver.com/docs/caddyfile/options#log>
         for details.
@@ -155,7 +178,7 @@ in
           file_server
         ''';
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Override the configuration file used by Caddy. By default,
         NixOS generates one automatically.
 
@@ -170,7 +193,7 @@ in
       '';
       example = literalExpression "nginx";
       type = with types; nullOr str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Name of the config adapter to use.
         See <https://caddyserver.com/docs/config-adapters>
         for the full list.
@@ -192,7 +215,7 @@ in
     resume = mkOption {
       default = false;
       type = types.bool;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Use saved config, if any (and prefer over any specified configuration passed with `--config`).
       '';
     };
@@ -208,7 +231,7 @@ in
           }
         }
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Additional lines of configuration appended to the global config section
         of the `Caddyfile`.
 
@@ -227,7 +250,7 @@ in
           root /srv/http
         }
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Additional lines of configuration appended to the automatically
         generated `Caddyfile`.
       '';
@@ -247,7 +270,7 @@ in
           };
         };
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Declarative specification of virtual hosts served by Caddy.
       '';
     };
@@ -256,7 +279,7 @@ in
       default = null;
       example = "https://acme-v02.api.letsencrypt.org/directory";
       type = with types; nullOr str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         ::: {.note}
         Sets the [`acme_ca` option](https://caddyserver.com/docs/caddyfile/options#acme-ca)
         in the global options block of the resulting Caddyfile.
@@ -276,7 +299,7 @@ in
     email = mkOption {
       default = null;
       type = with types; nullOr str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Your email address. Mainly used when creating an ACME account with your
         CA, and is highly recommended in case there are problems with your
         certificates.
@@ -286,7 +309,7 @@ in
     enableReload = mkOption {
       default = true;
       type = types.bool;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Reload Caddy instead of restarting it when configuration file changes.
 
         Note that enabling this option requires the [admin API](https://caddyserver.com/docs/caddyfile/options#admin)
@@ -302,7 +325,7 @@ in
     settings = mkOption {
       type = settingsFormat.type;
       default = {};
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Structured configuration for Caddy to generate a Caddy JSON configuration file.
         See <https://caddyserver.com/docs/json/> for available options.
 
