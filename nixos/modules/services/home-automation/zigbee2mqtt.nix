@@ -1,11 +1,23 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    maintainers
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRenamedOptionModule
+    types
+    ;
+
   cfg = config.services.zigbee2mqtt;
 
   format = pkgs.formats.yaml { };
+
   configFile = format.generate "zigbee2mqtt.yaml" cfg.settings;
 
 in
@@ -18,12 +30,12 @@ in
   ];
 
   options.services.zigbee2mqtt = {
-    enable = mkEnableOption (lib.mdDoc "zigbee2mqtt service");
+    enable = mkEnableOption (mdDoc "zigbee2mqtt service");
 
     package = mkPackageOption pkgs "zigbee2mqtt" { };
 
     dataDir = mkOption {
-      description = lib.mdDoc "Zigbee2mqtt data directory";
+      description = mdDoc "Zigbee2mqtt data directory";
       default = "/var/lib/zigbee2mqtt";
       type = types.path;
     };
@@ -40,7 +52,7 @@ in
           };
         }
       '';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Your {file}`configuration.yaml` as a Nix attribute set.
         Check the [documentation](https://www.zigbee2mqtt.io/information/configuration.html)
         for possible options.
