@@ -1,8 +1,20 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    isBool
+    isList
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optional
+    optionals
+    types
+    ;
+
   cfg = config.services.moosefs;
 
   mfsUser = if cfg.runAsUser then "moosefs" else "root";
@@ -25,8 +37,8 @@ let
       in attrsOf valueType;
 
       generate = name: value:
-        pkgs.writeText name ( lib.concatStringsSep "\n" (
-          lib.mapAttrsToList (key: val: "${key} = ${valueToString val}") value ));
+        pkgs.writeText name ( concatStringsSep "\n" (
+          mapAttrsToList (key: val: "${key} = ${valueToString val}") value ));
     };
 
 
@@ -75,22 +87,22 @@ in {
       masterHost = mkOption {
         type = types.str;
         default = null;
-        description = lib.mdDoc "IP or DNS name of master host.";
+        description = mdDoc "IP or DNS name of master host.";
       };
 
       runAsUser = mkOption {
         type = types.bool;
         default = true;
         example = true;
-        description = lib.mdDoc "Run daemons as user moosefs instead of root.";
+        description = mdDoc "Run daemons as user moosefs instead of root.";
       };
 
-      client.enable = mkEnableOption (lib.mdDoc "Moosefs client");
+      client.enable = mkEnableOption (mdDoc "Moosefs client");
 
       master = {
         enable = mkOption {
           type = types.bool;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Enable Moosefs master daemon.
 
             You need to run `mfsmaster-init` on a freshly installed master server to
@@ -102,7 +114,7 @@ in {
         exports = mkOption {
           type = with types; listOf str;
           default = null;
-          description = lib.mdDoc "Paths to export (see mfsexports.cfg).";
+          description = mdDoc "Paths to export (see mfsexports.cfg).";
           example = [
             "* / rw,alldirs,admin,maproot=0:0"
             "* . rw"
@@ -111,7 +123,7 @@ in {
 
         openFirewall = mkOption {
           type = types.bool;
-          description = lib.mdDoc "Whether to automatically open the necessary ports in the firewall.";
+          description = mdDoc "Whether to automatically open the necessary ports in the firewall.";
           default = false;
         };
 
@@ -122,16 +134,16 @@ in {
             options.DATA_PATH = mkOption {
               type = types.str;
               default = "/var/lib/mfs";
-              description = lib.mdDoc "Data storage directory.";
+              description = mdDoc "Data storage directory.";
             };
           };
 
-          description = lib.mdDoc "Contents of config file (mfsmaster.cfg).";
+          description = mdDoc "Contents of config file (mfsmaster.cfg).";
         };
       };
 
       metalogger = {
-        enable = mkEnableOption (lib.mdDoc "Moosefs metalogger daemon");
+        enable = mkEnableOption (mdDoc "Moosefs metalogger daemon");
 
         settings = mkOption {
           type = types.submodule {
@@ -140,27 +152,27 @@ in {
             options.DATA_PATH = mkOption {
               type = types.str;
               default = "/var/lib/mfs";
-              description = lib.mdDoc "Data storage directory";
+              description = mdDoc "Data storage directory";
             };
           };
 
-          description = lib.mdDoc "Contents of metalogger config file (mfsmetalogger.cfg).";
+          description = mdDoc "Contents of metalogger config file (mfsmetalogger.cfg).";
         };
       };
 
       chunkserver = {
-        enable = mkEnableOption (lib.mdDoc "Moosefs chunkserver daemon");
+        enable = mkEnableOption (mdDoc "Moosefs chunkserver daemon");
 
         openFirewall = mkOption {
           type = types.bool;
-          description = lib.mdDoc "Whether to automatically open the necessary ports in the firewall.";
+          description = mdDoc "Whether to automatically open the necessary ports in the firewall.";
           default = false;
         };
 
         hdds = mkOption {
           type = with types; listOf str;
           default =  null;
-          description = lib.mdDoc "Mount points to be used by chunkserver for storage (see mfshdd.cfg).";
+          description = mdDoc "Mount points to be used by chunkserver for storage (see mfshdd.cfg).";
           example = [ "/mnt/hdd1" ];
         };
 
@@ -171,11 +183,11 @@ in {
             options.DATA_PATH = mkOption {
               type = types.str;
               default = "/var/lib/mfs";
-              description = lib.mdDoc "Directory for lock file.";
+              description = mdDoc "Directory for lock file.";
             };
           };
 
-          description = lib.mdDoc "Contents of chunkserver config file (mfschunkserver.cfg).";
+          description = mdDoc "Contents of chunkserver config file (mfschunkserver.cfg).";
         };
       };
     };
@@ -219,12 +231,12 @@ in {
     };
 
     environment.systemPackages =
-      (lib.optional cfg.client.enable pkgs.moosefs) ++
-      (lib.optional cfg.master.enable initTool);
+      (optional cfg.client.enable pkgs.moosefs) ++
+      (optional cfg.master.enable initTool);
 
     networking.firewall.allowedTCPPorts =
-      (lib.optionals cfg.master.openFirewall [ 9419 9420 9421 ]) ++
-      (lib.optional cfg.chunkserver.openFirewall 9422);
+      (optionals cfg.master.openFirewall [ 9419 9420 9421 ]) ++
+      (optional cfg.chunkserver.openFirewall 9422);
 
     # Ensure storage directories exist
     systemd.tmpfiles.rules =
