@@ -1,8 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.cpuminer-cryptonight;
 
   json = builtins.toJSON (
@@ -23,27 +28,27 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable the cpuminer cryptonight miner.
         '';
       };
       url = mkOption {
         type = types.str;
-        description = lib.mdDoc "URL of mining server";
+        description = mdDoc "URL of mining server";
       };
       user = mkOption {
         type = types.str;
-        description = lib.mdDoc "Username for mining server";
+        description = mdDoc "Username for mining server";
       };
       pass = mkOption {
         type = types.str;
         default = "x";
-        description = lib.mdDoc "Password for mining server";
+        description = mdDoc "Password for mining server";
       };
       threads = mkOption {
         type = types.int;
         default = 0;
-        description = lib.mdDoc "Number of miner threads, defaults to available processors";
+        description = mdDoc "Number of miner threads, defaults to available processors";
       };
     };
 
