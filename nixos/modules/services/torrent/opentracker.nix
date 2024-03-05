@@ -1,17 +1,25 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.opentracker;
 in {
   options.services.opentracker = {
-    enable = mkEnableOption (lib.mdDoc "opentracker");
+    enable = mkEnableOption (mdDoc "opentracker");
 
     package = mkPackageOption pkgs "opentracker" { };
 
     extraOptions = mkOption {
       type = types.separatedString " ";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Configuration Arguments for opentracker
         See https://erdgeist.org/arts/software/opentracker/ for all params
       '';
@@ -19,7 +27,7 @@ in {
     };
   };
 
-  config = lib.mkIf cfg.enable {
+  config = mkIf cfg.enable {
 
     systemd.services.opentracker = {
       description = "opentracker server";
