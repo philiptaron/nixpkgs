@@ -1,8 +1,32 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrValues
+    concatMap
+    elemAt
+    escapeShellArg
+    escapeShellArgs
+    filterAttrs
+    generators
+    literalExpression
+    mapAttrs
+    mapAttrs'
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    nameValuePair
+    optional
+    optionalString
+    types
+    ;
+
   cfg = config.services.redis;
 
   mkValueString = value:
@@ -56,7 +80,7 @@ in {
     services.redis = {
       package = mkPackageOption pkgs "redis" { };
 
-      vmOverCommit = mkEnableOption (lib.mdDoc ''
+      vmOverCommit = mkEnableOption (mdDoc ''
         setting of vm.overcommit_memory to 1
         (Suggested for Background Saving: <https://redis.io/docs/get-started/faq/>)
       '');
@@ -64,7 +88,7 @@ in {
       servers = mkOption {
         type = with types; attrsOf (submodule ({ config, name, ... }: {
           options = {
-            enable = mkEnableOption (lib.mdDoc ''
+            enable = mkEnableOption (mdDoc ''
               Redis server.
 
               Note that the NixOS module for Redis disables kernel support
@@ -79,14 +103,14 @@ in {
               defaultText = literalExpression ''
                 if name == "" then "redis" else "redis-''${name}"
               '';
-              description = lib.mdDoc "The username and groupname for redis-server.";
+              description = mdDoc "The username and groupname for redis-server.";
             };
 
             port = mkOption {
               type = types.port;
               default = if name == "" then 6379 else 0;
               defaultText = literalExpression ''if name == "" then 6379 else 0'';
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The TCP port to accept connections.
                 If port 0 is specified Redis will not listen on a TCP socket.
               '';
@@ -95,7 +119,7 @@ in {
             openFirewall = mkOption {
               type = types.bool;
               default = false;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Whether to open ports in the firewall for the server.
               '';
             };
@@ -103,14 +127,14 @@ in {
             extraParams = mkOption {
               type = with types; listOf str;
               default = [];
-              description = lib.mdDoc "Extra parameters to append to redis-server invocation";
+              description = mdDoc "Extra parameters to append to redis-server invocation";
               example = [ "--sentinel" ];
             };
 
             bind = mkOption {
               type = with types; nullOr str;
               default = "127.0.0.1";
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 The IP interface to bind to.
                 `null` means "all interfaces".
               '';
@@ -123,13 +147,13 @@ in {
               defaultText = literalExpression ''
                 if name == "" then "/run/redis/redis.sock" else "/run/redis-''${name}/redis.sock"
               '';
-              description = lib.mdDoc "The path to the socket to bind to.";
+              description = mdDoc "The path to the socket to bind to.";
             };
 
             unixSocketPerm = mkOption {
               type = types.int;
               default = 660;
-              description = lib.mdDoc "Change permissions for the socket";
+              description = mdDoc "Change permissions for the socket";
               example = 600;
             };
 
@@ -137,32 +161,32 @@ in {
               type = types.str;
               default = "notice"; # debug, verbose, notice, warning
               example = "debug";
-              description = lib.mdDoc "Specify the server verbosity level, options: debug, verbose, notice, warning.";
+              description = mdDoc "Specify the server verbosity level, options: debug, verbose, notice, warning.";
             };
 
             logfile = mkOption {
               type = types.str;
               default = "/dev/null";
-              description = lib.mdDoc "Specify the log file name. Also 'stdout' can be used to force Redis to log on the standard output.";
+              description = mdDoc "Specify the log file name. Also 'stdout' can be used to force Redis to log on the standard output.";
               example = "/var/log/redis.log";
             };
 
             syslog = mkOption {
               type = types.bool;
               default = true;
-              description = lib.mdDoc "Enable logging to the system logger.";
+              description = mdDoc "Enable logging to the system logger.";
             };
 
             databases = mkOption {
               type = types.int;
               default = 16;
-              description = lib.mdDoc "Set the number of databases.";
+              description = mdDoc "Set the number of databases.";
             };
 
             maxclients = mkOption {
               type = types.int;
               default = 10000;
-              description = lib.mdDoc "Set the max number of connected clients at the same time.";
+              description = mdDoc "Set the max number of connected clients at the same time.";
             };
 
             save = mkOption {
@@ -180,27 +204,27 @@ in {
                 options = {
                   ip = mkOption {
                     type = str;
-                    description = lib.mdDoc "IP of the Redis master";
+                    description = mdDoc "IP of the Redis master";
                     example = "192.168.1.100";
                   };
 
                   port = mkOption {
                     type = port;
-                    description = lib.mdDoc "port of the Redis master";
+                    description = mdDoc "port of the Redis master";
                     default = 6379;
                   };
                 };
               }));
 
               default = null;
-              description = lib.mdDoc "IP and port to which this redis instance acts as a slave.";
+              description = mdDoc "IP and port to which this redis instance acts as a slave.";
               example = { ip = "192.168.1.100"; port = 6379; };
             };
 
             masterAuth = mkOption {
               type = with types; nullOr str;
               default = null;
-              description = lib.mdDoc ''If the master is password protected (using the requirePass configuration)
+              description = mdDoc ''If the master is password protected (using the requirePass configuration)
               it is possible to tell the slave to authenticate before starting the replication synchronization
               process, otherwise the master will refuse the slave request.
               (STORED PLAIN TEXT, WORLD-READABLE IN NIX STORE)'';
@@ -209,7 +233,7 @@ in {
             requirePass = mkOption {
               type = with types; nullOr str;
               default = null;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Password for database (STORED PLAIN TEXT, WORLD-READABLE IN NIX STORE).
                 Use requirePassFile to store it outside of the nix store in a dedicated file.
               '';
@@ -219,40 +243,40 @@ in {
             requirePassFile = mkOption {
               type = with types; nullOr path;
               default = null;
-              description = lib.mdDoc "File with password for the database.";
+              description = mdDoc "File with password for the database.";
               example = "/run/keys/redis-password";
             };
 
             appendOnly = mkOption {
               type = types.bool;
               default = false;
-              description = lib.mdDoc "By default data is only periodically persisted to disk, enable this option to use an append-only file for improved persistence.";
+              description = mdDoc "By default data is only periodically persisted to disk, enable this option to use an append-only file for improved persistence.";
             };
 
             appendFsync = mkOption {
               type = types.str;
               default = "everysec"; # no, always, everysec
-              description = lib.mdDoc "How often to fsync the append-only log, options: no, always, everysec.";
+              description = mdDoc "How often to fsync the append-only log, options: no, always, everysec.";
             };
 
             slowLogLogSlowerThan = mkOption {
               type = types.int;
               default = 10000;
-              description = lib.mdDoc "Log queries whose execution take longer than X in milliseconds.";
+              description = mdDoc "Log queries whose execution take longer than X in milliseconds.";
               example = 1000;
             };
 
             slowLogMaxLen = mkOption {
               type = types.int;
               default = 128;
-              description = lib.mdDoc "Maximum number of items to keep in slow log.";
+              description = mdDoc "Maximum number of items to keep in slow log.";
             };
 
             settings = mkOption {
               # TODO: this should be converted to freeformType
               type = with types; attrsOf (oneOf [ bool int str (listOf str) ]);
               default = {};
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Redis configuration. Refer to
                 <https://redis.io/topics/config>
                 for details on supported values.
@@ -292,7 +316,7 @@ in {
             (mkIf (config.requirePass != null) { requirepass = config.requirePass; })
           ];
         }));
-        description = lib.mdDoc "Configuration of multiple `redis-server` instances.";
+        description = mdDoc "Configuration of multiple `redis-server` instances.";
         default = {};
       };
     };
