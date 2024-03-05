@@ -2,13 +2,32 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    attrNames
+    concatStringsSep
+    foldl'
+    generators
+    length
+    listToAttrs
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    nameValuePair
+    optionalAttrs
+    types
+    ;
+in
 
 let
   cfg = config.services.fwupd;
 
   format = pkgs.formats.ini {
-    listToValue = l: lib.concatStringsSep ";" (map (s: generators.mkValueStringDefault {} s) l);
+    listToValue = l: concatStringsSep ";" (map (s: generators.mkValueStringDefault {} s) l);
     mkKeyValue = generators.mkKeyValueDefault {} "=";
   };
 
@@ -16,7 +35,7 @@ let
     "fwupd/fwupd.conf" = {
       source = format.generate "fwupd.conf" ({
         fwupd = cfg.daemonSettings;
-      } // lib.optionalAttrs (lib.length (lib.attrNames cfg.uefiCapsuleSettings) != 0) {
+      } // optionalAttrs (length (attrNames cfg.uefiCapsuleSettings) != 0) {
         uefi_capsule = cfg.uefiCapsuleSettings;
       });
       # fwupd tries to chmod the file if it doesn't have the right permissions
@@ -51,7 +70,7 @@ let
     # to install it because it would create a cyclic dependency between
     # the outputs. We also need to enable the remote,
     # which should not be done by default.
-    lib.optionalAttrs
+    optionalAttrs
       (cfg.daemonSettings.TestDevices or false)
       (enableRemote cfg.package.installedTests "fwupd-tests")
   );
@@ -64,7 +83,7 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable fwupd, a DBus service that allows
           applications to update firmware.
         '';
@@ -74,7 +93,7 @@ in {
         type = types.listOf types.path;
         default = [];
         example = literalExpression "[ /etc/nixos/fwupd/myfirmware.pem ]";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Installing a public key allows firmware signed with a matching private key to be recognized as trusted, which may require less authentication to install than for untrusted files. By default trusted firmware can be upgraded (but not downgraded) without the user or administrator password. Only very few keys are installed by default.
         '';
       };
@@ -83,7 +102,7 @@ in {
         type = with types; listOf str;
         default = [];
         example = [ "lvfs-testing" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enables extra remotes in fwupd. See `/etc/fwupd/remotes.d`.
         '';
       };
@@ -98,7 +117,7 @@ in {
               type = types.listOf types.str;
               default = [];
               example = [ "2082b5e0-7a64-478a-b1b2-e3404fab6dad" ];
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 List of device GUIDs to be disabled.
               '';
             };
@@ -107,7 +126,7 @@ in {
               type = types.listOf types.str;
               default = [];
               example = [ "udev" ];
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 List of plugins to be disabled.
               '';
             };
@@ -115,8 +134,8 @@ in {
             EspLocation = mkOption {
               type = types.path;
               default = config.boot.loader.efi.efiSysMountPoint;
-              defaultText = lib.literalExpression "config.boot.loader.efi.efiSysMountPoint";
-              description = lib.mdDoc ''
+              defaultText = literalExpression "config.boot.loader.efi.efiSysMountPoint";
+              description = mdDoc ''
                 The EFI system partition (ESP) path used if UDisks is not available
                 or if this partition is not mounted at /boot/efi, /boot, or /efi
               '';
@@ -126,7 +145,7 @@ in {
               internal = true;
               type = types.bool;
               default = false;
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Create virtual test devices and remote for validating daemon flows.
                 This is only intended for CI testing and development purposes.
               '';
@@ -134,7 +153,7 @@ in {
           };
         };
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configurations for the fwupd daemon.
         '';
       };
@@ -144,7 +163,7 @@ in {
           freeformType = format.type.nestedTypes.elemType;
         };
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           UEFI capsule configurations for the fwupd daemon.
         '';
       };
