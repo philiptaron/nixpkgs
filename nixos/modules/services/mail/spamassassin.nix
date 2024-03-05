@@ -1,9 +1,17 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.spamassassin;
+
   spamassassin-local-cf = pkgs.writeText "local.cf" cfg.config;
 
 in
@@ -12,17 +20,17 @@ in
   options = {
 
     services.spamassassin = {
-      enable = mkEnableOption (lib.mdDoc "the SpamAssassin daemon");
+      enable = mkEnableOption (mdDoc "the SpamAssassin daemon");
 
       debug = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to run the SpamAssassin daemon in debug mode";
+        description = mdDoc "Whether to run the SpamAssassin daemon in debug mode";
       };
 
       config = mkOption {
         type = types.lines;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The SpamAssassin local.cf config
 
           If you are using this configuration:
@@ -57,7 +65,7 @@ in
 
       initPreConf = mkOption {
         type = with types; either str path;
-        description = lib.mdDoc "The SpamAssassin init.pre config.";
+        description = mdDoc "The SpamAssassin init.pre config.";
         apply = val: if builtins.isPath val then val else pkgs.writeText "init.pre" val;
         default =
         ''
