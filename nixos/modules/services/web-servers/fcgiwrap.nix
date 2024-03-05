@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    optional
+    optionalString
+    types
+    ;
+
   cfg = config.services.fcgiwrap;
 in {
 
@@ -11,38 +18,38 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to enable fcgiwrap, a server for running CGI applications over FastCGI.";
+        description = mdDoc "Whether to enable fcgiwrap, a server for running CGI applications over FastCGI.";
       };
 
       preforkProcesses = mkOption {
         type = types.int;
         default = 1;
-        description = lib.mdDoc "Number of processes to prefork.";
+        description = mdDoc "Number of processes to prefork.";
       };
 
       socketType = mkOption {
         type = types.enum [ "unix" "tcp" "tcp6" ];
         default = "unix";
-        description = lib.mdDoc "Socket type: 'unix', 'tcp' or 'tcp6'.";
+        description = mdDoc "Socket type: 'unix', 'tcp' or 'tcp6'.";
       };
 
       socketAddress = mkOption {
         type = types.str;
         default = "/run/fcgiwrap.sock";
         example = "1.2.3.4:5678";
-        description = lib.mdDoc "Socket address. In case of a UNIX socket, this should be its filesystem path.";
+        description = mdDoc "Socket address. In case of a UNIX socket, this should be its filesystem path.";
       };
 
       user = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc "User permissions for the socket.";
+        description = mdDoc "User permissions for the socket.";
       };
 
       group = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc "Group permissions for the socket.";
+        description = mdDoc "Group permissions for the socket.";
       };
     };
   };
