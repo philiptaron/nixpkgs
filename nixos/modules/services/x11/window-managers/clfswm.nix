@@ -1,15 +1,21 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkPackageOption
+    singleton
+    ;
+
   cfg = config.services.xserver.windowManager.clfswm;
 in
 
 {
   options = {
     services.xserver.windowManager.clfswm = {
-      enable = mkEnableOption (lib.mdDoc "clfswm");
+      enable = mkEnableOption (mdDoc "clfswm");
       package = mkPackageOption pkgs [ "lispPackages" "clfswm" ] { };
     };
   };
