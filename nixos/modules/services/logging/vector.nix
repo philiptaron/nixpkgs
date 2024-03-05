@@ -1,19 +1,29 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-let cfg = config.services.vector;
+let
+  inherit (lib)
+    getExe
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
+  cfg = config.services.vector;
 
 in
 {
   options.services.vector = {
-    enable = mkEnableOption (lib.mdDoc "Vector");
+    enable = mkEnableOption (mdDoc "Vector");
 
     package = mkPackageOption pkgs "vector" { };
 
     journaldAccess = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Enable Vector to access journald.
       '';
     };
@@ -21,7 +31,7 @@ in
     settings = mkOption {
       type = (pkgs.formats.json { }).type;
       default = { };
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Specify the configuration for Vector in Nix.
       '';
     };
