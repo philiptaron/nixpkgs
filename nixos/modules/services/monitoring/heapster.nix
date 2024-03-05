@@ -1,27 +1,35 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.heapster;
-in {
+in
+{
   options.services.heapster = {
-    enable = mkEnableOption (lib.mdDoc "Heapster monitoring");
+    enable = mkEnableOption (mdDoc "Heapster monitoring");
 
     source = mkOption {
-      description = lib.mdDoc "Heapster metric source";
+      description = mdDoc "Heapster metric source";
       example = "kubernetes:https://kubernetes.default";
       type = types.str;
     };
 
     sink = mkOption {
-      description = lib.mdDoc "Heapster metic sink";
+      description = mdDoc "Heapster metic sink";
       example = "influxdb:http://localhost:8086";
       type = types.str;
     };
 
     extraOpts = mkOption {
-      description = lib.mdDoc "Heapster extra options";
+      description = mdDoc "Heapster extra options";
       default = "";
       type = types.separatedString " ";
     };
