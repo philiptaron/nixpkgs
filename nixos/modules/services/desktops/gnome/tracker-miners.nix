@@ -2,7 +2,16 @@
 
 { config, pkgs, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    mkRenamedOptionModule
+    teams
+    types
+    ;
+in
 
 {
 
@@ -27,7 +36,7 @@ with lib;
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable Tracker miners, indexing services for Tracker
           search engine and metadata storage system.
         '';
