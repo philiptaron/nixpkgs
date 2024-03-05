@@ -1,8 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    cli
+    escapeShellArgs
+    mapAttrs
+    mdDoc
+    mkDefault
+    mkIf
+    mkMerge
+    mkOption
+    optionalAttrs
+    optionalString
+    types
+    ;
 
   cfg = config.virtualbox;
 
@@ -14,42 +25,42 @@ in {
         type = with types; either (enum [ "auto" ]) int;
         default = "auto";
         example = 50 * 1024;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The size of the VirtualBox base image in MiB.
         '';
       };
       baseImageFreeSpace = mkOption {
         type = with types; int;
         default = 30 * 1024;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Free space in the VirtualBox base image in MiB.
         '';
       };
       memorySize = mkOption {
         type = types.int;
         default = 1536;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The amount of RAM the VirtualBox appliance can use in MiB.
         '';
       };
       vmDerivationName = mkOption {
         type = types.str;
         default = "nixos-ova-${config.system.nixos.label}-${pkgs.stdenv.hostPlatform.system}";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The name of the derivation for the VirtualBox appliance.
         '';
       };
       vmName = mkOption {
         type = types.str;
         default = "${config.system.nixos.distroName} ${config.system.nixos.label} (${pkgs.stdenv.hostPlatform.system})";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The name of the VirtualBox appliance.
         '';
       };
       vmFileName = mkOption {
         type = types.str;
         default = "nixos-${config.system.nixos.label}-${pkgs.stdenv.hostPlatform.system}.ova";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The file name of the VirtualBox appliance.
         '';
       };
@@ -60,7 +71,7 @@ in {
           rtcuseutc = "on";
           usb = "off";
         };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Parameters passed to the Virtualbox appliance.
 
           Run `VBoxManage modifyvm --help` to see more options.
@@ -72,14 +83,14 @@ in {
           "--vsys" "0" "--vendor" "ACME Inc."
         ];
         default = [];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Parameters passed to the Virtualbox export command.
 
           Run `VBoxManage export --help` to see more options.
         '';
       };
       extraDisk = mkOption {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Optional extra disk/hdd configuration.
           The disk will be an 'ext4' partition on a separate file.
         '';
@@ -93,16 +104,16 @@ in {
           options = {
             size = mkOption {
               type = types.int;
-              description = lib.mdDoc "Size in MiB";
+              description = mdDoc "Size in MiB";
             };
             label = mkOption {
               type = types.str;
               default = "vm-extra-storage";
-              description = lib.mdDoc "Label for the disk partition";
+              description = mdDoc "Label for the disk partition";
             };
             mountPoint = mkOption {
               type = types.str;
-              description = lib.mdDoc "Path where to mount this disk.";
+              description = mdDoc "Path where to mount this disk.";
             };
           };
         });
@@ -120,7 +131,7 @@ in {
             --network-descriptions 'Nic description' \
             --scsi-subtypes VirtualSCSI
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra commands to run after exporting the OVA to `$fn`.
         '';
       };
@@ -140,7 +151,7 @@ in {
           bootable = "on";
           hostiocache = "on";
         };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Parameters passed to the VirtualBox appliance. Must have at least
           `name`.
 
@@ -206,8 +217,8 @@ in {
             --ostype ${if pkgs.stdenv.hostPlatform.system == "x86_64-linux" then "Linux26_64" else "Linux26"}
           VBoxManage modifyvm "$vmName" \
             --memory ${toString cfg.memorySize} \
-            ${lib.cli.toGNUCommandLineShell { } cfg.params}
-          VBoxManage storagectl "$vmName" ${lib.cli.toGNUCommandLineShell { } cfg.storageController}
+            ${cli.toGNUCommandLineShell { } cfg.params}
+          VBoxManage storagectl "$vmName" ${cli.toGNUCommandLineShell { } cfg.storageController}
           VBoxManage storageattach "$vmName" --storagectl ${cfg.storageController.name} --port 0 --device 0 --type hdd \
             --medium disk.vdi
           ${optionalString (cfg.extraDisk != null) ''
@@ -234,7 +245,7 @@ in {
         autoResize = true;
         fsType = "ext4";
       };
-    } // (lib.optionalAttrs (cfg.extraDisk != null) {
+    } // (optionalAttrs (cfg.extraDisk != null) {
       ${cfg.extraDisk.mountPoint} = {
         device = "/dev/disk/by-label/" + cfg.extraDisk.label;
         autoResize = true;
