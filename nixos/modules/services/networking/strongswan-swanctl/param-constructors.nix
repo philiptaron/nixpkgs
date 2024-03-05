@@ -39,12 +39,24 @@
 # { "${name}" = string }. This allows parameters to change the attribute
 # name like in the previous example.
 
-lib :
+lib:
 
-with lib;
-with (import ./param-lib.nix lib);
+let
+  inherit (lib)
+    concatStringsSep
+    mapAttrs
+    mapAttrs'
+    mdDoc
+    mkOption
+    nameValuePair
+    types
+    ;
 
-rec {
+  inherit (import ./param-lib.nix lib)
+    paramsToOptions
+    paramsToRenderedStrings
+    ;
+
   mkParamOfType = type : strongswanDefault : description : {
     _type = "param";
     option = mkOption {
@@ -152,7 +164,7 @@ rec {
     option = mkOption {
       type = types.attrsOf (types.submodule {options = paramsToOptions params;});
       default = {};
-      description = lib.mdDoc description;
+      description = mdDoc description;
     };
     render = postfix: attrs:
       let postfixedAttrs = mapAttrs' (name: nameValuePair "${name}-${postfix}") attrs;
@@ -160,4 +172,33 @@ rec {
            (mapAttrs (_n: _v: params) postfixedAttrs);
   };
 
+in {
+  inherit
+    documentDefault
+    mkAttrsOf
+    mkAttrsOfParam
+    mkAttrsOfParams
+    mkCommaSepListParam
+    mkDurationParam
+    mkEnumParam
+    mkFloatParam
+    mkHexParam
+    mkIntParam
+    mkOptionalDurationParam
+    mkOptionalHexParam
+    mkOptionalIntParam
+    mkOptionalStrParam
+    mkParamOfType
+    mkPostfixedAttrsOfParams
+    mkPrefixedAttrsOf
+    mkPrefixedAttrsOfParam
+    mkPrefixedAttrsOfParams
+    mkSepListParam
+    mkSpaceSepListParam
+    mkStrParam
+    mkYesNoParam
+    no
+    single
+    yes
+    ;
 }
