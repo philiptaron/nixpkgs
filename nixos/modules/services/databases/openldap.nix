@@ -1,14 +1,48 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    attrNames
+    attrValues
+    concatStringsSep
+    escapeShellArgs
+    filterAttrs
+    flatten
+    getAttr
+    hasAttr
+    hasPrefix
+    isAttrs
+    isList
+    isString
+    literalExpression
+    maintainers
+    mapAttrs
+    mapAttrs'
+    mapAttrsToList
+    mdDoc
+    mergeEqualOption
+    mkIf
+    mkOption
+    mkOptionType
+    mkPackageOption
+    modules
+    nameValuePair
+    optional
+    optionalAttrs
+    optionalString
+    removePrefix
+    replaceStrings
+    singleton
+    types
+    ;
+
   cfg = config.services.openldap;
   openldap = cfg.package;
   configDir = if cfg.configDir != null then cfg.configDir else "/etc/openldap/slapd.d";
 
   ldapValueType = let
     # Can't do types.either with multiple non-overlapping submodules, so define our own
-    singleLdapValueType = lib.mkOptionType rec {
+    singleLdapValueType = mkOptionType rec {
       name = "LDAP";
       # TODO: It would be nice to define a { secret = ...; } option, using
       # systemd's LoadCredentials for secrets. That would remove the last
@@ -19,8 +53,8 @@ let
         `path` or `base64` for included
         values or base-64 encoded values respectively.
       '';
-      check = x: lib.isString x || (lib.isAttrs x && (x ? path || x ? base64));
-      merge = lib.mergeEqualOption;
+      check = x: isString x || (isAttrs x && (x ? path || x ? base64));
+      merge = mergeEqualOption;
     };
     # We don't coerce to lists of single values, as some values must be unique
   in types.either singleLdapValueType (types.listOf singleLdapValueType);
@@ -31,17 +65,17 @@ let
         attrs = mkOption {
           type = types.attrsOf ldapValueType;
           default = {};
-          description = lib.mdDoc "Attributes of the parent entry.";
+          description = mdDoc "Attributes of the parent entry.";
         };
         children = mkOption {
           # Hide the child attributes, to avoid infinite recursion in e.g. documentation
           # Actual Nix evaluation is lazy, so this is not an issue there
           type = let
-            hiddenOptions = lib.mapAttrs (name: attr: attr // { visible = false; }) options;
+            hiddenOptions = mapAttrs (name: attr: attr // { visible = false; }) options;
           in types.attrsOf (types.submodule { options = hiddenOptions; });
           default = {};
-          description = lib.mdDoc "Child entries of the current entry, with recursively the same structure.";
-          example = lib.literalExpression ''
+          description = mdDoc "Child entries of the current entry, with recursively the same structure.";
+          example = literalExpression ''
             {
                 "cn=schema" = {
                 # The attribute used in the DN must be defined
@@ -59,7 +93,7 @@ let
         includes = mkOption {
           type = types.listOf types.path;
           default = [];
-          description = lib.mdDoc ''
+          description = mdDoc ''
             LDIF files to include after the parent's attributes but before its children.
           '';
         };
@@ -67,20 +101,20 @@ let
     in types.submodule { inherit options; };
 
   valueToLdif = attr: values: let
-    listValues = if lib.isList values then values else lib.singleton values;
+    listValues = if isList values then values else singleton values;
   in map (value:
-    if lib.isAttrs value then
-      if lib.hasAttr "path" value
+    if isAttrs value then
+      if hasAttr "path" value
       then "${attr}:< file://${value.path}"
       else "${attr}:: ${value.base64}"
-    else "${attr}: ${lib.replaceStrings [ "\n" ] [ "\n " ] value}"
+    else "${attr}: ${replaceStrings [ "\n" ] [ "\n " ] value}"
   ) listValues;
 
   attrsToLdif = dn: { attrs, children, includes, ... }: [''
     dn: ${dn}
-    ${lib.concatStringsSep "\n" (lib.flatten (lib.mapAttrsToList valueToLdif attrs))}
+    ${concatStringsSep "\n" (flatten (mapAttrsToList valueToLdif attrs))}
   ''] ++ (map (path: "include: file://${path}\n") includes) ++ (
-    lib.flatten (lib.mapAttrsToList (name: value: attrsToLdif "${name},${dn}" value) children)
+    flatten (mapAttrsToList (name: value: attrsToLdif "${name},${dn}" value) children)
   );
 in {
   options = {
@@ -88,7 +122,7 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to enable the ldap server.";
+        description = mdDoc "Whether to enable the ldap server.";
       };
 
       package = mkPackageOption pkgs "openldap" {
@@ -102,26 +136,26 @@ in {
       user = mkOption {
         type = types.str;
         default = "openldap";
-        description = lib.mdDoc "User account under which slapd runs.";
+        description = mdDoc "User account under which slapd runs.";
       };
 
       group = mkOption {
         type = types.str;
         default = "openldap";
-        description = lib.mdDoc "Group account under which slapd runs.";
+        description = mdDoc "Group account under which slapd runs.";
       };
 
       urlList = mkOption {
         type = types.listOf types.str;
         default = [ "ldap:///" ];
-        description = lib.mdDoc "URL list slapd should listen on.";
+        description = mdDoc "URL list slapd should listen on.";
         example = [ "ldaps:///" ];
       };
 
       settings = mkOption {
         type = ldapAttrsType;
-        description = lib.mdDoc "Configuration for OpenLDAP, in OLC format";
-        example = lib.literalExpression ''
+        description = mdDoc "Configuration for OpenLDAP, in OLC format";
+        example = literalExpression ''
           {
             attrs.olcLogLevel = [ "stats" ];
             children = {
@@ -168,7 +202,7 @@ in {
       configDir = mkOption {
         type = types.nullOr types.path;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Use this config directory instead of generating one from the
           `settings` option. Overrides all NixOS settings.
         '';
@@ -178,7 +212,7 @@ in {
       mutableConfig = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to allow writable on-line configuration. If
           `true`, the NixOS settings will only be used to
           initialize the OpenLDAP configuration if it does not exist, and are
@@ -189,7 +223,7 @@ in {
       declarativeContents = mkOption {
         type = with types; attrsOf lines;
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Declarative contents for the LDAP database, in LDIF format by suffix.
 
           All data will be erased when starting the LDAP server. Modifications
@@ -203,7 +237,7 @@ in {
           `olcDbDirectory` must begin with
           `"/var/lib/openldap"`.
         '';
-        example = lib.literalExpression ''
+        example = literalExpression ''
           {
             "dc=example,dc=org" = '''
               dn= dn: dc=example,dc=org
@@ -222,16 +256,16 @@ in {
     };
   };
 
-  meta.maintainers = with lib.maintainers; [ kwohlfahrt ];
+  meta.maintainers = with maintainers; [ kwohlfahrt ];
 
   config = let
     dbSettings = mapAttrs' (name: { attrs, ... }: nameValuePair attrs.olcSuffix attrs)
       (filterAttrs (name: { attrs, ... }: (hasPrefix "olcDatabase=" name) && attrs ? olcSuffix) cfg.settings.children);
-    settingsFile = pkgs.writeText "config.ldif" (lib.concatStringsSep "\n" (attrsToLdif "cn=config" cfg.settings));
+    settingsFile = pkgs.writeText "config.ldif" (concatStringsSep "\n" (attrsToLdif "cn=config" cfg.settings));
     writeConfig = pkgs.writeShellScript "openldap-config" ''
       set -euo pipefail
 
-      ${lib.optionalString (!cfg.mutableConfig) ''
+      ${optionalString (!cfg.mutableConfig) ''
         chmod -R u+w ${configDir}
         rm -rf ${configDir}/*
       ''}
@@ -302,13 +336,13 @@ in {
         ExecStartPre = [
           "!${pkgs.coreutils}/bin/mkdir -p ${configDir}"
           "+${pkgs.coreutils}/bin/chown $USER ${configDir}"
-        ] ++ (lib.optional (cfg.configDir == null) writeConfig)
-        ++ (mapAttrsToList (dn: content: lib.escapeShellArgs [
+        ] ++ (optional (cfg.configDir == null) writeConfig)
+        ++ (mapAttrsToList (dn: content: escapeShellArgs [
           writeContents dn (getAttr dn dbSettings).olcDbDirectory content
         ]) contentsFiles)
         ++ [ "${openldap}/bin/slaptest -u -F ${configDir}" ];
-        ExecStart = lib.escapeShellArgs ([
-          "${openldap}/libexec/slapd" "-d" "0" "-F" configDir "-h" (lib.concatStringsSep " " cfg.urlList)
+        ExecStart = escapeShellArgs ([
+          "${openldap}/libexec/slapd" "-d" "0" "-F" configDir "-h" (concatStringsSep " " cfg.urlList)
         ]);
         Type = "notify";
         # Fixes an error where openldap attempts to notify from a thread
@@ -324,14 +358,14 @@ in {
       };
     };
 
-    users.users = lib.optionalAttrs (cfg.user == "openldap") {
+    users.users = optionalAttrs (cfg.user == "openldap") {
       openldap = {
         group = cfg.group;
         isSystemUser = true;
       };
     };
 
-    users.groups = lib.optionalAttrs (cfg.group == "openldap") {
+    users.groups = optionalAttrs (cfg.group == "openldap") {
       openldap = {};
     };
   };
