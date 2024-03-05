@@ -1,8 +1,12 @@
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkOption
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.shelly;
 in
 {
@@ -10,7 +14,7 @@ in
   extraOpts = {
     metrics-file = mkOption {
       type = types.path;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path to the JSON file with the metric definitions
       '';
     };
