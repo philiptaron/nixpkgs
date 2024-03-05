@@ -1,18 +1,25 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.duckling;
-in {
+in
+{
   options = {
     services.duckling = {
-      enable = mkEnableOption (lib.mdDoc "duckling");
+      enable = mkEnableOption (mdDoc "duckling");
 
       port = mkOption {
         type = types.port;
         default = 8080;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Port on which duckling will run.
         '';
       };
