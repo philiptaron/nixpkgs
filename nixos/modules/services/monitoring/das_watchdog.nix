@@ -2,17 +2,21 @@
 # background at all times to ensure a realtime process won't hang the machine
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
 
   inherit (pkgs) das_watchdog;
 
-in {
+in
+{
   ###### interface
 
   options = {
-    services.das_watchdog.enable = mkEnableOption (lib.mdDoc "realtime watchdog");
+    services.das_watchdog.enable = mkEnableOption (mdDoc "realtime watchdog");
   };
 
   ###### implementation
