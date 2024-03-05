@@ -1,16 +1,22 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.infnoise;
 in {
   options = {
     services.infnoise = {
-      enable = mkEnableOption (lib.mdDoc "the Infinite Noise TRNG driver");
+      enable = mkEnableOption (mdDoc "the Infinite Noise TRNG driver");
 
       fillDevRandom = mkOption {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to run the infnoise driver as a daemon to refill /dev/random.
 
           If disabled, you can use the `infnoise` command-line tool to
