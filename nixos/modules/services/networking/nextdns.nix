@@ -1,8 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    escapeShellArgs
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.nextdns;
 in {
   options = {
@@ -10,13 +16,13 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to enable the NextDNS DNS/53 to DoH Proxy service.";
+        description = mdDoc "Whether to enable the NextDNS DNS/53 to DoH Proxy service.";
       };
       arguments = mkOption {
         type = types.listOf types.str;
         default = [];
         example = [ "-config" "10.0.3.0/24=abcdef" ];
-        description = lib.mdDoc "Additional arguments to be passed to nextdns run.";
+        description = mdDoc "Additional arguments to be passed to nextdns run.";
       };
     };
   };
