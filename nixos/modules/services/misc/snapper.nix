@@ -1,8 +1,28 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrNames
+    concatMap
+    concatMapStringsSep
+    concatStringsSep
+    escape
+    filterAttrs
+    generators
+    hasAttr
+    isList
+    isString
+    literalExpression
+    mapAttrs'
+    mdDoc
+    mkIf
+    mkOption
+    nameValuePair
+    optionalAttrs
+    toUpper
+    types
+    ;
+
   cfg = config.services.snapper;
 
   mkValue = v:
@@ -25,7 +45,7 @@ let
   configOptions = {
     SUBVOLUME = mkOption {
       type = types.path;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path of the subvolume or mount point.
         This path is a subvolume and has to contain a subvolume named
         .snapshots.
@@ -36,7 +56,7 @@ let
     FSTYPE = mkOption {
       type = types.enum [ "btrfs" ];
       default = "btrfs";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Filesystem type. Only btrfs is stable and tested.
       '';
     };
@@ -44,7 +64,7 @@ let
     ALLOW_GROUPS = mkOption {
       type = types.listOf safeStr;
       default = [];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         List of groups allowed to operate with the config.
 
         Also see the PERMISSIONS section in man:snapper(8).
@@ -55,7 +75,7 @@ let
       type = types.listOf safeStr;
       default = [];
       example = [ "alice" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         List of users allowed to operate with the config. "root" is always
         implicitly included.
 
@@ -66,7 +86,7 @@ let
     TIMELINE_CLEANUP = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Defines whether the timeline cleanup algorithm should be run for the config.
       '';
     };
@@ -74,7 +94,7 @@ let
     TIMELINE_CREATE = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Defines whether hourly snapshots should be created.
       '';
     };
@@ -87,7 +107,7 @@ in
     snapshotRootOnBoot = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to snapshot root on boot
       '';
     };
@@ -95,7 +115,7 @@ in
     snapshotInterval = mkOption {
       type = types.str;
       default = "hourly";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Snapshot interval.
 
         The format is described in
@@ -106,7 +126,7 @@ in
     cleanupInterval = mkOption {
       type = types.str;
       default = "1d";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Cleanup interval.
 
         The format is described in
@@ -117,7 +137,7 @@ in
     filters = mkOption {
       type = types.nullOr types.lines;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Global display difference filter. See man:snapper(8) for more details.
       '';
     };
@@ -135,7 +155,7 @@ in
         }
       '';
 
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Subvolume configuration. Any option mentioned in man:snapper-configs(5)
         is valid here, even if NixOS doesn't document it.
       '';
@@ -161,14 +181,14 @@ in
       etc = {
 
         "sysconfig/snapper".text = ''
-          SNAPPER_CONFIGS="${lib.concatStringsSep " " (builtins.attrNames cfg.configs)}"
+          SNAPPER_CONFIGS="${concatStringsSep " " (builtins.attrNames cfg.configs)}"
         '';
 
       }
       // (mapAttrs' (name: subvolume: nameValuePair "snapper/configs/${name}" ({
-        text = lib.generators.toKeyValue { inherit mkKeyValue; } (filterAttrs (k: v: v != defaultOf k) subvolume);
+        text = generators.toKeyValue { inherit mkKeyValue; } (filterAttrs (k: v: v != defaultOf k) subvolume);
       })) cfg.configs)
-      // (lib.optionalAttrs (cfg.filters != null) {
+      // (optionalAttrs (cfg.filters != null) {
         "snapper/filters/default.txt".text = cfg.filters;
       });
 
@@ -216,7 +236,7 @@ in
       timerConfig.OnUnitActiveSec = cfg.cleanupInterval;
     };
 
-    systemd.services.snapper-boot = lib.optionalAttrs cfg.snapshotRootOnBoot {
+    systemd.services.snapper-boot = optionalAttrs cfg.snapshotRootOnBoot {
       description = "Take snapper snapshot of root on boot";
       inherit documentation;
       serviceConfig.ExecStart = "${pkgs.snapper}/bin/snapper --config root create --cleanup-algorithm number --description boot";
