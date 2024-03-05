@@ -1,8 +1,16 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    types
+    ;
+
   cfg = config.services.lxd-image-server;
   format = pkgs.formats.toml {};
 
@@ -11,18 +19,18 @@ in
 {
   options = {
     services.lxd-image-server = {
-      enable = mkEnableOption (lib.mdDoc "lxd-image-server");
+      enable = mkEnableOption (mdDoc "lxd-image-server");
 
       group = mkOption {
         type = types.str;
-        description = lib.mdDoc "Group assigned to the user and the webroot directory.";
+        description = mdDoc "Group assigned to the user and the webroot directory.";
         default = "nginx";
         example = "www-data";
       };
 
       settings = mkOption {
         type = format.type;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configuration for lxd-image-server.
 
           Example see <https://github.com/Avature/lxd-image-server/blob/master/config.toml>.
@@ -31,10 +39,10 @@ in
       };
 
       nginx = {
-        enable = mkEnableOption (lib.mdDoc "nginx");
+        enable = mkEnableOption (mdDoc "nginx");
         domain = mkOption {
           type = types.str;
-          description = lib.mdDoc "Domain to use for nginx virtual host.";
+          description = mdDoc "Domain to use for nginx virtual host.";
           example = "images.example.org";
         };
       };
