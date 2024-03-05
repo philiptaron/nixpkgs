@@ -1,6 +1,13 @@
 { config, pkgs, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    teams
+    ;
+in
 
 {
 
@@ -14,7 +21,7 @@ with lib;
 
     services.deepin.app-services = {
 
-      enable = mkEnableOption (lib.mdDoc "service collection of DDE applications, including dconfig-center");
+      enable = mkEnableOption (mdDoc "service collection of DDE applications, including dconfig-center");
 
     };
 
