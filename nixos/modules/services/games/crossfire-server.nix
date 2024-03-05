@@ -1,16 +1,31 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrsets
+    elem
+    fileContents
+    literalExpression
+    mapAttrs
+    mdDoc
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    nameValuePair
+    optionalString
+    types
+    ;
+
   cfg = config.services.crossfire-server;
   serverPort = 13327;
-in {
+in
+{
   options.services.crossfire-server = {
     enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         If enabled, the Crossfire game server will be started at boot.
       '';
     };
@@ -27,7 +42,7 @@ in {
       type = types.str;
       default = "${cfg.package}/share/crossfire";
       defaultText = literalExpression ''"''${config.services.crossfire.package}/share/crossfire"'';
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Where to load readonly data from -- maps, archetypes, treasure tables,
         and the like. If you plan to edit the data on the live server (rather
         than overlaying the crossfire-maps and crossfire-arch packages and
@@ -39,7 +54,7 @@ in {
     stateDir = mkOption {
       type = types.str;
       default = "/var/lib/crossfire";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Where to store runtime data (save files, persistent items, etc).
 
         If left at the default, this will be automatically created on server
@@ -52,14 +67,14 @@ in {
     openFirewall = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to open ports in the firewall for the server.
       '';
     };
 
     configFiles = mkOption {
       type = types.attrsOf types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Text to append to the corresponding configuration files. Note that the
         files given in the example are *not* the complete set of files available
         to customize; look in /etc/crossfire after enabling the server to see
@@ -116,8 +131,8 @@ in {
     # For most files this consists of reading ${crossfire}/etc/crossfire/${name}
     # and appending the user setting to it; the motd, news, and rules are handled
     # specially, with user-provided values completely replacing the original.
-    environment.etc = lib.attrsets.mapAttrs'
-      (name: value: lib.attrsets.nameValuePair "crossfire/${name}" {
+    environment.etc = attrsets.mapAttrs'
+      (name: value: attrsets.nameValuePair "crossfire/${name}" {
         mode = "0644";
         text =
           (optionalString (!elem name ["motd" "news" "rules"])
