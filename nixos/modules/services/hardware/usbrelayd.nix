@@ -1,15 +1,23 @@
 { config, lib, pkgs, ... }:
-with lib;
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.usbrelayd;
 in
 {
-  options.services.usbrelayd = with types; {
-    enable = mkEnableOption (lib.mdDoc "USB Relay MQTT daemon");
+  options.services.usbrelayd = {
+    enable = mkEnableOption (mdDoc "USB Relay MQTT daemon");
 
     broker = mkOption {
-      type = str;
-      description = lib.mdDoc "Hostname or IP address of your MQTT Broker.";
+      type = types.str;
+      description = mdDoc "Hostname or IP address of your MQTT Broker.";
       default = "127.0.0.1";
       example = [
         "mqtt"
@@ -18,8 +26,8 @@ in
     };
 
     clientName = mkOption {
-      type = str;
-      description = lib.mdDoc "Name, your client connects as.";
+      type = types.str;
+      description = mdDoc "Name, your client connects as.";
       default = "MyUSBRelay";
     };
   };
@@ -38,6 +46,6 @@ in
   };
 
   meta = {
-    maintainers = with lib.maintainers; [ wentasah ];
+    maintainers = with maintainers; [ wentasah ];
   };
 }
