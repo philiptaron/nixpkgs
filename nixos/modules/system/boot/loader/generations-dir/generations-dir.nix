@@ -1,8 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    optional
+    types
+    ;
 
   generationsDirBuilder = pkgs.substituteAll {
     src = ./generations-dir-builder.sh;
@@ -22,7 +27,7 @@ in
       enable = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to create symlinks to the system generations under
           `/boot`.  When enabled,
           `/boot/default/kernel`,
@@ -41,7 +46,7 @@ in
       copyKernels = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether copy the necessary boot files into /boot, so
           /nix/store is not needed by the boot loader.
         '';
