@@ -1,8 +1,13 @@
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    mdDoc
+    mkOption
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.ping;
 
   settingsFormat = pkgs.formats.yaml {};
@@ -23,7 +28,7 @@ in
       type = settingsFormat.type;
       default = {};
 
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Configuration for ping_exporter, see
         <https://github.com/czerwonk/ping_exporter>
         for supported values.
