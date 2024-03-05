@@ -1,13 +1,22 @@
 { config, lib, options, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalAttrs
+    types
+    ;
 
   name = "sickbeard";
 
   cfg = config.services.sickbeard;
+
   opt = options.services.sickbeard;
+
   sickbeard = cfg.package;
 
 in
@@ -20,7 +29,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Whether to enable the sickbeard server.";
+        description = mdDoc "Whether to enable the sickbeard server.";
       };
       package = mkPackageOption pkgs "sickbeard" {
         example = "sickrage";
@@ -32,28 +41,28 @@ in
       dataDir = mkOption {
         type = types.path;
         default = "/var/lib/${name}";
-        description = lib.mdDoc "Path where to store data files.";
+        description = mdDoc "Path where to store data files.";
       };
       configFile = mkOption {
         type = types.path;
         default = "${cfg.dataDir}/config.ini";
         defaultText = literalExpression ''"''${config.${opt.dataDir}}/config.ini"'';
-        description = lib.mdDoc "Path to config file.";
+        description = mdDoc "Path to config file.";
       };
       port = mkOption {
         type = types.ints.u16;
         default = 8081;
-        description = lib.mdDoc "Port to bind to.";
+        description = mdDoc "Port to bind to.";
       };
       user = mkOption {
         type = types.str;
         default = name;
-        description = lib.mdDoc "User to run the service as";
+        description = mdDoc "User to run the service as";
       };
       group = mkOption {
         type = types.str;
         default = name;
-        description = lib.mdDoc "Group to run the service as";
+        description = mdDoc "Group to run the service as";
       };
     };
   };
