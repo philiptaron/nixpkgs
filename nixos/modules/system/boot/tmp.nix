@@ -1,8 +1,16 @@
 { config, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    mdDoc
+    mkIf
+    mkOption
+    mkRenamedOptionModule
+    optional
+    types
+    ;
+
   cfg = config.boot.tmp;
 in
 {
@@ -17,7 +25,7 @@ in
       cleanOnBoot = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to delete all files in {file}`/tmp` during boot.
         '';
       };
@@ -25,7 +33,7 @@ in
       tmpfsSize = mkOption {
         type = types.oneOf [ types.str types.types.ints.positive ];
         default = "50%";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Size of tmpfs in percentage.
           Percentage is defined by systemd.
         '';
@@ -34,7 +42,7 @@ in
       useTmpfs = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
            Whether to mount a tmpfs on {file}`/tmp` during boot.
 
            ::: {.note}
