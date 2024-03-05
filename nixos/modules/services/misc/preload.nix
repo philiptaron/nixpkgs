@@ -1,10 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    getExe
+    mkEnableOption
+    mkIf
+    mkPackageOption
+    ;
+
   cfg = config.services.preload;
-in {
+in
+{
   meta = { maintainers = pkgs.preload.meta.maintainers; };
 
   options.services.preload = {
