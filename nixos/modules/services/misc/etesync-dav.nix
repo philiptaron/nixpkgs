@@ -1,43 +1,50 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.etesync-dav;
 in
   {
     options.services.etesync-dav = {
-      enable = mkEnableOption (lib.mdDoc "etesync-dav");
+      enable = mkEnableOption (mdDoc "etesync-dav");
 
       host = mkOption {
         type = types.str;
         default = "localhost";
-        description = lib.mdDoc "The server host address.";
+        description = mdDoc "The server host address.";
       };
 
       port = mkOption {
         type = types.port;
         default = 37358;
-        description = lib.mdDoc "The server host port.";
+        description = mdDoc "The server host port.";
       };
 
       apiUrl = mkOption {
         type = types.str;
         default = "https://api.etesync.com/";
-        description = lib.mdDoc "The url to the etesync API.";
+        description = mdDoc "The url to the etesync API.";
       };
 
       openFirewall = mkOption {
         default = false;
         type = types.bool;
-        description = lib.mdDoc "Whether to open the firewall for the specified port.";
+        description = mdDoc "Whether to open the firewall for the specified port.";
       };
 
       sslCertificate = mkOption {
         type = types.nullOr types.path;
         default = null;
         example = "/var/etesync.crt";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Path to server SSL certificate. It will be copied into
           etesync-dav's data directory.
         '';
@@ -47,7 +54,7 @@ in
         type = types.nullOr types.path;
         default = null;
         example = "/var/etesync.key";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Path to server SSL certificate key.  It will be copied into
           etesync-dav's data directory.
         '';
