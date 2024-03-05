@@ -1,13 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkPackageOption
+    ;
+
   cfg = config.services.greenclip;
-in {
+in
+{
 
   options.services.greenclip = {
-    enable = mkEnableOption (lib.mdDoc "Greenclip daemon");
+    enable = mkEnableOption (mdDoc "Greenclip daemon");
 
     package = mkPackageOption pkgs [ "haskellPackages" "greenclip" ] { };
   };
