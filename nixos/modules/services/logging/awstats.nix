@@ -1,31 +1,50 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    collect
+    concatStringsSep
+    filterAttrs
+    literalExpression
+    mapAttrs'
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    nameValuePair
+    optionalString
+    tail
+    types
+    ;
+
   cfg = config.services.awstats;
+
   package = pkgs.awstats;
+
   configOpts = {name, config, ...}: {
     options = {
       type = mkOption{
         type = types.enum [ "mail" "web" ];
         default = "web";
         example = "mail";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The type of log being collected.
         '';
       };
       domain = mkOption {
         type = types.str;
         default = name;
-        description = lib.mdDoc "The domain name to collect stats for.";
+        description = mdDoc "The domain name to collect stats for.";
         example = "example.com";
       };
 
       logFile = mkOption {
         type = types.str;
         example = "/var/log/nginx/access.log";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The log file to be scanned.
 
           For mail, set this to
@@ -38,7 +57,7 @@ let
       logFormat = mkOption {
         type = types.str;
         default = "1";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The log format being used.
 
           For mail, set this to
@@ -52,7 +71,7 @@ let
         type = types.listOf types.str;
         default = [];
         example = [ "www.example.org" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of aliases the site has.
         '';
       };
@@ -65,22 +84,22 @@ let
             "ValidHTTPCodes" = "404";
           }
         '';
-        description = lib.mdDoc "Extra configuration to be appended to awstats.\${name}.conf.";
+        description = mdDoc "Extra configuration to be appended to awstats.\${name}.conf.";
       };
 
       webService = {
-        enable = mkEnableOption (lib.mdDoc "awstats web service");
+        enable = mkEnableOption (mdDoc "awstats web service");
 
         hostname = mkOption {
           type = types.str;
           default = config.domain;
-          description = lib.mdDoc "The hostname the web service appears under.";
+          description = mdDoc "The hostname the web service appears under.";
         };
 
         urlPrefix = mkOption {
           type = types.str;
           default = "/awstats";
-          description = lib.mdDoc "The URL prefix under which the awstats pages appear.";
+          description = mdDoc "The URL prefix under which the awstats pages appear.";
         };
       };
     };
@@ -95,12 +114,12 @@ in
   ];
 
   options.services.awstats = {
-    enable = mkEnableOption (lib.mdDoc "awstats");
+    enable = mkEnableOption (mdDoc "awstats");
 
     dataDir = mkOption {
       type = types.path;
       default = "/var/lib/awstats";
-      description = lib.mdDoc "The directory where awstats data will be stored.";
+      description = mdDoc "The directory where awstats data will be stored.";
     };
 
     configs = mkOption {
@@ -114,14 +133,14 @@ in
           };
         }
       '';
-      description = lib.mdDoc "Attribute set of domains to collect stats for.";
+      description = mdDoc "Attribute set of domains to collect stats for.";
     };
 
     updateAt = mkOption {
       type = types.nullOr types.str;
       default = null;
       example = "hourly";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Specification of the time at which awstats will get updated.
         (in the format described by {manpage}`systemd.time(7)`)
       '';
@@ -203,7 +222,7 @@ in
       [ "Z '${cfg.dataDir}' 755 root root - -" ];
 
     # nginx options
-    services.nginx.virtualHosts = mapAttrs'(name: opts: {
+    services.nginx.virtualHosts = mapAttrs' (name: opts: {
       name = opts.webService.hostname;
       value = {
         locations = {
