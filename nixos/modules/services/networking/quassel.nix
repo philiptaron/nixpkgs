@@ -1,8 +1,19 @@
 { config, lib, options, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optional
+    optionalAttrs
+    types
+    ;
+
   cfg = config.services.quassel;
   opt = options.services.quassel;
   quassel = cfg.package;
@@ -17,12 +28,12 @@ in
 
     services.quassel = {
 
-      enable = mkEnableOption (lib.mdDoc "the Quassel IRC client daemon");
+      enable = mkEnableOption (mdDoc "the Quassel IRC client daemon");
 
       certificateFile = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Path to the certificate used for SSL connections with clients.
         '';
       };
@@ -30,7 +41,7 @@ in
       requireSSL = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Require SSL for connections from clients.
         '';
       };
@@ -40,7 +51,7 @@ in
       interfaces = mkOption {
         type = types.listOf types.str;
         default = [ "127.0.0.1" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The interfaces the Quassel daemon will be listening to.  If `[ 127.0.0.1 ]`,
           only clients on the local host can connect to it; if `[ 0.0.0.0 ]`, clients
           can access it from any network interface.
@@ -50,7 +61,7 @@ in
       portNumber = mkOption {
         type = types.port;
         default = 4242;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The port number the Quassel daemon will be listening to.
         '';
       };
@@ -61,7 +72,7 @@ in
           "/home/''${config.${opt.user}}/.config/quassel-irc.org"
         '';
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The directory holding configuration files, the SQlite database and the SSL Cert.
         '';
       };
@@ -69,7 +80,7 @@ in
       user = mkOption {
         default = null;
         type = types.nullOr types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The existing user the Quassel daemon should run as. If left empty, a default "quassel" user will be created.
         '';
       };
