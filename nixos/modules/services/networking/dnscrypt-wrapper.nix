@@ -1,7 +1,19 @@
 { config, lib, pkgs, ... }:
-with lib;
-
 let
+  inherit (lib)
+    licenses
+    literalExpression
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optional
+    optionalString
+    platforms
+    types
+    ;
+
   cfg     = config.services.dnscrypt-wrapper;
   dataDir = "/var/lib/dnscrypt-wrapper";
 
@@ -124,12 +136,12 @@ in {
   ###### interface
 
   options.services.dnscrypt-wrapper = {
-    enable = mkEnableOption (lib.mdDoc "DNSCrypt wrapper");
+    enable = mkEnableOption (mdDoc "DNSCrypt wrapper");
 
     address = mkOption {
       type = types.str;
       default = "127.0.0.1";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The DNSCrypt wrapper will bind to this IP address.
       '';
     };
@@ -137,7 +149,7 @@ in {
     port = mkOption {
       type = types.port;
       default = 5353;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The DNSCrypt wrapper will listen for DNS queries on this port.
       '';
     };
@@ -147,7 +159,7 @@ in {
       default = "2.dnscrypt-cert.${config.networking.hostName}";
       defaultText = literalExpression ''"2.dnscrypt-cert.''${config.networking.hostName}"'';
       example = "2.dnscrypt-cert.myresolver";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The name that will be given to this DNSCrypt resolver.
         Note: the resolver name must start with `2.dnscrypt-cert.`.
       '';
@@ -157,7 +169,7 @@ in {
       type = types.nullOr types.path;
       default = null;
       example = "/etc/secrets/public.key";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The filepath to the provider public key. If not given a new
         provider key pair will be generated on the first run.
       '';
@@ -167,7 +179,7 @@ in {
       type = types.nullOr types.path;
       default = null;
       example = "/etc/secrets/secret.key";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The filepath to the provider secret key. If not given a new
         provider key pair will be generated on the first run.
       '';
@@ -176,7 +188,7 @@ in {
     upstream.address = mkOption {
       type = types.str;
       default = "127.0.0.1";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The IP address of the upstream DNS server DNSCrypt will "wrap".
       '';
     };
@@ -184,7 +196,7 @@ in {
     upstream.port = mkOption {
       type = types.port;
       default = 53;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The port of the upstream DNS server DNSCrypt will "wrap".
       '';
     };
@@ -192,7 +204,7 @@ in {
     keys.expiration = mkOption {
       type = types.int;
       default = 30;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The duration (in days) of the time-limited secret key.
         This will be automatically rotated before expiration.
       '';
@@ -201,7 +213,7 @@ in {
     keys.checkInterval = mkOption {
       type = types.int;
       default = 1440;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The time interval (in minutes) between key expiration checks.
       '';
     };
@@ -270,6 +282,6 @@ in {
 
   };
 
-  meta.maintainers = with lib.maintainers; [ rnhmjoj ];
+  meta.maintainers = with maintainers; [ rnhmjoj ];
 
 }
