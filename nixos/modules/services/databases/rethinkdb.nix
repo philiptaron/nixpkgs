@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalAttrs
+    singleton
+    ;
+
   cfg = config.services.rethinkdb;
   rethinkdb = cfg.package;
 in
@@ -15,7 +22,7 @@ in
 
     services.rethinkdb = {
 
-      enable = mkEnableOption (lib.mdDoc "RethinkDB server");
+      enable = mkEnableOption (mdDoc "RethinkDB server");
 
       #package = mkOption {
       #  default = pkgs.rethinkdb;
@@ -24,22 +31,22 @@ in
 
       user = mkOption {
         default = "rethinkdb";
-        description = lib.mdDoc "User account under which RethinkDB runs.";
+        description = mdDoc "User account under which RethinkDB runs.";
       };
 
       group = mkOption {
         default = "rethinkdb";
-        description = lib.mdDoc "Group which rethinkdb user belongs to.";
+        description = mdDoc "Group which rethinkdb user belongs to.";
       };
 
       dbpath = mkOption {
         default = "/var/db/rethinkdb";
-        description = lib.mdDoc "Location where RethinkDB stores its data, 1 data directory per instance.";
+        description = mdDoc "Location where RethinkDB stores its data, 1 data directory per instance.";
       };
 
       pidpath = mkOption {
         default = "/run/rethinkdb";
-        description = lib.mdDoc "Location where each instance's pid file is located.";
+        description = mdDoc "Location where each instance's pid file is located.";
       };
 
       #cfgpath = mkOption {
