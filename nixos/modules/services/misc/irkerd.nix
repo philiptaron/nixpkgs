@@ -1,21 +1,27 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.irkerd;
+
   ports = [ 6659 ];
 in
 {
   options.services.irkerd = {
     enable = mkOption {
-      description = lib.mdDoc "Whether to enable irker, an IRC notification daemon.";
+      description = mdDoc "Whether to enable irker, an IRC notification daemon.";
       default = false;
       type = types.bool;
     };
 
     openPorts = mkOption {
-      description = lib.mdDoc "Open ports in the firewall for irkerd";
+      description = mdDoc "Open ports in the firewall for irkerd";
       default = false;
       type = types.bool;
     };
@@ -24,7 +30,7 @@ in
       default = "localhost";
       example = "0.0.0.0";
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Specifies the bind address on which the irker daemon listens.
         The default is localhost.
 
@@ -36,7 +42,7 @@ in
     nick = mkOption {
       default = "irker";
       type = types.str;
-      description = lib.mdDoc "Nick to use for irker";
+      description = mdDoc "Nick to use for irker";
     };
   };
 
