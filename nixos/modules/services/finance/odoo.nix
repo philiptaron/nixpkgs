@@ -1,15 +1,26 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStringsSep
+    escapeShellArg
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.odoo;
   format = pkgs.formats.ini {};
 in
 {
   options = {
     services.odoo = {
-      enable = mkEnableOption (lib.mdDoc "odoo");
+      enable = mkEnableOption (mdDoc "odoo");
 
       package = mkPackageOption pkgs "odoo" { };
 
@@ -17,13 +28,13 @@ in
         type = with types; listOf package;
         default = [];
         example = literalExpression "[ pkgs.odoo_enterprise ]";
-        description = lib.mdDoc "Odoo addons.";
+        description = mdDoc "Odoo addons.";
       };
 
       settings = mkOption {
         type = format.type;
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Odoo configuration settings. For more details see <https://www.odoo.com/documentation/15.0/administration/install/deploy.html>
         '';
         example = literalExpression ''
@@ -36,7 +47,7 @@ in
 
       domain = mkOption {
         type = with types; nullOr str;
-        description = lib.mdDoc "Domain to host Odoo with nginx";
+        description = mdDoc "Domain to host Odoo with nginx";
         default = null;
       };
     };
