@@ -1,7 +1,17 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    mapAttrs'
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    nameValuePair
+    types
+    ;
+
   gunicorn = pkgs.python3Packages.gunicorn;
   bepasty = pkgs.bepasty;
   gevent = pkgs.python3Packages.gevent;
@@ -13,11 +23,11 @@ let
 in
 {
   options.services.bepasty = {
-    enable = mkEnableOption (lib.mdDoc "Bepasty servers");
+    enable = mkEnableOption (mdDoc "Bepasty servers");
 
     servers = mkOption {
       default = {};
-      description = lib.mdDoc ''
+      description = mdDoc ''
         configure a number of bepasty servers which will be started with
         gunicorn.
         '';
@@ -27,7 +37,7 @@ in
 
           bind = mkOption {
             type = types.str;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Bind address to be used for this server.
               '';
             example = "0.0.0.0:8000";
@@ -36,7 +46,7 @@ in
 
           dataDir = mkOption {
             type = types.str;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Path to the directory where the pastes will be saved to
               '';
             default = default_home+"/data";
@@ -44,7 +54,7 @@ in
 
           defaultPermissions = mkOption {
             type = types.str;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               default permissions for all unauthenticated accesses.
               '';
             example = "read,create,delete";
@@ -53,7 +63,7 @@ in
 
           extraConfig = mkOption {
             type = types.lines;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Extra configuration for bepasty server to be appended on the
               configuration.
               see https://bepasty-server.readthedocs.org/en/latest/quickstart.html#configuring-bepasty
@@ -70,7 +80,7 @@ in
 
           secretKey = mkOption {
             type = types.str;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               server secret for safe session cookies, must be set.
 
               Warning: this secret is stored in the WORLD-READABLE Nix store!
@@ -84,7 +94,7 @@ in
           secretKeyFile = mkOption {
             type = types.nullOr types.str;
             default = null;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               A file that contains the server secret for safe session cookies, must be set.
 
               {option}`secretKeyFile` takes precedence over {option}`secretKey`.
@@ -96,7 +106,7 @@ in
 
           workDir = mkOption {
             type = types.str;
-            description = lib.mdDoc ''
+            description = mdDoc ''
               Path to the working directory (used for config and pidfile).
               Defaults to the users home directory.
               '';
