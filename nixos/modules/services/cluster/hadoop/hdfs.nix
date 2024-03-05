@@ -1,6 +1,19 @@
 { config, lib, pkgs, ... }:
-with lib;
 let
+  inherit (lib)
+    concatMapStringsSep
+    escapeShellArgs
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    optionalAttrs
+    toLower
+    types
+    versionAtLeast
+    ;
+
   cfg = config.services.hadoop;
 
   # Config files for hadoop services
@@ -8,10 +21,10 @@ let
 
   # Generator for HDFS service options
   hadoopServiceOption = { serviceName, firewallOption ? true, extraOpts ? null }: {
-    enable = mkEnableOption (lib.mdDoc serviceName);
+    enable = mkEnableOption (mdDoc serviceName);
     restartIfChanged = mkOption {
       type = types.bool;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Automatically restart the service on config change.
         This can be set to false to defer restarts on clusters running critical applications.
         Please consider the security implications of inadvertently running an older version,
@@ -22,7 +35,7 @@ let
     extraFlags = mkOption{
       type = with types; listOf str;
       default = [];
-      description = lib.mdDoc "Extra command line flags to pass to ${serviceName}";
+      description = mdDoc "Extra command line flags to pass to ${serviceName}";
       example = [
         "-Dcom.sun.management.jmxremote"
         "-Dcom.sun.management.jmxremote.port=8010"
@@ -31,13 +44,13 @@ let
     extraEnv = mkOption{
       type = with types; attrsOf str;
       default = {};
-      description = lib.mdDoc "Extra environment variables for ${serviceName}";
+      description = mdDoc "Extra environment variables for ${serviceName}";
     };
   } // (optionalAttrs firewallOption {
     openFirewall = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc "Open firewall ports for ${serviceName}.";
+      description = mdDoc "Open firewall ports for ${serviceName}.";
     };
   }) // (optionalAttrs (extraOpts != null) extraOpts);
 
@@ -83,7 +96,7 @@ in
       formatOnInit = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Format HDFS namenode on first start. This is useful for quickly spinning up
           ephemeral HDFS clusters with a single namenode.
           For HA clusters, initialization involves multiple steps across multiple nodes.
@@ -96,19 +109,19 @@ in
     datanode = hadoopServiceOption { serviceName = "HDFS DataNode"; } // {
       dataDirs = mkOption {
         default = null;
-        description = lib.mdDoc "Tier and path definitions for datanode storage.";
+        description = mdDoc "Tier and path definitions for datanode storage.";
         type = with types; nullOr (listOf (submodule {
           options = {
             type = mkOption {
               type = enum [ "SSD" "DISK" "ARCHIVE" "RAM_DISK" ];
-              description = lib.mdDoc ''
+              description = mdDoc ''
                 Storage types ([SSD]/[DISK]/[ARCHIVE]/[RAM_DISK]) for HDFS storage policies.
               '';
             };
             path = mkOption {
               type = path;
               example = [ "/var/lib/hadoop/hdfs/dn" ];
-              description = lib.mdDoc "Determines where on the local filesystem a data node should store its blocks.";
+              description = mdDoc "Determines where on the local filesystem a data node should store its blocks.";
             };
           };
         }));
@@ -126,7 +139,7 @@ in
       tempPath = mkOption {
         type = types.path;
         default = "/tmp/hadoop/httpfs";
-        description = lib.mdDoc "HTTPFS_TEMP path used by HTTPFS";
+        description = mdDoc "HTTPFS_TEMP path used by HTTPFS";
       };
     };
 
