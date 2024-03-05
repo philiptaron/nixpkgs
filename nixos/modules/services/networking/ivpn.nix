@@ -1,14 +1,22 @@
 { config, lib, pkgs, ... }:
+
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.ivpn;
 in
-with lib;
 {
   options.services.ivpn = {
     enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         This option enables iVPN daemon.
         This sets {option}`networking.firewall.checkReversePath` to "loose", which might be undesirable for security.
       '';
