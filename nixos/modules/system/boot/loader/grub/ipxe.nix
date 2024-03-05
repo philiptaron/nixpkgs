@@ -2,9 +2,15 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   scripts = builtins.attrNames config.boot.loader.grub.ipxe;
 
   grubEntry = name:
@@ -28,7 +34,7 @@ in
     { boot.loader.grub.ipxe = mkOption {
         type = types.attrsOf (types.either types.path types.str);
         description =
-          lib.mdDoc ''
+          mdDoc ''
             Set of iPXE scripts available for
             booting from the GRUB boot menu.
           '';
