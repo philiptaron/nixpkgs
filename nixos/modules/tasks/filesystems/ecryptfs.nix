@@ -1,7 +1,11 @@
 { config, lib, pkgs, ... }:
 # TODO: make ecryptfs work in initramfs?
 
-with lib;
+let
+  inherit (lib)
+    mkIf
+    ;
+in
 
 {
   config = mkIf (config.boot.supportedFilesystems.ecryptfs or false) {
