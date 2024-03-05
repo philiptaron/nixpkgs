@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
 
-let cfg = config.services.SystemdJournal2Gelf;
+  cfg = config.services.SystemdJournal2Gelf;
 in
 
 { options = {
@@ -10,7 +17,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable SystemdJournal2Gelf.
         '';
       };
@@ -18,7 +25,7 @@ in
       graylogServer = mkOption {
         type = types.str;
         example = "graylog2.example.com:11201";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Host and port of your graylog2 input. This should be a GELF
           UDP input.
         '';
@@ -27,7 +34,7 @@ in
       extraOptions = mkOption {
         type = types.separatedString " ";
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Any extra flags to pass to SystemdJournal2Gelf. Note that
           these are basically `journalctl` flags.
         '';
