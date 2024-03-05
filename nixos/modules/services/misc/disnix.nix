@@ -1,9 +1,19 @@
 # Disnix server
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optional
+    optionalAttrs
+    optionals
+    optionalString
+    types
+    ;
 
   cfg = config.services.disnix;
 
@@ -17,24 +27,24 @@ in
 
     services.disnix = {
 
-      enable = mkEnableOption (lib.mdDoc "Disnix");
+      enable = mkEnableOption (mdDoc "Disnix");
 
       enableMultiUser = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc "Whether to support multi-user mode by enabling the Disnix D-Bus service";
+        description = mdDoc "Whether to support multi-user mode by enabling the Disnix D-Bus service";
       };
 
-      useWebServiceInterface = mkEnableOption (lib.mdDoc "the DisnixWebService interface running on Apache Tomcat");
+      useWebServiceInterface = mkEnableOption (mdDoc "the DisnixWebService interface running on Apache Tomcat");
 
       package = mkPackageOption pkgs "disnix" {};
 
-      enableProfilePath = mkEnableOption (lib.mdDoc "exposing the Disnix profiles in the system's PATH");
+      enableProfilePath = mkEnableOption (mdDoc "exposing the Disnix profiles in the system's PATH");
 
       profiles = mkOption {
         type = types.listOf types.str;
         default = [ "default" ];
-        description = lib.mdDoc "Names of the Disnix profiles to expose in the system's PATH";
+        description = mdDoc "Names of the Disnix profiles to expose in the system's PATH";
       };
     };
 
@@ -46,8 +56,8 @@ in
     dysnomia.enable = true;
 
     environment.systemPackages = [ pkgs.disnix ] ++ optional cfg.useWebServiceInterface pkgs.DisnixWebService;
-    environment.variables.PATH = lib.optionals cfg.enableProfilePath (map (profileName: "/nix/var/nix/profiles/disnix/${profileName}/bin" ) cfg.profiles);
-    environment.variables.DISNIX_REMOTE_CLIENT = lib.optionalString (cfg.enableMultiUser) "disnix-client";
+    environment.variables.PATH = optionals cfg.enableProfilePath (map (profileName: "/nix/var/nix/profiles/disnix/${profileName}/bin" ) cfg.profiles);
+    environment.variables.DISNIX_REMOTE_CLIENT = optionalString (cfg.enableMultiUser) "disnix-client";
 
     services.dbus.enable = true;
     services.dbus.packages = [ pkgs.disnix ];
