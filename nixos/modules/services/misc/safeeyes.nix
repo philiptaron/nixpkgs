@@ -1,8 +1,11 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
 
   cfg = config.services.safeeyes;
 
@@ -16,7 +19,7 @@ in
 
     services.safeeyes = {
 
-      enable = mkEnableOption (lib.mdDoc "the safeeyes OSGi service");
+      enable = mkEnableOption (mdDoc "the safeeyes OSGi service");
 
     };
 
