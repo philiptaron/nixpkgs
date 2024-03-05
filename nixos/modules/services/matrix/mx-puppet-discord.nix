@@ -1,18 +1,32 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
-  dataDir = "/var/lib/mx-puppet-discord";
-  registrationFile = "${dataDir}/discord-registration.yaml";
-  cfg = config.services.mx-puppet-discord;
-  settingsFormat = pkgs.formats.json {};
-  settingsFile = settingsFormat.generate "mx-puppet-discord-config.json" cfg.settings;
+  inherit (lib)
+    literalExpression
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optional
+    recursiveUpdate
+    types
+    ;
 
-in {
+  dataDir = "/var/lib/mx-puppet-discord";
+
+  registrationFile = "${dataDir}/discord-registration.yaml";
+
+  cfg = config.services.mx-puppet-discord;
+
+  settingsFormat = pkgs.formats.json {};
+
+  settingsFile = settingsFormat.generate "mx-puppet-discord-config.json" cfg.settings;
+in
+{
   options = {
     services.mx-puppet-discord = {
-      enable = mkEnableOption (lib.mdDoc ''
+      enable = mkEnableOption (mdDoc ''
         mx-puppet-discord is a discord puppeting bridge for matrix.
         It handles bridging private and group DMs, as well as Guilds (servers)
       '');
@@ -57,7 +71,7 @@ in {
             relay.whitelist = [ "@.*:example.com" ];
           }
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           {file}`config.yaml` configuration as a Nix attribute set.
           Configuration options should match those described in
           [
@@ -70,7 +84,7 @@ in {
         defaultText = literalExpression ''
           optional config.services.matrix-synapse.enable config.services.matrix-synapse.serviceUnit
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of Systemd services to require and wait for when starting the application service.
         '';
       };
