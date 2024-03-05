@@ -1,8 +1,10 @@
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    ;
+
   cfg = config.services.prometheus.exporters.statsd;
 in
 {
