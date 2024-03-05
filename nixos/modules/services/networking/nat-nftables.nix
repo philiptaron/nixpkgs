@@ -1,8 +1,18 @@
 { config, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMap
+    concatStringsSep
+    elemAt
+    filter
+    length
+    mkIf
+    optionalString
+    replaceStrings
+    splitString
+    ;
+
   cfg = config.networking.nat;
 
   mkDest = externalIP:
@@ -21,7 +31,7 @@ let
   oifExpr = optionalString (cfg.externalInterface != null) ''oifname "${cfg.externalInterface}"'';
 
   # Whether given IP (plus optional port) is an IPv6.
-  isIPv6 = ip: length (lib.splitString ":" ip) > 2;
+  isIPv6 = ip: length (splitString ":" ip) > 2;
 
   splitIPPorts = IPPorts:
     let
