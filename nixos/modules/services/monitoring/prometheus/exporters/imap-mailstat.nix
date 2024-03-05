@@ -1,8 +1,17 @@
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrValues
+    concatStrings
+    concatStringsSep
+    mapAttrs
+    mdDoc
+    mkOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.imap-mailstat;
   valueToString = value:
     if (builtins.typeOf value == "string") then "\"${value}\""
@@ -22,7 +31,7 @@ let
   mkOpt = type: description: mkOption {
     type = types.nullOr type;
     default = null;
-    description = lib.mdDoc description;
+    description = mdDoc description;
   };
   accountOptions.options = {
     mailaddress = mkOpt types.str "Your email address (at the moment used as login name)";
@@ -39,21 +48,21 @@ in
     oldestUnseenDate = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Enable metric with timestamp of oldest unseen mail
       '';
     };
     accounts = mkOption {
       type = types.attrsOf (types.submodule accountOptions);
       default = {};
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Accounts to monitor
       '';
     };
     configurationFile = mkOption {
       type = types.path;
       example = "/path/to/config-file";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         File containing the configuration
       '';
     };
