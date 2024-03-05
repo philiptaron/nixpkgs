@@ -1,32 +1,43 @@
 { config, lib, options, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    boolToString
+    concatMapStringsSep
+    literalExpression
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
+
   top = config.services.kubernetes;
   otop = options.services.kubernetes;
   cfg = top.scheduler;
 in
 {
   ###### interface
-  options.services.kubernetes.scheduler = with lib.types; {
+  options.services.kubernetes.scheduler = with types; {
 
     address = mkOption {
-      description = lib.mdDoc "Kubernetes scheduler listening address.";
+      description = mdDoc "Kubernetes scheduler listening address.";
       default = "127.0.0.1";
       type = str;
     };
 
-    enable = mkEnableOption (lib.mdDoc "Kubernetes scheduler");
+    enable = mkEnableOption (mdDoc "Kubernetes scheduler");
 
     extraOpts = mkOption {
-      description = lib.mdDoc "Kubernetes scheduler extra command line options.";
+      description = mdDoc "Kubernetes scheduler extra command line options.";
       default = "";
       type = separatedString " ";
     };
 
     featureGates = mkOption {
-      description = lib.mdDoc "List set of feature gates";
+      description = mdDoc "List set of feature gates";
       default = top.featureGates;
       defaultText = literalExpression "config.${otop.featureGates}";
       type = listOf str;
@@ -35,19 +46,19 @@ in
     kubeconfig = top.lib.mkKubeConfigOptions "Kubernetes scheduler";
 
     leaderElect = mkOption {
-      description = lib.mdDoc "Whether to start leader election before executing main loop.";
+      description = mdDoc "Whether to start leader election before executing main loop.";
       type = bool;
       default = true;
     };
 
     port = mkOption {
-      description = lib.mdDoc "Kubernetes scheduler listening port.";
+      description = mdDoc "Kubernetes scheduler listening port.";
       default = 10251;
       type = port;
     };
 
     verbosity = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Optional glog verbosity level for logging statements. See
         <https://github.com/kubernetes/community/blob/master/contributors/devel/logging.md>
       '';
