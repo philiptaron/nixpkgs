@@ -1,13 +1,19 @@
 { config, pkgs, lib, ... }:
 
-with lib;
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkPackageOption
+    ;
+
   cfg = config.services.spice-webdavd;
 in
 {
   options = {
     services.spice-webdavd = {
-      enable = mkEnableOption (lib.mdDoc "the spice guest webdav proxy daemon");
+      enable = mkEnableOption (mdDoc "the spice guest webdav proxy daemon");
 
       package = mkPackageOption pkgs "phodav" { };
     };
