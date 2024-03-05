@@ -1,7 +1,17 @@
 { pkgs, lib, config, ... }:
 
-with lib;
 let
+  inherit (lib)
+    concatStringsSep
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionals
+    optionalString
+    types
+    ;
+
   cfg = config.services.gammu-smsd;
 
   configFile = pkgs.writeText "gammu-smsd.conf" ''
@@ -49,48 +59,49 @@ let
     postgresSupport = service == "sql" && sql.driver == "native_pgsql";
   });
 
-in {
+in
+{
   options = {
     services.gammu-smsd = {
 
-      enable = mkEnableOption (lib.mdDoc "gammu-smsd daemon");
+      enable = mkEnableOption (mdDoc "gammu-smsd daemon");
 
       user = mkOption {
         type = types.str;
         default = "smsd";
-        description = lib.mdDoc "User that has access to the device";
+        description = mdDoc "User that has access to the device";
       };
 
       device = {
         path = mkOption {
           type = types.path;
-          description = lib.mdDoc "Device node or address of the phone";
+          description = mdDoc "Device node or address of the phone";
           example = "/dev/ttyUSB2";
         };
 
         group = mkOption {
           type = types.str;
           default = "root";
-          description = lib.mdDoc "Owner group of the device";
+          description = mdDoc "Owner group of the device";
           example = "dialout";
         };
 
         connection = mkOption {
           type = types.str;
           default = "at";
-          description = lib.mdDoc "Protocol which will be used to talk to the phone";
+          description = mdDoc "Protocol which will be used to talk to the phone";
         };
 
         synchronizeTime = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc "Whether to set time from computer to the phone during starting connection";
+          description = mdDoc "Whether to set time from computer to the phone during starting connection";
         };
 
         pin = mkOption {
           type = types.nullOr types.str;
           default = null;
-          description = lib.mdDoc "PIN code for the simcard";
+          description = mdDoc "PIN code for the simcard";
         };
       };
 
@@ -99,13 +110,13 @@ in {
         file = mkOption {
           type = types.str;
           default = "syslog";
-          description = lib.mdDoc "Path to file where information about communication will be stored";
+          description = mdDoc "Path to file where information about communication will be stored";
         };
 
         format = mkOption {
           type = types.enum [ "nothing" "text" "textall" "textalldate" "errors" "errorsdate" "binary" ];
           default = "errors";
-          description = lib.mdDoc "Determines what will be logged to the LogFile";
+          description = mdDoc "Determines what will be logged to the LogFile";
         };
       };
 
@@ -114,14 +125,14 @@ in {
         gammu = mkOption {
           type = types.lines;
           default = "";
-          description = lib.mdDoc "Extra config lines to be added into [gammu] section";
+          description = mdDoc "Extra config lines to be added into [gammu] section";
         };
 
 
         smsd = mkOption {
           type = types.lines;
           default = "";
-          description = lib.mdDoc "Extra config lines to be added into [smsd] section";
+          description = mdDoc "Extra config lines to be added into [smsd] section";
         };
       };
 
@@ -130,69 +141,69 @@ in {
         service = mkOption {
           type = types.enum [ "null" "files" "sql" ];
           default = "null";
-          description = lib.mdDoc "Service to use to store sms data.";
+          description = mdDoc "Service to use to store sms data.";
         };
 
         files = {
           inboxPath = mkOption {
             type = types.path;
             default = "/var/spool/sms/inbox/";
-            description = lib.mdDoc "Where the received SMSes are stored";
+            description = mdDoc "Where the received SMSes are stored";
           };
 
           outboxPath = mkOption {
             type = types.path;
             default = "/var/spool/sms/outbox/";
-            description = lib.mdDoc "Where SMSes to be sent should be placed";
+            description = mdDoc "Where SMSes to be sent should be placed";
           };
 
           sentSMSPath = mkOption {
             type = types.path;
             default = "/var/spool/sms/sent/";
-            description = lib.mdDoc "Where the transmitted SMSes are placed";
+            description = mdDoc "Where the transmitted SMSes are placed";
           };
 
           errorSMSPath = mkOption {
             type = types.path;
             default = "/var/spool/sms/error/";
-            description = lib.mdDoc "Where SMSes with error in transmission is placed";
+            description = mdDoc "Where SMSes with error in transmission is placed";
           };
         };
 
         sql = {
           driver = mkOption {
             type = types.enum [ "native_mysql" "native_pgsql" "odbc" "dbi" ];
-            description = lib.mdDoc "DB driver to use";
+            description = mdDoc "DB driver to use";
           };
 
           sqlDialect = mkOption {
             type = types.nullOr types.str;
             default = null;
-            description = lib.mdDoc "SQL dialect to use (odbc driver only)";
+            description = mdDoc "SQL dialect to use (odbc driver only)";
           };
 
           database = mkOption {
             type = types.nullOr types.str;
             default = null;
-            description = lib.mdDoc "Database name to store sms data";
+            description = mdDoc "Database name to store sms data";
           };
 
           host = mkOption {
             type = types.str;
             default = "localhost";
-            description = lib.mdDoc "Database server address";
+            description = mdDoc "Database server address";
           };
 
           user = mkOption {
             type = types.nullOr types.str;
             default = null;
-            description = lib.mdDoc "User name used for connection to the database";
+            description = mdDoc "User name used for connection to the database";
           };
 
           password = mkOption {
             type = types.nullOr types.str;
             default = null;
-            description = lib.mdDoc "User password used for connection to the database";
+            description = mdDoc "User password used for connection to the database";
           };
         };
       };
