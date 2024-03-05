@@ -1,8 +1,20 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    hasPrefix
+    length
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optional
+    optionalString
+    types
+    ;
+
   cfg = config.services.prometheus.pushgateway;
 
   cmdlineArgs =
@@ -21,14 +33,14 @@ let
 in {
   options = {
     services.prometheus.pushgateway = {
-      enable = mkEnableOption (lib.mdDoc "Prometheus Pushgateway");
+      enable = mkEnableOption (mdDoc "Prometheus Pushgateway");
 
       package = mkPackageOption pkgs "prometheus-pushgateway" { };
 
       web.listen-address = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Address to listen on for the web interface, API and telemetry.
 
           `null` will default to `:9091`.
@@ -38,7 +50,7 @@ in {
       web.telemetry-path = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Path under which to expose metrics.
 
           `null` will default to `/metrics`.
@@ -48,7 +60,7 @@ in {
       web.external-url = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The URL under which Pushgateway is externally reachable.
         '';
       };
@@ -56,7 +68,7 @@ in {
       web.route-prefix = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Prefix for the internal routes of web endpoints.
 
           Defaults to the path of
@@ -68,7 +80,7 @@ in {
         type = types.nullOr types.str;
         default = null;
         example = "10m";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The minimum interval at which to write out the persistence file.
 
           `null` will default to `5m`.
@@ -78,7 +90,7 @@ in {
       log.level = mkOption {
         type = types.nullOr (types.enum ["debug" "info" "warn" "error" "fatal"]);
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Only log messages with the given severity or above.
 
           `null` will default to `info`.
@@ -89,7 +101,7 @@ in {
         type = types.nullOr types.str;
         default = null;
         example = "logger:syslog?appname=bob&local=7";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Set the log target and format.
 
           `null` will default to `logger:stderr`.
@@ -99,7 +111,7 @@ in {
       extraFlags = mkOption {
         type = types.listOf types.str;
         default = [];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra commandline options when launching the Pushgateway.
         '';
       };
@@ -107,7 +119,7 @@ in {
       persistMetrics = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to persist metrics to a file.
 
           When enabled metrics will be saved to a file called
@@ -121,7 +133,7 @@ in {
       stateDir = mkOption {
         type = types.str;
         default = "pushgateway";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Directory below `/var/lib` to store metrics.
 
           This directory will be created automatically using systemd's
@@ -140,7 +152,7 @@ in {
         message =
           "The option services.prometheus.pushgateway.stateDir" +
           " shouldn't be an absolute directory." +
-          " It should be a directory relative to /var/lib.";
+          " It should be a directory relative to `/var/lib`.";
       }
     ];
     systemd.services.pushgateway = {
