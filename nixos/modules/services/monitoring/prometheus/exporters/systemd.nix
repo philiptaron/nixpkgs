@@ -1,8 +1,11 @@
 { config, pkgs, lib, ... }:
 
-with lib;
+let
+  inherit (lib)
+    concatStringsSep
+    ;
 
-let cfg = config.services.prometheus.exporters.systemd;
+  cfg = config.services.prometheus.exporters.systemd;
 
 in {
   port = 9558;
