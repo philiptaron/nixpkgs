@@ -1,8 +1,24 @@
 { config, lib, options, pkgs, utils, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    escapeShellArg
+    getExe
+    literalExpression
+    mapAttrs'
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRemovedOptionModule
+    nameValuePair
+    optionalString
+    types
+    ;
+
   gcfg = config.services.tarsnap;
   opt = options.services.tarsnap;
 
@@ -30,14 +46,14 @@ in
 
   options = {
     services.tarsnap = {
-      enable = mkEnableOption (lib.mdDoc "periodic tarsnap backups");
+      enable = mkEnableOption (mdDoc "periodic tarsnap backups");
 
       package = mkPackageOption pkgs "tarsnap" { };
 
       keyfile = mkOption {
         type = types.str;
         default = "/root/tarsnap.key";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The keyfile which associates this machine with your tarsnap
           account.
           Create the keyfile with {command}`tarsnap-keygen`.
@@ -69,7 +85,7 @@ in
                 type = types.str;
                 default = gcfg.keyfile;
                 defaultText = literalExpression "config.${opt.keyfile}";
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Set a specific keyfile for this archive. This defaults to
                   `"/root/tarsnap.key"` if left unspecified.
 
@@ -94,7 +110,7 @@ in
                 defaultText = literalExpression ''
                   "/var/cache/tarsnap/''${utils.escapeSystemdPath config.${options.keyfile}}"
                 '';
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   The cache allows tarsnap to identify previously stored data
                   blocks, reducing archival time and bandwidth usage.
 
@@ -109,7 +125,7 @@ in
               nodump = mkOption {
                 type = types.bool;
                 default = true;
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Exclude files with the `nodump` flag.
                 '';
               };
@@ -117,7 +133,7 @@ in
               printStats = mkOption {
                 type = types.bool;
                 default = true;
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Print global archive statistics upon completion.
                   The output is available via
                   {command}`systemctl status tarsnap-archive-name`.
@@ -127,7 +143,7 @@ in
               checkpointBytes = mkOption {
                 type = types.nullOr types.str;
                 default = "1GB";
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Create a checkpoint every `checkpointBytes`
                   of uploaded data (optionally specified using an SI prefix).
 
@@ -142,7 +158,7 @@ in
                 type = types.str;
                 default = "01:15";
                 example = "hourly";
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Create archive at this interval.
 
                   The format is described in
@@ -153,7 +169,7 @@ in
               aggressiveNetworking = mkOption {
                 type = types.bool;
                 default = false;
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Upload data over multiple TCP connections, potentially
                   increasing tarsnap's bandwidth utilisation at the cost
                   of slowing down all other network traffic. Not
@@ -165,13 +181,13 @@ in
               directories = mkOption {
                 type = types.listOf types.path;
                 default = [];
-                description = lib.mdDoc "List of filesystem paths to archive.";
+                description = mdDoc "List of filesystem paths to archive.";
               };
 
               excludes = mkOption {
                 type = types.listOf types.str;
                 default = [];
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Exclude files and directories matching these patterns.
                 '';
               };
@@ -179,7 +195,7 @@ in
               includes = mkOption {
                 type = types.listOf types.str;
                 default = [];
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Include only files and directories matching these
                   patterns (the empty list includes everything).
 
@@ -190,7 +206,7 @@ in
               lowmem = mkOption {
                 type = types.bool;
                 default = false;
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Reduce memory consumption by not caching small files.
                   Possibly beneficial if the average file size is smaller
                   than 1 MB and the number of files is lower than the
@@ -201,7 +217,7 @@ in
               verylowmem = mkOption {
                 type = types.bool;
                 default = false;
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Reduce memory consumption by a factor of 2 beyond what
                   `lowmem` does, at the cost of significantly
                   slowing down the archiving process.
@@ -211,7 +227,7 @@ in
               maxbw = mkOption {
                 type = types.nullOr types.int;
                 default = null;
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Abort archival if upstream bandwidth usage in bytes
                   exceeds this threshold.
                 '';
@@ -221,7 +237,7 @@ in
                 type = types.nullOr types.int;
                 default = null;
                 example = literalExpression "25 * 1000";
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Upload bandwidth rate limit in bytes.
                 '';
               };
@@ -230,7 +246,7 @@ in
                 type = types.nullOr types.int;
                 default = null;
                 example = literalExpression "50 * 1000";
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Download bandwidth rate limit in bytes.
                 '';
               };
@@ -238,21 +254,21 @@ in
               verbose = mkOption {
                 type = types.bool;
                 default = false;
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Whether to produce verbose logging output.
                 '';
               };
               explicitSymlinks = mkOption {
                 type = types.bool;
                 default = false;
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Whether to follow symlinks specified as archives.
                 '';
               };
               followSymlinks = mkOption {
                 type = types.bool;
                 default = false;
-                description = lib.mdDoc ''
+                description = mdDoc ''
                   Whether to follow all symlinks in archive trees.
                 '';
               };
@@ -275,7 +291,7 @@ in
           }
         '';
 
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Tarsnap archive configurations. Each attribute names an archive
           to be created at a given time interval, according to the options
           associated with it. When uploading to the tarsnap server,
@@ -320,7 +336,7 @@ in
         '';
 
         script = let
-          tarsnap = ''${lib.getExe gcfg.package} --configfile "/etc/tarsnap/${name}.conf"'';
+          tarsnap = ''${getExe gcfg.package} --configfile "/etc/tarsnap/${name}.conf"'';
           run = ''${tarsnap} -c -f "${name}-$(date +"%Y%m%d%H%M%S")" \
                         ${optionalString cfg.verbose "-v"} \
                         ${optionalString cfg.explicitSymlinks "-H"} \
@@ -360,7 +376,7 @@ in
         path = with pkgs; [ iputils gcfg.package util-linux ];
 
         script = let
-          tarsnap = ''${lib.getExe gcfg.package} --configfile "/etc/tarsnap/${name}.conf"'';
+          tarsnap = ''${getExe gcfg.package} --configfile "/etc/tarsnap/${name}.conf"'';
           lastArchive = "$(${tarsnap} --list-archives | sort | tail -1)";
           run = ''${tarsnap} -x -f "${lastArchive}" ${optionalString cfg.verbose "-v"}'';
           cachedir = escapeShellArg cfg.cachedir;
