@@ -1,8 +1,20 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    boolToString
+    concatStringsSep
+    isBool
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    optional
+    types
+    ;
+
   cfg = config.services.minecraft-server;
 
   # We don't allow eula=false anyways
@@ -54,7 +66,7 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If enabled, start a Minecraft Server. The server
           data will be loaded from and saved to
           {option}`services.minecraft-server.dataDir`.
@@ -64,7 +76,7 @@ in {
       declarative = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to use a declarative Minecraft server configuration.
           Only if set to `true`, the options
           {option}`services.minecraft-server.whitelist` and
@@ -76,7 +88,7 @@ in {
       eula = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether you agree to
           [
           Mojangs EULA](https://account.mojang.com/documents/minecraft_eula). This option must be set to
@@ -87,7 +99,7 @@ in {
       dataDir = mkOption {
         type = types.path;
         default = "/var/lib/minecraft";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Directory to store Minecraft database and other state/data files.
         '';
       };
@@ -95,7 +107,7 @@ in {
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to open ports in the firewall for the server.
         '';
       };
@@ -108,7 +120,7 @@ in {
             };
           in types.attrsOf minecraftUUID;
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whitelisted players, only has an effect when
           {option}`services.minecraft-server.declarative` is
           `true` and the whitelist is enabled
@@ -141,7 +153,7 @@ in {
             "rcon.password" = "hunter2";
           }
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Minecraft server properties for the server.properties file. Only has
           an effect when {option}`services.minecraft-server.declarative`
           is set to `true`. See
@@ -161,7 +173,7 @@ in {
         example = "-Xms4092M -Xmx4092M -XX:+UseG1GC -XX:+CMSIncrementalPacing "
           + "-XX:+CMSClassUnloadingEnabled -XX:ParallelGCThreads=2 "
           + "-XX:MinHeapFreeRatio=5 -XX:MaxHeapFreeRatio=10";
-        description = lib.mdDoc "JVM options for the Minecraft server.";
+        description = mdDoc "JVM options for the Minecraft server.";
       };
     };
   };
