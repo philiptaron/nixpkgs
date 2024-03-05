@@ -1,8 +1,20 @@
 { config, lib, utils, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStrings
+    literalExpression
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    optional
+    optionals
+    teams
+    types
+    ;
 
   cfg = config.services.xserver.desktopManager.pantheon;
   serviceCfg = config.services.pantheon;
@@ -26,10 +38,10 @@ in
     services.pantheon = {
 
       contractor = {
-         enable = mkEnableOption (lib.mdDoc "contractor, a desktop-wide extension service used by Pantheon");
+         enable = mkEnableOption (mdDoc "contractor, a desktop-wide extension service used by Pantheon");
       };
 
-      apps.enable = mkEnableOption (lib.mdDoc "Pantheon default applications");
+      apps.enable = mkEnableOption (mdDoc "Pantheon default applications");
 
     };
 
@@ -37,14 +49,14 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Enable the pantheon desktop manager";
+        description = mdDoc "Enable the pantheon desktop manager";
       };
 
       sessionPath = mkOption {
         default = [];
         type = types.listOf types.package;
         example = literalExpression "[ pkgs.gnome.gpaste ]";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Additional list of packages to be added to the session search path.
           Useful for GSettings-conditional autostart.
 
@@ -55,28 +67,28 @@ in
       extraWingpanelIndicators = mkOption {
         default = null;
         type = with types; nullOr (listOf package);
-        description = lib.mdDoc "Indicators to add to Wingpanel.";
+        description = mdDoc "Indicators to add to Wingpanel.";
       };
 
       extraSwitchboardPlugs = mkOption {
         default = null;
         type = with types; nullOr (listOf package);
-        description = lib.mdDoc "Plugs to add to Switchboard.";
+        description = mdDoc "Plugs to add to Switchboard.";
       };
 
       extraGSettingsOverrides = mkOption {
         default = "";
         type = types.lines;
-        description = lib.mdDoc "Additional gsettings overrides.";
+        description = mdDoc "Additional gsettings overrides.";
       };
 
       extraGSettingsOverridePackages = mkOption {
         default = [];
         type = types.listOf types.path;
-        description = lib.mdDoc "List of packages for which gsettings are overridden.";
+        description = mdDoc "List of packages for which gsettings are overridden.";
       };
 
-      debug = mkEnableOption (lib.mdDoc "gnome-session debug messages");
+      debug = mkEnableOption (mdDoc "gnome-session debug messages");
 
     };
 
@@ -84,7 +96,7 @@ in
       default = [];
       example = literalExpression "[ pkgs.pantheon.elementary-camera ]";
       type = types.listOf types.package;
-      description = lib.mdDoc "Which packages pantheon should exclude from the default environment";
+      description = mdDoc "Which packages pantheon should exclude from the default environment";
     };
 
   };
@@ -297,7 +309,7 @@ in
         elementary-terminal
         elementary-videos
         epiphany
-      ] ++ lib.optionals config.services.flatpak.enable [
+      ] ++ optionals config.services.flatpak.enable [
         # Only install appcenter if flatpak is enabled before
         # https://github.com/NixOS/nixpkgs/issues/15932 is resolved.
         appcenter
