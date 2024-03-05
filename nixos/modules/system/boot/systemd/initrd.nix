@@ -1,9 +1,40 @@
 { lib, options, config, utils, pkgs, ... }:
 
-with lib;
-
 let
-  inherit (utils) systemdUtils escapeSystemdPath;
+  inherit (lib)
+    attrByPath
+    concatLists
+    concatMapStringsSep
+    concatStringsSep
+    elem
+    escapeShellArg
+    filter
+    filterAttrs
+    generators
+    getBin
+    isBool
+    listToAttrs
+    literalExpression
+    mapAttrs'
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    nameValuePair
+    optional
+    optionalAttrs
+    optionals
+    optionalString
+    subtractLists
+    types
+    ;
+
+  inherit (utils)
+    systemdUtils
+    escapeSystemdPath
+    ;
+
   inherit (systemdUtils.lib)
     generateUnits
     pathToUnit
@@ -14,7 +45,6 @@ let
     timerToUnit
     mountToUnit
     automountToUnit;
-
 
   cfg = config.boot.initrd.systemd;
 
@@ -119,8 +149,8 @@ let
 
 in {
   options.boot.initrd.systemd = {
-    enable = mkEnableOption (lib.mdDoc "systemd in initrd") // {
-      description = lib.mdDoc ''
+    enable = mkEnableOption (mdDoc "systemd in initrd") // {
+      description = mdDoc ''
         Whether to enable systemd in initrd. The unit options such as
         {option}`boot.initrd.systemd.services` are the same as their
         stage 2 counterparts such as {option}`systemd.services`,
@@ -129,10 +159,10 @@ in {
       '';
     };
 
-    package = lib.mkOption {
-      type = lib.types.package;
+    package = mkOption {
+      type = types.package;
       default = config.systemd.package;
-      defaultText = lib.literalExpression "config.systemd.package";
+      defaultText = literalExpression "config.systemd.package";
       description = ''
         The systemd package to use.
       '';
@@ -142,7 +172,7 @@ in {
       default = "";
       type = types.lines;
       example = "DefaultLimitCORE=infinity";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra config options for systemd. See systemd-system.conf(5) man page
         for available options.
       '';
@@ -152,14 +182,14 @@ in {
       type = with types; attrsOf (nullOr (oneOf [ str path package ]));
       default = {};
       example = { SYSTEMD_LOG_LEVEL = "debug"; };
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Environment variables of PID 1. These variables are
         *not* passed to started units.
       '';
     };
 
     contents = mkOption {
-      description = lib.mdDoc "Set of files that have to be linked into the initrd";
+      description = mdDoc "Set of files that have to be linked into the initrd";
       example = literalExpression ''
         {
           "/etc/hostname".text = "mymachine";
@@ -170,7 +200,7 @@ in {
     };
 
     storePaths = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Store paths to copy into the initrd as well.
       '';
       type = with types; listOf (oneOf [ singleLineStr package ]);
@@ -178,7 +208,7 @@ in {
     };
 
     strip = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to completely strip executables and libraries copied to the initramfs.
 
         Setting this to false may save on the order of 30MiB on the
@@ -191,7 +221,7 @@ in {
     };
 
     extraBin = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Tools to add to /bin
       '';
       example = literalExpression ''
@@ -204,7 +234,7 @@ in {
     };
 
     suppressedStorePaths = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Store paths specified in the storePaths option that
         should not be copied.
       '';
@@ -214,7 +244,7 @@ in {
 
     emergencyAccess = mkOption {
       type = with types; oneOf [ bool (nullOr (passwdEntry str)) ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Set to true for unauthenticated emergency access, and false for
         no emergency access.
 
@@ -227,7 +257,7 @@ in {
     initrdBin = mkOption {
       type = types.listOf types.package;
       default = [];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Packages to include in /bin for the stage 1 emergency shell.
       '';
     };
@@ -236,7 +266,7 @@ in {
       default = [ ];
       type = types.listOf types.str;
       example = [ "debug-shell.service" "systemd-quotacheck.service" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Additional units shipped with systemd that shall be enabled.
       '';
     };
@@ -245,7 +275,7 @@ in {
       default = [ ];
       type = types.listOf types.str;
       example = [ "systemd-backlight@.service" ];
-      description = lib.mdDoc ''
+      description = mdDoc ''
         A list of units to skip when generating system systemd configuration directory. This has
         priority over upstream units, {option}`boot.initrd.systemd.units`, and
         {option}`boot.initrd.systemd.additionalUpstreamUnits`. The main purpose of this is to
@@ -255,7 +285,7 @@ in {
     };
 
     units = mkOption {
-      description = lib.mdDoc "Definition of systemd units.";
+      description = mdDoc "Definition of systemd units.";
       default = {};
       visible = "shallow";
       type = systemdUtils.types.units;
@@ -265,49 +295,49 @@ in {
       default = [];
       type = types.listOf types.package;
       example = literalExpression "[ pkgs.systemd-cryptsetup-generator ]";
-      description = lib.mdDoc "Packages providing systemd units and hooks.";
+      description = mdDoc "Packages providing systemd units and hooks.";
     };
 
     targets = mkOption {
       default = {};
       visible = "shallow";
       type = systemdUtils.types.initrdTargets;
-      description = lib.mdDoc "Definition of systemd target units.";
+      description = mdDoc "Definition of systemd target units.";
     };
 
     services = mkOption {
       default = {};
       type = systemdUtils.types.initrdServices;
       visible = "shallow";
-      description = lib.mdDoc "Definition of systemd service units.";
+      description = mdDoc "Definition of systemd service units.";
     };
 
     sockets = mkOption {
       default = {};
       type = systemdUtils.types.initrdSockets;
       visible = "shallow";
-      description = lib.mdDoc "Definition of systemd socket units.";
+      description = mdDoc "Definition of systemd socket units.";
     };
 
     timers = mkOption {
       default = {};
       type = systemdUtils.types.initrdTimers;
       visible = "shallow";
-      description = lib.mdDoc "Definition of systemd timer units.";
+      description = mdDoc "Definition of systemd timer units.";
     };
 
     paths = mkOption {
       default = {};
       type = systemdUtils.types.initrdPaths;
       visible = "shallow";
-      description = lib.mdDoc "Definition of systemd path units.";
+      description = mdDoc "Definition of systemd path units.";
     };
 
     mounts = mkOption {
       default = [];
       type = systemdUtils.types.initrdMounts;
       visible = "shallow";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Definition of systemd mount units.
         This is a list instead of an attrSet, because systemd mandates the names to be derived from
         the 'where' attribute.
@@ -318,7 +348,7 @@ in {
       default = [];
       type = systemdUtils.types.automounts;
       visible = "shallow";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Definition of systemd automount units.
         This is a list instead of an attrSet, because systemd mandates the names to be derived from
         the 'where' attribute.
@@ -329,13 +359,13 @@ in {
       default = {};
       type = systemdUtils.types.slices;
       visible = "shallow";
-      description = lib.mdDoc "Definition of slice configurations.";
+      description = mdDoc "Definition of slice configurations.";
     };
 
     enableTpm2 = mkOption {
       default = true;
       type = types.bool;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to enable TPM2 support in the initrd.
       '';
     };
@@ -343,13 +373,13 @@ in {
 
   config = mkIf (config.boot.initrd.enable && cfg.enable) {
     assertions = map (name: {
-      assertion = lib.attrByPath name (throw "impossible") config.boot.initrd == "";
+      assertion = attrByPath name (throw "impossible") config.boot.initrd == "";
       message = ''
-        systemd stage 1 does not support 'boot.initrd.${lib.concatStringsSep "." name}'. Please
+        systemd stage 1 does not support 'boot.initrd.${concatStringsSep "." name}'. Please
           convert it to analogous systemd units in 'boot.initrd.systemd'.
 
             Definitions:
-        ${lib.concatMapStringsSep "\n" ({ file, ... }: "    - ${file}") (lib.attrByPath name (throw "impossible") options.boot.initrd).definitionsWithLocations}
+        ${concatMapStringsSep "\n" ({ file, ... }: "    - ${file}") (attrByPath name (throw "impossible") options.boot.initrd).definitionsWithLocations}
       '';
     }) [
       [ "preFailCommands" ]
@@ -370,8 +400,8 @@ in {
       # systemd needs this for some features
       "autofs"
       # systemd-cryptenroll
-    ] ++ lib.optional cfg.enableTpm2 "tpm-tis"
-    ++ lib.optional (cfg.enableTpm2 && !(pkgs.stdenv.hostPlatform.isRiscV64 || pkgs.stdenv.hostPlatform.isArmv7)) "tpm-crb";
+    ] ++ optional cfg.enableTpm2 "tpm-tis"
+    ++ optional (cfg.enableTpm2 && !(pkgs.stdenv.hostPlatform.isRiscV64 || pkgs.stdenv.hostPlatform.isArmv7)) "tpm-crb";
 
     boot.initrd.systemd = {
       initrdBin = [pkgs.bash pkgs.coreutils cfg.package.kmod cfg.package];
@@ -393,7 +423,7 @@ in {
           [Manager]
           DefaultEnvironment=PATH=/bin:/sbin
           ${cfg.extraConfig}
-          ManagerEnvironment=${lib.concatStringsSep " " (lib.mapAttrsToList (n: v: "${n}=${lib.escapeShellArg v}") cfg.managerEnvironment)}
+          ManagerEnvironment=${concatStringsSep " " (mapAttrsToList (n: v: "${n}=${escapeShellArg v}") cfg.managerEnvironment)}
         '';
 
         "/lib".source = "${modulesClosure}/lib";
@@ -555,6 +585,6 @@ in {
       };
     };
 
-    boot.kernelParams = lib.mkIf (config.boot.resumeDevice != "") [ "resume=${config.boot.resumeDevice}" ];
+    boot.kernelParams = mkIf (config.boot.resumeDevice != "") [ "resume=${config.boot.resumeDevice}" ];
   };
 }
