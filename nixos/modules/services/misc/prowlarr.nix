@@ -1,22 +1,30 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    getExe
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.prowlarr;
 
 in
 {
   options = {
     services.prowlarr = {
-      enable = mkEnableOption (lib.mdDoc "Prowlarr");
+      enable = mkEnableOption (mdDoc "Prowlarr");
 
       package = mkPackageOption pkgs "prowlarr" { };
 
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Open ports in the firewall for the Prowlarr web interface.";
+        description = mdDoc "Open ports in the firewall for the Prowlarr web interface.";
       };
     };
   };
@@ -31,7 +39,7 @@ in
         Type = "simple";
         DynamicUser = true;
         StateDirectory = "prowlarr";
-        ExecStart = "${lib.getExe cfg.package} -nobrowser -data=/var/lib/prowlarr";
+        ExecStart = "${getExe cfg.package} -nobrowser -data=/var/lib/prowlarr";
         Restart = "on-failure";
       };
     };
