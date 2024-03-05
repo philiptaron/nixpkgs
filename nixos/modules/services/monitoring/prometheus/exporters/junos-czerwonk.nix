@@ -1,8 +1,15 @@
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    escapeShellArg
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.prometheus.exporters.junos-czerwonk;
 
   configFile = if cfg.configuration != null then configurationFile else (escapeShellArg cfg.configurationFile);
@@ -15,21 +22,21 @@ in
     environmentFile = mkOption {
       type = types.nullOr types.str;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         File containing env-vars to be substituted into the exporter's config.
       '';
     };
     configurationFile = mkOption {
       type = types.nullOr types.path;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Specify the JunOS exporter configuration file to use.
       '';
     };
     configuration = mkOption {
       type = types.nullOr types.attrs;
       default = null;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         JunOS exporter configuration as nix attribute set. Mutually exclusive with the `configurationFile` option.
       '';
       example = {
@@ -44,7 +51,7 @@ in
     telemetryPath = mkOption {
       type = types.str;
       default = "/metrics";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path under which to expose metrics.
       '';
     };
