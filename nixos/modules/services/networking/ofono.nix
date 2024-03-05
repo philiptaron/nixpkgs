@@ -1,14 +1,21 @@
 # Ofono daemon.
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStringsSep
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.services.ofono;
 
   plugin_path =
-    lib.concatMapStringsSep ":"
+    concatMapStringsSep ":"
       (plugin: "${plugin}/lib/ofono/plugins")
       cfg.plugins
     ;
@@ -19,13 +26,13 @@ in
   ###### interface
   options = {
     services.ofono = {
-      enable = mkEnableOption (lib.mdDoc "Ofono");
+      enable = mkEnableOption (mdDoc "Ofono");
 
       plugins = mkOption {
         type = types.listOf types.package;
         default = [];
         example = literalExpression "[ pkgs.modem-manager-gui ]";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The list of plugins to install.
         '';
       };
