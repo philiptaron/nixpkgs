@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalString
+    types
+    ;
 
   cfg = config.services.mongodb;
 
@@ -29,56 +36,56 @@ in
 
     services.mongodb = {
 
-      enable = mkEnableOption (lib.mdDoc "the MongoDB server");
+      enable = mkEnableOption (mdDoc "the MongoDB server");
 
       package = mkPackageOption pkgs "mongodb" { };
 
       user = mkOption {
         type = types.str;
         default = "mongodb";
-        description = lib.mdDoc "User account under which MongoDB runs";
+        description = mdDoc "User account under which MongoDB runs";
       };
 
       bind_ip = mkOption {
         type = types.str;
         default = "127.0.0.1";
-        description = lib.mdDoc "IP to bind to";
+        description = mdDoc "IP to bind to";
       };
 
       quiet = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "quieter output";
+        description = mdDoc "quieter output";
       };
 
       enableAuth = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Enable client authentication. Creates a default superuser with username root!";
+        description = mdDoc "Enable client authentication. Creates a default superuser with username root!";
       };
 
       initialRootPassword = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc "Password for the root user if auth is enabled.";
+        description = mdDoc "Password for the root user if auth is enabled.";
       };
 
       dbpath = mkOption {
         type = types.str;
         default = "/var/db/mongodb";
-        description = lib.mdDoc "Location where MongoDB stores its files";
+        description = mdDoc "Location where MongoDB stores its files";
       };
 
       pidFile = mkOption {
         type = types.str;
         default = "/run/mongodb.pid";
-        description = lib.mdDoc "Location of MongoDB pid file";
+        description = mdDoc "Location of MongoDB pid file";
       };
 
       replSetName = mkOption {
         type = types.str;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           If this instance is part of a replica set, set its name here.
           Otherwise, leave empty to run as single node.
         '';
@@ -90,13 +97,13 @@ in
         example = ''
           storage.journal.enabled: false
         '';
-        description = lib.mdDoc "MongoDB extra configuration in YAML format";
+        description = mdDoc "MongoDB extra configuration in YAML format";
       };
 
       initialScript = mkOption {
         type = types.nullOr types.path;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A file containing MongoDB statements to execute on first startup.
         '';
       };
@@ -150,7 +157,7 @@ in
           fi
           if ! test -e ${cfg.pidFile}; then
               install -D -o ${cfg.user} /dev/null ${cfg.pidFile}
-          fi '' + lib.optionalString cfg.enableAuth ''
+          fi '' + optionalString cfg.enableAuth ''
 
           if ! test -e "${cfg.dbpath}/.auth_setup_complete"; then
             systemd-run --unit=mongodb-for-setup --uid=${cfg.user} ${mongodb}/bin/mongod --config ${mongoCnf cfg_}
