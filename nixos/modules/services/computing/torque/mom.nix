@@ -1,8 +1,13 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.services.torque.mom;
   torque = pkgs.torque;
@@ -17,11 +22,11 @@ in
   options = {
 
     services.torque.mom = {
-      enable = mkEnableOption (lib.mdDoc "torque computing node");
+      enable = mkEnableOption (mdDoc "torque computing node");
 
       serverNode = mkOption {
         type = types.str;
-        description = lib.mdDoc "Hostname running pbs server.";
+        description = mdDoc "Hostname running pbs server.";
       };
 
     };
