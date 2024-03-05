@@ -1,8 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.services.munge;
 
@@ -15,12 +20,12 @@ in
   options = {
 
     services.munge = {
-      enable = mkEnableOption (lib.mdDoc "munge service");
+      enable = mkEnableOption (mdDoc "munge service");
 
       password = mkOption {
         default = "/etc/munge/munge.key";
         type = types.path;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           The path to a daemon's secret key.
         '';
       };
