@@ -1,19 +1,30 @@
 { config, lib, pkgs, ... }:
-with lib;
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkForce
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.fluidd;
   moonraker = config.services.moonraker;
 in
 {
   options.services.fluidd = {
-    enable = mkEnableOption (lib.mdDoc "Fluidd, a Klipper web interface for managing your 3d printer");
+    enable = mkEnableOption (mdDoc "Fluidd, a Klipper web interface for managing your 3d printer");
 
     package = mkPackageOption pkgs "fluidd" { };
 
     hostName = mkOption {
       type = types.str;
       default = "localhost";
-      description = lib.mdDoc "Hostname to serve fluidd on";
+      description = mdDoc "Hostname to serve fluidd on";
     };
 
     nginx = mkOption {
@@ -25,7 +36,7 @@ in
           serverAliases = [ "fluidd.''${config.networking.domain}" ];
         }
       '';
-      description = lib.mdDoc "Extra configuration for the nginx virtual host of fluidd.";
+      description = mdDoc "Extra configuration for the nginx virtual host of fluidd.";
     };
   };
 
