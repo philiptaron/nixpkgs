@@ -1,8 +1,12 @@
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    mdDoc
+    mkOption
+    types
+    ;
   cfg = config.services.prometheus.exporters.apcupsd;
 in
 {
@@ -11,7 +15,7 @@ in
     apcupsdAddress = mkOption {
       type = types.str;
       default = ":3551";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Address of the apcupsd Network Information Server (NIS).
       '';
     };
@@ -19,7 +23,7 @@ in
     apcupsdNetwork = mkOption {
       type = types.enum ["tcp" "tcp4" "tcp6"];
       default = "tcp";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Network of the apcupsd Network Information Server (NIS): one of "tcp", "tcp4", or "tcp6".
       '';
     };
