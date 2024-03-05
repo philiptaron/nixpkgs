@@ -1,8 +1,12 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.virtualisation.appvm;
 
@@ -13,13 +17,13 @@ in {
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           This enables AppVMs and related virtualisation settings.
         '';
       };
       user = mkOption {
         type = types.str;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           AppVM user login. Currently only AppVMs are supported for a single user only.
         '';
       };
