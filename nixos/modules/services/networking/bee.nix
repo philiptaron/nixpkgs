@@ -1,7 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    hasAttr
+    maintainers
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalAttrs
+    types
+    ;
+
   cfg = config.services.bee;
   format = pkgs.formats.yaml {};
   configFile = format.generate "bee.yaml" cfg.settings;
@@ -15,7 +27,7 @@ in {
 
   options = {
     services.bee = {
-      enable = mkEnableOption (lib.mdDoc "Ethereum Swarm Bee");
+      enable = mkEnableOption (mdDoc "Ethereum Swarm Bee");
 
       package = mkPackageOption pkgs "bee" {
         example = "bee-unstable";
@@ -23,7 +35,7 @@ in {
 
       settings = mkOption {
         type = format.type;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Ethereum Swarm Bee configuration. Refer to
           <https://gateway.ethswarm.org/bzz/docs.swarm.eth/docs/installation/configuration/>
           for details on supported values.
@@ -33,7 +45,7 @@ in {
       daemonNiceLevel = mkOption {
         type = types.int;
         default = 0;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Daemon process priority for bee.
           0 is the default Unix process priority, 19 is the lowest.
         '';
@@ -42,7 +54,7 @@ in {
       user = mkOption {
         type = types.str;
         default = "bee";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           User the bee binary should execute under.
         '';
       };
@@ -50,7 +62,7 @@ in {
       group = mkOption {
         type = types.str;
         default = "bee";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Group the bee binary should execute under.
         '';
       };
@@ -74,10 +86,10 @@ in {
     ];
 
     services.bee.settings = {
-      data-dir             = lib.mkDefault "/var/lib/bee";
-      password-file        = lib.mkDefault "/var/lib/bee/password";
-      clef-signer-enable   = lib.mkDefault true;
-      swap-endpoint        = lib.mkDefault "https://rpc.slock.it/goerli";
+      data-dir             = mkDefault "/var/lib/bee";
+      password-file        = mkDefault "/var/lib/bee/password";
+      clef-signer-enable   = mkDefault true;
+      swap-endpoint        = mkDefault "https://rpc.slock.it/goerli";
     };
 
     systemd.packages = [ cfg.package ]; # include the upstream bee.service file
