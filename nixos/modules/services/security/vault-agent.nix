@@ -1,8 +1,22 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    getExe
+    getName
+    maintainers
+    mapAttrs'
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    nameValuePair
+    optionalString
+    types
+    ;
+
   format = pkgs.formats.json { };
   commonOptions = { pkgName, flavour ? pkgName }: mkOption {
     default = { };
