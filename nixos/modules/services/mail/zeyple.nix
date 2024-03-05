@@ -1,27 +1,40 @@
 { config, pkgs, lib, ... }:
 
-with lib;
 let
+  inherit (lib)
+    concatStringsSep
+    mapAttrs
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalAttrs
+    types
+    ;
+
   cfg = config.services.zeyple;
+
   ini = pkgs.formats.ini { };
 
   gpgHome = pkgs.runCommand "zeyple-gpg-home" { } ''
     mkdir -p $out
-    for file in ${lib.concatStringsSep " " cfg.keys}; do
+    for file in ${concatStringsSep " " cfg.keys}; do
       ${config.programs.gnupg.package}/bin/gpg --homedir="$out" --import "$file"
     done
 
     # Remove socket files
     rm -f $out/S.*
   '';
-in {
+in
+{
   options.services.zeyple = {
-    enable = mkEnableOption (lib.mdDoc "Zeyple, an utility program to automatically encrypt outgoing emails with GPG");
+    enable = mkEnableOption (mdDoc "Zeyple, an utility program to automatically encrypt outgoing emails with GPG");
 
     user = mkOption {
       type = types.str;
       default = "zeyple";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         User to run Zeyple as.
 
         ::: {.note}
@@ -35,7 +48,7 @@ in {
     group = mkOption {
       type = types.str;
       default = "zeyple";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Group to use to run Zeyple.
 
         ::: {.note}
@@ -49,7 +62,7 @@ in {
     settings = mkOption {
       type = ini.type;
       default = { };
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Zeyple configuration. refer to
         <https://github.com/infertux/zeyple/blob/master/zeyple/zeyple.conf.example>
         for details on supported values.
@@ -58,13 +71,13 @@ in {
 
     keys = mkOption {
       type = with types; listOf path;
-      description = lib.mdDoc "List of public key files that will be imported by gpg.";
+      description = mdDoc "List of public key files that will be imported by gpg.";
     };
 
     rotateLogs = mkOption {
       type = types.bool;
       default = true;
-      description = lib.mdDoc "Whether to enable rotation of log files.";
+      description = mdDoc "Whether to enable rotation of log files.";
     };
   };
 
