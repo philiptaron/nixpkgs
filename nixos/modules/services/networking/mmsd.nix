@@ -1,6 +1,15 @@
 { pkgs, lib, config, ... }:
-with lib;
+
 let
+  inherit (lib)
+    escapeShellArgs
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.mmsd;
   dbusServiceFile = pkgs.writeTextDir "share/dbus-1/services/org.ofono.mms.service" ''
     [D-BUS Service]
