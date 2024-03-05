@@ -1,8 +1,26 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrsets
+    concatLists
+    concatStringsSep
+    escapeShellArg
+    literalExpression
+    maintainers
+    mapAttrs
+    mapAttrsToList
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    nameValuePair
+    optionalString
+    remove
+    types
+    versionAtLeast
+    ;
+
   receiverSubmodule = {
     options = {
       postgresqlPackage = mkPackageOption pkgs "postgresql" {
@@ -12,7 +30,7 @@ let
       directory = mkOption {
         type = types.path;
         example = literalExpression "/mnt/pg_wal/main/";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Directory to write the output to.
         '';
       };
@@ -20,7 +38,7 @@ let
       statusInterval = mkOption {
         type = types.int;
         default = 10;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Specifies the number of seconds between status packets sent back to the server.
           This allows for easier monitoring of the progress from server.
           A value of zero disables the periodic status updates completely,
@@ -32,7 +50,7 @@ let
         type = types.str;
         default = "";
         example = "some_slot_name";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Require {command}`pg_receivewal` to use an existing replication slot (see
           [Section 26.2.6 of the PostgreSQL manual](https://www.postgresql.org/docs/current/warm-standby.html#STREAMING-REPLICATION-SLOTS)).
           When this option is used, {command}`pg_receivewal` will report a flush position to the server,
@@ -48,7 +66,7 @@ let
       synchronous = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Flush the WAL data to disk immediately after it has been received.
           Also send a status packet back to the server immediately after flushing, regardless of {option}`statusInterval`.
 
@@ -60,7 +78,7 @@ let
       compress = mkOption {
         type = types.ints.between 0 9;
         default = 0;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enables gzip compression of write-ahead logs, and specifies the compression level
           (`0` through `9`, `0` being no compression and `9` being best compression).
           The suffix `.gz` will automatically be added to all filenames.
@@ -72,7 +90,7 @@ let
       connection = mkOption {
         type = types.str;
         example = "postgresql://user@somehost";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Specifies parameters used to connect to the server, as a connection string.
           See [Section 34.1.1 of the PostgreSQL manual](https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING) for more information.
 
@@ -89,7 +107,7 @@ let
             "--no-sync"
           ]
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           A list of extra arguments to pass to the {command}`pg_receivewal` command.
         '';
       };
@@ -103,7 +121,7 @@ let
             PGSSLMODE = "require";
           }
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Environment variables passed to the service.
           Usable parameters are listed in [Section 34.14 of the PostgreSQL manual](https://www.postgresql.org/docs/current/libpq-envars.html).
         '';
@@ -127,7 +145,7 @@ in {
             };
           }
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           PostgreSQL WAL receivers.
           Stream write-ahead logs from a PostgreSQL server using {command}`pg_receivewal` (formerly {command}`pg_receivexlog`).
           See [the man page](https://www.postgresql.org/docs/current/app-pgreceivewal.html) for more information.
