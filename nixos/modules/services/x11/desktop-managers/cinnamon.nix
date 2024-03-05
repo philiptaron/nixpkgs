@@ -1,8 +1,18 @@
 { config, lib, pkgs, utils, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStrings
+    elem
+    literalExpression
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    types
+    ;
 
   cfg = config.services.xserver.desktopManager.cinnamon;
   serviceCfg = config.services.cinnamon;
@@ -12,23 +22,23 @@ let
     extraGSettingsOverrides = cfg.extraGSettingsOverrides;
   };
 
-  notExcluded = pkg: (!(lib.elem pkg config.environment.cinnamon.excludePackages));
+  notExcluded = pkg: (!(elem pkg config.environment.cinnamon.excludePackages));
 in
 
 {
   options = {
     services.cinnamon = {
-      apps.enable = mkEnableOption (lib.mdDoc "Cinnamon default applications");
+      apps.enable = mkEnableOption (mdDoc "Cinnamon default applications");
     };
 
     services.xserver.desktopManager.cinnamon = {
-      enable = mkEnableOption (lib.mdDoc "the cinnamon desktop manager");
+      enable = mkEnableOption (mdDoc "the cinnamon desktop manager");
 
       sessionPath = mkOption {
         default = [];
         type = types.listOf types.package;
         example = literalExpression "[ pkgs.gnome.gpaste ]";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Additional list of packages to be added to the session search path.
           Useful for GSettings-conditional autostart.
 
@@ -39,13 +49,13 @@ in
       extraGSettingsOverrides = mkOption {
         default = "";
         type = types.lines;
-        description = lib.mdDoc "Additional gsettings overrides.";
+        description = mdDoc "Additional gsettings overrides.";
       };
 
       extraGSettingsOverridePackages = mkOption {
         default = [];
         type = types.listOf types.path;
-        description = lib.mdDoc "List of packages for which gsettings are overridden.";
+        description = mdDoc "List of packages for which gsettings are overridden.";
       };
     };
 
@@ -53,7 +63,7 @@ in
       default = [];
       example = literalExpression "[ pkgs.cinnamon.blueberry ]";
       type = types.listOf types.package;
-      description = lib.mdDoc "Which packages cinnamon should exclude from the default environment";
+      description = mdDoc "Which packages cinnamon should exclude from the default environment";
     };
 
   };
