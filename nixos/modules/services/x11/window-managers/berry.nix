@@ -1,14 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    singleton
+    ;
+
   cfg = config.services.xserver.windowManager.berry;
 in
 {
   ###### interface
   options = {
-    services.xserver.windowManager.berry.enable = mkEnableOption (lib.mdDoc "berry");
+    services.xserver.windowManager.berry.enable = mkEnableOption (mdDoc "berry");
   };
 
   ###### implementation
