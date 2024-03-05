@@ -1,23 +1,32 @@
 { config, lib, pkgs, options }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    escapeShellArg
+    hasPrefix
+    isStorePath
+    mdDoc
+    mkOption
+    types
+    warn
+    ;
+
   logPrefix = "services.prometheus.exporter.blackbox";
   cfg = config.services.prometheus.exporters.blackbox;
 
   # This ensures that we can deal with string paths, path types and
   # store-path strings with context.
   coerceConfigFile = file:
-    if (builtins.isPath file) || (lib.isStorePath file) then
+    if (builtins.isPath file) || (isStorePath file) then
       file
     else
-      (lib.warn ''
+      (warn ''
         ${logPrefix}: configuration file "${file}" is being copied to the nix-store.
         If you would like to avoid that, please set enableConfigCheck to false.
       '' /. + file);
   checkConfigLocation = file:
-    if lib.hasPrefix "/tmp/" file then
+    if hasPrefix "/tmp/" file then
       throw
       "${logPrefix}: configuration file must not reside within /tmp - it won't be visible to the systemd service."
     else
@@ -35,14 +44,14 @@ in {
   extraOpts = {
     configFile = mkOption {
       type = types.path;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Path to configuration file.
       '';
     };
     enableConfigCheck = mkOption {
       type = types.bool;
       default = true;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to run a correctness check for the configuration file. This depends
         on the configuration file residing in the nix-store. Paths passed as string will
         be copied to the store.
