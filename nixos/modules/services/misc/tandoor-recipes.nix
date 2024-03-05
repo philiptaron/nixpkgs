@@ -1,8 +1,20 @@
 { config, pkgs, lib, ... }:
 
-with lib;
 let
+  inherit (lib)
+    maintainers
+    mapAttrs
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalAttrs
+    toShellVars
+    types
+    ;
+
   cfg = config.services.tandoor-recipes;
+
   pkg = cfg.package;
 
   # SECRET_KEY through an env file
@@ -14,12 +26,12 @@ let
   } // optionalAttrs (config.time.timeZone != null) {
     TZ = config.time.timeZone;
   } // (
-    lib.mapAttrs (_: toString) cfg.extraConfig
+    mapAttrs (_: toString) cfg.extraConfig
   );
 
   manage = pkgs.writeShellScript "manage" ''
     set -o allexport # Export the following env vars
-    ${lib.toShellVars env}
+    ${toShellVars env}
     exec ${pkg}/bin/tandoor-recipes "$@"
   '';
 in
@@ -28,9 +40,9 @@ in
 
   options.services.tandoor-recipes = {
     enable = mkOption {
-      type = lib.types.bool;
+      type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Enable Tandoor Recipes.
 
         When started, the Tandoor Recipes database is automatically created if
@@ -45,19 +57,19 @@ in
     address = mkOption {
       type = types.str;
       default = "localhost";
-      description = lib.mdDoc "Web interface address.";
+      description = mdDoc "Web interface address.";
     };
 
     port = mkOption {
       type = types.port;
       default = 8080;
-      description = lib.mdDoc "Web interface port.";
+      description = mdDoc "Web interface port.";
     };
 
     extraConfig = mkOption {
       type = types.attrs;
       default = { };
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Extra tandoor recipes config options.
 
         See [the example dot-env file](https://raw.githubusercontent.com/vabene1111/recipes/master/.env.template)
@@ -115,7 +127,7 @@ in
         # gunicorn needs setuid
         SystemCallFilter = [ "@system-service" "~@privileged" "@resources" "@setuid" "@keyring" ];
         UMask = "0066";
-      } // lib.optionalAttrs (cfg.port < 1024) {
+      } // optionalAttrs (cfg.port < 1024) {
         AmbientCapabilities = [ "CAP_NET_BIND_SERVICE" ];
         CapabilityBoundingSet = [ "CAP_NET_BIND_SERVICE" ];
       };
