@@ -1,8 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    listToAttrs
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    optionals
+    types
+    ;
+
   cfg = config.virtualisation.virtualbox.host;
 
   virtualbox = cfg.package.override {
@@ -18,8 +28,8 @@ in
 
 {
   options.virtualisation.virtualbox.host = {
-    enable = mkEnableOption (lib.mdDoc "VirtualBox") // {
-      description = lib.mdDoc ''
+    enable = mkEnableOption (mdDoc "VirtualBox") // {
+      description = mdDoc ''
         Whether to enable VirtualBox.
 
         ::: {.note}
@@ -29,8 +39,8 @@ in
       '';
     };
 
-    enableExtensionPack = mkEnableOption (lib.mdDoc "VirtualBox extension pack") // {
-      description = lib.mdDoc ''
+    enableExtensionPack = mkEnableOption (mdDoc "VirtualBox extension pack") // {
+      description = mdDoc ''
         Whether to install the Oracle Extension Pack for VirtualBox.
 
         ::: {.important}
@@ -45,7 +55,7 @@ in
     addNetworkInterface = mkOption {
       type = types.bool;
       default = true;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Automatically set up a vboxnet0 host-only network interface.
       '';
     };
@@ -53,7 +63,7 @@ in
     enableHardening = mkOption {
       type = types.bool;
       default = true;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Enable hardened VirtualBox, which ensures that only the binaries in the
         system path get access to the devices exposed by the kernel modules
         instead of all users in the vboxusers group.
@@ -68,7 +78,7 @@ in
     headless = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Use VirtualBox installation without GUI and Qt dependency. Useful to enable on servers
         and when virtual machines are controlled only via SSH.
       '';
@@ -77,7 +87,7 @@ in
     enableWebService = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Build VirtualBox web service tool (vboxwebsrv) to allow managing VMs via other webpage frontend tools. Useful for headless servers.
       '';
     };
@@ -114,7 +124,7 @@ in
         "VBoxNetDHCP"
         "VBoxNetNAT"
         "VBoxVolInfo"
-      ] ++ (lib.optionals (!cfg.headless) [
+      ] ++ (optionals (!cfg.headless) [
         "VBoxSDL"
         "VirtualBoxVM"
       ]);
