@@ -1,6 +1,14 @@
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    singleton
+    types
+    ;
+in
 
 {
 
@@ -11,7 +19,7 @@ with lib;
     services.tftpd.enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Whether to enable tftpd, a Trivial File Transfer Protocol server.
         The server will be run as an xinetd service.
       '';
@@ -20,7 +28,7 @@ with lib;
     services.tftpd.path = mkOption {
       type = types.path;
       default = "/srv/tftp";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Where the tftp server files are stored.
       '';
     };
