@@ -1,7 +1,17 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    maintainers
+    mapAttrs'
+    mdDoc
+    mkIf
+    mkOption
+    nameValuePair
+    recursiveUpdate
+    types
+    ;
+
   cfg = config.services.pantalaimon-headless;
 
   iniFmt = pkgs.formats.ini { };
@@ -51,7 +61,7 @@ in
   options.services.pantalaimon-headless.instances = mkOption {
     default = { };
     type = types.attrsOf (types.submodule (import ./pantalaimon-options.nix));
-    description = lib.mdDoc ''
+    description = mdDoc ''
       Declarative instance config.
 
       Note: to use pantalaimon interactively, e.g. for a Matrix client which does not
