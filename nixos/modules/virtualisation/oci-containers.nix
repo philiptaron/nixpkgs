@@ -1,7 +1,27 @@
 { config, options, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    concatStringsSep
+    escapeShellArg
+    literalExpression
+    mapAttrs
+    mapAttrs'
+    mapAttrsToList
+    mdDoc
+    mkChangedOptionModule
+    mkIf
+    mkMerge
+    mkOption
+    nameValuePair
+    optional
+    optionalAttrs
+    optionals
+    optionalString
+    types
+    versionAtLeast
+    ;
+
   cfg = config.virtualisation.oci-containers;
   proxy_env = config.networking.proxy.envVars;
 
@@ -14,14 +34,14 @@ let
 
         image = mkOption {
           type = with types; str;
-          description = lib.mdDoc "OCI image to run.";
+          description = mdDoc "OCI image to run.";
           example = "library/hello-world";
         };
 
         imageFile = mkOption {
           type = with types; nullOr package;
           default = null;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Path to an image file to load before running the image. This can
             be used to bypass pulling the image from the registry.
 
@@ -38,20 +58,20 @@ let
           username = mkOption {
             type = with types; nullOr str;
             default = null;
-            description = lib.mdDoc "Username for login.";
+            description = mdDoc "Username for login.";
           };
 
           passwordFile = mkOption {
             type = with types; nullOr str;
             default = null;
-            description = lib.mdDoc "Path to file containing password.";
+            description = mdDoc "Path to file containing password.";
             example = "/etc/nixos/dockerhub-password.txt";
           };
 
           registry = mkOption {
             type = with types; nullOr str;
             default = null;
-            description = lib.mdDoc "Registry where to login to.";
+            description = mdDoc "Registry where to login to.";
             example = "https://docker.pkg.github.com";
           };
 
@@ -60,7 +80,7 @@ let
         cmd = mkOption {
           type =  with types; listOf str;
           default = [];
-          description = lib.mdDoc "Commandline arguments to pass to the image's entrypoint.";
+          description = mdDoc "Commandline arguments to pass to the image's entrypoint.";
           example = literalExpression ''
             ["--port=9000"]
           '';
@@ -69,7 +89,7 @@ let
         labels = mkOption {
           type = with types; attrsOf str;
           default = {};
-          description = lib.mdDoc "Labels to attach to the container at runtime.";
+          description = mdDoc "Labels to attach to the container at runtime.";
           example = literalExpression ''
             {
               "traefik.https.routers.example.rule" = "Host(`example.container`)";
@@ -79,7 +99,7 @@ let
 
         entrypoint = mkOption {
           type = with types; nullOr str;
-          description = lib.mdDoc "Override the default entrypoint of the image.";
+          description = mdDoc "Override the default entrypoint of the image.";
           default = null;
           example = "/bin/my-app";
         };
@@ -87,7 +107,7 @@ let
         environment = mkOption {
           type = with types; attrsOf str;
           default = {};
-          description = lib.mdDoc "Environment variables to set for this container.";
+          description = mdDoc "Environment variables to set for this container.";
           example = literalExpression ''
             {
               DATABASE_HOST = "db.example.com";
@@ -99,7 +119,7 @@ let
         environmentFiles = mkOption {
           type = with types; listOf path;
           default = [];
-          description = lib.mdDoc "Environment files for this container.";
+          description = mdDoc "Environment files for this container.";
           example = literalExpression ''
             [
               /path/to/.env
@@ -111,7 +131,7 @@ let
         log-driver = mkOption {
           type = types.str;
           default = "journald";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Logging driver for the container.  The default of
             `"journald"` means that the container's logs will be
             handled as part of the systemd unit.
@@ -129,7 +149,7 @@ let
         ports = mkOption {
           type = with types; listOf str;
           default = [];
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Network ports to publish from the container to the outer host.
 
             Valid formats:
@@ -161,7 +181,7 @@ let
         user = mkOption {
           type = with types; nullOr str;
           default = null;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Override the username or UID (and optionally groupname or GID) used
             in the container.
           '';
@@ -171,7 +191,7 @@ let
         volumes = mkOption {
           type = with types; listOf str;
           default = [];
-          description = lib.mdDoc ''
+          description = mdDoc ''
             List of volumes to attach to this container.
 
             Note that this is a list of `"src:dst"` strings to
@@ -192,14 +212,14 @@ let
         workdir = mkOption {
           type = with types; nullOr str;
           default = null;
-          description = lib.mdDoc "Override the default working directory for the container.";
+          description = mdDoc "Override the default working directory for the container.";
           example = "/var/lib/hello_world";
         };
 
         dependsOn = mkOption {
           type = with types; listOf str;
           default = [];
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Define which other containers this one depends on. They will be added to both After and Requires for the unit.
 
             Use the same name as the attribute under `virtualisation.oci-containers.containers`.
@@ -217,14 +237,14 @@ let
         hostname = mkOption {
           type = with types; nullOr str;
           default = null;
-          description = lib.mdDoc "The hostname of the container.";
+          description = mdDoc "The hostname of the container.";
           example = "hello-world";
         };
 
         extraOptions = mkOption {
           type = with types; listOf str;
           default = [];
-          description = lib.mdDoc "Extra options for {command}`${defaultBackend} run`.";
+          description = mdDoc "Extra options for {command}`${defaultBackend} run`.";
           example = literalExpression ''
             ["--network=host"]
           '';
@@ -233,7 +253,7 @@ let
         autoStart = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             When enabled, the container is automatically started on boot.
             If this option is set to false, the container has to be started on-demand via its service.
           '';
@@ -270,10 +290,10 @@ let
     };
   in {
     wantedBy = [] ++ optional (container.autoStart) "multi-user.target";
-    wants = lib.optional (container.imageFile == null)  "network-online.target";
-    after = lib.optionals (cfg.backend == "docker") [ "docker.service" "docker.socket" ]
+    wants = optional (container.imageFile == null)  "network-online.target";
+    after = optionals (cfg.backend == "docker") [ "docker.service" "docker.socket" ]
             # if imageFile is not set, the service needs the network to download the image from the registry
-            ++ lib.optionals (container.imageFile == null) [ "network-online.target" ]
+            ++ optionals (container.imageFile == null) [ "network-online.target" ]
             ++ dependsOn;
     requires = dependsOn;
     environment = proxy_env;
@@ -292,7 +312,7 @@ let
       "--entrypoint=${escapeShellArg container.entrypoint}"
       ++ optional (container.hostname != null)
       "--hostname=${escapeShellArg container.hostname}"
-      ++ lib.optionals (cfg.backend == "podman") [
+      ++ optionals (cfg.backend == "podman") [
         "--cidfile=/run/podman-${escapedName}.ctr-id"
         "--cgroups=no-conmon"
         "--sdnotify=conmon"
@@ -348,12 +368,12 @@ let
 in {
   imports = [
     (
-      lib.mkChangedOptionModule
+      mkChangedOptionModule
       [ "docker-containers"  ]
       [ "virtualisation" "oci-containers" ]
       (oldcfg: {
         backend = "docker";
-        containers = lib.mapAttrs (n: v: builtins.removeAttrs (v // {
+        containers = mapAttrs (n: v: builtins.removeAttrs (v // {
           extraOptions = v.extraDockerOptions or [];
         }) [ "extraDockerOptions" ]) oldcfg.docker-containers;
       })
@@ -365,25 +385,25 @@ in {
     backend = mkOption {
       type = types.enum [ "podman" "docker" ];
       default = if versionAtLeast config.system.stateVersion "22.05" then "podman" else "docker";
-      description = lib.mdDoc "The underlying Docker implementation to use.";
+      description = mdDoc "The underlying Docker implementation to use.";
     };
 
     containers = mkOption {
       default = {};
       type = types.attrsOf (types.submodule containerOptions);
-      description = lib.mdDoc "OCI (Docker) containers to run as systemd services.";
+      description = mdDoc "OCI (Docker) containers to run as systemd services.";
     };
 
   };
 
-  config = lib.mkIf (cfg.containers != {}) (lib.mkMerge [
+  config = mkIf (cfg.containers != {}) (mkMerge [
     {
       systemd.services = mapAttrs' (n: v: nameValuePair "${cfg.backend}-${n}" (mkService n v)) cfg.containers;
     }
-    (lib.mkIf (cfg.backend == "podman") {
+    (mkIf (cfg.backend == "podman") {
       virtualisation.podman.enable = true;
     })
-    (lib.mkIf (cfg.backend == "docker") {
+    (mkIf (cfg.backend == "docker") {
       virtualisation.docker.enable = true;
     })
   ]);
