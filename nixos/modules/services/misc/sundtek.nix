@@ -1,14 +1,17 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
-  cfg = config.services.sundtek;
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
 
+  cfg = config.services.sundtek;
 in
 {
   options.services.sundtek = {
-    enable = mkEnableOption (lib.mdDoc "Sundtek driver");
+    enable = mkEnableOption (mdDoc "Sundtek driver");
   };
 
   config = mkIf cfg.enable {
