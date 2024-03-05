@@ -1,8 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkIf
+    mkOption
+    optional
+    optionalAttrs
+    optionalString
+    singleton
+    types
+    ;
+
   cfg = config.services.shadowsocks;
 
   opts = {
@@ -34,7 +44,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to run shadowsocks-libev shadowsocks server.
         '';
       };
@@ -42,7 +52,7 @@ in
       localAddress = mkOption {
         type = types.coercedTo types.str singleton (types.listOf types.str);
         default = [ "[::0]" "0.0.0.0" ];
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Local addresses to which the server binds.
         '';
       };
@@ -50,7 +60,7 @@ in
       port = mkOption {
         type = types.port;
         default = 8388;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Port which the server uses.
         '';
       };
@@ -58,7 +68,7 @@ in
       password = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Password for connecting clients.
         '';
       };
@@ -66,7 +76,7 @@ in
       passwordFile = mkOption {
         type = types.nullOr types.path;
         default = null;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Password file with a password for connecting clients.
         '';
       };
@@ -74,7 +84,7 @@ in
       mode = mkOption {
         type = types.enum [ "tcp_only" "tcp_and_udp" "udp_only" ];
         default = "tcp_and_udp";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Relay protocols.
         '';
       };
@@ -82,7 +92,7 @@ in
       fastOpen = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           use TCP fast-open
         '';
       };
@@ -90,7 +100,7 @@ in
       encryptionMethod = mkOption {
         type = types.str;
         default = "chacha20-ietf-poly1305";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Encryption method. See <https://github.com/shadowsocks/shadowsocks-org/wiki/AEAD-Ciphers>.
         '';
       };
@@ -99,7 +109,7 @@ in
         type = types.nullOr types.str;
         default = null;
         example = literalExpression ''"''${pkgs.shadowsocks-v2ray-plugin}/bin/v2ray-plugin"'';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           SIP003 plugin for shadowsocks
         '';
       };
@@ -108,7 +118,7 @@ in
         type = types.str;
         default = "";
         example = "server;host=example.com";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Options to pass to the plugin if one was specified
         '';
       };
@@ -119,7 +129,7 @@ in
         example = {
           nameserver = "8.8.8.8";
         };
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Additional configuration for shadowsocks that is not covered by the
           provided options. The provided attrset will be serialized to JSON and
           has to contain valid shadowsocks options. Unfortunately most
