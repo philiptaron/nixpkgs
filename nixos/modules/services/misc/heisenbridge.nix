@@ -1,16 +1,30 @@
 { config, pkgs, lib, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    escapeShellArg
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optional
+    optionals
+    types
+    ;
+
   cfg = config.services.heisenbridge;
 
   pkg = config.services.heisenbridge.package;
+
   bin = "${pkg}/bin/heisenbridge";
 
   jsonType = (pkgs.formats.json { }).type;
 
   registrationFile = "/var/lib/heisenbridge/registration.yml";
+
   # JSON is a proper subset of YAML
   bridgeConfig = builtins.toFile "heisenbridge-registration.yml" (builtins.toJSON {
     id = "heisenbridge";
@@ -23,19 +37,19 @@ let
 in
 {
   options.services.heisenbridge = {
-    enable = mkEnableOption (lib.mdDoc "the Matrix to IRC bridge");
+    enable = mkEnableOption (mdDoc "the Matrix to IRC bridge");
 
     package = mkPackageOption pkgs "heisenbridge" { };
 
     homeserver = mkOption {
       type = types.str;
-      description = lib.mdDoc "The URL to the home server for client-server API calls";
+      description = mdDoc "The URL to the home server for client-server API calls";
       example = "http://localhost:8008";
     };
 
     registrationUrl = mkOption {
       type = types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The URL where the application service is listening for HS requests, from the Matrix HS perspective.#
         The default value assumes the bridge runs on the same host as the home server, in the same network.
       '';
@@ -46,26 +60,26 @@ in
 
     address = mkOption {
       type = types.str;
-      description = lib.mdDoc "Address to listen on. IPv6 does not seem to be supported.";
+      description = mdDoc "Address to listen on. IPv6 does not seem to be supported.";
       default = "127.0.0.1";
       example = "0.0.0.0";
     };
 
     port = mkOption {
       type = types.port;
-      description = lib.mdDoc "The port to listen on";
+      description = mdDoc "The port to listen on";
       default = 9898;
     };
 
     debug = mkOption {
       type = types.bool;
-      description = lib.mdDoc "More verbose logging. Recommended during initial setup.";
+      description = mdDoc "More verbose logging. Recommended during initial setup.";
       default = false;
     };
 
     owner = mkOption {
       type = types.nullOr types.str;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Set owner MXID otherwise first talking local user will claim the bridge
       '';
       default = null;
@@ -73,7 +87,7 @@ in
     };
 
     namespaces = mkOption {
-      description = lib.mdDoc "Configure the 'namespaces' section of the registration.yml for the bridge and the server";
+      description = mdDoc "Configure the 'namespaces' section of the registration.yml for the bridge and the server";
       # TODO link to Matrix documentation of the format
       type = types.submodule {
         freeformType = jsonType;
@@ -91,16 +105,16 @@ in
       };
     };
 
-    identd.enable = mkEnableOption (lib.mdDoc "identd service support");
+    identd.enable = mkEnableOption (mdDoc "identd service support");
     identd.port = mkOption {
       type = types.port;
-      description = lib.mdDoc "identd listen port";
+      description = mdDoc "identd listen port";
       default = 113;
     };
 
     extraArgs = mkOption {
       type = types.listOf types.str;
-      description = lib.mdDoc "Heisenbridge is configured over the command line. Append extra arguments here";
+      description = mdDoc "Heisenbridge is configured over the command line. Append extra arguments here";
       default = [ ];
     };
   };
@@ -138,30 +152,30 @@ in
 
       serviceConfig = rec {
         Type = "simple";
-        ExecStart = lib.concatStringsSep " " (
+        ExecStart = concatStringsSep " " (
           [
             bin
             (if cfg.debug then "-vvv" else "-v")
             "--config"
             registrationFile
             "--listen-address"
-            (lib.escapeShellArg cfg.address)
+            (escapeShellArg cfg.address)
             "--listen-port"
             (toString cfg.port)
           ]
-          ++ (lib.optionals (cfg.owner != null) [
+          ++ (optionals (cfg.owner != null) [
             "--owner"
-            (lib.escapeShellArg cfg.owner)
+            (escapeShellArg cfg.owner)
           ])
-          ++ (lib.optionals cfg.identd.enable [
+          ++ (optionals cfg.identd.enable [
             "--identd"
             "--identd-port"
             (toString cfg.identd.port)
           ])
           ++ [
-            (lib.escapeShellArg cfg.homeserver)
+            (escapeShellArg cfg.homeserver)
           ]
-          ++ (map (lib.escapeShellArg) cfg.extraArgs)
+          ++ (map (escapeShellArg) cfg.extraArgs)
         );
 
         # Hardening options
@@ -210,5 +224,5 @@ in
     };
   };
 
-  meta.maintainers = [ lib.maintainers.piegames ];
+  meta.maintainers = [ maintainers.piegames ];
 }
