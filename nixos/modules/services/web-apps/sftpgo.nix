@@ -1,8 +1,21 @@
 { options, config, lib, pkgs, utils, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    any
+    catAttrs
+    mapAttrs
+    mdDoc
+    mkDefault
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    optionalAttrs
+    optionalString
+    types
+    ;
+
   cfg = config.services.sftpgo;
   defaultUser = "sftpgo";
   settingsFormat = pkgs.formats.json {};
