@@ -36,9 +36,15 @@
 , enableKisTablet ? false # enable improved graphics tablet support
 }:
 
-with lib;
-
 let
+  inherit (lib)
+    licenses
+    maintainers
+    optional
+    optionals
+    platforms
+    ;
+
   clientDeps = [
     qtbase
     qtkeychain
