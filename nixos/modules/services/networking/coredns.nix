@@ -1,13 +1,22 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    escapeShellArgs
+    getBin
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.coredns;
   configFile = pkgs.writeText "Corefile" cfg.config;
 in {
   options.services.coredns = {
-    enable = mkEnableOption (lib.mdDoc "Coredns dns server");
+    enable = mkEnableOption (mdDoc "Coredns dns server");
 
     config = mkOption {
       default = "";
@@ -17,7 +26,7 @@ in {
         }
       '';
       type = types.lines;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Verbatim Corefile to use.
         See <https://coredns.io/manual/toc/#configuration> for details.
       '';
@@ -29,7 +38,7 @@ in {
       default = [];
       example = [ "-dns.port=53" ];
       type = types.listOf types.str;
-      description = lib.mdDoc "Extra arguments to pass to coredns.";
+      description = mdDoc "Extra arguments to pass to coredns.";
     };
   };
 
@@ -46,7 +55,7 @@ in {
         AmbientCapabilities = "cap_net_bind_service";
         NoNewPrivileges = true;
         DynamicUser = true;
-        ExecStart = "${getBin cfg.package}/bin/coredns -conf=${configFile} ${lib.escapeShellArgs cfg.extraArgs}";
+        ExecStart = "${getBin cfg.package}/bin/coredns -conf=${configFile} ${escapeShellArgs cfg.extraArgs}";
         ExecReload = "${pkgs.coreutils}/bin/kill -SIGUSR1 $MAINPID";
         Restart = "on-failure";
       };
