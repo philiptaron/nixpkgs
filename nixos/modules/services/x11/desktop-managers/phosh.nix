@@ -1,8 +1,21 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    isList
+    isPath
+    isString
+    mapAttrsToList
+    mdDoc
+    mkDefault
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.xserver.desktopManager.phosh;
 
   # Based on https://source.puri.sm/Librem5/librem5-base/-/blob/4596c1056dd75ac7f043aede07887990fd46f572/default/sm.puri.OSK0.desktop
@@ -24,7 +37,7 @@ let
   phocConfigType = types.submodule {
     options = {
       xwayland = mkOption {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to enable XWayland support.
 
           To start XWayland immediately, use `immediate`.
@@ -33,14 +46,14 @@ let
         default = "false";
       };
       cursorTheme = mkOption {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Cursor theme to use in Phosh.
         '';
         type = types.str;
         default = "default";
       };
       outputs = mkOption {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Output configurations.
         '';
         type = types.attrsOf phocOutputType;
@@ -56,7 +69,7 @@ let
   phocOutputType = types.submodule {
     options = {
       modeline = mkOption {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           One or more modelines.
         '';
         type = types.either types.str (types.listOf types.str);
@@ -67,7 +80,7 @@ let
         ];
       };
       mode = mkOption {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Default video mode.
         '';
         type = types.nullOr types.str;
@@ -75,7 +88,7 @@ let
         example = "768x1024";
       };
       scale = mkOption {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Display scaling factor.
         '';
         type = types.nullOr (
@@ -89,7 +102,7 @@ let
         example = 2;
       };
       rotate = mkOption {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Screen transformation.
         '';
         type = types.enum [
@@ -132,25 +145,25 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Enable the Phone Shell.";
+        description = mdDoc "Enable the Phone Shell.";
       };
 
       package = mkPackageOption pkgs "phosh" { };
 
       user = mkOption {
-        description = lib.mdDoc "The user to run the Phosh service.";
+        description = mdDoc "The user to run the Phosh service.";
         type = types.str;
         example = "alice";
       };
 
       group = mkOption {
-        description = lib.mdDoc "The group to run the Phosh service.";
+        description = mdDoc "The group to run the Phosh service.";
         type = types.str;
         example = "users";
       };
 
       phocConfig = mkOption {
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Configurations for the Phoc compositor.
         '';
         type = types.oneOf [ types.lines types.path phocConfigType ];
