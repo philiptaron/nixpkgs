@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkDefault
+    mkIf
+    mkMerge
+    mkOption
+    types
+    ;
 
   inInitrd = config.boot.initrd.supportedFilesystems.nfs or false;
 
@@ -30,7 +37,7 @@ in
       idmapd.settings = mkOption {
         type = format.type;
         default = {};
-        description = lib.mdDoc ''
+        description = mdDoc ''
           libnfsidmap configuration. Refer to
           <https://linux.die.net/man/5/idmapd.conf>
           for details.
@@ -49,7 +56,7 @@ in
       extraConfig = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Extra nfs-utils configuration.
         '';
       };
