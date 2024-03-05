@@ -1,6 +1,15 @@
 { lib, stdenv, fetchurl, dpkg, makeWrapper, coreutils, gawk, gnugrep, gnused, openjdk17 }:
 
-with lib;
+let
+  inherit (lib)
+    concatStrings
+    licenses
+    maintainers
+    makeBinPath
+    platforms
+    versions
+    ;
+in
 
 stdenv.mkDerivation rec {
   pname = "marvin";
