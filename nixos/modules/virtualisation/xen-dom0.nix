@@ -2,9 +2,23 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    optional
+    optionalAttrs
+    optionals
+    optionalString
+    types
+    ;
+
   cfg = config.virtualisation.xen;
 in
 
@@ -37,7 +51,7 @@ in
       type = types.package;
       defaultText = literalExpression "pkgs.xen";
       example = literalExpression "pkgs.xen-light";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The package used for Xen binary.
       '';
       relatedPackages = [ "xen" "xen-light" ];
@@ -47,7 +61,7 @@ in
       type = types.package;
       defaultText = literalExpression "pkgs.xen";
       example = literalExpression "pkgs.qemu_xen-light";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         The package with qemu binaries for dom0 qemu and xendomains.
       '';
       relatedPackages = [ "xen"
@@ -59,7 +73,7 @@ in
       mkOption {
         default = [];
         type = types.listOf types.str;
-        description = lib.mdDoc
+        description = mdDoc
           ''
             Parameters passed to the Xen hypervisor at boot time.
           '';
@@ -70,7 +84,7 @@ in
         default = 0;
         example = 512;
         type = types.addCheck types.int (n: n >= 0);
-        description = lib.mdDoc
+        description = mdDoc
           ''
             Amount of memory (in MiB) allocated to Domain 0 on boot.
             If set to 0, all memory is assigned to Domain 0.
@@ -81,7 +95,7 @@ in
         name = mkOption {
           default = "xenbr0";
           type = types.str;
-          description = lib.mdDoc ''
+          description = mdDoc ''
               Name of bridge the Xen domUs connect to.
             '';
         };
@@ -89,7 +103,7 @@ in
         address = mkOption {
           type = types.str;
           default = "172.16.0.1";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             IPv4 address of the bridge.
           '';
         };
@@ -97,7 +111,7 @@ in
         prefixLength = mkOption {
           type = types.addCheck types.int (n: n >= 0 && n <= 32);
           default = 16;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Subnet mask of the bridge interface, specified as the number of
             bits in the prefix (`24`).
             A DHCP server will provide IP addresses for the whole, remaining
@@ -108,7 +122,7 @@ in
         forwardDns = mkOption {
           type = types.bool;
           default = false;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             If set to `true`, the DNS queries from the
             hosts connected to the bridge will be forwarded to the DNS
             servers specified in /etc/resolv.conf .
@@ -120,7 +134,7 @@ in
     virtualisation.xen.stored =
       mkOption {
         type = types.path;
-        description = lib.mdDoc
+        description = mdDoc
           ''
             Xen Store daemon to use. Defaults to oxenstored of the xen package.
           '';
@@ -130,7 +144,7 @@ in
         extraConfig = mkOption {
           type = types.lines;
           default = "";
-          description = lib.mdDoc
+          description = mdDoc
             ''
               Options defined here will override the defaults for xendomains.
               The default options can be seen in the file included from
@@ -139,7 +153,7 @@ in
           };
       };
 
-    virtualisation.xen.trace = mkEnableOption (lib.mdDoc "Xen tracing");
+    virtualisation.xen.trace = mkEnableOption (mdDoc "Xen tracing");
 
   };
 
