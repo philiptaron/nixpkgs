@@ -1,7 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    concatStringsSep
+    maintainers
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.freshrss;
 
   poolName = "freshrss";
@@ -116,7 +128,7 @@ in
     user = mkOption {
       type = types.str;
       default = "freshrss";
-      description = lib.mdDoc "User under which FreshRSS runs.";
+      description = mdDoc "User under which FreshRSS runs.";
     };
 
     authType = mkOption {
