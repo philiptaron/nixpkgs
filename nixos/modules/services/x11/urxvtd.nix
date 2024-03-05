@@ -2,16 +2,23 @@
 
 # maintainer: siddharthist
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.urxvtd;
 in {
   options.services.urxvtd = {
     enable = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Enable urxvtd, the urxvt terminal daemon. To use urxvtd, run
         "urxvtc".
       '';
@@ -38,6 +45,6 @@ in {
     environment.variables.RXVT_SOCKET = "/run/user/$(id -u)/urxvtd-socket";
   };
 
-  meta.maintainers = with lib.maintainers; [ rnhmjoj ];
+  meta.maintainers = with maintainers; [ rnhmjoj ];
 
 }
