@@ -1,8 +1,20 @@
 { config, lib, pkgs, utils, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkDefault
+    mkIf
+    mkOption
+    mkRemovedOptionModule
+    mkRenamedOptionModule
+    optional
+    optionals
+    teams
+    types
+    ;
+
   cfg = config.services.xserver.desktopManager.xfce;
   excludePackages = config.environment.xfce.excludePackages;
 
@@ -49,25 +61,25 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Enable the Xfce desktop environment.";
+        description = mdDoc "Enable the Xfce desktop environment.";
       };
 
       noDesktop = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Don't install XFCE desktop components (xfdesktop and panel).";
+        description = mdDoc "Don't install XFCE desktop components (xfdesktop and panel).";
       };
 
       enableXfwm = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc "Enable the XFWM (default) window manager.";
+        description = mdDoc "Enable the XFWM (default) window manager.";
       };
 
       enableScreensaver = mkOption {
         type = types.bool;
         default = true;
-        description = lib.mdDoc "Enable the XFCE screensaver.";
+        description = mdDoc "Enable the XFCE screensaver.";
       };
     };
 
@@ -75,7 +87,7 @@ in
       default = [];
       example = literalExpression "[ pkgs.xfce.xfce4-volumed-pulse ]";
       type = types.listOf types.package;
-      description = lib.mdDoc "Which packages XFCE should exclude from the default environment";
+      description = mdDoc "Which packages XFCE should exclude from the default environment";
     };
   };
 
