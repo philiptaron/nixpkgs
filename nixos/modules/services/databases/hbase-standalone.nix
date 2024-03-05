@@ -1,14 +1,25 @@
 { config, options, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRenamedOptionModule
+    types
+    ;
+
   cfg = config.services.hbase-standalone;
   opt = options.services.hbase-standalone;
 
   buildProperty = configAttr:
     (builtins.concatStringsSep "\n"
-      (lib.mapAttrsToList
+      (mapAttrsToList
         (name: value: ''
           <property>
             <name>${name}</name>
@@ -41,7 +52,7 @@ in {
   options = {
     services.hbase-standalone = {
 
-      enable = mkEnableOption (lib.mdDoc ''
+      enable = mkEnableOption (mdDoc ''
         HBase master in standalone mode with embedded regionserver and zookeper.
         Do not use this configuration for production nor for evaluating HBase performance.
       '');
@@ -51,7 +62,7 @@ in {
       user = mkOption {
         type = types.str;
         default = "hbase";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           User account under which HBase runs.
         '';
       };
@@ -59,7 +70,7 @@ in {
       group = mkOption {
         type = types.str;
         default = "hbase";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Group account under which HBase runs.
         '';
       };
@@ -67,7 +78,7 @@ in {
       dataDir = mkOption {
         type = types.path;
         default = "/var/lib/hbase";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Specifies location of HBase database files. This location should be
           writable and readable for the user the HBase service runs as
           (hbase by default).
@@ -77,13 +88,13 @@ in {
       logDir = mkOption {
         type = types.path;
         default = "/var/log/hbase";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Specifies the location of HBase log files.
         '';
       };
 
       settings = mkOption {
-        type = with lib.types; attrsOf (oneOf [ str int bool ]);
+        type = with types; attrsOf (oneOf [ str int bool ]);
         default = {
           "hbase.rootdir" = "file://${cfg.dataDir}/hbase";
           "hbase.zookeeper.property.dataDir" = "${cfg.dataDir}/zookeeper";
@@ -94,7 +105,7 @@ in {
             "hbase.zookeeper.property.dataDir" = "''${config.${opt.dataDir}}/zookeeper";
           }
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           configurations in hbase-site.xml, see <https://github.com/apache/hbase/blob/master/hbase-server/src/test/resources/hbase-site.xml> for details.
         '';
       };
