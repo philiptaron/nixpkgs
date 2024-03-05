@@ -1,6 +1,15 @@
 { config, pkgs, lib, ... }:
-with lib;
 let
+  inherit (lib)
+    concatStringsSep
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.karma;
   yaml = pkgs.formats.yaml { };
 in
