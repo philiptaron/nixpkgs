@@ -1,8 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    makeBinPath
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.virtualisation.amazon-init;
 
   script = ''
@@ -11,7 +18,7 @@ let
     echo "attempting to fetch configuration from EC2 user data..."
 
     export HOME=/root
-    export PATH=${pkgs.lib.makeBinPath [ config.nix.package config.systemd.package pkgs.gnugrep pkgs.git pkgs.gnutar pkgs.gzip pkgs.gnused pkgs.xz config.system.build.nixos-rebuild]}:$PATH
+    export PATH=${pkgs.makeBinPath [ config.nix.package config.systemd.package pkgs.gnugrep pkgs.git pkgs.gnutar pkgs.gzip pkgs.gnused pkgs.xz config.system.build.nixos-rebuild]}:$PATH
     export NIX_PATH=nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixos:nixos-config=/etc/nixos/configuration.nix:/nix/var/nix/profiles/per-user/root/channels
 
     userData=/etc/ec2-metadata/user-data
@@ -60,7 +67,7 @@ in {
     enable = mkOption {
       default = true;
       type = types.bool;
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Enable or disable the amazon-init service.
       '';
     };
