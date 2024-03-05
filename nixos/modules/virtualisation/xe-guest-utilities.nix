@@ -1,11 +1,16 @@
 { config, lib, pkgs, ... }:
-with lib;
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.services.xe-guest-utilities;
 in {
   options = {
     services.xe-guest-utilities = {
-      enable = mkEnableOption (lib.mdDoc "the Xen guest utilities daemon");
+      enable = mkEnableOption (mdDoc "the Xen guest utilities daemon");
     };
   };
   config = mkIf cfg.enable {
