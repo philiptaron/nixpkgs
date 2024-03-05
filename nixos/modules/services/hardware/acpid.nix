@@ -1,8 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatStringsSep
+    escapeShellArgs
+    literalExpression
+    mapAttrsToList
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optional
+    types
+    ;
+
   cfg = config.services.acpid;
 
   canonicalHandlers = {
@@ -48,12 +59,12 @@ in
 
     services.acpid = {
 
-      enable = mkEnableOption (lib.mdDoc "the ACPI daemon");
+      enable = mkEnableOption (mdDoc "the ACPI daemon");
 
       logEvents = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc "Log all event activity.";
+        description = mdDoc "Log all event activity.";
       };
 
       handlers = mkOption {
@@ -62,17 +73,17 @@ in
             event = mkOption {
               type = types.str;
               example = literalExpression ''"button/power.*" "button/lid.*" "ac_adapter.*" "button/mute.*" "button/volumedown.*" "cd/play.*" "cd/next.*"'';
-              description = lib.mdDoc "Event type.";
+              description = mdDoc "Event type.";
             };
 
             action = mkOption {
               type = types.lines;
-              description = lib.mdDoc "Shell commands to execute when the event is triggered.";
+              description = mdDoc "Shell commands to execute when the event is triggered.";
             };
           };
         });
 
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Event handlers.
 
           ::: {.note}
@@ -104,19 +115,19 @@ in
       powerEventCommands = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc "Shell commands to execute on a button/power.* event.";
+        description = mdDoc "Shell commands to execute on a button/power.* event.";
       };
 
       lidEventCommands = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc "Shell commands to execute on a button/lid.* event.";
+        description = mdDoc "Shell commands to execute on a button/lid.* event.";
       };
 
       acEventCommands = mkOption {
         type = types.lines;
         default = "";
-        description = lib.mdDoc "Shell commands to execute on an ac_adapter.* event.";
+        description = mdDoc "Shell commands to execute on an ac_adapter.* event.";
       };
 
     };
