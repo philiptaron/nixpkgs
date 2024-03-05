@@ -1,8 +1,18 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    boolToString
+    concatStringsSep
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    optionalAttrs
+    optionalString
+    types
+    ;
 
   cfg = config.services.crowd;
 
@@ -34,84 +44,84 @@ in
 {
   options = {
     services.crowd = {
-      enable = mkEnableOption (lib.mdDoc "Atlassian Crowd service");
+      enable = mkEnableOption (mdDoc "Atlassian Crowd service");
 
       user = mkOption {
         type = types.str;
         default = "crowd";
-        description = lib.mdDoc "User which runs Crowd.";
+        description = mdDoc "User which runs Crowd.";
       };
 
       group = mkOption {
         type = types.str;
         default = "crowd";
-        description = lib.mdDoc "Group which runs Crowd.";
+        description = mdDoc "Group which runs Crowd.";
       };
 
       home = mkOption {
         type = types.str;
         default = "/var/lib/crowd";
-        description = lib.mdDoc "Home directory of the Crowd instance.";
+        description = mdDoc "Home directory of the Crowd instance.";
       };
 
       listenAddress = mkOption {
         type = types.str;
         default = "127.0.0.1";
-        description = lib.mdDoc "Address to listen on.";
+        description = mdDoc "Address to listen on.";
       };
 
       listenPort = mkOption {
         type = types.port;
         default = 8092;
-        description = lib.mdDoc "Port to listen on.";
+        description = mdDoc "Port to listen on.";
       };
 
       openidPassword = mkOption {
         type = types.str;
         default = "WILL_NEVER_BE_SET";
-        description = lib.mdDoc "Application password for OpenID server.";
+        description = mdDoc "Application password for OpenID server.";
       };
 
       openidPasswordFile = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = lib.mdDoc "Path to the file containing the application password for OpenID server.";
+        description = mdDoc "Path to the file containing the application password for OpenID server.";
       };
 
       catalinaOptions = mkOption {
         type = types.listOf types.str;
         default = [];
         example = [ "-Xms1024m" "-Xmx2048m" ];
-        description = lib.mdDoc "Java options to pass to catalina/tomcat.";
+        description = mdDoc "Java options to pass to catalina/tomcat.";
       };
 
       proxy = {
-        enable = mkEnableOption (lib.mdDoc "reverse proxy support");
+        enable = mkEnableOption (mdDoc "reverse proxy support");
 
         name = mkOption {
           type = types.str;
           example = "crowd.example.com";
-          description = lib.mdDoc "Virtual hostname at the proxy";
+          description = mdDoc "Virtual hostname at the proxy";
         };
 
         port = mkOption {
           type = types.port;
           default = 443;
           example = 80;
-          description = lib.mdDoc "Port used at the proxy";
+          description = mdDoc "Port used at the proxy";
         };
 
         scheme = mkOption {
           type = types.str;
           default = "https";
           example = "http";
-          description = lib.mdDoc "Protocol used at the proxy.";
+          description = mdDoc "Protocol used at the proxy.";
         };
 
         secure = mkOption {
           type = types.bool;
           default = true;
-          description = lib.mdDoc "Whether the connections to the proxy should be considered secure.";
+          description = mdDoc "Whether the connections to the proxy should be considered secure.";
         };
       };
 
@@ -166,7 +176,7 @@ in
         mkdir -p ${cfg.home}/{logs,database,work}
 
         sed -e 's,port="8095",port="${toString cfg.listenPort}" address="${cfg.listenAddress}",' \
-        '' + (lib.optionalString cfg.proxy.enable ''
+        '' + (optionalString cfg.proxy.enable ''
           -e 's,compression="on",compression="off" protocol="HTTP/1.1" proxyName="${cfg.proxy.name}" proxyPort="${toString cfg.proxy.port}" scheme="${cfg.proxy.scheme}" secure="${boolToString cfg.proxy.secure}",' \
         '') + ''
           ${pkg}/apache-tomcat/conf/server.xml.dist > ${cfg.home}/server.xml
