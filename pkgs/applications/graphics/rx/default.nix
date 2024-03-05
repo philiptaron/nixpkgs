@@ -3,7 +3,15 @@
 , xorg ? null
 , libGL ? null }:
 
-with lib;
+let
+  inherit (lib)
+    licenses
+    maintainers
+    optionals
+    optionalString
+    platforms
+    ;
+in
 
 rustPlatform.buildRustPackage rec {
   pname = "rx";
