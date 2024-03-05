@@ -1,19 +1,26 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.litestream;
   settingsFormat = pkgs.formats.yaml {};
 in
 {
   options.services.litestream = {
-    enable = mkEnableOption (lib.mdDoc "litestream");
+    enable = mkEnableOption (mdDoc "litestream");
 
     package = mkPackageOption pkgs "litestream" { };
 
     settings = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         See the [documentation](https://litestream.io/reference/config/).
       '';
       type = settingsFormat.type;
@@ -35,7 +42,7 @@ in
       type = types.nullOr types.path;
       default = null;
       example = "/run/secrets/litestream";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Environment file as defined in {manpage}`systemd.exec(5)`.
 
         Secrets may be passed to the service without adding them to the
