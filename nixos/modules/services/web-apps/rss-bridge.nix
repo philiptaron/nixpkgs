@@ -1,6 +1,18 @@
 { config, lib, pkgs, ... }:
-with lib;
+
 let
+  inherit (lib)
+    concatStringsSep
+    literalExpression
+    mapAttrs
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.rss-bridge;
 
   poolName = "rss-bridge";
@@ -11,12 +23,12 @@ in
 {
   options = {
     services.rss-bridge = {
-      enable = mkEnableOption (lib.mdDoc "rss-bridge");
+      enable = mkEnableOption (mdDoc "rss-bridge");
 
       user = mkOption {
         type = types.str;
         default = "nginx";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           User account under which both the service and the web-application run.
         '';
       };
@@ -24,7 +36,7 @@ in
       group = mkOption {
         type = types.str;
         default = "nginx";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Group under which the web-application run.
         '';
       };
@@ -32,7 +44,7 @@ in
       pool = mkOption {
         type = types.str;
         default = poolName;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Name of existing phpfpm pool that is used to run web-application.
           If not specified a pool will be created automatically with
           default values.
@@ -42,7 +54,7 @@ in
       dataDir = mkOption {
         type = types.str;
         default = "/var/lib/rss-bridge";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Location in which cache directory will be created.
           You can put `config.ini.php` in here.
         '';
@@ -51,7 +63,7 @@ in
       virtualHost = mkOption {
         type = types.nullOr types.str;
         default = "rss-bridge";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Name of the nginx virtualhost to use and setup. If null, do not setup any virtualhost.
         '';
       };
@@ -59,14 +71,14 @@ in
       whitelist = mkOption {
         type = types.listOf types.str;
         default = [];
-        example = options.literalExpression ''
+        example = literalExpression ''
           [
             "Facebook"
             "Instagram"
             "Twitter"
           ]
         '';
-        description = lib.mdDoc ''
+        description = mdDoc ''
           List of bridges to be whitelisted.
           If the list is empty, rss-bridge will use whitelist.default.txt.
           Use `[ "*" ]` to whitelist all.
