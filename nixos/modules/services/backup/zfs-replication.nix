@@ -1,61 +1,71 @@
 { lib, pkgs, config, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    escapeShellArg
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    optionalString
+    types
+    ;
+
   cfg = config.services.zfs.autoReplication;
   recursive = optionalString cfg.recursive " --recursive";
   followDelete = optionalString cfg.followDelete " --follow-delete";
-in {
+in
+{
   options = {
     services.zfs.autoReplication = {
-      enable = mkEnableOption (lib.mdDoc "ZFS snapshot replication");
+      enable = mkEnableOption (mdDoc "ZFS snapshot replication");
 
       followDelete = mkOption {
-        description = lib.mdDoc "Remove remote snapshots that don't have a local correspondent.";
+        description = mdDoc "Remove remote snapshots that don't have a local correspondent.";
         default = true;
         type = types.bool;
       };
 
       host = mkOption {
-        description = lib.mdDoc "Remote host where snapshots should be sent. `lz4` is expected to be installed on this host.";
+        description = mdDoc "Remote host where snapshots should be sent. `lz4` is expected to be installed on this host.";
         example = "example.com";
         type = types.str;
       };
 
       identityFilePath = mkOption {
-        description = lib.mdDoc "Path to SSH key used to login to host.";
+        description = mdDoc "Path to SSH key used to login to host.";
         example = "/home/username/.ssh/id_rsa";
         type = types.path;
       };
 
       localFilesystem = mkOption {
-        description = lib.mdDoc "Local ZFS filesystem from which snapshots should be sent.  Defaults to the attribute name.";
+        description = mdDoc "Local ZFS filesystem from which snapshots should be sent.  Defaults to the attribute name.";
         example = "pool/file/path";
         type = types.str;
       };
 
       remoteFilesystem = mkOption {
-        description = lib.mdDoc "Remote ZFS filesystem where snapshots should be sent.";
+        description = mdDoc "Remote ZFS filesystem where snapshots should be sent.";
         example = "pool/file/path";
         type = types.str;
       };
 
       recursive = mkOption {
-        description = lib.mdDoc "Recursively discover snapshots to send.";
+        description = mdDoc "Recursively discover snapshots to send.";
         default = true;
         type = types.bool;
       };
 
       username = mkOption {
-        description = lib.mdDoc "Username used by SSH to login to remote host.";
+        description = mdDoc "Username used by SSH to login to remote host.";
         example = "username";
         type = types.str;
       };
     };
   };
 
-  config = lib.mkIf cfg.enable {
+  config = mkIf cfg.enable {
     environment.systemPackages = [
       pkgs.lz4
     ];
@@ -85,6 +95,6 @@ in {
   };
 
   meta = {
-    maintainers = with lib.maintainers; [ alunduil ];
+    maintainers = with maintainers; [ alunduil ];
   };
 }
