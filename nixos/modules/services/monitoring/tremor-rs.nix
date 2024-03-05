@@ -1,7 +1,15 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
+  inherit (lib)
+    concatStringsSep
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    types
+    ;
 
   cfg = config.services.tremor-rs;
 
@@ -11,34 +19,34 @@ in {
 
   options = {
     services.tremor-rs = {
-      enable = lib.mkEnableOption (lib.mdDoc "Tremor event- or stream-processing system");
+      enable = mkEnableOption (mdDoc "Tremor event- or stream-processing system");
 
       troyFileList = mkOption {
         type = types.listOf types.path;
         default = [];
-        description = lib.mdDoc "List of troy files to load.";
+        description = mdDoc "List of troy files to load.";
       };
 
       tremorLibDir = mkOption {
         type = types.path;
         default = "";
-        description = lib.mdDoc "Directory where to find /lib containing tremor script files";
+        description = mdDoc "Directory where to find /lib containing tremor script files";
       };
 
       host = mkOption {
         type = types.str;
         default = "127.0.0.1";
-        description = lib.mdDoc "The host tremor should be listening on";
+        description = mdDoc "The host tremor should be listening on";
       };
 
       port = mkOption {
         type = types.port;
         default = 9898;
-        description = lib.mdDoc "the port tremor should be listening on";
+        description = mdDoc "the port tremor should be listening on";
       };
 
       loggerSettings = mkOption {
-        description = lib.mdDoc "Tremor logger configuration";
+        description = mdDoc "Tremor logger configuration";
         default = {};
         type = loggerSettingsFormat.type;
 
