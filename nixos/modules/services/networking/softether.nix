@@ -1,8 +1,16 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.softether;
 
   package = cfg.package.override { inherit (cfg) dataDir; };
@@ -16,27 +24,27 @@ in
 
     services.softether = {
 
-      enable = mkEnableOption (lib.mdDoc "SoftEther VPN services");
+      enable = mkEnableOption (mdDoc "SoftEther VPN services");
 
       package = mkPackageOption pkgs "softether" { };
 
-      vpnserver.enable = mkEnableOption (lib.mdDoc "SoftEther VPN Server");
+      vpnserver.enable = mkEnableOption (mdDoc "SoftEther VPN Server");
 
-      vpnbridge.enable = mkEnableOption (lib.mdDoc "SoftEther VPN Bridge");
+      vpnbridge.enable = mkEnableOption (mdDoc "SoftEther VPN Bridge");
 
       vpnclient = {
-        enable = mkEnableOption (lib.mdDoc "SoftEther VPN Client");
+        enable = mkEnableOption (mdDoc "SoftEther VPN Client");
         up = mkOption {
           type = types.lines;
           default = "";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Shell commands executed when the Virtual Network Adapter(s) is/are starting.
           '';
         };
         down = mkOption {
           type = types.lines;
           default = "";
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Shell commands executed when the Virtual Network Adapter(s) is/are shutting down.
           '';
         };
@@ -45,7 +53,7 @@ in
       dataDir = mkOption {
         type = types.path;
         default = "/var/lib/softether";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Data directory for SoftEther VPN.
         '';
       };
