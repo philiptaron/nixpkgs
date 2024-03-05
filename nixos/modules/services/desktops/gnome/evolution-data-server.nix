@@ -2,7 +2,19 @@
 
 { config, lib, pkgs, ... }:
 
-with lib;
+let
+  inherit (lib)
+    literalExpression
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkMerge
+    mkOption
+    mkRenamedOptionModule
+    teams
+    types
+    ;
+in
 
 {
 
@@ -27,20 +39,20 @@ with lib;
   options = {
 
     services.gnome.evolution-data-server = {
-      enable = mkEnableOption (lib.mdDoc "Evolution Data Server, a collection of services for storing addressbooks and calendars");
+      enable = mkEnableOption (mdDoc "Evolution Data Server, a collection of services for storing addressbooks and calendars");
       plugins = mkOption {
         type = types.listOf types.package;
         default = [ ];
-        description = lib.mdDoc "Plugins for Evolution Data Server.";
+        description = mdDoc "Plugins for Evolution Data Server.";
       };
     };
     programs.evolution = {
-      enable = mkEnableOption (lib.mdDoc "Evolution, a Personal information management application that provides integrated mail, calendaring and address book functionality");
+      enable = mkEnableOption (mdDoc "Evolution, a Personal information management application that provides integrated mail, calendaring and address book functionality");
       plugins = mkOption {
         type = types.listOf types.package;
         default = [ ];
         example = literalExpression "[ pkgs.evolution-ews ]";
-        description = lib.mdDoc "Plugins for Evolution.";
+        description = mdDoc "Plugins for Evolution.";
       };
 
     };
