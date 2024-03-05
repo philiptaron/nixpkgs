@@ -1,16 +1,19 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    ;
 
   cfg = config.services.novacomd;
 
 in {
-
   options = {
     services.novacomd = {
-      enable = mkEnableOption (lib.mdDoc "Novacom service for connecting to WebOS devices");
+      enable = mkEnableOption (mdDoc "Novacom service for connecting to WebOS devices");
     };
   };
 
