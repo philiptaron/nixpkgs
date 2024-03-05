@@ -1,8 +1,13 @@
 { config, lib, pkgs, ... }:
 
-with lib;
-
 let
+  inherit (lib)
+    mdDoc
+    mkIf
+    mkOption
+    optional
+    types
+    ;
 
   cfg = config.services.shairport-sync;
 
@@ -19,7 +24,7 @@ in
       enable = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Enable the shairport-sync daemon.
 
           Running with a local system-wide or remote pulseaudio server
@@ -30,7 +35,7 @@ in
       arguments = mkOption {
         type = types.str;
         default = "-v -o pa";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Arguments to pass to the daemon. Defaults to a local pulseaudio
           server.
         '';
@@ -39,7 +44,7 @@ in
       openFirewall = mkOption {
         type = types.bool;
         default = false;
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Whether to automatically open ports in the firewall.
         '';
       };
@@ -47,7 +52,7 @@ in
       user = mkOption {
         type = types.str;
         default = "shairport";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           User account name under which to run shairport-sync. The account
           will be created.
         '';
@@ -56,7 +61,7 @@ in
       group = mkOption {
         type = types.str;
         default = "shairport";
-        description = lib.mdDoc ''
+        description = mdDoc ''
           Group account name under which to run shairport-sync. The account
           will be created.
         '';
