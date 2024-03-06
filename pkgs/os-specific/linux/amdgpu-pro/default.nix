@@ -16,9 +16,15 @@
 , kernel ? null
 }:
 
-with lib;
-
 let
+  inherit (lib)
+    licenses
+    maintainers
+    makeLibraryPath
+    optionalAttrs
+    optionalString
+    platforms
+    ;
 
   bitness = if stdenv.is64bit then "64" else "32";
 
