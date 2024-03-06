@@ -1,8 +1,13 @@
 { fetchurl, lib, virtualbox }:
 
-with lib;
-
 let
+  inherit (lib)
+    licenses
+    maintainers
+    platforms
+    stringLength
+    ;
+
   inherit (virtualbox) version;
 in
 fetchurl rec {
