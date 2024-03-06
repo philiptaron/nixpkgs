@@ -1,7 +1,14 @@
 { stdenv, fetchFromGitHub, lib
 , zsh, coreutils, inetutils, procps, txt2tags }:
 
-with lib;
+let
+  inherit (lib)
+    licenses
+    maintainers
+    optional
+    platforms
+    ;
+in
 
 stdenv.mkDerivation rec {
   pname = "grml-zsh-config";
