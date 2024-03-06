@@ -12,9 +12,16 @@
 , withDebug ? false
 }:
 
-with lib;
-
 let
+  inherit (lib)
+    licenses
+    maintainers
+    optional
+    optionals
+    optionalString
+    platforms
+    ;
+
   phpConfig = {
     embedSupport = true;
     apxs2Support = false;
