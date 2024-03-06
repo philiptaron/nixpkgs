@@ -15,12 +15,33 @@
 , features ? {}
 }:
 
-with lib;
-with lib.kernel;
-with (lib.kernel.whenHelpers version);
-
 let
+  inherit (lib)
+    attrValues
+    head
+    mapAttrs
+    mkDefault
+    mkIf
+    mkMerge
+    optional
+    optionalAttrs
+    versionAtLeast
+    zipAttrs
+    ;
 
+  inherit (lib.kernel)
+    freeform
+    module
+    no
+    option
+    yes
+    ;
+
+  inherit (lib.kernel.whenHelpers version)
+    whenAtLeast
+    whenBetween
+    whenOlder
+    ;
 
   # configuration items have to be part of a subattrs
   flattenKConf =  nested: mapAttrs (_: head) (zipAttrs (attrValues nested));
