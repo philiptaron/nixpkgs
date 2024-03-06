@@ -1,14 +1,27 @@
 { config, pkgs, lib, ... }:
+
 let
+  inherit (lib)
+    maintainers
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    types
+    ;
+
   cfg = config.services.meshcentral;
   configFormat = pkgs.formats.json {};
   configFile = configFormat.generate "meshcentral-config.json" cfg.settings;
-in with lib; {
+
+in {
   options.services.meshcentral = with types; {
-    enable = mkEnableOption (lib.mdDoc "MeshCentral computer management server");
+    enable = mkEnableOption (mdDoc "MeshCentral computer management server");
     package = mkPackageOption pkgs "meshcentral" { };
     settings = mkOption {
-      description = lib.mdDoc ''
+      description = mdDoc ''
         Settings for MeshCentral. Refer to upstream documentation for details:
 
         - [JSON Schema definition](https://github.com/Ylianst/MeshCentral/blob/master/meshcentral-config-schema.json)
@@ -31,7 +44,7 @@ in with lib; {
     };
   };
   config = mkIf cfg.enable {
-    services.meshcentral.settings.settings.autoBackup.backupPath = lib.mkDefault "/var/lib/meshcentral/backups";
+    services.meshcentral.settings.settings.autoBackup.backupPath = mkDefault "/var/lib/meshcentral/backups";
     systemd.services.meshcentral = {
       wantedBy = ["multi-user.target"];
       serviceConfig = {
