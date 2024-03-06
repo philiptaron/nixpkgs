@@ -1,6 +1,14 @@
-{ lib, version, }:
+{ lib, version }:
 
-with lib; {
+let
+  inherit (lib)
+    licenses
+    maintainers
+    platforms
+    teams
+    versionOlder
+    ;
+in {
   homepage = "https://gcc.gnu.org/";
   license = licenses.gpl3Plus; # runtime support libraries are typically LGPLv3+
   description = "GNU Compiler Collection, version ${version}";
