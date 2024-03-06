@@ -10,11 +10,11 @@ lib.makeOverridable (
 , ... # For hash agility
 } @ args:
 
-with lib;
-
 assert (lib.assertOneOf "vc" vc [ "hg" "git" ]);
 
 let
+  inherit (lib) optionalString;
+
   urlFor = resource: "https://${resource}.${domain}/${owner}/${repo}";
   baseUrl = urlFor vc;
   baseArgs = {
