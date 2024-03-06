@@ -1,6 +1,17 @@
 { lib, mkCoqDerivation, coq, interval, compcert, flocq, bignums, version ? null }:
 
-with lib; mkCoqDerivation {
+let
+  inherit (lib)
+    licenses
+    maintainers
+    switch
+    ;
+
+  inherit (lib.versions) range;
+
+in
+
+mkCoqDerivation {
   pname = "vcfloat";
   owner = "VeriNum";
   inherit version;
@@ -8,7 +19,7 @@ with lib; mkCoqDerivation {
   postPatch = ''
     coq_makefile -o Makefile -f _CoqProject *.v
   '';
-  defaultVersion = with versions; switch coq.coq-version [
+  defaultVersion = switch coq.coq-version [
     { case = range "8.16" "8.17"; out = "2.1.1"; }
   ] null;
   release."2.1.1".sha256 = "sha256-bd/XSQhyFUAnSm2bhZEZBWB6l4/Ptlm9JrWu6w9BOpw=";
