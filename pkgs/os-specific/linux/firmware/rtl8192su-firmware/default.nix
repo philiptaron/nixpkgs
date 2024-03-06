@@ -1,5 +1,13 @@
 { lib, stdenvNoCC, fetchFromGitHub }:
-with lib;
+
+let
+  inherit (lib)
+    licenses
+    maintainers
+    platforms
+    ;
+in
+
 stdenvNoCC.mkDerivation {
   pname = "rtl8192su";
   version = "unstable-2016-10-05";
