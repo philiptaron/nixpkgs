@@ -4,9 +4,19 @@
               "load_average" "memory" "volume" "wifi" ]
 }:
 
-with lib;
-
 let
+  inherit (lib)
+    elem
+    intersectLists
+    length
+    licenses
+    maintainers
+    makeBinPath
+    optional
+    optionalString
+    platforms
+    ;
+
   perlscripts = [ "battery" "cpu_usage" "openvpn" "temperature" ];
   contains_any = l1: l2: 0 < length( intersectLists l1 l2 );
 
