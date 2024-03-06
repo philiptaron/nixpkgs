@@ -1,8 +1,13 @@
 { lib, fetchFromGitHub, nodePackages }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrValues
+    filter
+    maintainers
+    nixType
+    ;
+
   np = nodePackages.override { generated = ./package.nix; self = np; };
 in nodePackages.buildNodePackage rec {
   pname = "ripple-data-api";
