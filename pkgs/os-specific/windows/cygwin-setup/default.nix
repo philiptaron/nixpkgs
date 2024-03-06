@@ -2,7 +2,14 @@
 , zlib, bzip2, xz, libgcrypt
 }:
 
-with lib;
+let
+  inherit (lib)
+    flip
+    licenses
+    overrideDerivation
+    toList
+    ;
+in
 
 stdenv.mkDerivation rec {
   pname = "cygwin-setup";
