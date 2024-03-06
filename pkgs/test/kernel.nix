@@ -5,10 +5,21 @@
 # common-config.nix
 { lib, pkgs }:
 
-with lib;
-with kernel;
-
 let
+  inherit (lib)
+    mkDefault
+    mkMerge
+    optional
+    runTests
+    ;
+
+  inherit (lib.kernel)
+    freeform
+    no
+    option
+    yes
+    ;
+
   lts_kernel = pkgs.linuxPackages.kernel;
 
   # to see the result once the module transformed the lose structured config
@@ -29,7 +40,7 @@ let
 
   mkDefaultWorksConfig = mkMerge [
     { "NIXOS_TEST_BOOLEAN"  = yes; }
-    { "NIXOS_TEST_BOOLEAN"  = lib.mkDefault no; }
+    { "NIXOS_TEST_BOOLEAN"  = mkDefault no; }
   ];
 
   allOptionalRemainOptional = mkMerge [
