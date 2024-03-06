@@ -24,9 +24,20 @@
 # See https://github.com/cyberus-technology/virtualbox-kvm/issues/12
 assert enableKvm -> !enableHardening;
 
-with lib;
-
 let
+  inherit (lib)
+    any
+    getDev
+    getLib
+    licenses
+    maintainers
+    optional
+    optionals
+    optionalString
+    platforms
+    sourceTypes
+    ;
+
   buildType = "release";
   # Use maintainers/scripts/update.nix to update the version and all related hashes or
   # change the hashes in extpack.nix and guest-additions/default.nix as well manually.
@@ -68,7 +79,7 @@ in stdenv.mkDerivation {
   prePatch = ''
     set -x
     sed -e 's@MKISOFS --version@MKISOFS -version@' \
-        -e 's@PYTHONDIR=.*@PYTHONDIR=${lib.optionalString pythonBindings python3}@' \
+        -e 's@PYTHONDIR=.*@PYTHONDIR=${optionalString pythonBindings python3}@' \
         -e 's@CXX_FLAGS="\(.*\)"@CXX_FLAGS="-std=c++11 \1"@' \
         ${optionalString (!headless) ''
         -e 's@TOOLQT5BIN=.*@TOOLQT5BIN="${getDev qtbase}/bin"@' \
@@ -84,7 +95,7 @@ in stdenv.mkDerivation {
       s@"libdbus-1\.so\.3"@"${dbus.lib}/lib/libdbus-1.so.3"@g'
 
     grep 'libasound\.so\.2'     src include -rI --files-with-match | xargs sed -i -e '
-      s@"libasound\.so\.2"@"${alsa-lib.out}/lib/libasound.so.2"@g'
+      s@"libasound\.so\.2"@"${getLib alsa-lib}/lib/libasound.so.2"@g'
 
     export USER=nix
     set +x
@@ -141,7 +152,7 @@ in stdenv.mkDerivation {
 
   # first line: ugly hack, and it isn't yet clear why it's a problem
   configurePhase = ''
-    NIX_CFLAGS_COMPILE=$(echo "$NIX_CFLAGS_COMPILE" | sed 's,\-isystem ${lib.getDev stdenv.cc.libc}/include,,g')
+    NIX_CFLAGS_COMPILE=$(echo "$NIX_CFLAGS_COMPILE" | sed 's,\-isystem ${getDev stdenv.cc.libc}/include,,g')
 
     cat >> LocalConfig.kmk <<LOCAL_CONFIG
     VBOX_WITH_TESTCASES            :=
@@ -275,7 +286,7 @@ in stdenv.mkDerivation {
       To install on NixOS, please use the option `virtualisation.virtualbox.host.enable = true`.
       Please also check other options under `virtualisation.virtualbox`.
     '';
-    sourceProvenance = with lib.sourceTypes; [
+    sourceProvenance = with sourceTypes; [
       fromSource
       binaryNativeCode
     ];
