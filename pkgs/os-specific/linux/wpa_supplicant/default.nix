@@ -6,7 +6,17 @@
 , readOnlyModeSSIDs ? false
 }:
 
-with lib;
+let
+  inherit (lib)
+    getDev
+    licenses
+    maintainers
+    optional
+    optionals
+    optionalString
+    platforms
+    ;
+in
 stdenv.mkDerivation rec {
   version = "2.10";
 
@@ -20,7 +30,7 @@ stdenv.mkDerivation rec {
   patches = [
     # Fix a bug when using two config files
     ./Use-unique-IDs-for-networks-and-credentials.patch
-  ] ++ lib.optionals readOnlyModeSSIDs [
+  ] ++ optionals readOnlyModeSSIDs [
     # Allow read-only networks
     ./0001-Implement-read-only-mode-for-ssids.patch
   ];
@@ -101,8 +111,8 @@ stdenv.mkDerivation rec {
     cat -n .config
     substituteInPlace Makefile --replace /usr/local $out
     export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE \
-      -I$(echo "${lib.getDev libnl}"/include/libnl*/) \
-      ${optionalString withPcsclite "-I${lib.getDev pcsclite}/include/PCSC/"}"
+      -I$(echo "${getDev libnl}"/include/libnl*/) \
+      ${optionalString withPcsclite "-I${getDev pcsclite}/include/PCSC/"}"
   '';
 
   buildInputs = [ openssl libnl ]
@@ -117,7 +127,7 @@ stdenv.mkDerivation rec {
     cp -v "doc/docbook/"*.5 $out/share/man/man5/
     cp -v "doc/docbook/"*.8 $out/share/man/man8/
   ''
-  + lib.optionalString dbusSupport ''
+  + optionalString dbusSupport ''
     mkdir -p $out/share/dbus-1/system.d $out/share/dbus-1/system-services $out/etc/systemd/system
     cp -v "dbus/"*service $out/share/dbus-1/system-services
     sed -e "s@/sbin/wpa_supplicant@$out&@" -i "$out/share/dbus-1/system-services/"*
