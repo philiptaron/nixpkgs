@@ -5,9 +5,15 @@
 , dfVersion
 }:
 
-with lib;
-
 let
+  inherit (lib)
+    getAttr
+    hasAttr
+    licenses
+    maintainers
+    platforms
+    ;
+
   twbt-releases = {
     "0.44.10" = {
       twbtRelease = "6.49";
