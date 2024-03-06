@@ -6,13 +6,23 @@
 }:
 
 let
-  shouldUsePkg = pkg: if pkg != null && lib.meta.availableOn stdenv.hostPlatform pkg then pkg else null;
+  inherit (lib)
+    enableFeature
+    licenses
+    maintainers
+    meta
+    optionalString
+    platforms
+    withFeature
+    ;
+
+  shouldUsePkg = pkg: if pkg != null && meta.availableOn stdenv.hostPlatform pkg then pkg else null;
 
   optPam = shouldUsePkg pam;
   optLibidn = shouldUsePkg libidn;
   optGnutls = shouldUsePkg gnutls;
+
 in
-with lib;
 stdenv.mkDerivation rec {
   pname = "shishi";
   version = "1.0.2";
