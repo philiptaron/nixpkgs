@@ -9,13 +9,21 @@
 , withOnlyInstalledCommunityModules ? [ ]
 , withCommunityModules ? [ ] }:
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStringsSep
+    getBin
+    licenses
+    maintainers
+    optional
+    platforms
+    unique
+    ;
+
   luaEnv = lua.withPackages(p: with p; [
       luasocket luasec luaexpat luafilesystem luabitop luadbi-sqlite3 luaunbound
     ]
-    ++ lib.optional withDBI p.luadbi
+    ++ optional withDBI p.luadbi
     ++ withExtraLuaPackages p
   );
 in
@@ -52,7 +60,7 @@ stdenv.mkDerivation rec {
 
   configureFlags = [
     "--ostype=linux"
-    "--with-lua-bin=${lib.getBin buildPackages.lua}/bin"
+    "--with-lua-bin=${getBin buildPackages.lua}/bin"
     "--with-lua-include=${luaEnv}/include"
     "--with-lua=${luaEnv}"
     "--c-compiler=${stdenv.cc.targetPrefix}cc"
@@ -68,7 +76,7 @@ stdenv.mkDerivation rec {
   postInstall = ''
       ${concatMapStringsSep "\n" (module: ''
         cp -r $communityModules/mod_${module} $out/lib/prosody/modules/
-      '') (lib.lists.unique(nixosModuleDeps ++ withCommunityModules ++ withOnlyInstalledCommunityModules))}
+      '') (unique(nixosModuleDeps ++ withCommunityModules ++ withOnlyInstalledCommunityModules))}
       wrapProgram $out/bin/prosodyctl \
         --add-flags '--config "/etc/prosody/prosody.cfg.lua"'
       make -C tools/migration install
