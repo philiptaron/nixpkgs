@@ -5,16 +5,20 @@
 , fileFormat ? "lowerTriangularCsv"
 }:
 
-with lib;
-
-assert assertOneOf "fileFormat" fileFormat
-  ["lowerTriangularCsv" "upperTriangularCsv" "dipha"];
+assert lib.assertOneOf "fileFormat" fileFormat ["lowerTriangularCsv" "upperTriangularCsv" "dipha"];
 assert useGoogleHashmap -> sparsehash != null;
 
 let
-  inherit (lib) optional;
+  inherit (lib)
+    licenses
+    maintainers
+    optional
+    platforms
+    ;
+
   version = "1.2.1";
 in
+
 stdenv.mkDerivation {
   pname = "ripser";
   inherit version;
@@ -51,8 +55,8 @@ stdenv.mkDerivation {
   meta = {
     description = "A lean C++ code for the computation of Vietoris–Rips persistence barcodes";
     homepage = "https://github.com/Ripser/ripser";
-    license = lib.licenses.lgpl3;
-    maintainers = with lib.maintainers; [erikryb];
-    platforms = lib.platforms.linux;
+    license = licenses.lgpl3;
+    maintainers = with maintainers; [erikryb];
+    platforms = platforms.linux;
   };
 }
