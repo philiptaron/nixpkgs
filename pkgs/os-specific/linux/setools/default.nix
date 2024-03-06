@@ -3,7 +3,14 @@
 , withGraphics ? false
 }:
 
-with lib;
+let
+  inherit (lib)
+    getLib
+    licenses
+    optionals
+    platforms
+    ;
+in
 with python3.pkgs;
 
 buildPythonApplication rec {
@@ -30,7 +37,7 @@ buildPythonApplication rec {
   setupPyBuildFlags = [ "-i" ];
 
   preBuild = ''
-    export SEPOL="${lib.getLib libsepol}/lib/libsepol.a"
+    export SEPOL="${getLib libsepol}/lib/libsepol.a"
   '';
 
   meta = {
