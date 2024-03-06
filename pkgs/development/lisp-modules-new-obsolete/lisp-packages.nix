@@ -296,8 +296,7 @@ let
         inherit lisp;
       });
     in import ./ql.nix {
-      inherit pkgs;
-      inherit fixup;
+      inherit lib pkgs fixup;
       build-asdf-system = build-asdf-system';
     };
 
