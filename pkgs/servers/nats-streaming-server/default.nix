@@ -1,6 +1,11 @@
 { buildGoModule, fetchFromGitHub, lib  }:
 
-with lib;
+let
+  inherit (lib)
+    licenses
+    maintainers
+    ;
+in
 
 buildGoModule rec {
   pname   = "nats-streaming-server";
