@@ -10,11 +10,28 @@
 
 { stdenv, lib, version }:
 
-with lib;
-with lib.kernel;
-with (lib.kernel.whenHelpers version);
+assert (lib.versionAtLeast version "4.9");
 
-assert (versionAtLeast version "4.9");
+let
+  inherit (lib)
+    mkForce
+    versionAtLeast
+    ;
+
+  inherit (lib.kernel)
+    freeform
+    no
+    option
+    yes
+    ;
+
+  inherit (lib.kernel.whenHelpers version)
+    whenAtLeast
+    whenBetween
+    whenOlder
+    ;
+
+in
 
 {
   # Report BUG() conditions and kill the offending process.
@@ -110,7 +127,7 @@ assert (versionAtLeast version "4.9");
   INET_MPTCP_DIAG   = option no;
 
   # Use -fstack-protector-strong (gcc 4.9+) for best stack canary coverage.
-  CC_STACKPROTECTOR_REGULAR = lib.mkForce (whenOlder "4.18" no);
+  CC_STACKPROTECTOR_REGULAR = mkForce (whenOlder "4.18" no);
   CC_STACKPROTECTOR_STRONG  = whenOlder "4.18" yes;
 
   # Detect out-of-bound reads/writes and use-after-free
