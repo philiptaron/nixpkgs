@@ -2,7 +2,14 @@
 , libmicrohttpd, darwin
 }:
 
-with lib;
+let
+  inherit (lib)
+    licenses
+    maintainers
+    optionals
+    platforms
+    ;
+in
 
 stdenv.mkDerivation {
   pname = "stabber-unstable";
@@ -26,7 +33,7 @@ stdenv.mkDerivation {
 
   nativeBuildInputs = [ pkg-config autoreconfHook ];
   buildInputs = [ glib expat libmicrohttpd ] ++
-    lib.optionals stdenv.isDarwin [ darwin.apple_sdk.frameworks.Security ];
+    optionals stdenv.isDarwin [ darwin.apple_sdk.frameworks.Security ];
 
   meta = {
     description = "Stubbed XMPP Server";
