@@ -4,7 +4,14 @@
 
 # This file contains an extra mapping from Julia packages to the Python packages they depend on.
 
-with lib;
+let
+  inherit (lib)
+    concatMap
+    filter
+    getAttr
+    hasAttr
+    ;
+in
 
 rec {
   packageMapping = {
