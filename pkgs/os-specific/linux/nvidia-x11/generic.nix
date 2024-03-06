@@ -58,21 +58,33 @@
 , acceptLicense ? config.nvidia.acceptLicense or false
 }:
 
-with lib;
-
 assert !libsOnly -> kernel != null;
-assert versionOlder version "391" -> sha256_32bit != null;
+assert lib.versionOlder version "391" -> sha256_32bit != null;
 assert useSettings -> settingsSha256 != null;
 assert usePersistenced -> persistencedSha256 != null;
 assert useFabricmanager -> fabricmanagerSha256 != null;
 assert useFabricmanager -> !useSettings;
 
 let
+  inherit (lib)
+    licenses
+    maintainers
+    makeLibraryPath
+    mapNullable
+    optional
+    optionalAttrs
+    optionals
+    optionalString
+    platforms
+    versionAtLeast
+    versionOlder
+    ;
+
   nameSuffix = optionalString (!libsOnly) "-${kernel.version}";
   pkgSuffix = optionalString (versionOlder version "304") "-pkg0";
   i686bundled = versionAtLeast version "391" && !disable32Bit;
 
-  libPathFor = pkgs: lib.makeLibraryPath (with pkgs; [
+  libPathFor = pkgs: makeLibraryPath (with pkgs; [
     libdrm
     xorg.libXext
     xorg.libX11
@@ -227,7 +239,7 @@ let
           else { };
         inherit persistencedVersion settingsVersion;
         compressFirmware = false;
-        ibtSupport = ibtSupport || (lib.versionAtLeast version "530");
+        ibtSupport = ibtSupport || (versionAtLeast version "530");
       } // optionalAttrs (!i686bundled) {
         inherit lib32;
       };
