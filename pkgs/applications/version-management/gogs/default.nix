@@ -4,7 +4,14 @@
 , pamSupport ? true
 }:
 
-with lib;
+let
+  inherit (lib)
+    licenses
+    maintainers
+    makeBinPath
+    optional
+    ;
+in
 
 buildGoModule rec {
   pname = "gogs";
