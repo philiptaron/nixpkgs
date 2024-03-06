@@ -1,6 +1,13 @@
 { lib, stdenv, fetchFromGitHub, git, perl, makeWrapper }:
 
-with lib;
+let
+  inherit (lib)
+    licenses
+    maintainers
+    makeBinPath
+    platforms
+    ;
+in
 
 stdenv.mkDerivation rec {
   pname = "git-octopus";
