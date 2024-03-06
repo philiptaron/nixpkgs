@@ -1,8 +1,17 @@
 { config, lib, pkgs, ... }:
 
 let
+  inherit (lib)
+    getBin
+    maintainers
+    mdDoc
+    mkIf
+    mkOption
+    types
+    ;
+
   cfg = config.services.hardware.lcd;
-  pkg = lib.getBin pkgs.lcdproc;
+  pkg = getBin pkgs.lcdproc;
 
   serverCfg = pkgs.writeText "lcdd.conf" ''
     [server]
@@ -27,7 +36,7 @@ let
     Slice = "lcd.slice";
   };
 
-in with lib; {
+in {
 
   meta.maintainers = with maintainers; [ peterhoeg ];
 
@@ -36,32 +45,32 @@ in with lib; {
       serverHost = mkOption {
         type = str;
         default = "localhost";
-        description = lib.mdDoc "Host on which LCDd is listening.";
+        description = mdDoc "Host on which LCDd is listening.";
       };
 
       serverPort = mkOption {
         type = int;
         default = 13666;
-        description = lib.mdDoc "Port on which LCDd is listening.";
+        description = mdDoc "Port on which LCDd is listening.";
       };
 
       server = {
         enable = mkOption {
           type = bool;
           default = false;
-          description = lib.mdDoc "Enable the LCD panel server (LCDd)";
+          description = mdDoc "Enable the LCD panel server (LCDd)";
         };
 
         openPorts = mkOption {
           type = bool;
           default = false;
-          description = lib.mdDoc "Open the ports in the firewall";
+          description = mdDoc "Open the ports in the firewall";
         };
 
         usbPermissions = mkOption {
           type = bool;
           default = false;
-          description = lib.mdDoc ''
+          description = mdDoc ''
             Set group-write permissions on a USB device.
 
             A USB connected LCD panel will most likely require having its
@@ -83,25 +92,25 @@ in with lib; {
         usbVid = mkOption {
           type = str;
           default = "";
-          description = lib.mdDoc "The vendor ID of the USB device to claim.";
+          description = mdDoc "The vendor ID of the USB device to claim.";
         };
 
         usbPid = mkOption {
           type = str;
           default = "";
-          description = lib.mdDoc "The product ID of the USB device to claim.";
+          description = mdDoc "The product ID of the USB device to claim.";
         };
 
         usbGroup = mkOption {
           type = str;
           default = "dialout";
-          description = lib.mdDoc "The group to use for settings permissions. This group must exist or you will have to create it.";
+          description = mdDoc "The group to use for settings permissions. This group must exist or you will have to create it.";
         };
 
         extraConfig = mkOption {
           type = lines;
           default = "";
-          description = lib.mdDoc "Additional configuration added verbatim to the server config.";
+          description = mdDoc "Additional configuration added verbatim to the server config.";
         };
       };
 
@@ -109,19 +118,19 @@ in with lib; {
         enable = mkOption {
           type = bool;
           default = false;
-          description = lib.mdDoc "Enable the LCD panel client (LCDproc)";
+          description = mdDoc "Enable the LCD panel client (LCDproc)";
         };
 
         extraConfig = mkOption {
           type = lines;
           default = "";
-          description = lib.mdDoc "Additional configuration added verbatim to the client config.";
+          description = mdDoc "Additional configuration added verbatim to the client config.";
         };
 
         restartForever = mkOption {
           type = bool;
           default = true;
-          description = lib.mdDoc "Try restarting the client forever.";
+          description = mdDoc "Try restarting the client forever.";
         };
       };
     };
@@ -149,7 +158,7 @@ in with lib; {
         after = [ "lcdd.service" ];
         wantedBy = [ "lcd.target" ];
         # Allow restarting for eternity
-        startLimitIntervalSec = lib.mkIf cfg.client.restartForever 0;
+        startLimitIntervalSec = mkIf cfg.client.restartForever 0;
         serviceConfig = serviceCfg // {
           ExecStart = "${pkg}/bin/lcdproc -f -c ${clientCfg}";
           # If the server is being restarted at the same time, the client will
