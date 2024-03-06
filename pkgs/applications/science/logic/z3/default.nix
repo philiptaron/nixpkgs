@@ -16,9 +16,18 @@
 assert javaBindings -> jdk != null;
 assert ocamlBindings -> ocaml != null && findlib != null && zarith != null;
 
-with lib;
+let
+  inherit (lib)
+    concatStringsSep
+    licenses
+    maintainers
+    optional
+    optionals
+    optionalString
+    platforms
+    ;
 
-let common = { version, sha256, patches ? [ ], tag ? "z3" }:
+  common = { version, sha256, patches ? [ ], tag ? "z3" }:
   stdenv.mkDerivation rec {
     pname = "z3";
     inherit version sha256 patches;
