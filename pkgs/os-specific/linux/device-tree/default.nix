@@ -1,6 +1,14 @@
 { lib, stdenv, stdenvNoCC, dtc }:
 
-with lib; {
+let
+  inherit (lib)
+    concatMapStringsSep
+    concatStringsSep
+    filter
+    flip
+    toList
+    ;
+in {
   # Compile single Device Tree overlay source
   # file (.dts) into its compiled variant (.dtb)
   compileDTS = ({
@@ -15,8 +23,8 @@ with lib; {
 
     buildCommand =
       let
-        includeFlagsStr = lib.concatMapStringsSep " " (includePath: "-I${includePath}") includePaths;
-        extraPreprocessorFlagsStr = lib.concatStringsSep " " extraPreprocessorFlags;
+        includeFlagsStr = concatMapStringsSep " " (includePath: "-I${includePath}") includePaths;
+        extraPreprocessorFlagsStr = concatStringsSep " " extraPreprocessorFlags;
       in
       ''
         $CC -E -nostdinc ${includeFlagsStr} -undef -D__DTS__ -x assembler-with-cpp ${extraPreprocessorFlagsStr} ${dtsFile} | \
