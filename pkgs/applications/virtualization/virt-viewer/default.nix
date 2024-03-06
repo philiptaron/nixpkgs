@@ -33,7 +33,16 @@
 , wrapGAppsHook
 }:
 
-with lib;
+let
+  inherit (lib)
+    licenses
+    maintainers
+    mesonEnable
+    optional
+    optionals
+    platforms
+    ;
+in
 
 stdenv.mkDerivation rec {
   pname = "virt-viewer";
@@ -90,7 +99,7 @@ stdenv.mkDerivation rec {
   propagatedUserEnvPkgs = optional spiceSupport spice-gtk;
 
   mesonFlags = [
-    (lib.mesonEnable "ovirt" ovirtSupport)
+    (mesonEnable "ovirt" ovirtSupport)
   ];
 
   strictDeps = true;
