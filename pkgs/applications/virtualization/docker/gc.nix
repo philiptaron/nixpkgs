@@ -1,6 +1,13 @@
 { stdenv, lib, fetchFromGitHub, makeWrapper, docker, coreutils, procps, gnused, findutils, gnugrep }:
 
-with lib;
+let
+  inherit (lib)
+    licenses
+    maintainers
+    makeBinPath
+    platforms
+    ;
+in
 
 stdenv.mkDerivation rec {
   pname = "docker-gc";
@@ -20,7 +27,7 @@ stdenv.mkDerivation rec {
     cp docker-gc $out/bin
     chmod +x $out/bin/docker-gc
     wrapProgram $out/bin/docker-gc \
-        --prefix PATH : "${lib.makeBinPath [ docker coreutils procps gnused findutils gnugrep ]}"
+        --prefix PATH : "${makeBinPath [ docker coreutils procps gnused findutils gnugrep ]}"
   '';
 
   meta = {
