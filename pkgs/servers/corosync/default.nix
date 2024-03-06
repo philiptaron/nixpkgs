@@ -7,7 +7,15 @@
 , nixosTests
 }:
 
-with lib;
+let
+  inherit (lib)
+    licenses
+    maintainers
+    optional
+    optionalString
+    platforms
+    ;
+in
 
 stdenv.mkDerivation rec {
   pname = "corosync";
