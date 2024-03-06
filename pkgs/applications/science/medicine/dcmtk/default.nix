@@ -1,7 +1,13 @@
 { lib, stdenv, fetchFromGitHub, zlib, libtiff, libxml2, openssl, libiconv
 , libpng, cmake, fetchpatch }:
 
-with lib;
+let
+  inherit (lib)
+    licenses
+    maintainers
+    platforms
+    ;
+in
 stdenv.mkDerivation rec {
   pname = "dcmtk";
   version = "3.6.8";
