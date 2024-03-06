@@ -7,9 +7,17 @@
 , libGL, zlib, cacert
 }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrNames
+    licenses
+    maintainers
+    makeLibraryPath
+    platforms
+    sourceTypes
+    zip
+    ;
+
   pname = "gitkraken";
   version = "9.13.0";
 
@@ -37,7 +45,7 @@ let
   meta = {
     homepage = "https://www.gitkraken.com/";
     description = "The downright luxurious and most popular Git client for Windows, Mac & Linux";
-    sourceProvenance = with lib.sourceTypes; [ binaryNativeCode ];
+    sourceProvenance = with sourceTypes; [ binaryNativeCode ];
     license = licenses.unfree;
     platforms = builtins.attrNames srcs;
     maintainers = with maintainers; [ xnwdd evanjs arkivm nicolas-goudry ];
