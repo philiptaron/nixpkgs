@@ -3,7 +3,13 @@
 , pkg-config
 }:
 
-with lib;
+let
+  inherit (lib)
+    licenses
+    maintainers
+    platforms
+    ;
+in
 stdenv.mkDerivation {
   pname = "fped";
   version = "unstable-2017-05-11";
