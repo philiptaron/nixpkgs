@@ -1,23 +1,38 @@
 { config, lib, pkgs, ... }:
 
 let
+  inherit (lib)
+    escapeShellArg
+    escapeShellArgs
+    maintainers
+    mdDoc
+    mkDefault
+    mkEnableOption
+    mkIf
+    mkOption
+    mkRenamedOptionModule
+    optionalString
+    types
+    ;
+
   cfg = config.services.hydron;
-in with lib; {
+
+in {
   options.services.hydron = {
-    enable = mkEnableOption (lib.mdDoc "hydron");
+    enable = mkEnableOption (mdDoc "hydron");
 
     dataDir = mkOption {
       type = types.path;
       default = "/var/lib/hydron";
       example = "/home/okina/hydron";
-      description = lib.mdDoc "Location where hydron runs and stores data.";
+      description = mdDoc "Location where hydron runs and stores data.";
     };
 
     interval = mkOption {
       type = types.str;
       default = "weekly";
       example = "06:00";
-      description = lib.mdDoc ''
+      description = mdDoc ''
         How often we run hydron import and possibly fetch tags. Runs by default every week.
 
         The format is described in
@@ -29,19 +44,19 @@ in with lib; {
       type = types.str;
       default = "hydron";
       example = "dumbpass";
-      description = lib.mdDoc "Password for the hydron database.";
+      description = mdDoc "Password for the hydron database.";
     };
 
     passwordFile = mkOption {
       type = types.path;
       default = "/run/keys/hydron-password-file";
       example = "/home/okina/hydron/keys/pass";
-      description = lib.mdDoc "Password file for the hydron database.";
+      description = mdDoc "Password file for the hydron database.";
     };
 
     postgresArgs = mkOption {
       type = types.str;
-      description = lib.mdDoc "Postgresql connection arguments.";
+      description = mdDoc "Postgresql connection arguments.";
       example = ''
         {
           "driver": "postgres",
@@ -54,27 +69,27 @@ in with lib; {
       type = types.path;
       default = "/run/keys/hydron-postgres-args";
       example = "/home/okina/hydron/keys/postgres";
-      description = lib.mdDoc "Postgresql connection arguments file.";
+      description = mdDoc "Postgresql connection arguments file.";
     };
 
     listenAddress = mkOption {
       type = types.nullOr types.str;
       default = null;
       example = "127.0.0.1:8010";
-      description = lib.mdDoc "Listen on a specific IP address and port.";
+      description = mdDoc "Listen on a specific IP address and port.";
     };
 
     importPaths = mkOption {
       type = types.listOf types.path;
       default = [];
       example = [ "/home/okina/Pictures" ];
-      description = lib.mdDoc "Paths that hydron will recursively import.";
+      description = mdDoc "Paths that hydron will recursively import.";
     };
 
     fetchTags = mkOption {
       type = types.bool;
       default = true;
-      description = lib.mdDoc "Fetch tags for imported images and webm from gelbooru.";
+      description = mdDoc "Fetch tags for imported images and webm from gelbooru.";
     };
   };
 
