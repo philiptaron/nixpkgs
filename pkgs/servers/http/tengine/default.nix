@@ -7,7 +7,19 @@
 , ...
 }:
 
-with lib;
+let
+  inherit (lib)
+    concatMap
+    concatMapStringsSep
+    licenses
+    maintainers
+    optional
+    optionals
+    optionalString
+    platforms
+    singleton
+    ;
+in
 
 stdenv.mkDerivation rec {
   version = "3.1.0";
