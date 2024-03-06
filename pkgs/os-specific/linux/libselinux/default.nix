@@ -6,7 +6,14 @@
 
 assert enablePython -> swig != null && python3 != null;
 
-with lib;
+let
+  inherit (lib)
+    getLib
+    optional
+    optionals
+    optionalString
+    ;
+in
 
 stdenv.mkDerivation rec {
   pname = "libselinux";
@@ -65,7 +72,7 @@ stdenv.mkDerivation rec {
     "SBINDIR=$(bin)/sbin"
     "SHLIBDIR=$(out)/lib"
 
-    "LIBSEPOLA=${lib.getLib libsepol}/lib/libsepol.a"
+    "LIBSEPOLA=${getLib libsepol}/lib/libsepol.a"
     "ARCH=${stdenv.hostPlatform.linuxArch}"
   ] ++ optionals (fts != null) [
     "FTS_LDLIBS=-lfts"
@@ -77,7 +84,7 @@ stdenv.mkDerivation rec {
     "PYTHON_SETUP_ARGS=--no-build-isolation"
   ];
 
-  postPatch = lib.optionalString stdenv.hostPlatform.isMusl ''
+  postPatch = optionalString stdenv.hostPlatform.isMusl ''
     substituteInPlace src/procattr.c \
       --replace "#include <unistd.h>" ""
   '';
