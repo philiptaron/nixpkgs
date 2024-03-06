@@ -1,6 +1,12 @@
 { lib, stdenv, fetchFromGitHub }:
 
-with lib;
+let
+  inherit (lib)
+    licenses
+    maintainers
+    platforms
+    ;
+in
 
 stdenv.mkDerivation rec {
   pname = "pure-prompt";
