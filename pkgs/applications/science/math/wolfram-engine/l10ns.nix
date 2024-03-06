@@ -4,7 +4,16 @@
 , majorVersion ? null
 }:
 
-let allVersions = with lib; flip map
+let
+  inherit (lib)
+    elemAt
+    findFirst
+    flip
+    optionalString
+    splitVersion
+    ;
+
+  allVersions = flip map
   # N.B. Versions in this list should be ordered from newest to oldest.
   [
     {
@@ -57,14 +66,15 @@ let allVersions = with lib; flip map
       inherit sha256;
     };
   });
-minVersion =
-  with lib;
-  if majorVersion == null
-  then elemAt (builtins.splitVersion (elemAt allVersions 0).version) 0
-  else majorVersion;
-maxVersion = toString (1 + builtins.fromJSON minVersion);
+
+  minVersion =
+    if majorVersion == null
+    then elemAt (builtins.splitVersion (elemAt allVersions 0).version) 0
+    else majorVersion;
+
+  maxVersion = toString (1 + builtins.fromJSON minVersion);
+
 in
-with lib;
 findFirst (l: (l.lang == lang
                && l.version >= minVersion
                && l.version < maxVersion))
