@@ -16,6 +16,8 @@
 }:
 
 let
+  inherit (lib) concatMapStringsSep;
+
   gsettingsOverridePackages = [
     dde-dock
     startdde
@@ -26,9 +28,7 @@ let
     deepin-system-monitor
     gsettings-desktop-schemas # dde-appearance need org.gnome.desktop.background
   ] ++ extraGSettingsOverridePackages;
-
 in
-with lib;
 
 # TODO: Having https://github.com/NixOS/nixpkgs/issues/54150 would supersede this
 runCommand "nixos-gsettings-desktop-schemas" { preferLocalBuild = true; }
