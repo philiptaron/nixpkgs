@@ -1,8 +1,13 @@
 { lib, stdenv, fetchurl, kernel, alsa-lib }:
 
-with lib;
-
 let
+  inherit (lib)
+    licenses
+    maintainers
+    makeLibraryPath
+    platforms
+    ;
+
   bits =
     if stdenv.is64bit then "64"
     else "32";
