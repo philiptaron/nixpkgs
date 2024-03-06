@@ -4,7 +4,14 @@
 , libXinerama
 , imlib2 }:
 
-with lib;
+let
+  inherit (lib)
+    licenses
+    maintainers
+    platforms
+    sources
+    ;
+in
 stdenv.mkDerivation rec {
 
   pname = "fluxbox";
