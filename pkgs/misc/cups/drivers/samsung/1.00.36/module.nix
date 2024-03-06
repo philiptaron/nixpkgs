@@ -15,8 +15,13 @@
 # again after turning the device off and on.  atm i have no idea how
 # to fix this and no time to do more about it.
 {config, pkgs, lib ? pkgs.lib, ...}:
-with lib;
+
 let
+  inherit (lib)
+    mkEnableOption
+    mkIf
+    ;
+
   cfg = config.services.samsung-unified-linux-driver_1_00_36;
   pkg = pkgs.samsung-unified-linux-driver_1_00_36;
 in {
