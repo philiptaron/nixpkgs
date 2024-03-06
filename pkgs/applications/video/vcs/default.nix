@@ -3,8 +3,14 @@
 , util-linux, getopt
 , dejavu_fonts
 }:
-with lib;
 let
+  inherit (lib)
+    licenses
+    maintainers
+    makeBinPath
+    platforms
+    ;
+
   version = "1.13.4";
   gopt = if stdenv.isLinux then util-linux else getopt;
   runtimeDeps = [
