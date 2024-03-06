@@ -3,7 +3,13 @@
 
 # this is python3 only because setools only supports python3
 
-with lib;
+let
+  inherit (lib)
+    getLib
+    licenses
+    platforms
+    ;
+in
 
 stdenv.mkDerivation rec {
   pname = "selinux-python";
@@ -34,7 +40,7 @@ stdenv.mkDerivation rec {
     "BASHCOMPLETIONDIR=$(out)/share/bash-completion/completions"
     "PYTHON=python"
     "PYTHONLIBDIR=$(out)/${python3.sitePackages}"
-    "LIBSEPOLA=${lib.getLib libsepol}/lib/libsepol.a"
+    "LIBSEPOLA=${getLib libsepol}/lib/libsepol.a"
   ];
 
 
