@@ -5,10 +5,24 @@
 }:
 
 let
-  unionOfDisjoints = lib.fold lib.attrsets.unionOfDisjoint {};
+  inherit (lib)
+    any
+    attrsets
+    fold
+    hasSuffix
+    isDerivation
+    maintainers
+    makeScope
+    mapAttrs
+    optionalAttrs
+    pipe
+    recurseIntoAttrs
+    ;
+
+  unionOfDisjoints = fold attrsets.unionOfDisjoint {};
 
   addTests = name: drv:
-    if ! lib.isDerivation drv then
+    if ! isDerivation drv then
       drv
     else let
       inherit (drv) scriptName;
@@ -19,7 +33,7 @@ let
 
       {
         scriptName-is-valid = runCommand "mpvScripts.${name}.passthru.tests.scriptName-is-valid" {
-          meta.maintainers = with lib.maintainers; [ nicoo ];
+          meta.maintainers = with maintainers; [ nicoo ];
           preferLocalBuild = true;
         } ''
           if [ -e "${fullScriptPath}" ]; then
@@ -32,9 +46,9 @@ let
       }
 
       # can't check whether `fullScriptPath` is a directory, in pure-evaluation mode
-      (with lib; optionalAttrs (! any (s: hasSuffix s drv.passthru.scriptName) [ ".js" ".lua" ".so" ]) {
+      (optionalAttrs (! any (s: hasSuffix s drv.passthru.scriptName) [ ".js" ".lua" ".so" ]) {
         single-main-in-script-dir = runCommand "mpvScripts.${name}.passthru.tests.single-main-in-script-dir" {
-          meta.maintainers = with lib.maintainers; [ nicoo ];
+          meta.maintainers = with maintainers; [ nicoo ];
           preferLocalBuild = true;
         } ''
           die() {
@@ -57,7 +71,7 @@ let
 
   scope = self: let
     inherit (self) callPackage;
-  in lib.mapAttrs addTests {
+  in mapAttrs addTests {
     inherit (callPackage ./mpv.nix { })
       acompressor autocrop autodeint autoload;
     inherit (callPackage ./occivink.nix { })
@@ -90,9 +104,8 @@ let
   aliases = {
     youtube-quality = throw "'youtube-quality' is no longer maintained, use 'quality-menu' instead"; # added 2023-07-14
   };
-in
 
-with lib; pipe scope [
+in pipe scope [
   (makeScope newScope)
   (self:
     assert builtins.intersectAttrs self aliases == {};
