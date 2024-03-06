@@ -1,8 +1,21 @@
 { config, lib, pkgs, ... }:
 
 let
-  inherit (lib) generators literalExpression mkEnableOption mkPackageOption
-                mkIf mkOption recursiveUpdate types;
+  inherit (lib)
+    generators
+    literalExpression
+    maintainers
+    mdDoc
+    mkEnableOption
+    mkIf
+    mkOption
+    mkPackageOption
+    mkRemovedOptionModule
+    optional
+    recursiveUpdate
+    types
+    ;
+
   cfg = config.services.zeronet;
   dataDir = "/var/lib/zeronet";
   configFile = pkgs.writeText "zeronet.conf" (generators.toINI {} (recursiveUpdate defaultSettings cfg.settings));
@@ -16,9 +29,10 @@ let
       tor = if !cfg.tor then "disable" else if cfg.torAlways then "always" else "enable";
     };
   };
-in with lib; {
+
+in {
   options.services.zeronet = {
-    enable = mkEnableOption (lib.mdDoc "zeronet");
+    enable = mkEnableOption (mdDoc "zeronet");
 
     package = mkPackageOption pkgs "zeronet" { };
 
@@ -27,7 +41,7 @@ in with lib; {
       default = {};
       example = literalExpression "{ global.tor = enable; }";
 
-      description = lib.mdDoc ''
+      description = mdDoc ''
         {file}`zeronet.conf` configuration. Refer to
         <https://zeronet.readthedocs.io/en/latest/faq/#is-it-possible-to-use-a-configuration-file>
         for details on supported values;
@@ -37,7 +51,7 @@ in with lib; {
     port = mkOption {
       type = types.port;
       default = 43110;
-      description = lib.mdDoc "Optional zeronet web UI port.";
+      description = mdDoc "Optional zeronet web UI port.";
     };
 
     fileserverPort = mkOption {
@@ -45,19 +59,19 @@ in with lib; {
       # read-only config file and crashes
       type = types.port;
       default = 12261;
-      description = lib.mdDoc "Zeronet fileserver port.";
+      description = mdDoc "Zeronet fileserver port.";
     };
 
     tor = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc "Use TOR for zeronet traffic where possible.";
+      description = mdDoc "Use TOR for zeronet traffic where possible.";
     };
 
     torAlways = mkOption {
       type = types.bool;
       default = false;
-      description = lib.mdDoc "Use TOR for all zeronet traffic.";
+      description = mdDoc "Use TOR for all zeronet traffic.";
     };
   };
 
