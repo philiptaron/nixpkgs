@@ -4,9 +4,16 @@
 , version, hash, ...
 }:
 
-with lib;
-
 let
+  inherit (lib)
+    licenses
+    maintainers
+    optional
+    optionalString
+    platforms
+    versionAtLeast
+    ;
+
   isVer33 = versionAtLeast version "3.3";
 
 in stdenv.mkDerivation {
@@ -36,7 +43,7 @@ in stdenv.mkDerivation {
       --replace '#define PKG_LIBDIR "%s/@INSTALL_LIBDIR@"' "#define PKG_LIBDIR \"$out/lib/mariadb\"" \
       --replace '#define PLUGIN_DIR "%s/@INSTALL_PLUGINDIR@"' "#define PLUGIN_DIR \"$out/lib/mariadb/plugin\"" \
       --replace '#define PKG_PLUGINDIR "%s/@INSTALL_PLUGINDIR@"' "#define PKG_PLUGINDIR \"$out/lib/mariadb/plugin\""
-  '' + lib.optionalString stdenv.hostPlatform.isStatic ''
+  '' + optionalString stdenv.hostPlatform.isStatic ''
     # Disables all dynamic plugins
     substituteInPlace cmake/plugins.cmake \
       --replace 'if(''${CC_PLUGIN_DEFAULT} STREQUAL "DYNAMIC")' 'if(''${CC_PLUGIN_DEFAULT} STREQUAL "INVALID")'
