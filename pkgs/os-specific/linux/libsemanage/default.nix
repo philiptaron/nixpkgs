@@ -2,7 +2,13 @@
 , enablePython ? true, swig ? null, python ? null
 }:
 
-with lib;
+let
+  inherit (lib)
+    licenses
+    optional
+    optionals
+    ;
+in
 
 stdenv.mkDerivation rec {
   pname = "libsemanage";
@@ -49,6 +55,6 @@ stdenv.mkDerivation rec {
 
   meta = removeAttrs libsepol.meta ["outputsToInstall"] // {
     description = "Policy management tools for SELinux";
-    license = lib.licenses.lgpl21;
+    license = licenses.lgpl21;
   };
 }
