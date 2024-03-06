@@ -19,9 +19,17 @@
 , pkg-config
 }:
 
-with lib;
-
 let
+  inherit (lib)
+    getAttr
+    getLib
+    hasAttr
+    licenses
+    maintainers
+    platforms
+    versionOlder
+    ;
+
   unfuck-releases = {
     "0.43.05" = {
       unfuckRelease = "0.43.05";
@@ -88,8 +96,8 @@ stdenv.mkDerivation {
   '';
 
   cmakeFlags = [
-    "-DGTK2_GLIBCONFIG_INCLUDE_DIR=${glib.out}/lib/glib-2.0/include"
-    "-DGTK2_GDKCONFIG_INCLUDE_DIR=${gtk2.out}/lib/gtk-2.0/include"
+    "-DGTK2_GLIBCONFIG_INCLUDE_DIR=${getLib glib}/lib/glib-2.0/include"
+    "-DGTK2_GDKCONFIG_INCLUDE_DIR=${getLib gtk2}/lib/gtk-2.0/include"
   ];
 
   nativeBuildInputs = [ cmake pkg-config ];
@@ -106,7 +114,7 @@ stdenv.mkDerivation {
     libGL
   ]
   # switched to gtk3 in 0.47.05
-  ++ (if lib.versionOlder release.unfuckRelease "0.47.05" then [
+  ++ (if versionOlder release.unfuckRelease "0.47.05" then [
     gtk2
   ] else [
     gtk3
