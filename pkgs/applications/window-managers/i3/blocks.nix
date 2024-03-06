@@ -1,6 +1,11 @@
 { fetchFromGitHub, fetchpatch, lib, stdenv, autoreconfHook, pkg-config }:
 
-with lib;
+let
+  inherit (lib)
+    licenses
+    platforms
+    ;
+in
 
 stdenv.mkDerivation {
   pname = "i3blocks";
