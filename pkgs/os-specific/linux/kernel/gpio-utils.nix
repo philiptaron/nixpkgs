@@ -1,6 +1,12 @@
 { lib, stdenv, linux }:
 
-with lib;
+let
+  inherit (lib)
+    licenses
+    maintainers
+    platforms
+    ;
+in
 
 stdenv.mkDerivation {
   pname = "gpio-utils";
