@@ -4,7 +4,12 @@
 
 # this is python3 only as it depends on selinux-python
 
-with lib;
+let
+  inherit (lib)
+    licenses
+    platforms
+    ;
+in
 with python3.pkgs;
 
 stdenv.mkDerivation rec {
