@@ -13,9 +13,16 @@
 
 assert extraSessionCommands != "" -> withBaseWrapper;
 
-with lib;
-
 let
+  inherit (lib)
+    concatMapStrings
+    getExe
+    optional
+    optionals
+    optionalString
+    replaceStrings
+    ;
+
   sway = sway-unwrapped.overrideAttrs (oa: { inherit isNixOS enableXWayland; });
   baseWrapper = writeShellScriptBin sway.meta.mainProgram ''
      set -o errexit
@@ -26,13 +33,13 @@ let
      fi
      if [ "$DBUS_SESSION_BUS_ADDRESS" ]; then
        export DBUS_SESSION_BUS_ADDRESS
-       exec ${lib.getExe sway} "$@"
+       exec ${getExe sway} "$@"
      else
-       exec ${lib.optionalString dbusSupport "${dbus}/bin/dbus-run-session"} ${lib.getExe sway} "$@"
+       exec ${optionalString dbusSupport "${dbus}/bin/dbus-run-session"} ${getExe sway} "$@"
      fi
    '';
 in symlinkJoin rec {
-  pname = lib.replaceStrings ["-unwrapped"] [""] sway.pname;
+  pname = replaceStrings ["-unwrapped"] [""] sway.pname;
   inherit (sway) version;
   name = "${pname}-${version}";
 
