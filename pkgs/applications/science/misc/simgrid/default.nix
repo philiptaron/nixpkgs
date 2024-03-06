@@ -12,9 +12,17 @@
 , withoutBin ? false
 }:
 
-with lib;
-
 let
+  inherit (lib)
+    licenses
+    maintainers
+    optional
+    optionals
+    optionalString
+    platforms
+    versions
+    ;
+
   optionOnOff = option: if option then "on" else "off";
 in
 
@@ -92,18 +100,18 @@ stdenv.mkDerivation rec {
     make tests -j $NIX_BUILD_CORES
   '';
 
-  postInstall = lib.optionalString withoutBin ''
+  postInstall = optionalString withoutBin ''
     # remove bin from output if requested.
     # having a specific bin output would be cleaner but it does not work currently (circular references)
     rm -rf $out/bin
-  '' + lib.optionalString buildPythonBindings ''
+  '' + optionalString buildPythonBindings ''
     # manually install the python binding if requested.
-    mkdir -p $python/lib/python${lib.versions.majorMinor python3.version}/site-packages/
-    cp ./lib/simgrid.cpython*.so $python/lib/python${lib.versions.majorMinor python3.version}/site-packages/
+    mkdir -p $python/lib/python${versions.majorMinor python3.version}/site-packages/
+    cp ./lib/simgrid.cpython*.so $python/lib/python${versions.majorMinor python3.version}/site-packages/
    '';
 
   # improve debuggability if requested
-  hardeningDisable = lib.optionals debug [ "fortify" ];
+  hardeningDisable = optionals debug [ "fortify" ];
   dontStrip = debug;
 
   meta = {
