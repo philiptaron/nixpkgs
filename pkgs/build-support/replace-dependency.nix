@@ -19,9 +19,20 @@
 # (and all of its dependencies) without rebuilding further.
 { drv, oldDependency, newDependency, verbose ? true }:
 
-with lib;
-
 let
+  inherit (lib)
+    any
+    attrNames
+    concatStringsSep
+    elem
+    filter
+    filterAttrs
+    listToAttrs
+    mapAttrsToList
+    stringLength
+    substring
+    ;
+
   warn = if verbose then builtins.trace else (x: y: y);
   references = import (runCommandLocal "references.nix" { exportReferencesGraph = [ "graph" drv ]; } ''
     (echo {
