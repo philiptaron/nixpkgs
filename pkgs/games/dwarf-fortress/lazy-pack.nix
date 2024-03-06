@@ -25,9 +25,16 @@
 , enableSound ? true
 }:
 
-with lib;
-
 let
+  inherit (lib)
+    getAttr
+    hasAttr
+    licenses
+    maintainers
+    optional
+    platforms
+    ;
+
   dfGame = versionToName dfVersion;
   dwarf-fortress =
     if hasAttr dfGame df-games
@@ -43,8 +50,8 @@ buildEnv {
         enableIntro enableTruetype enableFPS enableTextMode enableSound;
     })
   ]
-  ++ lib.optional enableDwarfTherapist dwarf-therapist
-  ++ lib.optional enableLegendsBrowser legends-browser;
+  ++ optional enableDwarfTherapist dwarf-therapist
+  ++ optional enableLegendsBrowser legends-browser;
 
   meta = with lib; {
     description = "An opinionated wrapper for Dwarf Fortress";
