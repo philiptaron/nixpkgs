@@ -23,9 +23,22 @@ config:
 
 , ...} @ args:
 
-with lib;
-
 let
+  inherit (lib)
+    attrValues
+    concatMap
+    concatMapStringsSep
+    concatStringsSep
+    hasAttr
+    licenses
+    maintainers
+    mapAttrsToList
+    optionals
+    optionalString
+    platforms
+    versionOlder
+    ;
+
   #TODO: fix paths instead
   scriptEnvPath = concatMapStringsSep ":" (x: "${x}/bin") [
     which perl
@@ -245,7 +258,7 @@ stdenv.mkDerivation (rec {
                     + withXenfiles (name: x: "* ${name}: ${x.meta.description or "(No description)"}.");
     platforms = [ "x86_64-linux" ];
     maintainers = [ ];
-    license = lib.licenses.gpl2;
+    license = licenses.gpl2;
     knownVulnerabilities = [
       # https://www.openwall.com/lists/oss-security/2023/03/21/1
       # Affects 3.2 (at *least*) - 4.17
@@ -258,7 +271,7 @@ stdenv.mkDerivation (rec {
       # Affects 4.15 - 4.17
       "CVE-2022-42331"
     # https://xenbits.xen.org/docs/unstable/support-matrix.html
-    ] ++ lib.optionals (lib.versionOlder version "4.15") [
+    ] ++ optionals (versionOlder version "4.15") [
       "This version of Xen has reached its end of life. See https://xenbits.xen.org/docs/unstable/support-matrix.html"
     ];
   } // (config.meta or {});
