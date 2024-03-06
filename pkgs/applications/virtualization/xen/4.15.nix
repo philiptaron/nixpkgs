@@ -20,13 +20,17 @@ assert withInternalSeabios -> !withSeabios;
 assert withInternalOVMF -> !withOVMF;
 assert !withLibHVM;
 
-with lib;
-
-# Patching XEN? Check the XSAs at
-# https://xenbits.xen.org/xsa/
-# and try applying all the ones we don't have yet.
-
 let
+  inherit (lib)
+    flatten
+    optional
+    optionalAttrs
+    ;
+
+  # Patching XEN? Check the XSAs at
+  # https://xenbits.xen.org/xsa/
+  # and try applying all the ones we don't have yet.
+
   xsa = import ./xsa-patches.nix { inherit fetchpatch; };
 
   qemuMemfdBuildFix = fetchpatch {
