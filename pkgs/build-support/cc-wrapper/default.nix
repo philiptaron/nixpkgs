@@ -55,16 +55,35 @@
 , includeFortifyHeaders ? null
 }:
 
-with lib;
-
 assert nativeTools -> !propagateDoc && nativePrefix != "";
-assert !nativeTools ->
-  cc != null && coreutils != null && gnugrep != null;
+assert !nativeTools -> cc != null && coreutils != null && gnugrep != null;
 assert !(nativeLibc && noLibc);
 assert (noLibc || nativeLibc) == (libc == null);
 
 let
+  inherit (lib)
+    attrByPath
+    concat
+    concatMapStrings
+    concatStringsSep
+    getBin
+    getDev
+    getLib
+    getName
+    getVersion
+    mapAttrsToList
+    optional
+    optionalAttrs
+    optionals
+    optionalString
+    removePrefix
+    replaceStrings
+    toList
+    versionAtLeast
+    ;
+
   stdenv = stdenvNoCC;
+
   inherit (stdenv) hostPlatform targetPlatform;
 
   includeFortifyHeaders' = if includeFortifyHeaders != null
@@ -75,11 +94,11 @@ let
   #
   # TODO(@Ericson2314) Make unconditional, or optional but always true by
   # default.
-  targetPrefix = lib.optionalString (targetPlatform != hostPlatform)
+  targetPrefix = optionalString (targetPlatform != hostPlatform)
                                            (targetPlatform.config + "-");
 
-  ccVersion = lib.getVersion cc;
-  ccName = lib.removePrefix targetPrefix (lib.getName cc);
+  ccVersion = getVersion cc;
+  ccName = removePrefix targetPrefix (getName cc);
 
   libc_bin = optionalString (libc != null) (getBin libc);
   libc_dev = optionalString (libc != null) (getDev libc);
@@ -98,7 +117,7 @@ let
   suffixSalt = replaceStrings ["-" "."] ["_" "_"] targetPlatform.config;
 
   expand-response-params =
-    lib.optionalString ((buildPackages.stdenv.hasCC or false) && buildPackages.stdenv.cc != "/dev/null") (import ../expand-response-params { inherit (buildPackages) stdenv; });
+    optionalString ((buildPackages.stdenv.hasCC or false) && buildPackages.stdenv.cc != "/dev/null") (import ../expand-response-params { inherit (buildPackages) stdenv; });
 
   useGccForLibs = useCcForLibs
     && libcxx == null
@@ -111,7 +130,7 @@ let
     + optionalString (targetPlatform != hostPlatform) "/${targetPlatform.config}";
 
   # Analogously to cc_solib and gccForLibs_solib
-  libcxx_solib = "${lib.getLib libcxx}/lib";
+  libcxx_solib = "${getLib libcxx}/lib";
 
   # The following two functions, `isGccArchSupported` and
   # `isGccTuneSupported`, only handle those situations where a flag
@@ -407,9 +426,9 @@ stdenv.mkDerivation {
 
   setupHooks = [
     ../setup-hooks/role.bash
-  ] ++ lib.optional (cc.langC or true) ./setup-hook.sh
-    ++ lib.optional (cc.langFortran or false) ./fortran-hook.sh
-    ++ lib.optional (targetPlatform.isWindows) (stdenv.mkDerivation {
+  ] ++ optional (cc.langC or true) ./setup-hook.sh
+    ++ optional (cc.langFortran or false) ./fortran-hook.sh
+    ++ optional (targetPlatform.isWindows) (stdenv.mkDerivation {
       name = "win-dll-hook.sh";
       dontUnpack = true;
       installPhase = ''
@@ -476,7 +495,7 @@ stdenv.mkDerivation {
     # when building e.g. firefox), lld is able to find libgcc_s.so
     + concatMapStrings (libgcc: ''
       echo "-L${libgcc}/lib" >> $out/nix-support/cc-ldflags
-    '') (lib.toList (gccForLibs.libgcc or [])))
+    '') (toList (gccForLibs.libgcc or [])))
 
     ##
     ## General libc support
@@ -484,8 +503,8 @@ stdenv.mkDerivation {
 
     # The "-B${libc_lib}/lib/" flag is a quick hack to force gcc to link
     # against the crt1.o from our own glibc, rather than the one in
-    # /usr/lib.  (This is only an issue when using an `impure'
-    # compiler/linker, i.e., one that searches /usr/lib and so on.)
+    # `/usr/lib`.  (This is only an issue when using an `impure'
+    # compiler/linker, i.e., one that searches `/usr/lib` and so on.)
     #
     # Unfortunately, setting -B appears to override the default search
     # path. Thus, the gcc-specific "../includes-fixed" directory is
@@ -542,8 +561,8 @@ stdenv.mkDerivation {
       done
     ''
     + optionalString (libcxx.isLLVM or false) ''
-      echo "-isystem ${lib.getDev libcxx}/include/c++/v1" >> $out/nix-support/libcxx-cxxflags
-      echo "-isystem ${lib.getDev libcxx.cxxabi}/include/c++/v1" >> $out/nix-support/libcxx-cxxflags
+      echo "-isystem ${getDev libcxx}/include/c++/v1" >> $out/nix-support/libcxx-cxxflags
+      echo "-isystem ${getDev libcxx.cxxabi}/include/c++/v1" >> $out/nix-support/libcxx-cxxflags
       echo "-stdlib=libc++" >> $out/nix-support/libcxx-ldflags
       echo "-l${libcxx.cxxabi.libName}" >> $out/nix-support/libcxx-ldflags
     ''
@@ -709,8 +728,8 @@ stdenv.mkDerivation {
     ## Extra custom steps
     ##
     + extraBuildCommands
-    + lib.strings.concatStringsSep "; "
-      (lib.attrsets.mapAttrsToList
+    + concatStringsSep "; "
+      (mapAttrsToList
         (name: value: "echo ${toString value} >> $out/nix-support/${name}")
         nixSupport);
 
@@ -733,10 +752,10 @@ stdenv.mkDerivation {
   };
 
   meta =
-    let cc_ = lib.optionalAttrs (cc != null) cc; in
-    (lib.optionalAttrs (cc_ ? meta) (removeAttrs cc.meta ["priority"])) //
+    let cc_ = optionalAttrs (cc != null) cc; in
+    (optionalAttrs (cc_ ? meta) (removeAttrs cc.meta ["priority"])) //
     { description =
-        lib.attrByPath ["meta" "description"] "System C compiler" cc_
+        attrByPath ["meta" "description"] "System C compiler" cc_
         + " (wrapper script)";
       priority = 10;
       mainProgram = if name != "" then name else ccName;
