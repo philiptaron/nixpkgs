@@ -11,6 +11,17 @@
 }:
 
 let
+  inherit (lib)
+    enableFeature
+    licenses
+    maintainers
+    optional
+    optionals
+    optionalString
+    platforms
+    versionAtLeast
+    ;
+
   pname = "rxvt-unicode";
   version = "9.31";
   description = "A clone of the well-known terminal emulator rxvt";
@@ -31,9 +42,8 @@ let
       extraPrefix = "";
       inherit name sha256;
     };
-in
 
-with lib;
+in
 
 stdenv.mkDerivation {
   name = "${pname}-unwrapped-${version}";
@@ -96,7 +106,7 @@ stdenv.mkDerivation {
       mkdir -p $terminfo/share/terminfo
       export TERMINFO=$terminfo/share/terminfo
     ''
-    + lib.optionalString perlSupport ''
+    + optionalString perlSupport ''
       # make urxvt find its perl file lib/perl5/site_perl
       # is added to PERL5LIB automatically
       mkdir -p $out/$(dirname ${perl.libPrefix})
