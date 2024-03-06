@@ -11,8 +11,18 @@
 , zlib
 }:
 
-with lib;
 let
+  inherit (lib)
+    elemAt
+    licenses
+    maintainers
+    makeBinPath
+    optional
+    platforms
+    sourceTypes
+    splitString
+    ;
+
   info = splitString "-" stdenv.hostPlatform.system;
   arch = elemAt info 0;
   plat = elemAt info 1;
@@ -46,7 +56,7 @@ stdenv.mkDerivation rec {
   '';
 
   nativeBuildInputs = [ makeWrapper ]
-    ++ lib.optional (!stdenv.hostPlatform.isDarwin) autoPatchelfHook;
+    ++ optional (!stdenv.hostPlatform.isDarwin) autoPatchelfHook;
 
   buildInputs = [ jre_headless util-linux zlib ];
 
@@ -72,7 +82,7 @@ stdenv.mkDerivation rec {
 
   meta = {
     description = "Open Source, Distributed, RESTful Search Engine";
-    sourceProvenance = with lib.sourceTypes; [
+    sourceProvenance = with sourceTypes; [
       binaryBytecode
       binaryNativeCode
     ];
