@@ -10,9 +10,17 @@
 , extraPackages ? [], extraBuildCommands ? ""
 }:
 
-with lib;
-
 let
+  inherit (lib)
+    attrByPath
+    getBin
+    optional
+    optionalAttrs
+    optionals
+    optionalString
+    replaceStrings
+    ;
+
   stdenv = stdenvNoCC;
   inherit (stdenv) hostPlatform targetPlatform;
 
@@ -20,7 +28,7 @@ let
   #
   # TODO(@Ericson2314) Make unconditional, or optional but always true by
   # default.
-  targetPrefix = lib.optionalString (targetPlatform != hostPlatform)
+  targetPrefix = optionalString (targetPlatform != hostPlatform)
                                         (targetPlatform.config + "-");
 
   # See description in cc-wrapper.
@@ -49,7 +57,7 @@ stdenv.mkDerivation {
   dontUnpack = true;
 
   # Additional flags passed to pkg-config.
-  addFlags = lib.optional stdenv.targetPlatform.isStatic "--static";
+  addFlags = optional stdenv.targetPlatform.isStatic "--static";
 
   installPhase =
     ''
@@ -70,7 +78,7 @@ stdenv.mkDerivation {
     # symlink in share for autoconf to find macros
 
     # TODO(@Ericson2314): in the future just make the unwrapped pkg-config a
-    # propagated dep once we can rely on downstream deps comming first in
+    # propagated dep once we can rely on downstream deps coming first in
     # search paths. (https://github.com/NixOS/nixpkgs/pull/31414 took a crack
     # at this.)
     + ''
@@ -119,10 +127,10 @@ stdenv.mkDerivation {
   };
 
   meta =
-    let pkg-config_ = lib.optionalAttrs (pkg-config != null) pkg-config; in
-    (lib.optionalAttrs (pkg-config_ ? meta) (removeAttrs pkg-config.meta ["priority"])) //
+    let pkg-config_ = optionalAttrs (pkg-config != null) pkg-config; in
+    (optionalAttrs (pkg-config_ ? meta) (removeAttrs pkg-config.meta ["priority"])) //
     { description =
-        lib.attrByPath ["meta" "description"] "pkg-config" pkg-config_
+        attrByPath ["meta" "description"] "pkg-config" pkg-config_
         + " (wrapper script)";
       priority = 10;
   };
