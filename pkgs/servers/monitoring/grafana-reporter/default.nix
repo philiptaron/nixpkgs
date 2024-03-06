@@ -1,6 +1,12 @@
 { lib, buildGoPackage, fetchFromGitHub, tetex, makeWrapper }:
 
-with lib;
+let
+  inherit (lib)
+    licenses
+    maintainers
+    makeBinPath
+    ;
+in
 
 buildGoPackage rec {
   pname = "reporter";
