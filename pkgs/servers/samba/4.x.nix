@@ -48,9 +48,18 @@
 , enablePam ? (!stdenv.isDarwin), pam
 }:
 
-with lib;
-
 let
+  inherit (lib)
+    getBin
+    getDev
+    licenses
+    maintainers
+    optional
+    optionals
+    optionalString
+    platforms
+    ;
+
   # samba-tool requires libxcrypt-legacy algorithms
   python = python3Packages.python.override {
     libxcrypt = libxcrypt-legacy;
@@ -124,7 +133,7 @@ stdenv.mkDerivation rec {
     ++ optional enableMDNS avahi
     ++ optionals enableDomainController [ gpgme lmdb python3Packages.dnspython ]
     ++ optional enableRegedit ncurses
-    ++ optional (enableCephFS && stdenv.isLinux) (lib.getDev ceph)
+    ++ optional (enableCephFS && stdenv.isLinux) (getDev ceph)
     ++ optionals (enableGlusterFS && stdenv.isLinux) [ glusterfs libuuid ]
     ++ optional enableAcl acl
     ++ optional enableLibunwind libunwind
@@ -202,12 +211,12 @@ stdenv.mkDerivation rec {
     read -r -d "" SCRIPT << EOF || true
     [ -z "\$SAMBA_LIBS" ] && exit 1;
     BIN='{}';
-  '' + lib.optionalString stdenv.isLinux ''
+  '' + optionalString stdenv.isLinux ''
     OLD_LIBS="\$(patchelf --print-rpath "\$BIN" 2>/dev/null | tr ':' '\n')";
     ALL_LIBS="\$(echo -e "\$SAMBA_LIBS\n\$OLD_LIBS" | sort | uniq | tr '\n' ':')";
     patchelf --set-rpath "\$ALL_LIBS" "\$BIN" 2>/dev/null || exit $?;
     patchelf --shrink-rpath "\$BIN";
-  '' + lib.optionalString stdenv.isDarwin ''
+  '' + optionalString stdenv.isDarwin ''
     install_name_tool -id \$BIN \$BIN
     for old_rpath in \$(otool -L \$BIN | grep /private/tmp/ | awk '{print \$1}'); do
       new_rpath=\$(find \$SAMBA_LIBS -name \$(basename \$old_rpath) | head -n 1)
@@ -224,12 +233,12 @@ stdenv.mkDerivation rec {
     # Samba does its own shebang patching, but uses build Python
     find $out/bin -type f -executable | while read file; do
       isScript "$file" || continue
-      sed -i 's^${lib.getBin buildPackages.python3Packages.python}^${lib.getBin python}^' "$file"
+      sed -i 's^${getBin buildPackages.python3Packages.python}^${getBin python}^' "$file"
     done
   '';
 
   disallowedReferences =
-    lib.optionals (buildPackages.python3Packages.python != python3Packages.python)
+    optionals (buildPackages.python3Packages.python != python3Packages.python)
       [ buildPackages.python3Packages.python ];
 
   passthru = {
