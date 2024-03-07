@@ -97,20 +97,20 @@ let
     inherit (self.strings) concatStrings concatMapStrings concatImapStrings
       intersperse concatStringsSep concatMapStringsSep
       concatImapStringsSep concatLines makeSearchPath makeSearchPathOutput
-      makeLibraryPath makeBinPath optionalString
+      makeLibraryPath makeBinPath match optionalString
       hasInfix hasPrefix hasSuffix stringToCharacters stringAsChars escape
       escapeShellArg escapeShellArgs
       isStorePath isStringLike
       isValidPosixName toShellVar toShellVars
       escapeRegex escapeURL escapeXML replaceChars lowerChars
-      upperChars toLower toUpper addContextFrom splitString
+      upperChars toLower toUpper addContextFrom split splitString
       removePrefix removeSuffix versionOlder versionAtLeast
-      getName getVersion
+      getName getVersion typeOf
       cmakeOptionType cmakeBool cmakeFeature
       mesonOption mesonBool mesonEnable
       nameFromURL enableFeature enableFeatureAs withFeature
       withFeatureAs fixedWidthString fixedWidthNumber
-      toInt toIntBase10 readPathsFromFile fileContents;
+      toInt toIntBase10 toJSON readPathsFromFile fileContents;
     inherit (self.stringsWithDeps) textClosureList textClosureMap
       noDepEntry fullDepEntry packEntry stringAfter;
     inherit (self.customisation) overrideDerivation makeOverridable
