@@ -19,9 +19,8 @@
 , fetchpatch
 }:
 
-with lib.strings;
-
 let
+  inherit (lib.strings) concatStringsSep makeLibraryPath;
 
   version = "2.70.3";
 
@@ -188,7 +187,7 @@ let
 
       propagatedBuildInputs = [ faust ] ++ propagatedBuildInputs;
 
-      libPath = lib.makeLibraryPath propagatedBuildInputs;
+      libPath = makeLibraryPath propagatedBuildInputs;
 
       postFixup = ''
 
@@ -224,8 +223,7 @@ let
 
     let
 
-      runtimePath =
-        concatStringsSep ":" (map (p: "${p}/bin") ([ faust ] ++ runtimeInputs));
+      runtimePath = concatStringsSep ":" (map (p: "${p}/bin") ([ faust ] ++ runtimeInputs));
 
     in
       stdenv.mkDerivation ((faust2ApplBase args) // {
