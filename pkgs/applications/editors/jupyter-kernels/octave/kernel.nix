@@ -1,6 +1,12 @@
 { lib, python3Packages, fetchPypi }:
 
-with python3Packages;
+let
+  inherit (python3Packages)
+    buildPythonPackage
+    metakernel
+    ipykernel
+    ;
+in
 
 buildPythonPackage rec {
   pname = "octave-kernel";
