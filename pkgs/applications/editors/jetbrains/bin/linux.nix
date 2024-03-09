@@ -42,7 +42,7 @@ let
     + ".vmoptions";
 in
 
-with stdenv; lib.makeOverridable mkDerivation (rec {
+lib.makeOverridable stdenv.mkDerivation (finalAttrs: {
   inherit pname version src;
   passthru.buildNumber = buildNumber;
   meta = args.meta // { mainProgram = pname; };
@@ -100,7 +100,7 @@ with stdenv; lib.makeOverridable mkDerivation (rec {
     cp ${fsnotifier}/bin/fsnotifier $out/$pname/bin/fsnotifier
 
     jdk=${jdk.home}
-    item=${desktopItem}
+    item=${finalAttrs.desktopItem}
 
     wrapProgram  "$out/$pname/bin/${loName}.sh" \
       --prefix PATH : "${lib.makeBinPath [ jdk coreutils gnugrep which git ]}" \
@@ -112,7 +112,7 @@ with stdenv; lib.makeOverridable mkDerivation (rec {
       --set-default JAVA_HOME "$jdk" \
       --set-default JETBRAINSCLIENT_JDK "$jdk" \
       --set-default ${hiName}_JDK "$jdk" \
-      --set-default ${hiName}_VM_OPTIONS ${vmoptsFile}
+      --set-default ${hiName}_VM_OPTIONS ${finalAttrs.vmoptsFile}
 
     ln -s "$out/$pname/bin/${loName}.sh" $out/bin/$pname
     rm -rf $out/$pname/plugins/remote-dev-server/selfcontained/
