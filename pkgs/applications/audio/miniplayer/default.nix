@@ -3,7 +3,19 @@
 , fetchPypi
 }:
 
-with python3Packages;
+let
+  inherit (python3Packages)
+    buildPythonApplication
+    colorthief
+    ffmpeg-python
+    mpd2
+    pillow
+    pixcat
+    requests
+    ueberzug
+    setuptools
+    ;
+in
 
 buildPythonApplication rec {
   pname = "miniplayer";
@@ -16,6 +28,7 @@ buildPythonApplication rec {
   };
 
   propagatedBuildInputs = [
+    setuptools
     colorthief
     ffmpeg-python
     mpd2
