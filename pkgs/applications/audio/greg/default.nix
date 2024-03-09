@@ -1,6 +1,9 @@
 { lib, fetchFromGitHub, pythonPackages }:
 
-with pythonPackages; buildPythonApplication rec {
+let
+  inherit (pythonPackages) buildPythonApplication isPy3k setuptools feedparser;
+in
+buildPythonApplication rec {
   pname = "greg";
   version = "0.4.8";
 
