@@ -28561,7 +28561,9 @@ with pkgs;
 
   andika = callPackage ../data/fonts/andika { };
 
-  androguard = with python3.pkgs; toPythonApplication androguard;
+  androguard = python3.pkgs.toPythonApplication (python3.pkgs.androguard.override {
+    withGui = true;
+  });
 
   android-udev-rules = callPackage ../os-specific/linux/android-udev-rules { };
 

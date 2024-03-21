@@ -1,12 +1,18 @@
 { lib
 , buildPythonPackage
 , fetchFromGitHub
+, poetry-core
+, apkinspector
+, dataset
+, frida-python
 , future
 , networkx
 , pygments
+, loguru
 , lxml
 , colorama
 , matplotlib
+, mutf8
 , asn1crypto
 , click
 , pydot
@@ -14,6 +20,7 @@
 , packaging
 , pyqt5
 , pyperclip
+, pyyaml
 , nose
 , nose-timer
 , mock
@@ -31,33 +38,50 @@
 
 buildPythonPackage rec {
   pname = "androguard";
-  version = "4.1.0";
-  format = "setuptools";
+  version = "4.1.1";
+  pyproject = true;
 
   src = fetchFromGitHub {
     repo = pname;
     owner = pname;
     rev = "refs/tags/v${version}";
-    sha256 = "sha256-NJYiuAr/rfR24pAhQDysGWXH2bBuvTrJI1jkmrJS8+c=";
+    hash = "sha256-P6GUKUZZFTTKkGokmhKAnzWEijh+4bKYLbpGpEBdY5U=";
   };
+
+  postPatch = ''
+    # Already provided by Nix
+    sed -i "s/^PyQt5-Qt5.*//" pyproject.toml
+  '' + lib.optionalString (!withGui) ''
+    sed -i "s/^PyQt5.*//" pyproject.toml
+
+    # The UI is standalone.
+    rm -rf androguard/ui
+  '';
 
   nativeBuildInputs = [
     packaging
+    poetry-core
   ] ++ lib.optionals withGui [
     qt5.wrapQtAppsHook
   ];
 
   propagatedBuildInputs = [
+    apkinspector
     asn1crypto
     click
     colorama
+    dataset
     future
+    frida-python
     ipython
+    loguru
     lxml
     matplotlib
+    mutf8
     networkx
     pydot
     pygments
+    pyyaml
   ] ++ lib.optionals withGui [
     pyqt5
     pyperclip
@@ -73,6 +97,7 @@ buildPythonPackage rec {
     pyqt5
     python-magic
   ];
+
   inherit doCheck;
 
   # If it won't be verbose, you'll see nothing going on for a long time.

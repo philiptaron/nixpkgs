@@ -38,6 +38,7 @@ python3.pkgs.buildPythonApplication rec {
   ];
 
   pythonRelaxDeps = [
+    "androguard"
     "r2pipe"
   ];
 
