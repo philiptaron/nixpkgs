@@ -21,6 +21,11 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
 
+    -A)
+      nix_args+=(--arg nixos "$2")
+      shift 2
+      ;;
+
     --show-trace)
       nix_args+=("$1")
       shift
