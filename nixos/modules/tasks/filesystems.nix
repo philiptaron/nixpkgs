@@ -321,7 +321,7 @@ in
       notAutoResizable = fs: fs.autoResize && !(builtins.elem fs.fsType resizableFSes);
     in [
       { assertion = ! (fileSystems' ? cycle);
-        message = "The ‘fileSystems’ option can't be topologically sorted: mountpoint dependency path ${ls " -> " fileSystems'.cycle} loops to ${ls ", " fileSystems'.loops}";
+        message = "The ‘fileSystems’ option can't be topologically sorted: mountpoint dependency path ${ls " -> " (fileSystems'.cycle or [])} loops to ${ls ", " (fileSystems'.loops or [])}";
       }
       { assertion = ! (any notAutoResizable fileSystems);
         message = let
