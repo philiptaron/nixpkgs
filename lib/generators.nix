@@ -323,79 +323,143 @@ let
       in
         mapAny 0;
 
-  /* Pretty print a value, akin to `builtins.trace`.
-   * Should probably be a builtin as well.
-   * The pretty-printed string should be suitable for rendering default values
-   * in the NixOS manual. In particular, it should be as close to a valid Nix expression
-   * as possible.
-   */
-  toPretty = {
-    /* If this option is true, attrsets like { __pretty = fn; val = …; }
-       will use fn to convert val to a pretty printed representation.
-       (This means fn is type Val -> String.) */
-    allowPrettyValues ? false,
-    /* If this option is true, the output is indented with newlines for attribute sets and lists */
-    multiline ? true,
-    /* Initial indentation level */
-    indent ? ""
-  }:
+  /*
+    Pretty print a value, akin to `builtins.trace`. Should probably be a builtin as well.
+    The pretty-printed string should be suitable for rendering default values in the NixOS manual.
+    In particular, it should be as close to a valid Nix expression as possible.
+  */
+  toPretty =
+    {
+      /*
+        If this option is true, attrsets like { __pretty = fn; val = …; }
+        will use fn to convert val to a pretty printed representation.
+        (This means fn is type Val -> String.)
+      */
+      allowPrettyValues ? false,
+      # If this option is true, the output is indented with newlines for attribute sets and lists
+      multiline ? true,
+      # Initial indentation level
+      indent ? "",
+    }:
     let
-    go = indent: v:
-    let     introSpace = if multiline then "\n${indent}  " else " ";
-            outroSpace = if multiline then "\n${indent}" else " ";
-    in if   isInt      v then toString v
-    # toString loses precision on floats, so we use toJSON instead. This isn't perfect
-    # as the resulting string may not parse back as a float (e.g. 42, 1e-06), but for
-    # pretty-printing purposes this is acceptable.
-    else if isFloat    v then builtins.toJSON v
-    else if isString   v then
-      let
-        lines = filter (v: ! isList v) (split "\n" v);
-        escapeSingleline = escape [ "\\" "\"" "\${" ];
-        escapeMultiline = replaceStrings [ "\${" "''" ] [ "''\${" "'''" ];
-        singlelineResult = "\"" + concatStringsSep "\\n" (map escapeSingleline lines) + "\"";
-        multilineResult = let
+      escapeSingleline = escape [
+        "\\"
+        "\""
+        "\${"
+      ];
+
+      escapeMultiline =
+        replaceStrings
+          [
+            "\${"
+            "''"
+          ]
+          [
+            "''\${"
+            "'''"
+          ];
+
+      introSpace = if multiline then "\n${indent}  " else " ";
+      outroSpace = if multiline then "\n${indent}" else " ";
+
+      intGo = toString;
+
+      # toString loses precision on floats, so we use toJSON instead. This isn't perfect as the
+      # resulting string may not parse back as a float (e.g. 42, 1e-06), but for pretty-printing
+      # purposes this is acceptable.
+      floatGo = builtins.toJSON;
+
+      splitLines = v: filter (v: !isList v) (split "\n" v);
+
+      singleLineStringGo = lines: "\"" + concatStringsSep "\\n" (map escapeSingleline lines) + "\"";
+
+      multiLineStringGo =
+        lines:
+        let
           escapedLines = map escapeMultiline lines;
           # The last line gets a special treatment: if it's empty, '' is on its own line at the "outer"
           # indentation level. Otherwise, '' is appended to the last line.
           lastLine = last escapedLines;
-        in "''" + introSpace + concatStringsSep introSpace (init escapedLines)
-                + (if lastLine == "" then outroSpace else introSpace + lastLine) + "''";
-      in
-        if multiline && length lines > 1 then multilineResult else singlelineResult
-    else if true  ==   v then "true"
-    else if false ==   v then "false"
-    else if null  ==   v then "null"
-    else if isPath     v then toString v
-    else if isList     v then
-      if v == [] then "[ ]"
-      else "[" + introSpace
-        + concatMapStringsSep introSpace (go (indent + "  ")) v
-        + outroSpace + "]"
-    else if isFunction v then
-      let fna = functionArgs v;
-          showFnas = concatStringsSep ", " (mapAttrsToList
-                       (name: hasDefVal: if hasDefVal then name + "?" else name)
-                       fna);
-      in if fna == {}    then "<function>"
-                         else "<function, args: {${showFnas}}>"
-    else if isAttrs    v then
-      # apply pretty values if allowed
-      if allowPrettyValues && v ? __pretty && v ? val
-         then v.__pretty v.val
-      else if v == {} then "{ }"
-      else if v ? type && v.type == "derivation" then
-        "<derivation ${v.name or "???"}>"
-      else "{" + introSpace
-          + concatStringsSep introSpace (mapAttrsToList
-              (name: value:
-                "${escapeNixIdentifier name} = ${
-                  addErrorContext "while evaluating an attribute `${name}`"
-                    (go (indent + "  ") value)
-                };") v)
-        + outroSpace + "}"
-    else abort "generators.toPretty: should never happen (v = ${v})";
-  in go indent;
+        in
+        "''"
+        + introSpace
+        + concatStringsSep introSpace (init escapedLines)
+        + (if lastLine == "" then outroSpace else introSpace + lastLine)
+        + "''";
+
+      stringGo =
+        v:
+        let
+          lines = splitLines v;
+        in
+        if multiline && length lines > 1 then multiLineStringGo lines else singleLineStringGo lines;
+
+      listGo =
+        v:
+        if v == [ ] then
+          "[ ]"
+        else
+          "[" + introSpace + concatMapStringsSep introSpace (go (indent + "  ")) v + outroSpace + "]";
+
+      functionGo =
+        v:
+        let
+          fna = functionArgs v;
+          showFnas = concatStringsSep ", " (
+            mapAttrsToList (name: hasDefVal: if hasDefVal then name + "?" else name) fna
+          );
+        in
+        if fna == { } then "<function>" else "<function, args: {${showFnas}}>";
+
+      attrsetGo =
+        v:
+        # apply pretty values if allowed
+        if allowPrettyValues && v ? __pretty && v ? val then
+          v.__pretty v.val
+        else if v == { } then
+          "{ }"
+        else if v ? type && v.type == "derivation" then
+          "<derivation ${v.name or "???"}>"
+        else
+          "{"
+          + introSpace
+          + concatStringsSep introSpace (
+            mapAttrsToList (
+              name: value:
+              "${escapeNixIdentifier name} = ${
+                addErrorContext "while evaluating an attribute `${name}`" (go (indent + "  ") value)
+              };"
+            ) v
+          )
+          + outroSpace
+          + "}";
+
+      go =
+        indent: v:
+        if isInt v then
+          intGo v
+        else if isFloat v then
+          floatGo v
+        else if isString v then
+          stringGo v
+        else if true == v then
+          "true"
+        else if false == v then
+          "false"
+        else if null == v then
+          "null"
+        else if isPath v then
+          toString v
+        else if isList v then
+          listGo v
+        else if isFunction v then
+          functionGo v
+        else if isAttrs v then
+          attrsetGo v
+        else
+          abort "generators.toPretty: should never happen (v = ${v})";
+    in
+    go indent;
 
   # PLIST handling
   toPlist = {}: v: let
