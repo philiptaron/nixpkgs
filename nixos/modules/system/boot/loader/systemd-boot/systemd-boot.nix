@@ -327,11 +327,11 @@ in {
       }
       {
         assertion = cfg.xbootldrMountPoint == null || (hasPrefix "/" cfg.xbootldrMountPoint);
-        message = "The XBOOTLDR mount point '${generators.toPretty cfg.xbootldrMountPoint}' must be an absolute path";
+        message = "The XBOOTLDR mount point '${cfg.xbootldrMountPoint or "null"}' must be an absolute path";
       }
       {
         assertion = cfg.xbootldrMountPoint != efi.efiSysMountPoint;
-        message = "The XBOOTLDR mount point '${generators.toPretty cfg.xbootldrMountPoint}' cannot be the same as the ESP mount point '${generators.toPretty efi.efiSysMountPoint}'";
+        message = "The XBOOTLDR mount point '${cfg.xbootldrMountPoint or "null"}' cannot be the same as the ESP mount point '${efi.efiSysMountPoint or "null"}'";
       }
       {
         assertion = (config.boot.kernelPackages.kernel.features or { efiBootStub = true; }) ? efiBootStub;
