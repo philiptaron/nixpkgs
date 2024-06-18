@@ -70,6 +70,8 @@ let
 
   ## -- HELPER FUNCTIONS & DEFAULTS --
 
+  toPrettyDefault = toPretty { };
+
   /*
     Convert a value to a sensible default string representation.
     The builtin `toString` function has some strange defaults,
@@ -79,7 +81,8 @@ let
     { }:
     v:
     let
-      err = t: v: abort ("generators.mkValueStringDefault: " + "${t} not supported: ${toPretty { } v}");
+      err =
+        t: v: abort ("generators.mkValueStringDefault: " + "${t} not supported: ${toPrettyDefault v}");
     in
     if isInt v then
       toString v
@@ -432,8 +435,6 @@ let
       introSpace = if multiline then "\n${indent}  " else " ";
       outroSpace = if multiline then "\n${indent}" else " ";
 
-      intGo = toString;
-
       # toString loses precision on floats, so we use toJSON instead. This isn't perfect as the
       # resulting string may not parse back as a float (e.g. 42, 1e-06), but for pretty-printing
       # purposes this is acceptable.
@@ -471,21 +472,24 @@ let
         else
           "[" + introSpace + concatMapStringsSep introSpace (go (indent + "  ")) v + outroSpace + "]";
 
+      functionNameValueGo = name: hasDefaultValue: if hasDefaultValue then name + "?" else name;
+
       functionGo =
         v:
         let
-          fna = functionArgs v;
-          showFnas = concatStringsSep ", " (
-            mapAttrsToList (name: hasDefVal: if hasDefVal then name + "?" else name) fna
-          );
+          functionArgsV = functionArgs v;
+          showFunctionArgs = concatStringsSep ", " (mapAttrsToList functionNameValueGo functionArgsV);
         in
-        if fna == { } then "<function>" else "<function, args: {${showFnas}}>";
+        if functionArgsV == { } then "<function>" else "<function, args: {${showFunctionArgs}}>";
 
-      nameValueGo =
+      attrsetNameValueGo =
         name: value:
-        "${escapeNixIdentifier name} = ${
-          addErrorContext "while evaluating an attribute `${name}`" (go (indent + "  ") value)
-        };";
+        let
+          nameStr = escapeNixIdentifier name;
+          context = addErrorContext "while evaluating an attribute `${name}`";
+          valueStr = go (indent + "  ") value;
+        in
+        "${nameStr} = ${context valueStr}";
 
       attrsetGo =
         v:
@@ -497,13 +501,17 @@ let
         else if v ? type && v.type == "derivation" then
           "<derivation ${v.name or "???"}>"
         else
-          "{" + introSpace + concatStringsSep introSpace (mapAttrsToList nameValueGo v) + outroSpace + "}";
+          "{"
+          + introSpace
+          + concatStringsSep introSpace (mapAttrsToList attrsetNameValueGo v)
+          + outroSpace
+          + "}";
 
       go =
         indent: v:
         builtins.trace v (
           if isInt v then
-            intGo v
+            toString v
           else if isFloat v then
             floatGo v
           else if isString v then
@@ -694,7 +702,7 @@ let
         _type == "lua-inline";
 
       generatedBindings =
-        assert assertMsg (badVarNames == [ ]) "Bad Lua var names: ${toPretty { } badVarNames}";
+        assert assertMsg (badVarNames == [ ]) "Bad Lua var names: ${toPrettyDefault badVarNames}";
         concatStrings (mapAttrsToList (key: value: "${indent}${key} = ${toLua innerArgs value}\n") v);
 
       # https://en.wikibooks.org/wiki/Lua_Programming/variable#Variable_names
