@@ -40,7 +40,7 @@ in {
 
     haskellPackages = mkOption {
       description = "Which haskell package set to use.";
-      type = types.attrs;
+      type = types.pkgs;
       default = pkgs.haskellPackages;
       defaultText = literalExpression "pkgs.haskellPackages";
     };
