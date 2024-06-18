@@ -149,7 +149,7 @@ let
   renderRecursive =
     config:
     let
-      renderShort = n: v: "${lib.showOption (path' ++ n)} = ${safeToPretty v};";
+      renderShort = n: v: "${lib.showOption (path' ++ n)} = ${toPretty v};";
       mapAttrsRecursive' = safeMapAttrsRecursiveCond (x: !lib.isDerivation x);
     in
     if lib.isAttrs config then
