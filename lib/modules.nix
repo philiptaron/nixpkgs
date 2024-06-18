@@ -1092,7 +1092,7 @@ let
   */
   dischargeProperties =
     def:
-    builtins.trace def (
+    builtins.addErrorContext "attrNames: ${toString (builtins.attrNames def)}" (
       if def._type or "" == "merge" then
         concatMap dischargeProperties def.contents
       else if def._type or "" == "if" then
