@@ -1092,15 +1092,17 @@ let
   */
   dischargeProperties =
     def:
-    if def._type or "" == "merge" then
-      concatMap dischargeProperties def.contents
-    else if def._type or "" == "if" then
-      if isBool def.condition then
-        if def.condition then dischargeProperties def.content else [ ]
+    builtins.trace def (
+      if def._type or "" == "merge" then
+        concatMap dischargeProperties def.contents
+      else if def._type or "" == "if" then
+        if isBool def.condition then
+          if def.condition then dischargeProperties def.content else [ ]
+        else
+          throw "‘mkIf’ called with a non-Boolean condition"
       else
-        throw "‘mkIf’ called with a non-Boolean condition"
-    else
-      [ def ];
+        [ def ]
+    );
 
   /*
     Given a list of config values, process the mkOverride properties,
