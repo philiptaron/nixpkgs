@@ -28,6 +28,12 @@ let
     "resourcepacks" = pkgs.linkFarm "resourcepacks" cfg.resourcepacks;
   };
 
+  nginxVirtualHost =
+    if cfg.host == null then
+      assert config.networking.domain != null; "bluemap.${config.networking.domain}"
+    else
+      cfg.host;
+
   inherit (lib) mkOption;
 in {
   options.services.bluemap = {
@@ -70,9 +76,8 @@ in {
     };
 
     host = mkOption {
-      type = lib.types.str;
-      default = "bluemap.${config.networking.domain}";
-      defaultText = lib.literalExpression "bluemap.\${config.networking.domain}";
+      type = lib.types.nullOr lib.types.str;
+      default = null;
       description = "Domain to configure nginx for";
     };
 
@@ -267,6 +272,12 @@ in {
             You can achieve this through setting `services.bluemap.eula = true`
           '';
         }
+        { assertion = cfg.enableNginx -> (cfg.host != null && config.networking.domain != null);
+          message = ''
+            You have enabled nginx to serve the bluemap webapp, but have not assigned a host
+            to bluemap through setting `services.bluemap.host = "hostname"`.
+          '';
+        }
       ];
 
     services.bluemap.coreSettings.accept-download = cfg.eula;
@@ -292,7 +303,7 @@ in {
     };
 
     services.nginx.virtualHosts = lib.mkIf cfg.enableNginx {
-      "${cfg.host}" = {
+      "${nginxVirtualHost}" = {
         root = config.services.bluemap.webRoot;
         locations = {
           "~* ^/maps/[^/]*/tiles/[^/]*.json$".extraConfig = ''
