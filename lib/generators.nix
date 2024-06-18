@@ -415,7 +415,7 @@ let
       indent ? "",
     }:
     let
-      escapeSingleline = escape [
+      escapeSingleLine = escape [
         "\\"
         "\""
         "\${"
@@ -442,7 +442,7 @@ let
 
       splitLines = v: filter (v: !isList v) (split "\n" v);
 
-      singleLineStringGo = lines: "\"" + concatStringsSep "\\n" (map escapeSingleline lines) + "\"";
+      singleLineStringGo = lines: "\"" + concatStringsSep "\\n" (map escapeSingleLine lines) + "\"";
 
       multiLineStringGo =
         lines:
@@ -509,30 +509,28 @@ let
 
       go =
         indent: v:
-        builtins.trace v (
-          if isInt v then
-            toString v
-          else if isFloat v then
-            floatGo v
-          else if isString v then
-            stringGo v
-          else if true == v then
-            "true"
-          else if false == v then
-            "false"
-          else if null == v then
-            "null"
-          else if isPath v then
-            toString v
-          else if isList v then
-            listGo v
-          else if isFunction v then
-            functionGo v
-          else if isAttrs v then
-            attrsetGo v
-          else
-            abort "generators.toPretty: should never happen (v = ${v})"
-        );
+        if isInt v then
+          toString v
+        else if isFloat v then
+          floatGo v
+        else if isString v then
+          stringGo v
+        else if true == v then
+          "true"
+        else if false == v then
+          "false"
+        else if null == v then
+          "null"
+        else if isPath v then
+          toString v
+        else if isList v then
+          listGo v
+        else if isFunction v then
+          functionGo v
+        else if isAttrs v then
+          attrsetGo v
+        else
+          abort "generators.toPretty: should never happen (v = ${v})";
     in
     go indent;
 
