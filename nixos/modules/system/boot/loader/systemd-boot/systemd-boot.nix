@@ -14,7 +14,7 @@ let
     preferLocalBuild = true;
   } ''
     install -m755 -D ${./systemd-boot-builder.py} $out
-    ${lib.getExe pkgs.buildPackages.mypy} \
+    ${getExe pkgs.buildPackages.mypy} \
       --no-implicit-optional \
       --disallow-untyped-calls \
       --disallow-untyped-defs \
@@ -60,7 +60,7 @@ let
         exit 1
       }
       ${pkgs.util-linuxMinimal}/bin/findmnt ${efiSysMountPoint} > /dev/null || fail efiSysMountPoint ${efiSysMountPoint}
-      ${lib.optionalString
+      ${optionalString
         (cfg.xbootldrMountPoint != null)
         "${pkgs.util-linuxMinimal}/bin/findmnt ${cfg.xbootldrMountPoint} > /dev/null || fail xbootldrMountPoint ${cfg.xbootldrMountPoint}"}
     '';
@@ -87,19 +87,19 @@ let
   '';
 in {
 
-  meta.maintainers = with lib.maintainers; [ julienmalka ];
+  meta.maintainers = with maintainers; [ julienmalka ];
 
   imports =
     [ (mkRenamedOptionModule [ "boot" "loader" "gummiboot" "enable" ] [ "boot" "loader" "systemd-boot" "enable" ])
-      (lib.mkChangedOptionModule
+      (mkChangedOptionModule
         [ "boot" "loader" "systemd-boot" "memtest86" "entryFilename" ]
         [ "boot" "loader" "systemd-boot" "memtest86" "sortKey" ]
-        (config: lib.strings.removeSuffix ".conf" config.boot.loader.systemd-boot.memtest86.entryFilename)
+        (config: strings.removeSuffix ".conf" config.boot.loader.systemd-boot.memtest86.entryFilename)
       )
-      (lib.mkChangedOptionModule
+      (mkChangedOptionModule
         [ "boot" "loader" "systemd-boot" "netbootxyz" "entryFilename" ]
         [ "boot" "loader" "systemd-boot" "netbootxyz" "sortKey" ]
-        (config: lib.strings.removeSuffix ".conf" config.boot.loader.systemd-boot.netbootxyz.entryFilename)
+        (config: strings.removeSuffix ".conf" config.boot.loader.systemd-boot.netbootxyz.entryFilename)
       )
     ];
 
@@ -118,7 +118,7 @@ in {
 
     sortKey = mkOption {
       default = "nixos";
-      type = lib.types.str;
+      type = types.str;
       description = ''
         The sort key used for the NixOS bootloader entries.
         This key determines sorting relative to non-NixOS entries.
@@ -327,11 +327,11 @@ in {
       }
       {
         assertion = cfg.xbootldrMountPoint == null || (hasPrefix "/" cfg.xbootldrMountPoint);
-        message = "The XBOOTLDR mount point '${lib.generators.toPretty cfg.xbootldrMountPoint}' must be an absolute path";
+        message = "The XBOOTLDR mount point '${generators.toPretty cfg.xbootldrMountPoint}' must be an absolute path";
       }
       {
         assertion = cfg.xbootldrMountPoint != efi.efiSysMountPoint;
-        message = "The XBOOTLDR mount point '${cfg.xbootldrMountPoint}' cannot be the same as the ESP mount point '${efi.efiSysMountPoint}'";
+        message = "The XBOOTLDR mount point '${generators.toPretty cfg.xbootldrMountPoint}' cannot be the same as the ESP mount point '${generators.toPretty efi.efiSysMountPoint}'";
       }
       {
         assertion = (config.boot.kernelPackages.kernel.features or { efiBootStub = true; }) ? efiBootStub;
@@ -340,25 +340,25 @@ in {
     ] ++ concatMap (filename: [
       {
         assertion = !(hasInfix "/" filename);
-        message = "boot.loader.systemd-boot.extraEntries.${lib.strings.escapeNixIdentifier filename} is invalid: entries within folders are not supported";
+        message = "boot.loader.systemd-boot.extraEntries.${strings.escapeNixIdentifier filename} is invalid: entries within folders are not supported";
       }
       {
         assertion = hasSuffix ".conf" filename;
-        message = "boot.loader.systemd-boot.extraEntries.${lib.strings.escapeNixIdentifier filename} is invalid: entries must have a .conf file extension";
+        message = "boot.loader.systemd-boot.extraEntries.${strings.escapeNixIdentifier filename} is invalid: entries must have a .conf file extension";
       }
     ]) (builtins.attrNames cfg.extraEntries)
       ++ concatMap (filename: [
         {
           assertion = !(hasPrefix "/" filename);
-          message = "boot.loader.systemd-boot.extraFiles.${lib.strings.escapeNixIdentifier filename} is invalid: paths must not begin with a slash";
+          message = "boot.loader.systemd-boot.extraFiles.${strings.escapeNixIdentifier filename} is invalid: paths must not begin with a slash";
         }
         {
           assertion = !(hasInfix ".." filename);
-          message = "boot.loader.systemd-boot.extraFiles.${lib.strings.escapeNixIdentifier filename} is invalid: paths must not reference the parent directory";
+          message = "boot.loader.systemd-boot.extraFiles.${strings.escapeNixIdentifier filename} is invalid: paths must not reference the parent directory";
         }
         {
           assertion = !(hasInfix "nixos/.extra-files" (toLower filename));
-          message = "boot.loader.systemd-boot.extraFiles.${lib.strings.escapeNixIdentifier filename} is invalid: files cannot be placed in the nixos/.extra-files directory";
+          message = "boot.loader.systemd-boot.extraFiles.${strings.escapeNixIdentifier filename} is invalid: files cannot be placed in the nixos/.extra-files directory";
         }
       ]) (builtins.attrNames cfg.extraFiles);
 
