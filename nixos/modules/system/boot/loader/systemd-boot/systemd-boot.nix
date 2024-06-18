@@ -327,7 +327,7 @@ in {
       }
       {
         assertion = cfg.xbootldrMountPoint == null || (hasPrefix "/" cfg.xbootldrMountPoint);
-        message = "The XBOOTLDR mount point '${cfg.xbootldrMountPoint}' must be an absolute path";
+        message = "The XBOOTLDR mount point '${lib.generators.toPretty cfg.xbootldrMountPoint}' must be an absolute path";
       }
       {
         assertion = cfg.xbootldrMountPoint != efi.efiSysMountPoint;
