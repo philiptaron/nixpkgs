@@ -111,17 +111,18 @@ let
   nixos-taskserver = with pkgs.python3.pkgs; buildPythonApplication {
     name = "nixos-taskserver";
 
-    src = pkgs.runCommand "nixos-taskserver-src" { preferLocalBuild = true; } ''
-      mkdir -p "$out"
-      cat "${pkgs.substituteAll {
-        src = ./helper-tool.py;
+    src = let
+      helper-tool = pkgs.replaceVars ./helper-tool.py {
         inherit taskd certtool;
         inherit (cfg) dataDir user group fqdn;
         certBits = cfg.pki.auto.bits;
         clientExpiration = cfg.pki.auto.expiration.client;
         crlExpiration = cfg.pki.auto.expiration.crl;
         isAutoConfig = if needToCreateCA then "True" else "False";
-      }}" > "$out/main.py"
+      };
+    in pkgs.runCommand "nixos-taskserver-src" { preferLocalBuild = true; } ''
+      mkdir -p "$out"
+      cat "${helper-tool}" > "$out/main.py"
       cat > "$out/setup.py" <<EOF
       from setuptools import setup
       setup(name="nixos-taskserver",
