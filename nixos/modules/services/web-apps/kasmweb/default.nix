@@ -143,12 +143,10 @@ in
         ];
         serviceConfig = {
           Type = "oneshot";
-          ExecStart = pkgs.substituteAll {
-            src = ./initialize_kasmweb.sh;
+          ExecStart = pkgs.replaceVars ./initialize_kasmweb.sh {
             isExecutable = true;
             binPath = lib.makeBinPath [ pkgs.docker pkgs.openssl pkgs.gnused ];
-            runtimeShell = pkgs.runtimeShell;
-            kasmweb = pkgs.kasmweb;
+            inherit (pkgs) runtimeShell kasmweb;
             postgresUser = cfg.postgres.user;
             postgresPassword = cfg.postgres.password;
             inherit (cfg)
