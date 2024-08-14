@@ -4,8 +4,7 @@ with lib;
 
 let
 
-  generationsDirBuilder = pkgs.substituteAll {
-    src = ./generations-dir-builder.sh;
+  generationsDirBuilder = pkgs.replaceVars ./generations-dir-builder.sh {
     isExecutable = true;
     inherit (pkgs) bash;
     path = [pkgs.coreutils pkgs.gnused pkgs.gnugrep];
