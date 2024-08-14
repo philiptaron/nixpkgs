@@ -4,8 +4,7 @@ with lib;
 
 let
 
-  initScriptBuilder = pkgs.substituteAll {
-    src = ./init-script-builder.sh;
+  initScriptBuilder = pkgs.replaceVars ./init-script-builder.sh {
     isExecutable = true;
     inherit (pkgs) bash;
     inherit (config.system.nixos) distroName;
