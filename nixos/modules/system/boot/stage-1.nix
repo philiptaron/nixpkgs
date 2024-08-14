@@ -287,10 +287,8 @@ let
     ''; # */
 
 
-  # The init script of boot stage 1 (loading kernel modules for
-  # mounting the root FS).
-  bootStage1 = pkgs.substituteAll {
-    src = ./stage-1-init.sh;
+  # The init script of boot stage 1 (loading kernel modules for mounting the root FS).
+  bootStage1 = pkgs.replaceVars ./stage-1-init.sh {
 
     shell = "${extraUtils}/bin/ash";
 
