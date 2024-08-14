@@ -6,8 +6,7 @@ let
 
   useHostResolvConf = config.networking.resolvconf.enable && config.networking.useHostResolvConf;
 
-  bootStage2 = pkgs.substituteAll {
-    src = ./stage-2-init.sh;
+  bootStage2 = pkgs.replaceVars ./stage-2-init.sh {
     shellDebug = "${pkgs.bashInteractive}/bin/bash";
     shell = "${pkgs.bash}/bin/bash";
     inherit (config.boot) readOnlyNixStore systemdExecutable extraSystemdUnitPaths;
