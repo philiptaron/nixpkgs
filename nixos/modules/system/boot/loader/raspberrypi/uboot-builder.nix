@@ -23,8 +23,7 @@ let
       pkgs = pkgs.buildPackages;
     };
 in
-pkgs.substituteAll {
-  src = ./uboot-builder.sh;
+pkgs.replaceVars ./uboot-builder.sh {
   isExecutable = true;
   inherit (pkgs) bash;
   path = [pkgs.coreutils pkgs.gnused pkgs.gnugrep];
