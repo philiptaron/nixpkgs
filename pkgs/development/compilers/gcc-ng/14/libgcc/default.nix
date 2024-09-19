@@ -10,6 +10,8 @@ stdenv.mkDerivation rec {
   src = gcc_src;
 
   patches = [
+    # Submitted: https://gcc.gnu.org/pipermail/gcc-patches/2021-August/577880.html
+    # In Git: https://github.com/Ericson2314/gcc/tree/libgcc-custom-threading-model-14
     ../custom-threading-model.patch
   ];
 

@@ -1,5 +1,56 @@
+From 1eaf7ce77bb4eb73e5565ede220557c2ef0290b0 Mon Sep 17 00:00:00 2001
+From: John Ericson <git@JohnEricson.me>
+Date: Sun, 22 Aug 2021 01:14:22 -0400
+Subject: [PATCH] Allow explicitly specifying the thread model for runtime libs
+
+Previously, they always scraped the thread mode from `$CC -v', now, that
+is the default but one may pass `--with-threads=MODEL` to be explicit
+instead.
+
+One use-case is bootstraping with a shorter critical path. The
+traditionally route was to build an entire "static stage" GCC, build
+libc, and then build GCC again supporting dynamic linking,
+multithreading, etc. But this is wasteful in that GCC itself is built
+twice.
+
+With this change, rather than having to mess with spec files we can just
+configure the runtime libraries the way we want directly. In turn, that
+opens to just building libgcc twice rather than all of GCC.
+
+Frankly, specs were always a rather indirect approach to coordinate this
+during GCC's bootstrap, since GCC itself really doesn't care what the
+threading model is, just that the runtime libraries agree among
+themselves. Relying on a hard-coded spec for this also keeps us one step
+further from the long-term goal of multi-target GCC, for what it's
+worth.
+
+For the record, "single stage" builds of GCC have some precedent in
+downstream packaging, for example with [1]. That one, as far as I can
+tell, builds libgcc once, but with the headers of the libc
+implementation provided and then cyclic linking down later. They are
+both fine approaches, but I don't think one should have to be forced
+into cyclic dependencies if they don't want to. That opens the door to
+non-terminating programs due to, e.g., atomics used in a threads
+implementation being lowered to threads absent hardware support.
+
+Finally, I understand that such custom bootstrapping is not officially
+supported. I don't mean to imply it should be --- a lot more cleanup
+work to the build system would be necessary before supporting it
+wouldn't be a huge additional maintainer burden --- I just hope to add a
+reasonable knob for those comfortable with doing unsupported things
+already.
+
+[1]: https://github.com/richfelker/musl-cross-make
+---
+ config/gthr.m4              | 32 ++++++++++++++++++++++++++++++++
+ libatomic/configure.ac      |  4 +---
+ libgcc/configure.ac         |  4 +---
+ libphobos/m4/druntime/os.m4 |  2 +-
+ libstdc++-v3/acinclude.m4   |  8 +++-----
+ 5 files changed, 38 insertions(+), 12 deletions(-)
+
 diff --git a/config/gthr.m4 b/config/gthr.m4
-index 4b937306ad0..754e622f159 100644
+index 11996247f15..7aed5d3df0d 100644
 --- a/config/gthr.m4
 +++ b/config/gthr.m4
 @@ -5,6 +5,35 @@ dnl Public License, this file may be distributed as part of a program
@@ -38,10 +89,10 @@ index 4b937306ad0..754e622f159 100644
  dnl Define header location by thread model
  
  dnl usage: GCC_AC_THREAD_HEADER([thread_model])
-@@ -22,6 +51,9 @@ case $1 in
-     tpf)	thread_header=config/s390/gthr-tpf.h ;;
+@@ -23,6 +52,9 @@ case $1 in
      vxworks)	thread_header=config/gthr-vxworks.h ;;
      win32)	thread_header=config/i386/gthr-win32.h ;;
+     mcf)	thread_header=config/i386/gthr-mcf.h ;;
 +    *)
 +        AC_MSG_ERROR([No known header for threading model '$1'.])
 +        ;;
@@ -49,10 +100,10 @@ index 4b937306ad0..754e622f159 100644
  AC_SUBST(thread_header)
  ])
 diff --git a/libatomic/configure.ac b/libatomic/configure.ac
-index 2a371870c2f..42d2016b7a2 100644
+index 85824fa7614..691f4948f6c 100644
 --- a/libatomic/configure.ac
 +++ b/libatomic/configure.ac
-@@ -161,9 +161,7 @@ libtool_VERSION=3:0:2
+@@ -162,9 +162,7 @@ libtool_VERSION=3:0:2
  AC_SUBST(libtool_VERSION)
  
  # Check for used threading-model
@@ -64,10 +115,10 @@ index 2a371870c2f..42d2016b7a2 100644
  case "$target" in
   *aarch64*)
 diff --git a/libgcc/configure.ac b/libgcc/configure.ac
-index 13a80b2551b..1209a0986e0 100644
+index 4e8c036990f..acf54e24c79 100644
 --- a/libgcc/configure.ac
 +++ b/libgcc/configure.ac
-@@ -298,9 +298,7 @@ AC_SUBST([use_tm_clone_registry])
+@@ -305,9 +305,7 @@ AC_SUBST([use_tm_clone_registry])
  
  AC_LIB_PROG_LD_GNU
  
@@ -79,7 +130,7 @@ index 13a80b2551b..1209a0986e0 100644
  # Check for assembler CFI support.
  AC_CACHE_CHECK([whether assembler supports CFI directives], [libgcc_cv_cfi],
 diff --git a/libphobos/m4/druntime/os.m4 b/libphobos/m4/druntime/os.m4
-index 351558dbcda..2b44fbca8fc 100644
+index 15cde3b04b8..28bd4d3d2bd 100644
 --- a/libphobos/m4/druntime/os.m4
 +++ b/libphobos/m4/druntime/os.m4
 @@ -32,7 +32,7 @@ case $1 in
@@ -92,10 +143,10 @@ index 351558dbcda..2b44fbca8fc 100644
  AC_SUBST(DCFG_THREAD_MODEL)
  ])
 diff --git a/libstdc++-v3/acinclude.m4 b/libstdc++-v3/acinclude.m4
-index 1c0a4c13052..34a55d4e609 100644
+index 51a08bcc8b1..71697f59d6d 100644
 --- a/libstdc++-v3/acinclude.m4
 +++ b/libstdc++-v3/acinclude.m4
-@@ -3977,9 +3977,7 @@ dnl Substs:
+@@ -4342,9 +4342,7 @@ dnl Substs:
  dnl  thread_header
  dnl
  AC_DEFUN([GLIBCXX_ENABLE_THREADS], [
@@ -106,7 +157,7 @@ index 1c0a4c13052..34a55d4e609 100644
    GCC_AC_THREAD_HEADER([$target_thread_file])
  ])
  
-@@ -3989,7 +3987,8 @@ dnl Check if gthread implementation defines the types and functions
+@@ -4354,7 +4352,8 @@ dnl Check if gthread implementation defines the types and functions
  dnl required by the c++0x thread library.  Conforming gthread
  dnl implementations can define __GTHREADS_CXX0X to enable use with c++0x.
  dnl
@@ -116,7 +167,7 @@ index 1c0a4c13052..34a55d4e609 100644
  dnl
  AC_DEFUN([GLIBCXX_CHECK_GTHREADS], [
    GLIBCXX_ENABLE(libstdcxx-threads,auto,,[enable C++11 threads support])
-@@ -4004,7 +4003,6 @@ AC_DEFUN([GLIBCXX_CHECK_GTHREADS], [
+@@ -4369,7 +4368,6 @@ AC_DEFUN([GLIBCXX_CHECK_GTHREADS], [
    CXXFLAGS="$CXXFLAGS -fno-exceptions \
  	-I${toplevel_srcdir}/libgcc -I${toplevel_builddir}/libgcc"
  
@@ -124,3 +175,6 @@ index 1c0a4c13052..34a55d4e609 100644
    case $target_thread_file in
      posix)
        CXXFLAGS="$CXXFLAGS -DSUPPORTS_WEAK -DGTHREAD_USE_WEAK -D_PTHREADS"
+-- 
+2.44.1
+
