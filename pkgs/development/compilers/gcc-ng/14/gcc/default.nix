@@ -56,16 +56,16 @@ stdenv.mkDerivation ({
 
   patches = [
     ../../../gcc/patches/gcc-12-no-sys-dirs.patch
-    ../../../gcc/patches/no-sys-dirs-riscv.patch
+    ../../../gcc/patches/13/no-sys-dirs-riscv.patch
     ./find-prefixed-progs.patch
-  ] ++ lib.optional langFortran ../../gcc/gfortran-driving.patch
+  ] ++ lib.optional langFortran ../../gcc/patches/gcc-12-gfortran-driving.patch
     ++ lib.optional (stdenv.isDarwin && stdenv.isAarch64) (fetchpatch {
       url = "https://github.com/fxcoudert/gcc/compare/releases/gcc-11.1.0...gcc-11.1.0-arm-20210504.diff";
       sha256 = "sha256-JqCGJAfbOxSmkNyq49aFHteK/RFsCSLQrL9mzUCnaD0=";
     })
 
     # Obtain latest patch with ../../gcc/update-mcfgthread-patches.sh
-    ++ lib.optional targetPlatform.isMinGW ../../gcc/11/Added-mcf-thread-model-support-from-mcfgthread.patch;
+    ++ lib.optional targetPlatform.isMinGW ../../gcc/14/Added-mcf-thread-model-support-from-mcfgthread.patch;
 
   # TODO someday avoid target-specific subdirs all over the place and split libs from binaries
   outputs = [ "out" "dev" "man" "info" ];

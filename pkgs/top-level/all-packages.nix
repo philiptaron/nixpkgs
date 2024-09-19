@@ -15044,15 +15044,15 @@ with pkgs;
 
   gforth = callPackage ../development/compilers/gforth { };
 
-  gccNgPackages = gccNgPackages_12;
+  gccNgPackages = gccNgPackages_14;
 
-  gccNgPackages_12 = recurseIntoAttrs (callPackage ../development/compilers/gcc-ng/12 ({
+  gccNgPackages_14 = recurseIntoAttrs (callPackage ../development/compilers/gcc-ng/14 ({
     inherit (stdenvAdapters) overrideCC;
     # These are the default arguments, but do this to avoid splicing which was
     # causing infinite recursion.
     inherit bintools bintoolsNoLibc;
-    buildGccTools = buildPackages.gccNgPackages_12.tools;
-    targetGccLibraries = targetPackages.gccNgPackages_12.libraries;
+    buildGccTools = buildPackages.gccNgPackages_14.tools;
+    targetGccLibraries = targetPackages.gccNgPackages_14.libraries;
   }));
 
   gleam = callPackage ../development/compilers/gleam {

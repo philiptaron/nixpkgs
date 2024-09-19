@@ -1,102 +1,111 @@
+From 9cdfcd0ad4d566e0b35d8eed04356d87237f1c9f Mon Sep 17 00:00:00 2001
+From: John Ericson <John.Ericson@Obsidian.Systems>
+Date: Thu, 19 Sep 2024 13:45:01 -0400
+Subject: [PATCH] Find prefixed progs (?)
+
+---
+ gcc/gcc.cc | 101 +++++++++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 83 insertions(+), 18 deletions(-)
+
 diff --git a/gcc/gcc.cc b/gcc/gcc.cc
-index bb07cc244e3..ffd2bb6a196 100644
+index 728332b8153..18b3c396a10 100644
 --- a/gcc/gcc.cc
 +++ b/gcc/gcc.cc
-@@ -1582,6 +1582,11 @@ static const char *machine_suffix = 0;
-
+@@ -1593,6 +1593,11 @@ static const char *machine_suffix = 0;
+ 
  static const char *just_machine_suffix = 0;
-
+ 
 +/* Prefix to attach to *basename* of commands being searched.
 +   This is just `MACHINE-'.  */
 +
 +static const char *just_machine_prefix = 0;
 +
  /* Adjusted value of GCC_EXEC_PREFIX envvar.  */
-
+ 
  static const char *gcc_exec_prefix;
-@@ -2761,7 +2766,7 @@ static void *
+@@ -2767,7 +2772,7 @@ static void *
  for_each_path (const struct path_prefix *paths,
-               bool do_multi,
-               size_t extra_space,
--              void *(*callback) (char *, void *),
-+              void *(*callback) (char *, bool, void *),
-               void *callback_info)
+ 	       bool do_multi,
+ 	       size_t extra_space,
+-	       void *(*callback) (char *, void *),
++	       void *(*callback) (char *, bool, void *),
+ 	       void *callback_info)
  {
    struct prefix_list *pl;
-@@ -2822,7 +2827,7 @@ for_each_path (const struct path_prefix *paths,
-          if (!skip_multi_dir)
-            {
-              memcpy (path + len, multi_suffix, suffix_len + 1);
--             ret = callback (path, callback_info);
-+             ret = callback (path, true, callback_info);
-              if (ret)
-                break;
-            }
-@@ -2833,7 +2838,7 @@ for_each_path (const struct path_prefix *paths,
-              && pl->require_machine_suffix == 2)
-            {
-              memcpy (path + len, just_multi_suffix, just_suffix_len + 1);
--             ret = callback (path, callback_info);
-+             ret = callback (path, true, callback_info);
-              if (ret)
-                break;
-            }
-@@ -2843,7 +2848,7 @@ for_each_path (const struct path_prefix *paths,
-              && !pl->require_machine_suffix && multiarch_dir)
-            {
-              memcpy (path + len, multiarch_suffix, multiarch_len + 1);
--             ret = callback (path, callback_info);
-+             ret = callback (path, true, callback_info);
-              if (ret)
-                break;
-            }
-@@ -2871,7 +2876,7 @@ for_each_path (const struct path_prefix *paths,
-              else
-                path[len] = '\0';
-
--             ret = callback (path, callback_info);
-+             ret = callback (path, false, callback_info);
-              if (ret)
-                break;
-            }
-@@ -2926,7 +2931,7 @@ struct add_to_obstack_info {
+@@ -2828,7 +2833,7 @@ for_each_path (const struct path_prefix *paths,
+ 	  if (!skip_multi_dir)
+ 	    {
+ 	      memcpy (path + len, multi_suffix, suffix_len + 1);
+-	      ret = callback (path, callback_info);
++	      ret = callback (path, true, callback_info);
+ 	      if (ret)
+ 		break;
+ 	    }
+@@ -2839,7 +2844,7 @@ for_each_path (const struct path_prefix *paths,
+ 	      && pl->require_machine_suffix == 2)
+ 	    {
+ 	      memcpy (path + len, just_multi_suffix, just_suffix_len + 1);
+-	      ret = callback (path, callback_info);
++	      ret = callback (path, true, callback_info);
+ 	      if (ret)
+ 		break;
+ 	    }
+@@ -2849,7 +2854,7 @@ for_each_path (const struct path_prefix *paths,
+ 	      && !pl->require_machine_suffix && multiarch_dir)
+ 	    {
+ 	      memcpy (path + len, multiarch_suffix, multiarch_len + 1);
+-	      ret = callback (path, callback_info);
++	      ret = callback (path, true, callback_info);
+ 	      if (ret)
+ 		break;
+ 	    }
+@@ -2877,7 +2882,7 @@ for_each_path (const struct path_prefix *paths,
+ 	      else
+ 		path[len] = '\0';
+ 
+-	      ret = callback (path, callback_info);
++	      ret = callback (path, false, callback_info);
+ 	      if (ret)
+ 		break;
+ 	    }
+@@ -2932,7 +2937,7 @@ struct add_to_obstack_info {
  };
-
+ 
  static void *
 -add_to_obstack (char *path, void *data)
 +add_to_obstack (char *path, bool, void *data)
  {
    struct add_to_obstack_info *info = (struct add_to_obstack_info *) data;
-
-@@ -3018,7 +3023,7 @@ struct file_at_path_info {
+ 
+@@ -3024,7 +3029,7 @@ struct file_at_path_info {
  };
-
+ 
  static void *
 -file_at_path (char *path, void *data)
 +file_at_path (char *path, bool, void *data)
  {
    struct file_at_path_info *info = (struct file_at_path_info *) data;
    size_t len = strlen (path);
-@@ -3026,15 +3031,6 @@ file_at_path (char *path, void *data)
+@@ -3032,15 +3037,6 @@ file_at_path (char *path, void *data)
    memcpy (path + len, info->name, info->name_len);
    len += info->name_len;
-
+ 
 -  /* Some systems have a suffix for executable files.
 -     So try appending that first.  */
 -  if (info->suffix_len)
 -    {
 -      memcpy (path + len, info->suffix, info->suffix_len + 1);
 -      if (access_check (path, info->mode) == 0)
--       return path;
+-	return path;
 -    }
 -
    path[len] = '\0';
    if (access_check (path, info->mode) == 0)
      return path;
-@@ -3074,12 +3070,59 @@ find_a_file (const struct path_prefix *pprefix, const char *name, int mode,
-                                file_at_path, &info);
+@@ -3080,12 +3076,59 @@ find_a_file (const struct path_prefix *pprefix, const char *name, int mode,
+ 				file_at_path, &info);
  }
-
+ 
 +/* Callback for find_a_program.  Appends the file name to the directory
 +   path. Like file_at_path but tries machine prefix and exe suffix too. */
 +
@@ -113,17 +122,17 @@ index bb07cc244e3..ffd2bb6a196 100644
 +      len += info->name_len;
 +
 +      /* Some systems have a suffix for executable files.
-+        So try appending that first.  */
++	 So try appending that first.  */
 +      if (info->suffix_len)
-+       {
-+         memcpy (path + len, info->suffix, info->suffix_len + 1);
-+         if (access_check (path, info->mode) == 0)
-+           return path;
-+       }
++	{
++	  memcpy (path + len, info->suffix, info->suffix_len + 1);
++	  if (access_check (path, info->mode) == 0)
++	    return path;
++	}
 +
 +      path[len] = '\0';
 +      if (access_check (path, info->mode) == 0)
-+       return path;
++	return path;
 +
 +      return NULL;
 +    };
@@ -144,26 +153,26 @@ index bb07cc244e3..ffd2bb6a196 100644
 +
  /* Specialization of find_a_file for programs that also takes into account
     configure-specified default programs. */
-
+ 
  static char*
  find_a_program (const char *name)
  {
 +  const int mode = X_OK;
 +
    /* Do not search if default matches query. */
-
+ 
  #ifdef DEFAULT_ASSEMBLER
-@@ -3097,7 +3140,28 @@ find_a_program (const char *name)
+@@ -3103,7 +3146,28 @@ find_a_program (const char *name)
      return xstrdup (DEFAULT_DSYMUTIL);
  #endif
-
+ 
 -  return find_a_file (&exec_prefixes, name, X_OK, false);
 +  /* Find the filename in question (special case for absolute paths).  */
 +
 +  if (IS_ABSOLUTE_PATH (name))
 +    {
 +      if (access (name, mode) == 0)
-+       return xstrdup (name);
++	return xstrdup (name);
 +
 +      return NULL;
 +    }
@@ -181,22 +190,25 @@ index bb07cc244e3..ffd2bb6a196 100644
 +    info.name_len + info.suffix_len + strlen(just_machine_prefix),
 +    program_at_path, &info);
  }
-
+ 
  /* Ranking of prefixes in the sort list. -B prefixes are put before
-@@ -5898,7 +5962,7 @@ struct spec_path_info {
+@@ -5979,7 +6043,7 @@ struct spec_path_info {
  };
-
+ 
  static void *
 -spec_path (char *path, void *data)
 +spec_path (char *path, bool, void *data)
  {
    struct spec_path_info *info = (struct spec_path_info *) data;
    size_t len = 0;
-@@ -8338,6 +8402,7 @@ driver::set_up_specs () const
+@@ -8459,6 +8523,7 @@ driver::set_up_specs () const
    machine_suffix = concat (spec_host_machine, dir_separator_str, spec_version,
-                           accel_dir_suffix, dir_separator_str, NULL);
+ 			   accel_dir_suffix, dir_separator_str, NULL);
    just_machine_suffix = concat (spec_machine, dir_separator_str, NULL);
 +  just_machine_prefix = concat (spec_machine, "-", NULL);
-
+ 
    specs_file = find_a_file (&startfile_prefixes, "specs", R_OK, true);
    /* Read the specs file unless it is a default one.  */
+-- 
+2.44.1
+
