@@ -1,89 +1,93 @@
-{ stdenv
-, lib
-, fetchFromGitLab
-, autoconf
-, automake
-, libtool
-, which
-, pkg-config
-, python3
-, vala
-, avahi
-, gdk-pixbuf
-, gst_all_1
-, glib
-, gtk3
-, libgee
-, check
-, gtk-doc
-, docbook-xsl-nons
-, docbook_xml_dtd_43
-, gobject-introspection
-, libsoup
+{
+  stdenv,
+  lib,
+  fetchFromGitLab,
+  autoconf,
+  automake,
+  libtool,
+  pkg-config,
+  vala,
+  avahi,
+  gdk-pixbuf,
+  gst_all_1,
+  glib,
+  gtk-doc,
+  docbook-xsl-nons,
+  docbook_xml_dtd_43,
+  gobject-introspection,
+  libsoup_3,
+  withGtkDoc ? stdenv.buildPlatform.canExecute stdenv.hostPlatform,
 }:
 
 stdenv.mkDerivation rec {
   pname = "libdmapsharing";
-  version = "3.9.10";
+  version = "3.9.13";
 
-  outputs = [ "out" "dev" "devdoc" ];
+  outputs =
+    [
+      "out"
+      "dev"
+    ]
+    ++ lib.optionals withGtkDoc [
+      "devdoc"
+    ];
+
   outputBin = "dev";
 
   src = fetchFromGitLab {
     domain = "gitlab.gnome.org";
     owner = "GNOME";
     repo = pname;
-    rev = "${lib.toUpper pname}_${lib.replaceStrings ["."] ["_"] version}";
-    sha256 = "04y1wjwnbw4pzg05h383d83p6an6ylwy4b4g32jmjxpfi388x33g";
+    rev = "${lib.toUpper pname}_${lib.replaceStrings [ "." ] [ "_" ] version}";
+    sha256 = "oR9lpOFxgGfrtzncFT6dbmhKQfcuH/NvhOR/USHAHQc=";
   };
 
-  nativeBuildInputs = [
-    autoconf
-    automake
-    libtool
-    which
-    pkg-config
-    python3
-    gobject-introspection
-    vala
-    gtk-doc
-    docbook-xsl-nons
-    docbook_xml_dtd_43
-  ];
+  strictDeps = true;
 
-  buildInputs = [
-    avahi
-    gdk-pixbuf
-    gst_all_1.gstreamer
-    gst_all_1.gst-plugins-base
-  ];
+  nativeBuildInputs =
+    [
+      autoconf
+      automake
+      libtool
+      gtk-doc # gtkdocize
+      pkg-config
+      gobject-introspection
+      vala
+    ]
+    ++ lib.optionals withGtkDoc [
+      docbook-xsl-nons
+      docbook_xml_dtd_43
+    ];
+
+  buildInputs =
+    [
+      avahi
+      gdk-pixbuf
+      gst_all_1.gstreamer
+      gst_all_1.gst-plugins-base
+    ]
+    ++ lib.optionals withGtkDoc [
+      gtk-doc
+    ];
 
   propagatedBuildInputs = [
     glib
-    libsoup
-  ];
-
-  checkInputs = [
-    libgee
-    check
-    gtk3
+    libsoup_3
   ];
 
   configureFlags = [
-    "--enable-gtk-doc"
+    (lib.enableFeature false "tests") # Tests require mDNS server
+    (lib.enableFeature withGtkDoc "gtk-doc")
   ];
 
-  # Cannot disable tests here or `check` from checkInputs would not be included.
-  # Cannot disable building the tests or docs will not build:
-  # https://gitlab.gnome.org/GNOME/libdmapsharing/-/issues/49
-  doCheck = true;
+  postPatch = ''
+    substituteInPlace configure.ac \
+      --replace-fail pkg-config "$PKG_CONFIG"
+  '';
 
   preConfigure = ''
     NOCONFIGURE=1 ./autogen.sh
   '';
-
-  # Tests require mDNS server.
-  checkPhase = ":";
 
   meta = with lib; {
     homepage = "https://www.flyn.org/projects/libdmapsharing/";

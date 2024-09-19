@@ -1,32 +1,59 @@
-{ lib
-, buildPythonPackage
-, fetchPypi
-, isPy27
-, setuptools-scm
-, pytestCheckHook
+{
+  lib,
+  buildPythonPackage,
+  pythonOlder,
+  fetchFromGitHub,
+
+  # build-system
+  setuptools,
+  setuptools-scm,
+
+  # dependencies
+  more-itertools,
+  typeguard,
+
+  # checks
+  pytestCheckHook,
 }:
 
 buildPythonPackage rec {
   pname = "inflect";
-  version = "5.4.0";
-  disabled = isPy27;
+  version = "7.3.1";
+  pyproject = true;
 
-  src = fetchPypi {
-    inherit pname version;
-    sha256 = "sha256-tY1YxOc//KmyXgdcHE/Jyt7LtcmdfNnzze3ac+zoPBw=";
+  disabled = pythonOlder "3.8";
+
+  src = fetchFromGitHub {
+    owner = "jaraco";
+    repo = "inflect";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-J0XgSKPzZIt/7WnMGARXpyYzagBGiqRiuNmNnGKDBrs=";
   };
 
-  nativeBuildInputs = [ setuptools-scm ];
+  build-system = [
+    setuptools
+    setuptools-scm
+  ];
 
-  checkInputs = [ pytestCheckHook ];
+  dependencies = [
+    more-itertools
+    typeguard
+  ];
+
+  nativeCheckInputs = [ pytestCheckHook ];
+
+  disabledTests = [
+    # https://errors.pydantic.dev/2.5/v/string_too_short
+    "inflect.engine.compare"
+  ];
 
   pythonImportsCheck = [ "inflect" ];
 
-  meta = with lib; {
+  meta = {
     description = "Correctly generate plurals, singular nouns, ordinals, indefinite articles";
     homepage = "https://github.com/jaraco/inflect";
     changelog = "https://github.com/jaraco/inflect/blob/v${version}/CHANGES.rst";
-    license = licenses.mit;
-    maintainers = teams.tts.members;
+    license = lib.licenses.mit;
+    maintainers = lib.teams.tts.members;
   };
 }

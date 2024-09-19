@@ -20,11 +20,11 @@ let
 in
 stdenv.mkDerivation rec {
   pname = "verifast";
-  version = "21.04";
+  version = "24.08.30";
 
   src = fetchurl {
     url    = "https://github.com/verifast/verifast/releases/download/${version}/${pname}-${version}-linux.tar.gz";
-    sha256 = "sha256-PlRsf4wFXoM+E+60SbeKzs/RZK0HNVirX47AnI6NeYM=";
+    sha256 = "sha256-hIS5e+zVlxSOqr1/ZDy0PangyWjB9uLCvN8Qr688msg=";
   };
 
   dontConfigure = true;
@@ -43,6 +43,7 @@ stdenv.mkDerivation rec {
   meta = {
     description = "Verification for C and Java programs via separation logic";
     homepage    = "https://people.cs.kuleuven.be/~bart.jacobs/verifast/";
+    sourceProvenance = with lib.sourceTypes; [ binaryNativeCode ];
     license     = lib.licenses.mit;
     platforms   = [ "x86_64-linux" ];
     maintainers = [ lib.maintainers.thoughtpolice ];

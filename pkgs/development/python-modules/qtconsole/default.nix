@@ -1,38 +1,62 @@
-{ lib
-, buildPythonPackage
-, fetchPypi
-, nose
-, isPy27
-, mock
-, traitlets
-, jupyter_core
-, jupyter-client
-, pygments
-, ipykernel
-, pyqt5
-, qtpy
+{
+  lib,
+  buildPythonPackage,
+  fetchFromGitHub,
+
+  # build-system
+  setuptools,
+
+  # dependencies
+  ipykernel,
+  jupyter-core,
+  jupyter-client,
+  pygments,
+  pyqt5,
+  qtpy,
+  traitlets,
+
+  # tests
+  pytestCheckHook,
 }:
 
 buildPythonPackage rec {
   pname = "qtconsole";
-  version = "5.3.0";
+  version = "5.6.0";
+  pyproject = true;
 
-  src = fetchPypi {
-    inherit pname version;
-    sha256 = "sha256-jjUg/cdeRqvEzGz/7KFvomUnVBCbiug5+ijifR66ViU=";
+  src = fetchFromGitHub {
+    owner = "jupyter";
+    repo = "qtconsole";
+    rev = "refs/tags/${version}";
+    hash = "sha256-V82tGAmpvfGeUoewtJXXsBBXx2HNcV9/IMJxJg3bJL8=";
   };
 
-  checkInputs = [ nose ] ++ lib.optionals isPy27 [mock];
-  propagatedBuildInputs = [traitlets jupyter_core jupyter-client pygments ipykernel pyqt5 qtpy];
+  build-system = [ setuptools ];
+
+  dependencies = [
+    ipykernel
+    jupyter-core
+    jupyter-client
+    pygments
+    pyqt5
+    qtpy
+    traitlets
+  ];
+
+  nativeCheckInputs = [ pytestCheckHook ];
 
   # : cannot connect to X server
   doCheck = false;
 
+  pythonImportsCheck = [ "qtconsole" ];
+
   meta = {
     description = "Jupyter Qt console";
-    homepage = "https://jupyter.org/";
+    mainProgram = "jupyter-qtconsole";
+    homepage = "https://qtconsole.readthedocs.io/";
+    changelog = "https://qtconsole.readthedocs.io/en/stable/changelog.html#changes-in-jupyter-qt-console";
     license = lib.licenses.bsd3;
     platforms = lib.platforms.unix;
-    maintainers = with lib.maintainers; [ fridh ];
+    maintainers = with lib.maintainers; [ GaetanLepage ];
   };
 }

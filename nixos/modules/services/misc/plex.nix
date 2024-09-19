@@ -93,13 +93,21 @@ in
         '';
       };
 
-      package = mkOption {
-        type = types.package;
-        default = pkgs.plex;
-        defaultText = literalExpression "pkgs.plex";
+      accelerationDevices = mkOption {
+        type = types.listOf types.str;
+        default = ["*"];
+        example = [ "/dev/dri/renderD128" ];
         description = ''
-          The Plex package to use. Plex subscribers may wish to use their own
-          package here, pointing to subscriber-only server versions.
+          A list of device paths to hardware acceleration devices that Plex should
+          have access to. This is useful when transcoding media files.
+          The special value `"*"` will allow all devices.
+        '';
+      };
+
+      package = mkPackageOption pkgs "plex" {
+        extraDescription = ''
+          Plex subscribers may wish to use their own package here,
+          pointing to subscriber-only server versions.
         '';
       };
     };
@@ -134,7 +142,26 @@ in
 
         ExecStart = "${cfg.package}/bin/plexmediaserver";
         KillSignal = "SIGQUIT";
+        PIDFile = "${cfg.dataDir}/Plex Media Server/plexmediaserver.pid";
         Restart = "on-failure";
+
+        # Hardening
+        NoNewPrivileges = true;
+        PrivateTmp = true;
+        PrivateDevices = cfg.accelerationDevices == [];
+        DeviceAllow = mkIf (cfg.accelerationDevices != [] && !lib.elem "*" cfg.accelerationDevices) cfg.accelerationDevices;
+        ProtectSystem = true;
+        ProtectHome = true;
+        ProtectControlGroups = true;
+        ProtectKernelModules = true;
+        ProtectKernelTunables = true;
+        RestrictAddressFamilies = ["AF_UNIX" "AF_INET" "AF_INET6" "AF_NETLINK"];
+        # This could be made to work if the namespaces needed were known
+        # RestrictNamespaces = true;
+        RestrictRealtime = true;
+        RestrictSUIDSGID = true;
+        MemoryDenyWriteExecute = true;
+        LockPersonality = true;
       };
 
       environment = {

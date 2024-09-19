@@ -19,7 +19,7 @@ in stdenv.mkDerivation {
 
   src = fetchurl {
     name = "SpiderOakONE-${version}-slack_tar_x64.tgz";
-    url = "https://spideroak.com/release/spideroak/slack_tar_x64";
+    url = "https://spideroak-releases.s3.us-east-2.amazonaws.com/SpiderOakONE-${version}-slack_tar_x64.tgz";
     inherit sha256;
   };
 
@@ -53,8 +53,10 @@ in stdenv.mkDerivation {
   meta = {
     homepage = "https://spideroak.com";
     description = "Secure online backup and sychronization";
+    sourceProvenance = with lib.sourceTypes; [ binaryNativeCode ];
     license = lib.licenses.unfree;
     maintainers = with lib.maintainers; [ amorsillo ];
     platforms = lib.platforms.linux;
+    mainProgram = "spideroak";
   };
 }

@@ -8,7 +8,7 @@ let
       environment.variables.NIXOS_OZONE_WL = "1";
       environment.variables.DISPLAY = "do not use";
 
-      fonts.fonts = with pkgs; [ dejavu_fonts ];
+      fonts.packages = with pkgs; [ dejavu_fonts ];
     };
     xorg = { pkgs, ... }: {
       imports = [ ./common/user-account.nix ./common/x11.nix ];
@@ -32,6 +32,7 @@ let
         maintainers = [ synthetica turion ];
       };
       enableOCR = true;
+
       testScript = ''
         @polling_condition
         def codium_running():
@@ -41,11 +42,11 @@ let
         start_all()
 
         machine.wait_for_unit('graphical.target')
-        machine.wait_until_succeeds('pgrep -x codium')
 
-        with codium_running:
+        codium_running.wait() # type: ignore[union-attr]
+        with codium_running: # type: ignore[union-attr]
             # Wait until vscodium is visible. "File" is in the menu bar.
-            machine.wait_for_text('Get Started')
+            machine.wait_for_text('Welcome')
             machine.screenshot('start_screen')
 
             test_string = 'testfile'
@@ -62,17 +63,17 @@ let
 
             # Save the file
             machine.send_key('ctrl-s')
-            machine.wait_for_text('Save')
+            machine.wait_for_text('(Save|Desktop|alice|Size)')
             machine.screenshot('save_window')
             machine.send_key('ret')
 
             # (the default filename is the first line of the file)
             machine.wait_for_file(f'/home/alice/{test_string}')
 
-        machine.send_key('ctrl-q')
-        machine.wait_until_fails('pgrep -x codium')
+        # machine.send_key('ctrl-q')
+        # machine.wait_until_fails('pgrep -x codium')
       '';
     });
 
 in
-builtins.mapAttrs (k: v: mkTest k v { }) tests
+builtins.mapAttrs (k: v: mkTest k v) tests

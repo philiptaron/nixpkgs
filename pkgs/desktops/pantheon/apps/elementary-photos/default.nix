@@ -6,68 +6,58 @@
 , ninja
 , pkg-config
 , vala
-, desktop-file-utils
 , gtk3
 , libexif
 , libgee
 , libhandy
-, geocode-glib
+, libportal-gtk3
+, geocode-glib_2
 , gexiv2
 , libgphoto2
 , granite
 , gst_all_1
 , libgudev
-, json-glib
 , libraw
-, librest
-, libsoup
 , sqlite
 , python3
-, webkitgtk
 , libwebp
-, appstream
-, wrapGAppsHook
+, wrapGAppsHook3
 }:
 
 stdenv.mkDerivation rec {
   pname = "elementary-photos";
-  version = "2.7.5";
+  version = "8.0.0";
 
   src = fetchFromGitHub {
     owner = "elementary";
     repo = "photos";
     rev = version;
-    sha256 = "sha256-zM32+bva+QD1Z/0vUD7K0/tnSzo+7GGLjJ1ytr64c0I=";
+    sha256 = "sha256-EULNLtoZ8M68cp1DT11G6O2TONH/0DXWNX0k4AUqa/w=";
   };
 
   nativeBuildInputs = [
-    appstream
-    desktop-file-utils
     meson
     ninja
     pkg-config
     python3
     vala
-    wrapGAppsHook
+    wrapGAppsHook3
   ];
 
   buildInputs = [
-    geocode-glib
+    geocode-glib_2
     gexiv2
     granite
     gtk3
-    json-glib
     libexif
     libgee
     libgphoto2
     libgudev
     libhandy
+    libportal-gtk3
     libraw
-    librest
-    libsoup
     libwebp
     sqlite
-    webkitgtk
   ] ++ (with gst_all_1; [
     gst-plugins-bad
     gst-plugins-base
@@ -76,19 +66,13 @@ stdenv.mkDerivation rec {
     gstreamer
   ]);
 
-  mesonFlags = [
-    "-Dplugins=false"
-  ];
-
   postPatch = ''
     chmod +x meson/post_install.py
     patchShebangs meson/post_install.py
   '';
 
   passthru = {
-    updateScript = nix-update-script {
-      attrPath = "pantheon.${pname}";
-    };
+    updateScript = nix-update-script { };
   };
 
   meta = with lib; {

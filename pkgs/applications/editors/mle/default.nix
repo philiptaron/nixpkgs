@@ -1,26 +1,34 @@
-{ lib, stdenv, fetchFromGitHub, termbox, pcre, uthash, lua5_3, makeWrapper, installShellFiles }:
+{ lib
+, stdenv
+, fetchFromGitHub
+, pcre2
+, uthash
+, lua5_4
+, makeWrapper
+, installShellFiles
+}:
 
 stdenv.mkDerivation rec {
   pname = "mle";
-  version = "1.4.3";
+  version = "1.7.2";
 
   src = fetchFromGitHub {
     owner = "adsr";
     repo = "mle";
     rev = "v${version}";
-    sha256 = "16dbwfdd6sqqn7jfaxd5wdy8y9ghbihnz6bgn3xhqcww8rj1sia1";
+    sha256 = "0rkk7mh6w5y1lrbdv7wmxdgl5cqzpzw0p26adazkqlfdyb6wbj9k";
   };
 
-  # Fix location of Lua 5.3 header and library
+  # Fix location of Lua 5.4 header and library
   postPatch = ''
-    substituteInPlace Makefile --replace "-llua5.3" "-llua";
-    substituteInPlace mle.h    --replace "<lua5.3/" "<";
+    substituteInPlace Makefile --replace "-llua5.4" "-llua";
+    substituteInPlace mle.h    --replace "<lua5.4/" "<";
     patchShebangs tests/*
   '';
 
   nativeBuildInputs = [ makeWrapper installShellFiles ];
 
-  buildInputs = [ termbox pcre uthash lua5_3 ];
+  buildInputs = [ pcre2 uthash lua5_4 ];
 
   doCheck = true;
 
@@ -30,16 +38,12 @@ stdenv.mkDerivation rec {
     installManPage mle.1
   '';
 
-  postFixup = lib.optionalString stdenv.isDarwin ''
-    wrapProgram $out/bin/mle --prefix DYLD_LIBRARY_PATH : ${termbox}/lib
-  '';
-
   meta = with lib; {
-    broken = (stdenv.isLinux && stdenv.isAarch64);
-    description = "Small, flexible terminal-based text editor";
+    description = "Small, flexible, terminal-based text editor";
     homepage = "https://github.com/adsr/mle";
     license = licenses.asl20;
     platforms = platforms.unix;
     maintainers = with maintainers; [ adsr ];
+    mainProgram = "mle";
   };
 }

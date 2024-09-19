@@ -1,22 +1,25 @@
 { lib, python3Packages, fetchFromGitHub, libxslt,
-  gobject-introspection, gtk3, wrapGAppsHook, gnome }:
+  gobject-introspection, gtk3, wrapGAppsHook3, adwaita-icon-theme }:
 
 python3Packages.buildPythonApplication rec {
   pname = "wpgtk";
-  version = "6.5.0";
+  version = "6.5.9";
 
   src = fetchFromGitHub {
     owner = "deviantfero";
     repo = "wpgtk";
     rev = version;
-    sha256 = "0gv607jrdfbmadjyy3pbrj5ksh1dmaw5hz7l8my2z7sh0ifds0n2";
+    sha256 = "sha256-NlJG9d078TW1jcnVrpBORIIwDUGIAGWZoDbXp9/qRr4=";
   };
 
-  buildInputs = [
-    wrapGAppsHook
-    gtk3
+  nativeBuildInputs = [
     gobject-introspection
-    gnome.adwaita-icon-theme
+  ];
+
+  buildInputs = [
+    wrapGAppsHook3
+    gtk3
+    adwaita-icon-theme
     libxslt
   ];
 
@@ -46,6 +49,7 @@ python3Packages.buildPythonApplication rec {
     homepage = "https://github.com/deviantfero/wpgtk";
     license = licenses.gpl2Only;
     platforms = platforms.linux;
-    maintainers = [ maintainers.melkor333 ];
+    maintainers = with maintainers; [ melkor333 cafkafk ];
+    mainProgram = "wpg";
   };
 }

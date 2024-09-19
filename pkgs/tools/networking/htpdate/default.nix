@@ -1,14 +1,14 @@
 { stdenv, lib, fetchFromGitHub }:
 
 stdenv.mkDerivation rec {
-  version = "1.3.3";
+  version = "2.0.0";
   pname = "htpdate";
 
   src = fetchFromGitHub {
     owner = "twekkel";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-/xZxwEui8V5kyfGsmwRRkiyhj7lcJQaTmOjBihvdWg8=";
+    sha256 = "sha256-X7r95Uc4oGB0eVum5D7pC4tebZIyyz73g6Q/D0cjuFM=";
   };
 
   makeFlags = [
@@ -21,5 +21,6 @@ stdenv.mkDerivation rec {
     platforms = platforms.linux;
     license = licenses.gpl2Plus;
     maintainers = with maintainers; [ julienmalka ];
+    mainProgram = "htpdate";
   };
 }

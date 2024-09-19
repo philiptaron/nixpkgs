@@ -27,7 +27,7 @@ pythonPackages.buildPythonApplication rec {
       --replace "/bin/bash" "${bash}/bin/bash"
     mkdir -p "$out/${python.sitePackages}"
     export PYTHONPATH="$out/${python.sitePackages}:$PYTHONPATH"
-    ${python.interpreter} setup.py install \
+    ${python.pythonOnBuildForHost.interpreter} setup.py install \
       --install-lib=$out/${python.sitePackages} \
       --prefix="$out"
   '';
@@ -49,6 +49,10 @@ pythonPackages.buildPythonApplication rec {
   meta = with lib ; {
     description = "Evaluates genome assemblies by computing various metrics";
     homepage = "https://github.com/ablab/quast";
+    sourceProvenance = with sourceTypes; [
+      fromSource
+      binaryNativeCode  # source bundles binary dependencies
+    ];
     license = licenses.gpl2;
     maintainers = [ maintainers.bzizou ];
     platforms = platforms.all;

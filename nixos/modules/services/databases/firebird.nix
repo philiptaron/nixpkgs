@@ -1,6 +1,6 @@
 { config, lib, pkgs, ... }:
 
-# TODO: This may file may need additional review, eg which configuartions to
+# TODO: This may file may need additional review, eg which configurations to
 # expose to the user.
 #
 # I only used it to access some simple databases.
@@ -14,13 +14,10 @@
 #
 # Be careful, virtuoso-opensource also provides a different isql command !
 
-# There are at least two ways to run firebird. superserver has been choosen
+# There are at least two ways to run firebird. superserver has been chosen
 # however there are no strong reasons to prefer this or the other one AFAIK
 # Eg superserver is said to be most efficiently using resources according to
-# http://www.firebirdsql.org/manual/qsg25-classic-or-super.html
-
-with lib;
-
+# https://www.firebirdsql.org/manual/qsg25-classic-or-super.html
 let
 
   cfg = config.services.firebird;
@@ -40,38 +37,34 @@ in
 
     services.firebird = {
 
-      enable = mkEnableOption "the Firebird super server";
+      enable = lib.mkEnableOption "the Firebird super server";
 
-      package = mkOption {
-        default = pkgs.firebird;
-        defaultText = literalExpression "pkgs.firebird";
-        type = types.package;
-        example = literalExpression "pkgs.firebird_3";
-        description = ''
-          Which Firebird package to be installed: <code>pkgs.firebird_3</code>
-          For SuperServer use override: <code>pkgs.firebird_3.override { superServer = true; };</code>
+      package = lib.mkPackageOption pkgs "firebird" {
+        example = "firebird_3";
+        extraDescription = ''
+          For SuperServer use override: `pkgs.firebird_3.override { superServer = true; };`
         '';
       };
 
-      port = mkOption {
+      port = lib.mkOption {
         default = 3050;
-        type = types.port;
+        type = lib.types.port;
         description = ''
           Port Firebird uses.
         '';
       };
 
-      user = mkOption {
+      user = lib.mkOption {
         default = "firebird";
-        type = types.str;
+        type = lib.types.str;
         description = ''
           User account under which firebird runs.
         '';
       };
 
-      baseDir = mkOption {
+      baseDir = lib.mkOption {
         default = "/var/lib/firebird";
-        type = types.str;
+        type = lib.types.str;
         description = ''
           Location containing data/ and system/ directories.
           data/ stores the databases, system/ stores the password database security2.fdb.
@@ -85,7 +78,7 @@ in
 
   ###### implementation
 
-  config = mkIf config.services.firebird.enable {
+  config = lib.mkIf config.services.firebird.enable {
 
     environment.systemPackages = [cfg.package];
 
@@ -147,7 +140,7 @@ in
       # ConnectionTimeout = 180
 
       #RemoteServiceName = gds_db
-      RemoteServicePort = ${cfg.port}
+      RemoteServicePort = ${toString cfg.port}
 
       # randomly choose port for server Event Notification
       #RemoteAuxPort = 0

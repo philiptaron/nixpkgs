@@ -1,31 +1,24 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 202cda0..bc864cc 100644
+index dd0e3e1..5738ec1 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
-@@ -872,6 +872,7 @@ dependencies = [
+@@ -2829,6 +2829,7 @@ dependencies = [
   "tokei",
-  "toml",
-  "yaml-rust",
-+ "zstd-sys",
+  "typetag",
+  "winres",
++ "zstd",
  ]
  
  [[package]]
-@@ -1678,4 +1679,5 @@ checksum = "2141bed8922b427761470e6bbfeff255da94fa20b0bbeab0d9297fcaf71e3aa7"
- dependencies = [
-  "cc",
-  "libc",
-+ "pkg-config",
- ]
 diff --git a/Cargo.toml b/Cargo.toml
-index 8e0b5ff..48959b4 100644
+index a0a2777..ad146cb 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -57,6 +57,8 @@ libc = "0.2.112"
- [dev-dependencies]
- more-asserts = "0.2"
- paste = "1.0.7"
-+# Specify that the indirect dependency ztsd-sys should pick up the system zstd C library
-+zstd-sys = { version = "1", features = [ "pkg-config" ] }
+@@ -65,6 +65,7 @@ time-humanize = { version = "0.1.3", features = ["time"] }
+ tokei = "12.1.2"
+ typetag = "0.2"
+ parking_lot = "0.12"
++zstd = { version = "*", features = ["pkg-config"] }
  
- [features]
- fail-on-deprecated = []
+ [dev-dependencies]
+ criterion = "0.5.1"

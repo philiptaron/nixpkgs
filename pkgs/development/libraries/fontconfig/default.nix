@@ -1,6 +1,5 @@
-{ lib, stdenv
-, fetchpatch
-, substituteAll
+{ stdenv
+, lib
 , fetchurl
 , pkg-config
 , python3
@@ -11,26 +10,19 @@
 , dejavu_fonts
 , autoreconfHook
 , CoreFoundation
+, testers
 }:
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation (finalAttrs: {
   pname = "fontconfig";
-  version = "2.13.94";
-
-  src = fetchurl {
-    url = "https://www.freedesktop.org/software/fontconfig/release/${pname}-${version}.tar.xz";
-    sha256 = "0g004r0bkkqz00mpm3svnnxn7d83158q0yb9ggxryizxfg5m5w55";
-  };
-
-  patches = [
-    # Fix font style detection
-    (fetchpatch {
-      url = "https://gitlab.freedesktop.org/fontconfig/fontconfig/-/commit/92fbf14b0d7c4737ffe1e8326b7ab8ffae5548c3.patch";
-      sha256 = "1wmyax2151hg3m11q61mv25k45zk2w3xapb4p1r6wzk91zjlsgyr";
-    })
-  ];
+  version = "2.15.0";
 
   outputs = [ "bin" "dev" "lib" "out" ]; # $out contains all the config
+
+  src = fetchurl {
+    url = with finalAttrs; "https://www.freedesktop.org/software/fontconfig/release/${pname}-${version}.tar.xz";
+    hash = "sha256-Y6BljQ4G4PqIYQZFK1jvBPIfWCAuoCqUw53g0zNdfA4=";
+  };
 
   nativeBuildInputs = [
     autoreconfHook
@@ -77,6 +69,7 @@ stdenv.mkDerivation rec {
   postInstall = ''
     cd "$out/etc/fonts"
     xsltproc --stringparam fontDirectories "${dejavu_fonts.minimal}" \
+      --stringparam includes /etc/fonts/conf.d \
       --path $out/share/xml/fontconfig \
       ${./make-fonts-conf.xsl} $out/etc/fonts/fonts.conf \
       > fonts.conf.tmp
@@ -86,11 +79,18 @@ stdenv.mkDerivation rec {
     rm -r $bin/share/man/man3
   '';
 
+  passthru.tests = {
+    pkg-config = testers.hasPkgConfigModules {
+      package = finalAttrs.finalPackage;
+    };
+  };
+
   meta = with lib; {
-    description = "A library for font customization and configuration";
+    description = "Library for font customization and configuration";
     homepage = "http://fontconfig.org/";
     license = licenses.bsd2; # custom but very bsd-like
     platforms = platforms.all;
     maintainers = with maintainers; teams.freedesktop.members ++ [ ];
+    pkgConfigModules = [ "fontconfig" ];
   };
-}
+})

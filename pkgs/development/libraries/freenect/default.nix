@@ -1,19 +1,19 @@
-{ stdenv, lib, fetchFromGitHub, cmake, libusb1, pkg-config, freeglut, libGLU, libGL, libXi, libXmu
+{ stdenv, lib, fetchFromGitHub, cmake, libusb1, pkg-config, libglut, libGLU, libGL, libXi, libXmu
 , GLUT, Cocoa
  }:
 
 stdenv.mkDerivation rec {
   pname = "freenect";
-  version = "0.6.2";
+  version = "0.7.5";
 
   src = fetchFromGitHub {
     owner = "OpenKinect";
     repo = "libfreenect";
     rev = "v${version}";
-    sha256 = "sha256-/CR+r9/zMj+8gxhHeRGPCDhALeF5bLsea38KQ1lF6wo=";
+    sha256 = "sha256-PpJGFWrlQ5sK7TJxQNoPujw1MxWRjphvblwOqnF+mSg=";
   };
 
-  buildInputs = [ libusb1 freeglut libGLU libGL libXi libXmu ]
+  buildInputs = [ libusb1 libglut libGLU libGL libXi libXmu ]
     ++ lib.optionals stdenv.isDarwin [ GLUT Cocoa ];
 
   nativeBuildInputs = [ cmake pkg-config ];

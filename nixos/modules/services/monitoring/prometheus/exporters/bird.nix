@@ -1,9 +1,13 @@
-{ config, lib, pkgs, options }:
-
-with lib;
+{ config, lib, pkgs, options, ... }:
 
 let
   cfg = config.services.prometheus.exporters.bird;
+  inherit (lib)
+    mkOption
+    types
+    concatStringsSep
+    singleton
+    ;
 in
 {
   port = 9324;

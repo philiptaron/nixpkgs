@@ -1,14 +1,14 @@
-{ fetchFromGitHub, stdenv, lib }:
+{ fetchFromGitHub, stdenv, lib, nixosTests }:
 
 stdenv.mkDerivation rec {
   pname = "postfixadmin";
-  version = "3.3.11";
+  version = "3.3.13";
 
   src = fetchFromGitHub {
     owner = pname;
     repo = pname;
     rev = "${pname}-${version}";
-    sha256 = "sha256-jOO0AVcCmBxHLaWQOwvt7OFKAcAYPTVHTdQz1ZaYIqE=";
+    sha256 = "sha256-46bc34goAcRvaiyW7z0AvIcd8n61TL6vgLQ+y7nNKBQ=";
   };
 
   installPhase = ''
@@ -17,6 +17,8 @@ stdenv.mkDerivation rec {
     ln -sf /etc/postfixadmin/config.local.php $out/
     ln -sf /var/cache/postfixadmin/templates_c $out/
   '';
+
+  passthru.tests = { inherit (nixosTests) postfixadmin; };
 
   meta = {
     description = "Web based virtual user administration interface for Postfix mail servers";

@@ -2,26 +2,26 @@
 
 stdenv.mkDerivation rec {
   pname = "uthenticode";
-  version = "1.0.8";
+  version = "2.0.1";
 
   src = fetchFromGitHub {
     owner = "trailofbits";
     repo = "uthenticode";
     rev = "v${version}";
-    hash = "sha256-H4fAHZM+vYaUkXZE4f7r2bxw9dno7O+lYrqQ9/6YPWA=";
+    hash = "sha256-NGVOGXMRlgpSRw56jr63rJc/5/qCmPjtAFa0D21ogd4=";
   };
 
   cmakeFlags = [ "-DBUILD_TESTS=1" "-DUSE_EXTERNAL_GTEST=1" ];
 
   nativeBuildInputs = [ cmake ];
-  checkInputs = [ gtest ];
+  nativeCheckInputs = [ gtest ];
   buildInputs = [ pe-parse openssl ];
 
   doCheck = true;
   checkPhase = "test/uthenticode_test";
 
   meta = with lib; {
-    description = "A small cross-platform library for verifying Authenticode digital signatures.";
+    description = "Small cross-platform library for verifying Authenticode digital signatures";
     homepage = "https://github.com/trailofbits/uthenticode";
     license = licenses.mit;
     platforms = platforms.unix;

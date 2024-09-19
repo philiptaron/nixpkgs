@@ -1,23 +1,39 @@
-{ lib, buildGoModule, fetchFromGitHub }:
+{ lib
+, buildGoModule
+, fetchFromGitHub
+}:
 
 buildGoModule rec {
   pname = "statsd_exporter";
-  version = "0.22.2";
+  version = "0.27.1";
 
   src = fetchFromGitHub {
-    rev = "v${version}";
     owner = "prometheus";
     repo = "statsd_exporter";
-    sha256 = "sha256-pLzUbeSCMV0yr4gSR7m6NYrpm8ZhCPbwwZ5nQzy6lEM=";
+    rev = "v${version}";
+    hash = "sha256-aOwb1oL4eS3sdVXJXbPKHaao/xLGe1HZ5EJgQ6AAFnk=";
   };
 
-  vendorSha256 = "sha256-gBeeOxnVT0+x33VuwZhfjk3Fb8JHZdAzaDuFZlUfdgM=";
+  ldflags =
+    let
+      t = "github.com/prometheus/common/version";
+    in
+    [ "-s" "-w"
+      "-X ${t}.Version=${version}"
+      "-X ${t}.Revision=unknown"
+      "-X ${t}.Branch=unknown"
+      "-X ${t}.BuildUser=nix@nixpkgs"
+      "-X ${t}.BuildDate=unknown"
+    ];
+
+  vendorHash = "sha256-cP7dMkLWITRz87vU13B168iUIBbozOGNTXNV+m2CbMU=";
 
   meta = with lib; {
     description = "Receives StatsD-style metrics and exports them to Prometheus";
+    mainProgram = "statsd_exporter";
     homepage = "https://github.com/prometheus/statsd_exporter";
+    changelog = "https://github.com/prometheus/statsd_exporter/blob/v${version}/CHANGELOG.md";
     license = licenses.asl20;
     maintainers = with maintainers; [ benley ivan ];
-    platforms = platforms.unix;
   };
 }

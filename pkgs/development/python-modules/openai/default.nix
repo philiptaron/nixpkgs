@@ -1,57 +1,109 @@
-{ lib
-, buildPythonPackage
-, fetchFromGitHub
-, pythonOlder
+{
+  lib,
+  buildPythonPackage,
+  fetchFromGitHub,
+  pythonOlder,
 
-# Python dependencies
-, openpyxl
-, pandas
-, pandas-stubs
-, requests
-, tqdm
-, wandb
+  # build-system
+  hatchling,
+  hatch-fancy-pypi-readme,
 
-# Check dependencies
-, pytest-mock
-, pytestCheckHook
+  # dependencies
+  anyio,
+  cached-property,
+  distro,
+  httpx,
+  jiter,
+  pydantic,
+  sniffio,
+  tqdm,
+  typing-extensions,
+
+  numpy,
+  pandas,
+  pandas-stubs,
+
+  # check deps
+  pytestCheckHook,
+  dirty-equals,
+  inline-snapshot,
+  pytest-asyncio,
+  pytest-mock,
+  respx,
+
 }:
 
 buildPythonPackage rec {
   pname = "openai";
-  version = "0.19.0";
+  version = "1.46.0";
+  pyproject = true;
 
   disabled = pythonOlder "3.7.1";
 
-  # Use GitHub source since PyPi source does not include tests
   src = fetchFromGitHub {
     owner = "openai";
     repo = "openai-python";
-    rev = "v${version}";
-    sha256 = "sha256-v/EBmKIzHGPR2KGLUqyWlTSZjV2MqALYRRofCXRjH24=";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-f8t/6T7IwWgt3WjMMdx04dunR7i4j6FBDN/abuGlEU0=";
   };
 
-  propagatedBuildInputs = [
-    openpyxl
-    pandas
-    pandas-stubs
-    requests
-    tqdm
-    wandb
+  build-system = [
+    hatchling
+    hatch-fancy-pypi-readme
   ];
 
+  dependencies = [
+    anyio
+    distro
+    httpx
+    jiter
+    pydantic
+    sniffio
+    tqdm
+    typing-extensions
+  ] ++ lib.optionals (pythonOlder "3.8") [ cached-property ];
+
+  passthru.optional-dependencies = {
+    datalib = [
+      numpy
+      pandas
+      pandas-stubs
+    ];
+  };
+
   pythonImportsCheck = [ "openai" ];
-  checkInputs = [ pytestCheckHook pytest-mock ];
-  pytestFlagsArray = [ "openai/tests" ];
-  OPENAI_API_KEY = "sk-foo";
+
+  nativeCheckInputs = [
+    pytestCheckHook
+    dirty-equals
+    inline-snapshot
+    pytest-asyncio
+    pytest-mock
+    respx
+  ];
+
+  pytestFlagsArray = [
+    "-W"
+    "ignore::DeprecationWarning"
+  ];
+
+  disabledTests = [
+    # Tests make network requests
+    "test_copy_build_request"
+    "test_basic_attribute_access_works"
+  ];
+
   disabledTestPaths = [
-    "openai/tests/test_endpoints.py" # requires a real API key
-    "openai/tests/test_file_cli.py"
+    # Test makes network requests
+    "tests/api_resources"
   ];
 
   meta = with lib; {
     description = "Python client library for the OpenAI API";
     homepage = "https://github.com/openai/openai-python";
+    changelog = "https://github.com/openai/openai-python/releases/tag/v${version}";
     license = licenses.mit;
-    maintainers = [ maintainers.malo ];
+    maintainers = with maintainers; [ malo ];
+    mainProgram = "openai";
   };
 }

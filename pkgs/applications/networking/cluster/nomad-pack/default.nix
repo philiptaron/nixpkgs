@@ -5,17 +5,16 @@
 
 buildGoModule rec {
   pname = "nomad-pack";
-  version = "2022-05-12";
-  rev   = "bee6e8e078ff31fee916b864fbf3648294dbcdf5";
+  version = "0.1.2";
 
   src = fetchFromGitHub {
     owner = "hashicorp";
     repo = pname;
-    inherit rev;
-    sha256 = "sha256-28Dx9z7T+4WXl4voAzlSR2h3HcZMSzOuX7FHLJ4q9Sc=";
+    rev = "v${version}";
+    sha256 = "sha256-5OTGBO2EMGPJ4J2Eu3pIlZmYGXYxgL/6uGQgdB+8nPk=";
   };
 
-  vendorSha256 = "sha256-hPsO842gmk77qc27slV2TiYNI7Ofw1RqGgcLP1gdgJ0=";
+  vendorHash = "sha256-8hWiVtya/TlVLUlYVJSjOzZUI8vsPm355ksIRPhB2rA=";
 
   # skip running go tests as they require network access
   doCheck = false;
@@ -30,7 +29,7 @@ buildGoModule rec {
   meta = with lib; {
     homepage = "https://github.com/hashicorp/nomad-pack";
     changelog = "https://github.com/hashicorp/nomad-pack/blob/main/CHANGELOG.md";
-    description = "Nomad Pack is a templating and packaging tool used with HashiCorp Nomad.";
+    description = "Nomad Pack is a templating and packaging tool used with HashiCorp Nomad";
     license = licenses.mpl20;
     maintainers = with maintainers; [ techknowlogick ];
   };

@@ -4,12 +4,10 @@
 #
 # Example usage in a derivation:
 #
-#   { …, pythonPackages, … }:
+#   { …, python3Packages, … }:
 #
-#   pythonPackages.buildPythonPackage {
+#   python3Packages.buildPythonPackage {
 #     …
-#     nativeBuildInputs = [ pythonPackages.pythonRelaxDepsHook ];
-#
 #     # This will relax the dependency restrictions
 #     # e.g.: abc>1,<=2 -> abc
 #     pythonRelaxDeps = [ "abc" ];
@@ -22,6 +20,24 @@
 #     # pythonRemoveDeps = true;
 #     …
 #   }
+#
+# IMPLEMENTATION NOTES:
+#
+# The "Requires-Dist" dependency specification format is described in PEP 508.
+# Examples that the regular expressions in this hook needs to support:
+#
+# Requires-Dist: foo
+#   -> foo
+# Requires-Dist: foo[optional]
+#   -> foo[optional]
+# Requires-Dist: foo[optional]~=1.2.3
+#   -> foo[optional]
+# Requires-Dist: foo[optional, xyz] (~=1.2.3)
+#   -> foo[optional, xyz]
+# Requires-Dist: foo[optional]~=1.2.3 ; os_name = "posix"
+#   -> foo[optional] ; os_name = "posix"
+#
+# Currently unsupported: URL specs (foo @ https://example.com/a.zip).
 
 _pythonRelaxDeps() {
     local -r metadata_file="$1"
@@ -30,11 +46,11 @@ _pythonRelaxDeps() {
         return
     elif [[ "$pythonRelaxDeps" == 1 ]]; then
         sed -i "$metadata_file" -r \
-            -e 's/(Requires-Dist: \S*) \(.*\)/\1/'
+            -e 's/(Requires-Dist: [a-zA-Z0-9_.-]+\s*(\[[^]]+\])?)[^;]*(;.*)?/\1\3/'
     else
         for dep in $pythonRelaxDeps; do
             sed -i "$metadata_file" -r \
-                -e "s/(Requires-Dist: $dep) \(.*\)/\1/"
+                -e "s/(Requires-Dist: $dep\s*(\[[^]]+\])?)[^;]*(;.*)?/\1\3/i"
         done
     fi
 }
@@ -59,23 +75,31 @@ _pythonRemoveDeps() {
 pythonRelaxDepsHook() {
     pushd dist
 
-    local -r package="$pname-$version"
     local -r unpack_dir="unpacked"
-    local -r metadata_file="$unpack_dir/$package/$package.dist-info/METADATA"
-    local -r wheel=$(echo "$package"*".whl")
+    local -r metadata_file="$unpack_dir/*/*.dist-info/METADATA"
 
-    @pythonInterpreter@ -m wheel unpack --dest "$unpack_dir" "$wheel"
-    rm -rf "$wheel"
+    # We generally shouldn't have multiple wheel files, but let's be safer here
+    for wheel in *".whl"; do
 
-    _pythonRelaxDeps "$metadata_file"
-    _pythonRemoveDeps "$metadata_file"
+        PYTHONPATH="@wheel@/@pythonSitePackages@:$PYTHONPATH" \
+            @pythonInterpreter@ -m wheel unpack --dest "$unpack_dir" "$wheel"
+        rm -rf "$wheel"
 
-    if (( "${NIX_DEBUG:-0}" >= 1 )); then
-        echo "pythonRelaxDepsHook: resulting METADATA:"
-        cat "$unpack_dir/$package/$package.dist-info/METADATA"
-    fi
+        # Using no quotes on purpose since we need to expand the glob from `$metadata_file`
+        _pythonRelaxDeps $metadata_file
+        _pythonRemoveDeps $metadata_file
 
-    @pythonInterpreter@ -m wheel pack "$unpack_dir/$package"
+        if (( "${NIX_DEBUG:-0}" >= 1 )); then
+            echo "pythonRelaxDepsHook: resulting METADATA for '$wheel':"
+            cat $metadata_file
+        fi
+
+        PYTHONPATH="@wheel@/@pythonSitePackages@:$PYTHONPATH" \
+            @pythonInterpreter@ -m wheel pack "$unpack_dir/"*
+    done
+
+    # Remove the folder since it will otherwise be in the dist output.
+    rm -rf "$unpack_dir"
 
     popd
 }

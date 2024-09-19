@@ -2,13 +2,13 @@
 
 stdenv.mkDerivation rec {
   pname = "pspg";
-  version = "5.5.4";
+  version = "5.8.6";
 
   src = fetchFromGitHub {
     owner = "okbob";
     repo = pname;
     rev = version;
-    sha256 = "sha256-2j1K9enoPBPLL+0oOhzcYVxfsjb8BzsfeHNi9TJOnmc=";
+    sha256 = "sha256-UgJHsniDbfAcohnrYYUUJ4OhL2Fr65kGu26dsw9vYyM=";
   };
 
   nativeBuildInputs = [ pkg-config installShellFiles ];
@@ -17,6 +17,7 @@ stdenv.mkDerivation rec {
   makeFlags = [ "PREFIX=${placeholder "out"}" ];
 
   postInstall = ''
+    installManPage pspg.1
     installShellCompletion --bash --cmd pspg bash-completion.sh
   '';
 
@@ -26,5 +27,6 @@ stdenv.mkDerivation rec {
     license = licenses.bsd2;
     platforms = platforms.unix;
     maintainers = [ maintainers.jlesquembre ];
+    mainProgram = "pspg";
   };
 }

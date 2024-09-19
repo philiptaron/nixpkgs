@@ -1,4 +1,4 @@
-{ lib, stdenv, fetchFromGitHub, meson, ninja, pkg-config, glib, systemd, boost, fmt
+{ lib, stdenv, fetchFromGitHub, meson, ninja, pkg-config, glib, systemd, boost, fmt, buildPackages
 # Darwin inputs
 , AudioToolbox, AudioUnit
 # Inputs
@@ -9,7 +9,7 @@
 , audiofile, faad2, ffmpeg, flac, fluidsynth, game-music-emu
 , libmad, libmikmod, mpg123, libopus, libvorbis, lame
 # Filters
-, libsamplerate
+, libsamplerate, soxr
 # Outputs
 , alsa-lib, libjack2, libpulseaudio, libshout, pipewire
 # Misc
@@ -62,6 +62,7 @@ let
     lame          = [ lame ];
     # Filter plugins
     libsamplerate = [ libsamplerate ];
+    soxr          = [ soxr ];
     # Output plugins
     alsa          = [ alsa-lib ];
     jack          = [ libjack2 ];
@@ -116,13 +117,13 @@ let
 
     in stdenv.mkDerivation rec {
       pname = "mpd";
-      version = "0.23.6";
+      version = "0.23.15";
 
       src = fetchFromGitHub {
         owner  = "MusicPlayerDaemon";
         repo   = "MPD";
         rev    = "v${version}";
-        sha256 = "sha256-pVIbaCg3qDw7bjhLQHz6Rr3m498LeKNQVhRk4m5tpVQ=";
+        sha256 = "sha256-QURq7ysSsxmBOtoBlPTPWiloXQpjEdxnM0L1fLwXfpw=";
       };
 
       buildInputs = [
@@ -145,10 +146,18 @@ let
       ]
         ++ concatAttrVals features_ nativeFeatureDependencies;
 
+      depsBuildBuild = [ buildPackages.stdenv.cc ];
+
+      postPatch = lib.optionalString (stdenv.isDarwin && lib.versionOlder stdenv.hostPlatform.darwinSdkVersion "12.0") ''
+        substituteInPlace src/output/plugins/OSXOutputPlugin.cxx \
+          --replace kAudioObjectPropertyElement{Main,Master} \
+          --replace kAudioHardwareServiceDeviceProperty_Virtual{Main,Master}Volume
+      '';
+
       # Otherwise, the meson log says:
       #
       #    Program zip found: NO
-      checkInputs = [ zip ];
+      nativeCheckInputs = [ zip ];
 
       doCheck = true;
 
@@ -176,11 +185,12 @@ let
       passthru.tests.nixos = nixosTests.mpd;
 
       meta = with lib; {
-        description = "A flexible, powerful daemon for playing music";
+        description = "Flexible, powerful daemon for playing music";
         homepage    = "https://www.musicpd.org/";
         license     = licenses.gpl2Only;
-        maintainers = with maintainers; [ astsmtl ehmry fpletz tobim ];
+        maintainers = with maintainers; [ astsmtl tobim ];
         platforms   = platforms.unix;
+        mainProgram = "mpd";
 
         longDescription = ''
           Music Player Daemon (MPD) is a flexible, powerful daemon for playing

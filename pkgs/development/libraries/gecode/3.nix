@@ -18,12 +18,18 @@ stdenv.mkDerivation rec {
     (import ./fix-const-weights-clang-patch.nix fetchpatch)
   ];
 
+  postPatch = ''
+    substituteInPlace gecode/flatzinc/lexer.yy.cpp \
+      --replace "register " ""
+  '';
+
   nativeBuildInputs = [ perl ];
 
   preConfigure = "patchShebangs configure";
 
+  env.CXXFLAGS = lib.optionalString stdenv.cc.isClang "-std=c++14";
+
   meta = with lib; {
-    broken = stdenv.isDarwin;
     license = licenses.mit;
     homepage = "https://www.gecode.org";
     description = "Toolkit for developing constraint-based systems";

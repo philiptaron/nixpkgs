@@ -2,16 +2,16 @@
 
 buildGoModule rec {
   pname = "terminal-parrot";
-  version = "1.1.1";
+  version = "1.2.0";
 
   src = fetchFromGitHub {
     owner = "jmhobbs";
     repo = "terminal-parrot";
     rev = version;
-    sha256 = "1b4vr4s1zpkpf5kc1r2kdlp3hf88qp1f7h05g8kd62zf4sfbj722";
+    hash = "sha256-LI67DDcK3M084r9JPx8NcBWthaiBOCEL4lQJhuUJSok=";
   };
 
-  vendorSha256 = "1qalnhhq3fmyzj0hkzc5gk9wbypr558mz3ik5msw7fid68k2i48c";
+  vendorHash = "sha256-EhnmOpT+rx4RVpmqgEQ4qO+Uca1W9uhx4fcExXG9LOI=";
 
   doCheck = false;
 
@@ -20,5 +20,6 @@ buildGoModule rec {
     homepage = "https://github.com/jmhobbs/terminal-parrot";
     license = licenses.mit;
     maintainers = [ maintainers.heel ];
+    mainProgram = "terminal-parrot";
   };
 }

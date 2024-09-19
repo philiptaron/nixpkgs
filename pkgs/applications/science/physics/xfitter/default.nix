@@ -13,7 +13,7 @@
 , lhapdf
 , libtirpc
 , libyaml
-, libyamlcpp
+, yaml-cpp
 , pkg-config
 , qcdnum
 , root
@@ -38,14 +38,16 @@ stdenv.mkDerivation rec {
 
   nativeBuildInputs = [ cmake gfortran pkg-config ];
   buildInputs =
-    [ apfel blas ceres-solver lhapdf lapack libyaml root qcdnum gsl libyamlcpp zlib ]
+    [ apfel blas ceres-solver lhapdf lapack libyaml root qcdnum gsl yaml-cpp zlib ]
     ++ lib.optionals ("5" == lib.versions.major root.version) [ apfelgrid applgrid ]
     ++ lib.optionals (stdenv.system == "x86_64-darwin") [ memorymappingHook memstreamHook ]
     ++ lib.optional (stdenv.hostPlatform.libc == "glibc") libtirpc
     ;
 
-  NIX_CFLAGS_COMPILE = lib.optional (stdenv.hostPlatform.libc == "glibc") "-I${libtirpc.dev}/include/tirpc";
+  env.NIX_CFLAGS_COMPILE = lib.optionalString (stdenv.hostPlatform.libc == "glibc") "-I${libtirpc.dev}/include/tirpc";
   NIX_LDFLAGS = lib.optional (stdenv.hostPlatform.libc == "glibc") "-ltirpc";
+
+  hardeningDisable = [ "format" ];
 
   # workaround wrong library IDs
   postInstall = lib.optionalString stdenv.isDarwin ''
@@ -53,7 +55,7 @@ stdenv.mkDerivation rec {
   '';
 
   meta = with lib; {
-    description = "The xFitter project is an open source QCD fit framework ready to extract PDFs and assess the impact of new data";
+    description = "XFitter project is an open source QCD fit framework ready to extract PDFs and assess the impact of new data";
     license     = licenses.gpl3;
     homepage    = "https://www.xfitter.org/xFitter";
     platforms   = platforms.unix;

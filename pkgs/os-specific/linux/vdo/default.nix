@@ -9,13 +9,13 @@
 
 stdenv.mkDerivation rec {
   pname = "vdo";
-  version = "8.1.1.360";  # kvdo uses this!
+  version = "8.3.0.71";
 
   src = fetchFromGitHub {
     owner = "dm-vdo";
     repo = pname;
     rev = version;
-    sha256 = "1zp8aaw0diramnlx5z96jcpbm6x0r204xf1vwq6k21rzcazczkwv";
+    hash = "sha256-FZerMUzth43p5jvKQalyYcW+mrl6SLjS8GrivY2qWkI=";
   };
 
   nativeBuildInputs = [
@@ -48,17 +48,18 @@ stdenv.mkDerivation rec {
   enableParallelBuilding = true;
 
   postInstall = ''
-    installShellCompletion --bash $out/bash_completion.d/*
-    rm -r $out/bash_completion.d
+    installShellCompletion --bash $out/usr/share/bash-completion/completions/*
+    rm -rv $out/usr
 
     wrapPythonPrograms
   '';
 
   meta = with lib; {
     homepage = "https://github.com/dm-vdo/vdo";
-    description = "A set of userspace tools for managing pools of deduplicated and/or compressed block storage";
-    platforms = platforms.linux;
+    description = "Set of userspace tools for managing pools of deduplicated and/or compressed block storage";
+    # platforms are defined in https://github.com/dm-vdo/vdo/blob/master/utils/uds/atomicDefs.h
+    platforms = [ "x86_64-linux" "aarch64-linux" "s390-linux" "powerpc64-linux" "powerpc64le-linux" ];
     license = with licenses; [ gpl2Plus ];
-    maintainers = with maintainers; [ ajs124 ];
+    maintainers = teams.helsinki-systems.members;
   };
 }

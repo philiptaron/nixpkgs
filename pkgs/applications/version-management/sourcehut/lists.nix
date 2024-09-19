@@ -1,45 +1,70 @@
 { lib
 , fetchFromSourcehut
+, buildGoModule
 , buildPythonPackage
 , srht
-, asyncpg
 , aiosmtpd
+, asyncpg
 , pygit2
 , emailthreads
-, redis
 , python
+, unzip
+, pip
+, pythonOlder
+, setuptools
 }:
 
-buildPythonPackage rec {
-  pname = "listssrht";
-  version = "0.51.7";
+let
+  version = "0.57.18";
+  gqlgen = import ./fix-gqlgen-trimpath.nix { inherit unzip; gqlgenVersion = "0.17.45"; };
 
   src = fetchFromSourcehut {
     owner = "~sircmpwn";
     repo = "lists.sr.ht";
     rev = version;
-    sha256 = "sha256-oNY5A98oVoL2JKO0fU/8YVl8u7ywmHb/RHD8A6z9yIM=";
+    hash = "sha256-l+QPocnwHTjrU+M0wnm4tBrbz8KmSb6DovC+skuAnLc=";
   };
 
-  patches = [
-    # Revert change breaking Unix socket support for Redis
-    patches/redis-socket/lists/0001-Revert-Add-webhook-queue-monitoring.patch
-  ];
+  listssrht-api = buildGoModule ({
+    inherit src version;
+    pname = "listssrht-api";
+    modRoot = "api";
+    vendorHash = "sha256-UeVs/+uZNtv296bzXIBio2wcg3Uzu3fBM4APzF9O0hY=";
+  } // gqlgen);
+in
+buildPythonPackage rec {
+  inherit src version;
+  pname = "listssrht";
+  pyproject = true;
 
-  nativeBuildInputs = srht.nativeBuildInputs;
+  disabled = pythonOlder "3.7";
+
+  postPatch = ''
+    substituteInPlace Makefile \
+      --replace "all: api" ""
+  '';
+
+  nativeBuildInputs = [
+    pip
+    setuptools
+  ];
 
   propagatedBuildInputs = [
     srht
-    pygit2
-    asyncpg
     aiosmtpd
+    asyncpg
+    pygit2
+    # Unofficial dependency
     emailthreads
-    redis
   ];
 
   preBuild = ''
     export PKGVER=${version}
     export SRHT_PATH=${srht}/${python.sitePackages}/srht
+  '';
+
+  postInstall = ''
+    ln -s ${listssrht-api}/bin/api $out/bin/listssrht-api
   '';
 
   pythonImportsCheck = [ "listssrht" ];
@@ -48,6 +73,6 @@ buildPythonPackage rec {
     homepage = "https://git.sr.ht/~sircmpwn/lists.sr.ht";
     description = "Mailing list service for the sr.ht network";
     license = licenses.agpl3Only;
-    maintainers = with maintainers; [ eadwu ];
+    maintainers = with maintainers; [ eadwu christoph-heiss ];
   };
 }

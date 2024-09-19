@@ -1,5 +1,4 @@
 { lib, mkCoqDerivation, coq, version ? null }:
-with lib;
 
 mkCoqDerivation {
   pname = "smpl";
@@ -13,7 +12,7 @@ mkCoqDerivation {
   releaseRev = v: "v${v}";
 
   inherit version;
-  defaultVersion = with versions; switch coq.version [
+  defaultVersion = with lib.versions; lib.switch coq.version [
     { case = isEq "8.15"; out = "8.15"; }
     { case = isEq "8.14"; out = "8.14"; }
     { case = "8.13.2"; out = "8.13"; }
@@ -23,8 +22,8 @@ mkCoqDerivation {
 
   mlPlugin = true;
 
-  meta = {
-    description = "A Coq plugin providing an extensible tactic similar to first";
+  meta = with lib; {
+    description = "Coq plugin providing an extensible tactic similar to first";
     maintainers = with maintainers; [ siraben ];
     license = licenses.mit;
     platforms = platforms.unix;

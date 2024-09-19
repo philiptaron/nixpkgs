@@ -32,10 +32,10 @@ stdenv.mkDerivation {
   makeFlags = [ "PREFIX=${placeholder "out"}" ];
 
   meta = with lib; {
-    description = "The Bible, King James Version";
+    description = "Bible, King James Version";
     homepage = "https://github.com/bontibon/kjv";
     license = licenses.unlicense;
-    maintainers = with maintainers; [ jtobin ];
+    maintainers = with maintainers; [ jtobin cafkafk ];
     mainProgram = "kjv";
   };
 }

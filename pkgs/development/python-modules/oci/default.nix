@@ -1,58 +1,62 @@
-{ lib
-, buildPythonPackage
-, certifi
-, circuitbreaker
-, configparser
-, cryptography
-, fetchFromGitHub
-, pyopenssl
-, python-dateutil
-, pythonOlder
-, pytz
+{
+  lib,
+  buildPythonPackage,
+  certifi,
+  circuitbreaker,
+  cryptography,
+  fetchFromGitHub,
+  pyopenssl,
+  python-dateutil,
+  pythonOlder,
+  pytz,
+  setuptools,
 }:
 
 buildPythonPackage rec {
   pname = "oci";
-  version = "2.63.0";
+  version = "2.134.0";
   format = "setuptools";
 
-  disabled = pythonOlder "3.6";
+  disabled = pythonOlder "3.7";
 
   src = fetchFromGitHub {
     owner = "oracle";
     repo = "oci-python-sdk";
-    rev = "v${version}";
-    hash = "sha256-EIn7BRXsVf7R2ij8iK3hrNWnLehxKDBlk96lAhFh0xw=";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-EHqXwTsUy2bWQ1OzogL0wQhodgcm4v6T3fz7Y+d4o4w=";
   };
+
+  pythonRelaxDeps = [
+    "cryptography"
+    "pyOpenSSL"
+  ];
+
+  nativeBuildInputs = [
+    setuptools
+  ];
 
   propagatedBuildInputs = [
     certifi
     circuitbreaker
-    configparser
     cryptography
     pyopenssl
     python-dateutil
     pytz
   ];
 
-  postPatch = ''
-    substituteInPlace setup.py \
-      --replace "configparser==4.0.2 ; python_version < '3'" "configparser" \
-      --replace "cryptography>=3.2.1,<=3.4.7" "cryptography" \
-      --replace "pyOpenSSL>=17.5.0,<=19.1.0" "pyOpenSSL"
-  '';
-
   # Tests fail: https://github.com/oracle/oci-python-sdk/issues/164
   doCheck = false;
 
-  pythonImportsCheck = [
-    "oci"
-  ];
+  pythonImportsCheck = [ "oci" ];
 
   meta = with lib; {
     description = "Oracle Cloud Infrastructure Python SDK";
-    homepage = "https://oracle-cloud-infrastructure-python-sdk.readthedocs.io/";
-    license = with licenses; [ asl20 /* or */ upl ];
+    homepage = "https://github.com/oracle/oci-python-sdk";
+    changelog = "https://github.com/oracle/oci-python-sdk/blob/v${version}/CHANGELOG.rst";
+    license = with licenses; [
+      asl20 # or
+      upl
+    ];
     maintainers = with maintainers; [ ilian ];
   };
 }

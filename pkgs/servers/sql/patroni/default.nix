@@ -1,28 +1,22 @@
 { lib
 , pythonPackages
 , fetchFromGitHub
+, nixosTests
 }:
 
 pythonPackages.buildPythonApplication rec {
   pname = "patroni";
-  version = "2.1.3";
+  version = "4.0.1";
 
   src = fetchFromGitHub {
     owner = "zalando";
     repo = pname;
-    rev = "v${version}";
-    sha256 = "sha256-cBkiBrty/6A3rIv9A1oh8GvPjwxhHwYEKuDIsNzHw1g=";
+    rev = "refs/tags/v${version}";
+    sha256 = "sha256-0Eqk9X/qO9MkETaVIOCS6vyvywAK175/CDCNHH+YatQ=";
   };
 
-  # cdiff renamed to ydiff; remove when patroni source reflects this.
-  postPatch = ''
-    for i in requirements.txt patroni/ctl.py tests/test_ctl.py; do
-      substituteInPlace $i --replace cdiff ydiff
-    done
-  '';
-
   propagatedBuildInputs = with pythonPackages; [
-    boto
+    boto3
     click
     consul
     dnspython
@@ -40,7 +34,7 @@ pythonPackages.buildPythonApplication rec {
     ydiff
   ];
 
-  checkInputs = with pythonPackages; [
+  nativeCheckInputs = with pythonPackages; [
     flake8
     mock
     pytestCheckHook
@@ -53,9 +47,13 @@ pythonPackages.buildPythonApplication rec {
 
   pythonImportsCheck = [ "patroni" ];
 
+  passthru.tests = {
+    patroni = nixosTests.patroni;
+  };
+
   meta = with lib; {
     homepage = "https://patroni.readthedocs.io/en/latest/";
-    description = "A Template for PostgreSQL HA with ZooKeeper, etcd or Consul";
+    description = "Template for PostgreSQL HA with ZooKeeper, etcd or Consul";
     license = licenses.mit;
     platforms = platforms.unix;
     maintainers = teams.deshaw.members;

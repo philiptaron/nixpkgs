@@ -2,18 +2,18 @@
 
 buildGoModule rec {
   pname = "kubelogin";
-  version = "1.25.1";
+  version = "1.29.0";
 
   src = fetchFromGitHub {
     owner = "int128";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-BKJ6dZMGW+Md+YUEEgWtPdfiFiOP5Nfb+awx8FXB+bM=";
+    sha256 = "sha256-fGCllV07YustUIX1XiSvsC42obDOgl2yV5ruQMT2R0c=";
   };
 
   subPackages = ["."];
 
-  vendorSha256 = "sha256-mu4NHeYZBM4C5qpj2wRTLsRNLDvZGNkppKGDw621mp4=";
+  vendorHash = "sha256-wtxSoRSpmRwuIOdKGmCRR+QLwOvONiiltg6KL6t2cf8=";
 
   # Rename the binary instead of symlinking to avoid conflict with the
   # Azure version of kubelogin
@@ -22,7 +22,8 @@ buildGoModule rec {
   '';
 
   meta = with lib; {
-    description = "A Kubernetes credential plugin implementing OpenID Connect (OIDC) authentication";
+    description = "Kubernetes credential plugin implementing OpenID Connect (OIDC) authentication";
+    mainProgram = "kubectl-oidc_login";
     inherit (src.meta) homepage;
     license = licenses.asl20;
     maintainers = with maintainers; [ benley ];

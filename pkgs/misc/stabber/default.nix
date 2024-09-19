@@ -1,9 +1,6 @@
 { lib, stdenv, fetchFromGitHub, autoreconfHook, pkg-config, glib, expat
-, libmicrohttpd
+, libmicrohttpd, darwin
 }:
-
-with lib;
-
 stdenv.mkDerivation {
   pname = "stabber-unstable";
   version = "2020-06-08";
@@ -15,14 +12,22 @@ stdenv.mkDerivation {
     sha256 = "0042nbgagl4gcxa5fj7bikjdi1gbk0jwyqnzc5lswpb0l5y0i1ql";
   };
 
+  postPatch = ''
+    # New toolchainsd like gcc-13 trigger warnings and fail the build.
+    substituteInPlace configure.ac --replace "-Werror" ""
+  '';
+
   preAutoreconf = ''
     mkdir m4
   '';
 
-  buildInputs = [ autoreconfHook pkg-config glib expat libmicrohttpd ];
+  nativeBuildInputs = [ pkg-config autoreconfHook ];
+  buildInputs = [ glib expat libmicrohttpd ] ++
+    lib.optionals stdenv.isDarwin [ darwin.apple_sdk.frameworks.Security ];
 
-  meta = {
+  meta = with lib; {
     description = "Stubbed XMPP Server";
+    mainProgram = "stabber";
     homepage = "https://github.com/profanity-im/stabber";
     license = licenses.gpl3;
     platforms = platforms.unix;

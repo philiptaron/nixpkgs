@@ -8,19 +8,20 @@
 , glib
 , gdk-pixbuf
 , gnome
-, withIntrospection ? (stdenv.buildPlatform == stdenv.hostPlatform)
+, buildPackages
+, withIntrospection ? lib.meta.availableOn stdenv.hostPlatform gobject-introspection && stdenv.hostPlatform.emulatorAvailable buildPackages
 , gobject-introspection
 }:
 
 stdenv.mkDerivation rec {
   pname = "libnotify";
-  version = "0.7.12";
+  version = "0.8.3";
 
   outputs = [ "out" "man" "dev" ];
 
   src = fetchurl {
     url = "mirror://gnome/sources/${pname}/${lib.versions.majorMinor version}/${pname}-${version}.tar.xz";
-    sha256 = "dEsrN1CBNfgmG3Vanevm4JrdQhrcdb3pMPbhmLcKtG4=";
+    hash = "sha256-7o8++UYVatNAb99F/u29zZMtvSEatPFvdeuk82+y9sA=";
   };
 
   mesonFlags = [
@@ -44,10 +45,6 @@ stdenv.mkDerivation rec {
     gobject-introspection
   ];
 
-  buildInputs = lib.optionals withIntrospection [
-    gobject-introspection
-  ];
-
   propagatedBuildInputs = [
     gdk-pixbuf
     glib
@@ -61,7 +58,7 @@ stdenv.mkDerivation rec {
   };
 
   meta = with lib; {
-    description = "A library that sends desktop notifications to a notification daemon";
+    description = "Library that sends desktop notifications to a notification daemon";
     homepage = "https://gitlab.gnome.org/GNOME/libnotify";
     license = licenses.lgpl21;
     maintainers = teams.gnome.members;

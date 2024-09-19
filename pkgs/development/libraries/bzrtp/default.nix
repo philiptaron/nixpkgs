@@ -8,7 +8,7 @@
 
 stdenv.mkDerivation rec {
   pname = "bzrtp";
-  version = "5.1.12";
+  version = "5.2.111";
 
   src = fetchFromGitLab {
     domain = "gitlab.linphone.org";
@@ -16,17 +16,23 @@ stdenv.mkDerivation rec {
     group = "BC";
     repo = pname;
     rev = version;
-    sha256 = "sha256-GsHVuNXzLkbKUaHtnyXAr7bR9Emc55zcmKt3RGjCMtA=";
+    hash = "sha256-sLvvQhJ9uVt/dx57xs9ftY/ETi46xmyGDH8372zpqj8=";
   };
 
   buildInputs = [ bctoolbox sqlite ];
   nativeBuildInputs = [ cmake ];
 
   # Do not build static libraries
-  cmakeFlags = [ "-DENABLE_STATIC=NO" "-DCMAKE_C_FLAGS=-Wno-error=cast-function-type" ];
+  cmakeFlags = [ "-DENABLE_STATIC=NO" ];
+
+  env.NIX_CFLAGS_COMPILE = toString [
+    # Needed with GCC 12
+    "-Wno-error=stringop-overflow"
+    "-Wno-error=unused-parameter"
+  ];
 
   meta = with lib; {
-    description = "An opensource implementation of ZRTP keys exchange protocol. Part of the Linphone project.";
+    description = "Opensource implementation of ZRTP keys exchange protocol. Part of the Linphone project";
     homepage = "https://gitlab.linphone.org/BC/public/bzrtp";
     license = licenses.gpl3Plus;
     platforms = platforms.all;

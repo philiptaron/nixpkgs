@@ -1,200 +1,206 @@
-{ lib
-, stdenv
-, stdenvNoCC
-, fetchurl
-, fetchFromGitHub
-, cctools
-, sigtool
-, cereal
-, glslang
-, spirv-cross
-, spirv-headers
-, spirv-tools
-, vulkan-headers
-, AppKit
-, Foundation
-, Metal
-, QuartzCore
+{
+  lib,
+  stdenv,
+  fetchFromGitHub,
+  gitUpdater,
+  cereal,
+  libcxx,
+  glslang,
+  simd,
+  spirv-cross,
+  spirv-headers,
+  spirv-tools,
+  vulkan-headers,
+  xcbuild,
+  AppKit,
+  Foundation,
+  Metal,
+  QuartzCore,
+  enableStatic ? stdenv.hostPlatform.isStatic,
+  # MoltenVK supports using private APIs to implement some Vulkan functionality.
+  # Applications that use private APIs can’t be distributed on the App Store,
+  # but that’s not really a concern for nixpkgs, so use them by default.
+  # See: https://github.com/KhronosGroup/MoltenVK/blob/main/README.md#metal_private_api
+  enablePrivateAPIUsage ? true,
 }:
 
-# Even though the derivation is currently impure, it is written to build successfully using
-# `xcbuild`.  Once the SDK on x86_64-darwin is updated, it should be possible to switch from being
-# an impure derivation.
-#
-# The `sandboxProfile` was copied from the iTerm2 derivation.  In order to build you at least need
-# the `sandbox` option set to `relaxed` or `false`.  Xcode should be available in the default
-# location.
-let
-  libcxx.dev = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr";
-in
-stdenvNoCC.mkDerivation rec {
+stdenv.mkDerivation (finalAttrs: {
   pname = "MoltenVK";
-  version = "1.1.9";
+  version = "1.2.9";
 
   buildInputs = [
     AppKit
     Foundation
     Metal
     QuartzCore
+    cereal
+    glslang
+    simd
+    spirv-cross
+    spirv-headers
+    spirv-tools
+    vulkan-headers
   ];
 
-  outputs = [ "out" "bin" "dev" ];
+  nativeBuildInputs = [ xcbuild ];
 
-  # MoltenVK requires specific versions of its dependencies.
-  # Pin them here except for cereal, which is four years old and has several CVEs.
-  passthru = {
-    # The patch required to support DXVK may different from version to version. This should never
-    # be used except with DXVK, so there’s no package for it. To emphasize that this patch should
-    # never be used except with DXVK, `dxvk` provides a function for applying this patch.
-    dxvkPatch = ./dxvk-moltenvk-compat.patch;
-    glslang = (glslang.overrideAttrs (old: {
-      src = fetchFromGitHub {
-        owner = "KhronosGroup";
-        repo = "glslang";
-        rev = "9bb8cfffb0eed010e07132282c41d73064a7a609";
-        hash = "sha256-YLn/Mxuk6mXPGtBBgfwky5Nl1TCAW6i2g+AZLzqVz+A=";
-      };
-    })).override {
-      inherit (passthru) spirv-headers spirv-tools;
-    };
-    spirv-cross = spirv-cross.overrideAttrs (old: {
-      cmakeFlags = (old.cmakeFlags or [ ]) ++ [
-        "-DSPIRV_CROSS_NAMESPACE_OVERRIDE=MVK_spirv_cross"
-      ];
-      src = fetchFromGitHub {
-        owner = "KhronosGroup";
-        repo = "SPIRV-Cross";
-        rev = "0d4ce028bf8b8a94d325dc1e1c20446153ba19c4";
-        hash = "sha256-OluTxOEfDIGMdrXhvIifjpMgZBvyh9ofLKxKt0dX5ZU=";
-      };
-    });
-    spirv-headers = spirv-headers.overrideAttrs (_: {
-      src = fetchFromGitHub {
-        owner = "KhronosGroup";
-        repo = "spirv-headers";
-        rev = "4995a2f2723c401eb0ea3e10c81298906bf1422b";
-        hash = "sha256-LkIrTFWYvZffLVJJW3152um5LTEsMJEDEsIhBAdhBlk=";
-      };
-    });
-    spirv-tools = (spirv-tools.overrideAttrs (old: {
-      src = fetchFromGitHub {
-        owner = "KhronosGroup";
-        repo = "spirv-tools";
-        rev = "eed5c76a57bb965f2e1b56d1dc40b50910b5ec1d";
-        hash = "sha256-2Mr3HbhRslLpRfwHascl7e/UoPijhrij9Bjg3aCiqBM=";
-      };
-    })).override {
-      inherit (passthru) spirv-headers;
-    };
-    vulkan-headers = vulkan-headers.overrideAttrs (old: {
-      src = fetchFromGitHub {
-        owner = "KhronosGroup";
-        repo = "Vulkan-Headers";
-        rev = "76f00ef6cbb1886eb1162d1fa39bee8b51e22ee8";
-        hash = "sha256-FqrcFHsUS8e4ZgZpxVc8nNZWdNltniFmMjyyWVoNc7w=";
-      };
-    });
-  };
+  outputs = [
+    "out"
+    "bin"
+    "dev"
+  ];
 
   src = fetchFromGitHub {
     owner = "KhronosGroup";
     repo = "MoltenVK";
-    rev = "v${version}";
-    hash = "sha256-5ie1IGzZqaYbciFnrBJ1/9V0LEuz7JsEOFXXkG3hJzg=";
+    rev = "v${finalAttrs.version}";
+    hash = "sha256-9k7NMw2M6IqCUQNBekzDaS6VYAOKwPmuCfJkENQ7oiI=";
   };
 
-  patches = [
-    # Specify the libraries to link directly since XCFrameworks are not being used.
-    ./createDylib.patch
+  postPatch = ''
     # Move `mvkGitRevDerived.h` to a stable location
-    ./gitRevHeaderStability.patch
-    # Fix the Xcode projects to play nicely with `xcbuild`.
-    ./MoltenVKShaderConverter.xcodeproj.patch
-    ./MoltenVK.xcodeproj.patch
+    substituteInPlace Scripts/gen_moltenvk_rev_hdr.sh \
+      --replace-fail '$'''{BUILT_PRODUCTS_DIR}' "$NIX_BUILD_TOP/$sourceRoot/build/include" \
+      --replace-fail '$(git rev-parse HEAD)' ${finalAttrs.src.rev}
+
+    # Modify MoltenVK Xcode projects to build with xcbuild and dependencies from nixpkgs.
+    for proj in MoltenVK MoltenVKShaderConverter; do
+      # Remove xcframework dependencies from the Xcode projects. The basic format is:
+      #     (children|files) = (
+      #         DCFD7F822A45BDA0007BBBF7 /* SPIRVCross.xcframework in Frameworks */,
+      #         etc
+      #     )
+      # This regex will only remove lines matching `xcframework` that are in these blocks
+      # to avoid accidentally corrupting the project.
+      sed -E -e '/(children|files) = /,/;/{/xcframework/d}' \
+        -i "$proj/$proj.xcodeproj/project.pbxproj"
+      # Ensure the namespace used is consistent with the spirv-cross package in nixpkgs.
+      substituteInPlace "$proj/$proj.xcodeproj/project.pbxproj" \
+        --replace-fail SPIRV_CROSS_NAMESPACE_OVERRIDE=MVK_spirv_cross SPIRV_CROSS_NAMESPACE_OVERRIDE=spirv_cross
+    done
+    substituteInPlace MoltenVKShaderConverter/MoltenVKShaderConverter.xcodeproj/project.pbxproj \
+      --replace-fail MetalGLShaderConverterTool MoltenVKShaderConverter \
+      --replace-fail MetalGLShaderConverter-macOS MoltenVKShaderConverter
+
+    # Don’t try to build `xcframework`s because `xcbuild` can’t build them.
+    sed -e '/xcframework/d' -i Scripts/package_all.sh
+
+    # Remove vendored dependency links.
+    find . -lname '*/External/*' -delete
+
+    # The library will be linked in the install phase regardless of version,
+    # so truncate it if it exists to avoid link failures.
+    test -f Scripts/create_dylib.sh && truncate --size 0 Scripts/create_dylib.sh
+
+    # Link glslang source because MoltenVK needs non-public headers to build.
+    mkdir -p build/include
+    ln -s "${glslang.src}" "build/include/glslang"
+  '';
+
+  env.NIX_CFLAGS_COMPILE = toString (
+    [
+      "-isystem ${lib.getDev libcxx}/include/c++/v1"
+      "-I${lib.getDev spirv-cross}/include/spirv_cross"
+      "-I${lib.getDev spirv-headers}/include/spirv/unified1"
+    ]
+    ++ lib.optional enablePrivateAPIUsage "-DMVK_USE_METAL_PRIVATE_API=1"
+  );
+
+  env.NIX_LDFLAGS = toString [
+    "-lMachineIndependent"
+    "-lGenericCodeGen"
+    "-lglslang"
+    "-lOSDependent"
+    "-lSPIRV"
+    "-lSPIRV-Tools"
+    "-lSPIRV-Tools-opt"
+    "-lspirv-cross-msl"
+    "-lspirv-cross-core"
+    "-lspirv-cross-glsl"
+    "-lspirv-cross-reflect"
   ];
 
-  postPatch = ''
-    substituteInPlace MoltenVKShaderConverter/MoltenVKShaderConverter.xcodeproj/project.pbxproj \
-      --replace @@sourceRoot@@ $(pwd) \
-      --replace @@libcxx@@ "${libcxx.dev}" \
-      --replace @@glslang@@ "${passthru.glslang}" \
-      --replace @@spirv-cross@@ "${passthru.spirv-cross}" \
-      --replace @@spirv-tools@@ "${passthru.glslang.spirv-tools}" \
-      --replace @@spirv-headers@@ "${passthru.glslang.spirv-headers}"
-    substituteInPlace MoltenVK/MoltenVK.xcodeproj/project.pbxproj \
-      --replace @@sourceRoot@@ $(pwd) \
-      --replace @@libcxx@@ "${libcxx.dev}" \
-      --replace @@cereal@@ "${cereal}" \
-      --replace @@spirv-cross@@ "${passthru.spirv-cross}" \
-      --replace @@vulkan-headers@@ "${passthru.vulkan-headers}"
-    substituteInPlace Scripts/create_dylib.sh \
-      --replace @@sourceRoot@@ $(pwd) \
-      --replace @@glslang@@ "${passthru.glslang}" \
-      --replace @@spirv-tools@@ "${passthru.glslang.spirv-tools}" \
-      --replace @@spirv-cross@@ "${passthru.spirv-cross}"
-    substituteInPlace Scripts/gen_moltenvk_rev_hdr.sh \
-      --replace @@sourceRoot@@ $(pwd) \
-      --replace '$(git rev-parse HEAD)' ${src.rev}
-  '';
-
-  dontConfigure = true;
-
   buildPhase = ''
-    # Build each project on its own because `xcbuild` fails to build `MoltenVKPackaging.xcodeproj`.
-    derived_data_path=$(pwd)/DerivedData
-    pushd MoltenVKShaderConverter
-      /usr/bin/xcodebuild build \
-        -jobs $NIX_BUILD_CORES \
-        -derivedDataPath "$derived_data_path" \
-        -configuration Release \
-        -project MoltenVKShaderConverter.xcodeproj \
-        -scheme MoltenVKShaderConverter \
-        -arch ${stdenv.targetPlatform.darwinArch}
-    popd
-    mkdir -p outputs/bin outputs/lib
-    declare -A outputs=( [MoltenVKShaderConverter]=bin [libMoltenVKShaderConverter.a]=lib )
-    for output in "''${!outputs[@]}"; do
-      cp DerivedData/Build/Products/Release/$output "outputs/''${outputs[$output]}/$output"
-    done
+    runHook preBuild
 
-    pushd MoltenVK
-      /usr/bin/xcodebuild build \
-        -jobs $NIX_BUILD_CORES \
-        -derivedDataPath "$derived_data_path" \
-        -configuration Release \
-        -project MoltenVK.xcodeproj \
-        -scheme MoltenVK-macOS \
-        -arch ${stdenv.targetPlatform.darwinArch}
-    popd
-    cp DerivedData/Build/Products/Release/dynamic/libMoltenVK.dylib outputs/lib/libMoltenVK.dylib
+    NIX_CFLAGS_COMPILE+=" \
+      -I$NIX_BUILD_TOP/$sourceRoot/build/include \
+      -I$NIX_BUILD_TOP/$sourceRoot/Common"
+
+    xcodebuild build \
+      SYMROOT=$PWD/Products OBJROOT=$PWD/Intermedates \
+      -jobs $NIX_BUILD_CORES \
+      -configuration Release \
+      -project MoltenVKPackaging.xcodeproj \
+      -scheme 'MoltenVK Package (macOS only)' \
+      -destination generic/platform=macOS \
+      -arch ${stdenv.hostPlatform.darwinArch}
+
+    runHook postBuild
   '';
+
+  postBuild =
+    if enableStatic then
+      ''
+        mkdir -p Package/Release/MoltenVK/static
+        cp Products/Release/libMoltenVK.a Package/Release/MoltenVK/static
+      ''
+    else
+      ''
+        # MoltenVK’s Xcode project builds the dylib, but it doesn’t seem to work with
+        # xcbuild. This is based on the script versions prior to 1.2.8 used.
+        mkdir -p Package/Release/MoltenVK/dynamic/dylib
+        clang++ -Wl,-all_load -Wl,-w \
+          -dynamiclib \
+          -compatibility_version 1.0.0 -current_version 1.0.0 \
+          -LProducts/Release \
+          -framework AppKit \
+          -framework CoreGraphics \
+          -framework Foundation \
+          -framework IOKit \
+          -framework IOSurface \
+          -framework Metal \
+          -framework QuartzCore \
+          -lobjc \
+          -lMoltenVKShaderConverter \
+          -lspirv-cross-reflect \
+          -install_name "$out/lib/libMoltenVK.dylib" \
+          -o Package/Release/MoltenVK/dynamic/dylib/libMoltenVK.dylib \
+          -force_load Products/Release/libMoltenVK.a
+      '';
 
   installPhase = ''
-    mkdir -p "$out/lib" "$out/share/vulkan/icd.d" "$bin/bin" "$dev/include/MoltenVK"
-    cp outputs/bin/MoltenVKShaderConverter "$bin/bin/"
-    cp outputs/lib/libMoltenVK.dylib "$out/lib/"
-    cp MoltenVK/MoltenVK/API/* "$dev/include/MoltenVK"
-    ${cctools}/bin/install_name_tool -id "$out/lib/libMoltenVK.dylib" "$out/lib/libMoltenVK.dylib"
-    # FIXME: https://github.com/NixOS/nixpkgs/issues/148189
-    /usr/bin/codesign -s - -f "$out/lib/libMoltenVK.dylib"
-    install -m644 MoltenVK/icd/MoltenVK_icd.json "$out/share/vulkan/icd.d/MoltenVK_icd.json"
-    substituteInPlace $out/share/vulkan/icd.d/MoltenVK_icd.json \
-      --replace ./libMoltenVK.dylib "$out/lib/libMoltenVK.dylib"
+    runHook preInstall
+
+    libraryExtension=${if enableStatic then ".a" else ".dylib"}
+    packagePath=${if enableStatic then "static" else "dynamic/dylib"}
+
+    mkdir -p "$out/lib" "$out/share/vulkan/icd.d" "$bin/bin" "$dev"
+
+    cp Package/Release/MoltenVKShaderConverter/Tools/MoltenVKShaderConverter "$bin/bin"
+    cp -r Package/Release/MoltenVK/include "$dev"
+    cp Package/Release/MoltenVK/$packagePath/libMoltenVK$libraryExtension "$out/lib"
+
+    # Install ICD definition for use with vulkan-loader.
+    install -m644 MoltenVK/icd/MoltenVK_icd.json \
+      "$out/share/vulkan/icd.d/MoltenVK_icd.json"
+    substituteInPlace "$out/share/vulkan/icd.d/MoltenVK_icd.json" \
+      --replace-fail ./libMoltenVK.dylib "$out/lib/libMoltenVK.dylib"
+
+    runHook postInstall
   '';
 
-  sandboxProfile = ''
-    (allow file-read* file-write* process-exec mach-lookup)
-    ; block homebrew dependencies
-    (deny file-read* file-write* process-exec mach-lookup (subpath "/usr/local") (with no-log))
-  '';
+  passthru.updateScript = gitUpdater {
+    rev-prefix = "v";
+    ignoredVersions = ".*-(beta|rc).*";
+  };
 
   meta = {
-    description = "A Vulkan Portability implementation built on top of Apple’s Metal API";
+    description = "Vulkan Portability implementation built on top of Apple’s Metal API";
     homepage = "https://github.com/KhronosGroup/MoltenVK";
     changelog = "https://github.com/KhronosGroup/MoltenVK/releases";
     maintainers = [ lib.maintainers.reckenrode ];
-    hydraPlatforms = [ ]; # Prevent building on Hydra until MoltenVK no longer requires Xcode.
     license = lib.licenses.asl20;
     platforms = lib.platforms.darwin;
   };
-}
+})

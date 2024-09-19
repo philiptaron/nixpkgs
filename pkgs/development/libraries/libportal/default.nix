@@ -18,16 +18,21 @@ assert variant == null || variant == "gtk3" || variant == "gtk4" || variant == "
 
 stdenv.mkDerivation rec {
   pname = "libportal" + lib.optionalString (variant != null) "-${variant}";
-  version = "0.6";
+  version = "0.7.1";
 
-  outputs = [ "out" "dev" "devdoc" ];
+  outputs = [ "out" "dev" ]
+    ++ lib.optional (variant != "qt5") "devdoc";
 
   src = fetchFromGitHub {
     owner = "flatpak";
     repo = "libportal";
     rev = version;
-    sha256 = "sha256-wDDE43UC6FBgPYLS+WWExeheURCH/3fCKu5oJg7GM+A=";
+    sha256 = "sha256-3roZJHnGFM7ClxbB7I/haexPTwYskidz9F+WV3RL9Ho=";
   };
+
+  depsBuildBuild = [
+    pkg-config
+  ];
 
   nativeBuildInputs = [
     meson
@@ -47,12 +52,16 @@ stdenv.mkDerivation rec {
     gtk4
   ] ++ lib.optionals (variant == "qt5") [
     libsForQt5.qtbase
+    libsForQt5.qtx11extras
   ];
 
   mesonFlags = [
-    "-Dbackends=${lib.optionalString (variant != null) variant}"
-    "-Dvapi=${if variant != "qt5" then "true" else "false"}"
-    "-Dintrospection=${if variant != "qt5" then "true" else "false"}"
+    (lib.mesonEnable "backend-gtk3" (variant == "gtk3"))
+    (lib.mesonEnable "backend-gtk4" (variant == "gtk4"))
+    (lib.mesonEnable "backend-qt5" (variant == "qt5"))
+    (lib.mesonBool "vapi" (variant != "qt5"))
+    (lib.mesonBool "introspection" (variant != "qt5"))
+    (lib.mesonBool "docs" (variant != "qt5")) # requires introspection=true
   ];
 
   postFixup = ''
@@ -60,11 +69,14 @@ stdenv.mkDerivation rec {
     moveToOutput "share/doc" "$devdoc"
   '';
 
+  # we don't have any binaries
+  dontWrapQtApps = true;
+
   meta = with lib; {
     description = "Flatpak portal library";
     homepage = "https://github.com/flatpak/libportal";
     license = licenses.lgpl3Plus;
     maintainers = with maintainers; [ jtojnar ];
-    platforms = platforms.linux;
+    platforms = platforms.unix;
   };
 }

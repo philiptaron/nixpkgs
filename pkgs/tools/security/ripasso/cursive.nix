@@ -1,27 +1,58 @@
-{ stdenv, lib, rustPlatform, fetchFromGitHub, pkg-config, ncurses, python3, openssl, libgpg-error, gpgme, xorg, AppKit, Security, installShellFiles }:
+{ stdenv
+, lib
+, rustPlatform
+, fetchFromGitHub
+, pkg-config
+, python3
+, openssl
+, libgpg-error
+, gpgme
+, xorg
+, nettle
+, clang
+, AppKit
+, Security
+, installShellFiles
+}:
 
-with rustPlatform;
-buildRustPackage rec {
-  version = "0.5.2";
+rustPlatform.buildRustPackage rec {
+  version = "0.7.0";
   pname = "ripasso-cursive";
 
   src = fetchFromGitHub {
     owner = "cortex";
     repo = "ripasso";
-    rev  = "release-${version}";
-    sha256 = "sha256-De/xCDzdRHCslD0j6vT8bwjcMTf5R8KZ32aaB3i+Nig=";
+    rev = "release-${version}";
+    hash = "sha256-j98X/+UTea4lCtFfMpClnfcKlvxm4DpOujLc0xc3VUY=";
   };
 
-  patches = [ ./fix-tests.patch ];
+  cargoHash = "sha256-dP8H4OOgtQEBEJxpbaR3KnXFtgBdX4r+dCpBJjBK1MM=";
 
-  cargoSha256 = "sha256-ZmHzxHV4uIxPlLkkOLJApPNLo0GGVj9EopoIwi/j6DE=";
+  patches = [
+    ./fix-tests.patch
+  ];
 
   cargoBuildFlags = [ "-p ripasso-cursive" ];
 
-  nativeBuildInputs = [ pkg-config gpgme python3 installShellFiles ];
+  nativeBuildInputs = [
+    pkg-config
+    gpgme
+    python3
+    installShellFiles
+    clang
+    rustPlatform.bindgenHook
+  ];
+
   buildInputs = [
-    ncurses openssl libgpg-error gpgme xorg.libxcb
-  ] ++ lib.optionals stdenv.isDarwin [ AppKit Security ];
+    openssl
+    libgpg-error
+    gpgme
+    xorg.libxcb
+    nettle
+  ] ++ lib.optionals stdenv.isDarwin [
+    AppKit
+    Security
+  ];
 
   preCheck = ''
     export HOME=$TMPDIR
@@ -32,7 +63,8 @@ buildRustPackage rec {
   '';
 
   meta = with lib; {
-    description = "A simple password manager written in Rust";
+    description = "Simple password manager written in Rust";
+    mainProgram = "ripasso-cursive";
     homepage = "https://github.com/cortex/ripasso";
     license = licenses.gpl3;
     maintainers = with maintainers; [ sgo ];

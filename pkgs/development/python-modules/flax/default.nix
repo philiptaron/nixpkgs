@@ -1,42 +1,76 @@
-{ buildPythonPackage
-, fetchFromGitHub
-, jaxlib
-, keras
-, lib
-, matplotlib
-, msgpack
-, numpy
-, optax
-, pytest-xdist
-, pytestCheckHook
-, tensorflow
+{
+  lib,
+  buildPythonPackage,
+  pythonOlder,
+  fetchFromGitHub,
+
+  # build-system
+  jaxlib,
+  setuptools-scm,
+
+  # dependencies
+  jax,
+  msgpack,
+  numpy,
+  optax,
+  orbax-checkpoint,
+  pyyaml,
+  rich,
+  tensorstore,
+  typing-extensions,
+
+  # checks
+  cloudpickle,
+  einops,
+  keras,
+  pytest-xdist,
+  pytestCheckHook,
+  tensorflow,
+
+  # optional-dependencies
+  matplotlib,
 }:
 
 buildPythonPackage rec {
   pname = "flax";
-  version = "0.4.1";
+  version = "0.8.5";
+  pyproject = true;
+
+  disabled = pythonOlder "3.9";
 
   src = fetchFromGitHub {
     owner = "google";
-    repo = pname;
-    rev = "v${version}";
-    sha256 = "0j5ngdndm9nm49gcda7m36qzwk5lcbi4jnij9fi96vld54ip6f6v";
+    repo = "flax";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-6WOFq0758gtNdrlWqSQBlKmWVIGe5e4PAaGrvHoGjr0=";
   };
 
-  buildInputs = [ jaxlib ];
+  build-system = [
+    jaxlib
+    setuptools-scm
+  ];
 
-  propagatedBuildInputs = [
-    matplotlib
+  dependencies = [
+    jax
     msgpack
     numpy
     optax
+    orbax-checkpoint
+    pyyaml
+    rich
+    tensorstore
+    typing-extensions
   ];
 
-  pythonImportsCheck = [
-    "flax"
-  ];
+  passthru.optional-dependencies = {
+    all = [ matplotlib ];
+  };
 
-  checkInputs = [
+  pythonImportsCheck = [ "flax" ];
+
+  nativeCheckInputs = [
+    cloudpickle
+    einops
     keras
     pytest-xdist
     pytestCheckHook
@@ -51,7 +85,6 @@ buildPythonPackage rec {
   disabledTestPaths = [
     # Docs test, needs extra deps + we're not interested in it.
     "docs/_ext/codediff_test.py"
-
     # The tests in `examples` are not designed to be executed from a single test
     # session and thus either have the modules that conflict with each other or
     # wrong import paths, depending on how they're invoked. Many tests also have
@@ -59,12 +92,23 @@ buildPythonPackage rec {
     # `tensorflow_datasets`, `vocabulary`) so the benefits of trying to run them
     # would be limited anyway.
     "examples/*"
+    "flax/nnx/examples/*"
+    # See https://github.com/google/flax/issues/3232.
+    "tests/jax_utils_test.py"
+    # Requires tree
+    "tests/tensorboard_test.py"
   ];
 
-  meta = with lib; {
+  disabledTests = [
+    # ValueError: Checkpoint path should be absolute
+    "test_overwrite_checkpoints0"
+  ];
+
+  meta = {
     description = "Neural network library for JAX";
     homepage = "https://github.com/google/flax";
-    license = licenses.asl20;
-    maintainers = with maintainers; [ ndl ];
+    changelog = "https://github.com/google/flax/releases/tag/v${version}";
+    license = lib.licenses.asl20;
+    maintainers = with lib.maintainers; [ ndl ];
   };
 }

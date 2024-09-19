@@ -1,19 +1,28 @@
-{ lib, stdenv, fetchurl, autoreconfHook, ncurses, utmp, pam ? null }:
+{ lib
+, stdenv
+, fetchurl
+, autoreconfHook
+, ncurses
+, libxcrypt
+, utmp
+, pam ? null
+}:
 
 stdenv.mkDerivation rec {
   pname = "screen";
-  version = "4.9.0";
+  version = "4.9.1";
 
   src = fetchurl {
-    url = "mirror://gnu/screen/${pname}-${version}.tar.gz";
-    sha256 = "1x1hqy4h47i7hk85f779lkwkm7gkq8h8mxwd0znkh5adpf0m4czr";
+    url = "mirror://gnu/screen/screen-${version}.tar.gz";
+    hash = "sha256-Js7z48QlccDUhK1vrxEMXBUJH7+HKwb6eqR2bHQFrGk=";
   };
 
-  configureFlags= [
+  configureFlags = [
     "--enable-telnet"
     "--enable-pam"
     "--with-sys-screenrc=/etc/screenrc"
     "--enable-colors256"
+    "--enable-rxvt_osc"
   ];
 
   nativeBuildInputs = [
@@ -21,6 +30,7 @@ stdenv.mkDerivation rec {
   ];
   buildInputs = [
     ncurses
+    libxcrypt
   ] ++ lib.optional stdenv.isLinux pam
     ++ lib.optional stdenv.isDarwin utmp;
 
@@ -28,8 +38,8 @@ stdenv.mkDerivation rec {
 
   meta = with lib; {
     homepage = "https://www.gnu.org/software/screen/";
-    description = "A window manager that multiplexes a physical terminal";
-    license = licenses.gpl2Plus;
+    description = "Window manager that multiplexes a physical terminal";
+    license = licenses.gpl3Plus;
 
     longDescription =
       '' GNU Screen is a full-screen window manager that multiplexes a physical
@@ -54,6 +64,6 @@ stdenv.mkDerivation rec {
       '';
 
     platforms = platforms.unix;
-    maintainers = with maintainers; [ vrthra ];
+    maintainers = [ ];
   };
 }

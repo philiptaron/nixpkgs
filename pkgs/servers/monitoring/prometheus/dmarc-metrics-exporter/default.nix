@@ -1,54 +1,52 @@
-{ lib
-, python3
-, fetchpatch
+{
+  lib,
+  stdenv,
+  python3,
+  fetchFromGitHub,
 }:
 
 python3.pkgs.buildPythonApplication rec {
   pname = "dmarc-metrics-exporter";
-  version = "0.5.1";
+  version = "1.1.0";
 
-  disabled = python3.pythonOlder "3.7";
+  pyproject = true;
 
-  format = "pyproject";
-
-  src = python3.pkgs.fetchPypi {
-    inherit pname version;
-    sha256 = "22ec361f9a4c86abefbfab541f588597e21bf4fbedf2911f230e560b2ec3503a";
+  src = fetchFromGitHub {
+    owner = "jgosmann";
+    repo = "dmarc-metrics-exporter";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-xzIYlOZ1HeW+jbVDVlUPTIooFraQ0cJltsDoCzVMNsA=";
   };
 
-  patches = [
-    # https://github.com/jgosmann/dmarc-metrics-exporter/pull/23
-    (fetchpatch {
-      url = "https://github.com/jgosmann/dmarc-metrics-exporter/commit/3fe401f5dfb9e0304601a2a89ac987ff853b7cba.patch";
-      hash = "sha256-MjVLlFQMp2r3AhBMu1lEmRm0Y2H9FdvCfPgAK5kvwWE=";
-    })
-  ];
+  pythonRelaxDeps = true;
 
-  postPatch = ''
-    substituteInPlace pyproject.toml \
-      --replace 'python = "^3.7,<3.10"' 'python = "^3.7,<3.11"' \
-      --replace poetry.masonry.api poetry.core.masonry.api \
-      --replace '"^' '">='
-  '';
-
-  nativeBuildInputs = with python3.pkgs; [
+  build-system = with python3.pkgs; [
     poetry-core
   ];
 
-  propagatedBuildInputs = with python3.pkgs; [
-    bite-parser
-    dataclasses-serialization
-    prometheus-client
-    typing-extensions
-    uvicorn
-    xsdata
-  ];
+  dependencies =
+    with python3.pkgs;
+    [
+      bite-parser
+      dataclasses-serialization
+      prometheus-client
+      structlog
+      uvicorn
+      xsdata
+    ]
+    ++ uvicorn.optional-dependencies.standard;
 
-  checkInputs = with python3.pkgs; [
+  nativeCheckInputs = with python3.pkgs; [
     aiohttp
     pytest-asyncio
     pytestCheckHook
     requests
+  ];
+
+  disabledTests = lib.optionals stdenv.hostPlatform.isDarwin [
+    # flaky tests
+    "test_build_info"
+    "test_prometheus_exporter"
   ];
 
   disabledTestPaths = [
@@ -62,7 +60,9 @@ python3.pkgs.buildPythonApplication rec {
 
   meta = {
     description = "Export Prometheus metrics from DMARC reports";
+    mainProgram = "dmarc-metrics-exporter";
     homepage = "https://github.com/jgosmann/dmarc-metrics-exporter";
+    changelog = "https://github.com/jgosmann/dmarc-metrics-exporter/blob/v${version}/CHANGELOG.rst";
     license = lib.licenses.mit;
     maintainers = with lib.maintainers; [ ma27 ];
   };

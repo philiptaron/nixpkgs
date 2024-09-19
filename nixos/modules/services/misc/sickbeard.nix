@@ -22,13 +22,10 @@ in
         default = false;
         description = "Whether to enable the sickbeard server.";
       };
-      package = mkOption {
-        type = types.package;
-        default = pkgs.sickbeard;
-        defaultText = literalExpression "pkgs.sickbeard";
-        example = literalExpression "pkgs.sickrage";
-        description =''
-          Enable <literal>pkgs.sickrage</literal> or <literal>pkgs.sickgear</literal>
+      package = mkPackageOption pkgs "sickbeard" {
+        example = "sickrage";
+        extraDescription = ''
+          Enable `pkgs.sickrage` or `pkgs.sickgear`
           as an alternative to SickBeard
         '';
       };

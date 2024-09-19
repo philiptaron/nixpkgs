@@ -6,13 +6,14 @@
 
 assert withMysql -> (mysql_jdbc != null);
 
-stdenvNoCC.mkDerivation rec {
+lib.warnIf (crowdProperties != null) "Using `crowdProperties` is deprecated!"
+(stdenvNoCC.mkDerivation rec {
   pname = "atlassian-confluence";
-  version = "7.18.1";
+  version = "9.0.1";
 
   src = fetchurl {
     url = "https://product-downloads.atlassian.com/software/confluence/downloads/${pname}-${version}.tar.gz";
-    sha256 = "sha256-MEq1ASnJUYWPvt7Z30+fUTv+QrDI+Xsb5e9K0c8ZtdQ=";
+    hash = "sha256-WCshWmJaTfyjRLaXUtkDuXHO5eEhHa/rDCPVFSLd3aU=";
   };
 
   buildPhase = ''
@@ -45,6 +46,6 @@ stdenvNoCC.mkDerivation rec {
     homepage = "https://www.atlassian.com/software/confluence";
     sourceProvenance = with sourceTypes; [ binaryBytecode ];
     license = licenses.unfree;
-    maintainers = with maintainers; [ fpletz globin willibutz ciil techknowlogick ];
+    maintainers = with maintainers; [ willibutz ciil techknowlogick ];
   };
-}
+})

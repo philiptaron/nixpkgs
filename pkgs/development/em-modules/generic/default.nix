@@ -1,12 +1,20 @@
 { pkgs, lib, emscripten, python3 }:
 
+argsFun:
+
+let
+  wrapDerivation = f:
+    pkgs.stdenv.mkDerivation (finalAttrs:
+      f (lib.toFunction argsFun finalAttrs)
+    );
+in
+wrapDerivation (
 { buildInputs ? [], nativeBuildInputs ? []
 
 , enableParallelBuilding ? true
 
 , meta ? {}, ... } @ args:
 
-pkgs.stdenv.mkDerivation (
   args //
   {
 
@@ -17,6 +25,9 @@ pkgs.stdenv.mkDerivation (
 
   # fake conftest results with emscripten's python magic
   EMCONFIGURE_JS=2;
+
+  # removes archive indices
+  dontStrip = args.dontStrip or true;
 
   configurePhase = args.configurePhase or ''
     # FIXME: Some tests require writing at $HOME

@@ -7,25 +7,26 @@
 , gdk-pixbuf
 , gettext
 , glib
-, gnome
 , gobject-introspection
 , gtk4
+, gtksourceview5
+, libadwaita
 , libxml2
 , pkg-config
 , python3Packages
-, wrapGAppsHook4 }:
+, wrapGAppsHook4
+}:
 
 python3Packages.buildPythonApplication rec {
   pname = "bada-bib";
-  version = "0.6.2";
+  version = "0.8.1";
   format = "other";
-  strictDeps = false; # https://github.com/NixOS/nixpkgs/issues/56943
 
   src = fetchFromGitHub {
     owner = "RogerCrocker";
     repo = "BadaBib";
     rev = "refs/tags/v${version}";
-    sha256 = "sha256-3dXtBwqEqiXLjntmqLYeuwLv0RDb774+yOXc7vdf8+Y=";
+    sha256 = "sha256-8lpkmQCVh94+qhFJijAIVyYeJRFz2u/OYR1C5E+gtOE=";
   };
 
   nativeBuildInputs = [
@@ -42,9 +43,11 @@ python3Packages.buildPythonApplication rec {
     gdk-pixbuf
     glib
     gtk4
+    gtksourceview5
+    libadwaita
   ];
 
-  checkInputs = [
+  nativeCheckInputs = [
     appstream-glib
     desktop-file-utils
   ];
@@ -70,7 +73,8 @@ python3Packages.buildPythonApplication rec {
 
   meta = with lib; {
     homepage = "https://github.com/RogerCrocker/BadaBib";
-    description = "A simple BibTeX Viewer and Editor";
+    description = "Simple BibTeX Viewer and Editor";
+    mainProgram = "badabib";
     maintainers = [ maintainers.Cogitri ];
     license = licenses.gpl3Plus;
   };

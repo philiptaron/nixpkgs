@@ -2,7 +2,6 @@
 , stdenv
 , fetchurl
 , gmp
-, mpir
 , mpfr
 , ntl
 , openblas ? null, blas, lapack
@@ -13,16 +12,15 @@ assert withBlas -> openblas != null && blas.implementation == "openblas" && lapa
 
 stdenv.mkDerivation rec {
   pname = "flint";
-  version = "2.8.5";
+  version = "2.9.0";
 
   src = fetchurl {
     url = "https://www.flintlib.org/flint-${version}.tar.gz";
-    sha256 = "sha256-WRH+3/kREA8VeB8146T6k0/mDkrqAqjBDMiRgQHB7tg=";
+    sha256 = "sha256-L8CQ1RAzyTII5sENQGOXpTyYOuU0O5WOsl9ypXpM52o=";
   };
 
   buildInputs = [
     gmp
-    mpir
     mpfr
     ntl
   ] ++ lib.optionals withBlas [
@@ -35,7 +33,6 @@ stdenv.mkDerivation rec {
 
   configureFlags = [
     "--with-gmp=${gmp}"
-    "--with-mpir=${mpir}"
     "--with-mpfr=${mpfr}"
     "--with-ntl=${ntl}"
   ] ++ lib.optionals withBlas [

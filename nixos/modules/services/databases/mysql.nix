@@ -7,6 +7,9 @@ let
   cfg = config.services.mysql;
 
   isMariaDB = lib.getName cfg.package == lib.getName pkgs.mariadb;
+  isOracle = lib.getName cfg.package == lib.getName pkgs.mysql80;
+  # Oracle MySQL has supported "notify" service type since 8.0
+  hasNotify = isMariaDB || (isOracle && versionAtLeast cfg.package.version "8.0");
 
   mysqldOptions =
     "--user=${cfg.user} --datadir=${cfg.dataDir} --basedir=${cfg.package}";
@@ -36,9 +39,9 @@ in
       package = mkOption {
         type = types.package;
         example = literalExpression "pkgs.mariadb";
-        description = "
+        description = ''
           Which MySQL derivation to use. MariaDB packages are supported too.
-        ";
+        '';
       };
 
       user = mkOption {
@@ -47,11 +50,11 @@ in
         description = ''
           User account under which MySQL runs.
 
-          <note><para>
+          ::: {.note}
           If left as the default value this user will automatically be created
           on system activation, otherwise you are responsible for
           ensuring the user exists before the MySQL service starts.
-          </para></note>
+          :::
         '';
       };
 
@@ -61,11 +64,11 @@ in
         description = ''
           Group account under which MySQL runs.
 
-          <note><para>
+          ::: {.note}
           If left as the default value this group will automatically be created
           on system activation, otherwise you are responsible for
           ensuring the user exists before the MySQL service starts.
-          </para></note>
+          :::
         '';
       };
 
@@ -75,10 +78,10 @@ in
         description = ''
           The data directory for MySQL.
 
-          <note><para>
-          If left as the default value of <literal>/var/lib/mysql</literal> this directory will automatically be created before the MySQL
+          ::: {.note}
+          If left as the default value of `/var/lib/mysql` this directory will automatically be created before the MySQL
           server starts, otherwise you are responsible for ensuring the directory exists with appropriate ownership and permissions.
-          </para></note>
+          :::
         '';
       };
 
@@ -90,7 +93,7 @@ in
         '';
         description = ''
           Override the configuration file used by MySQL. By default,
-          NixOS generates one automatically from <option>services.mysql.settings</option>.
+          NixOS generates one automatically from {option}`services.mysql.settings`.
         '';
         example = literalExpression ''
           pkgs.writeText "my.cnf" '''
@@ -109,18 +112,16 @@ in
         default = {};
         description = ''
           MySQL configuration. Refer to
-          <link xlink:href="https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html"/>,
-          <link xlink:href="https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html"/>,
-          and <link xlink:href="https://mariadb.com/kb/en/server-system-variables/"/>
+          <https://dev.mysql.com/doc/refman/5.7/en/server-system-variables.html>,
+          <https://dev.mysql.com/doc/refman/8.0/en/server-system-variables.html>,
+          and <https://mariadb.com/kb/en/server-system-variables/>
           for details on supported values.
 
-          <note>
-            <para>
-              MySQL configuration options such as <literal>--quick</literal> should be treated as
-              boolean options and provided values such as <literal>true</literal>, <literal>false</literal>,
-              <literal>1</literal>, or <literal>0</literal>. See the provided example below.
-            </para>
-          </note>
+          ::: {.note}
+          MySQL configuration options such as `--quick` should be treated as
+          boolean options and provided values such as `true`, `false`,
+          `1`, or `0`. See the provided example below.
+          :::
         '';
         example = literalExpression ''
           {
@@ -162,10 +163,12 @@ in
           List of database names and their initial schemas that should be used to create databases on the first startup
           of MySQL. The schema attribute is optional: If not specified, an empty database is created.
         '';
-        example = [
-          { name = "foodatabase"; schema = literalExpression "./foodatabase.sql"; }
-          { name = "bardatabase"; }
-        ];
+        example = literalExpression ''
+          [
+            { name = "foodatabase"; schema = ./foodatabase.sql; }
+            { name = "bardatabase"; }
+          ]
+        '';
       };
 
       initialScript = mkOption {
@@ -210,8 +213,8 @@ in
 
                 For more information on how to specify the target
                 and on which privileges exist, see the
-                <link xlink:href="https://mariadb.com/kb/en/library/grant/">GRANT syntax</link>.
-                The attributes are used as <code>GRANT ''${attrName} ON ''${attrValue}</code>.
+                [GRANT syntax](https://mariadb.com/kb/en/library/grant/).
+                The attributes are used as `GRANT ''${attrName} ON ''${attrValue}`.
               '';
               example = literalExpression ''
                 {
@@ -377,19 +380,11 @@ in
         # The super user account to use on *first* run of MySQL server
         superUser = if isMariaDB then cfg.user else "root";
       in ''
-        ${optionalString (!isMariaDB) ''
+        ${optionalString (!hasNotify) ''
           # Wait until the MySQL server is available for use
-          count=0
           while [ ! -e /run/mysqld/mysqld.sock ]
           do
-              if [ $count -eq 30 ]
-              then
-                  echo "Tried 30 times, giving up..."
-                  exit 1
-              fi
-
               echo "MySQL daemon not yet started. Waiting for 1 second..."
-              count=$((count++))
               sleep 1
           done
         ''}
@@ -477,7 +472,7 @@ in
 
       serviceConfig = mkMerge [
         {
-          Type = if isMariaDB then "notify" else "simple";
+          Type = if hasNotify then "notify" else "simple";
           Restart = "on-abort";
           RestartSec = "5s";
 

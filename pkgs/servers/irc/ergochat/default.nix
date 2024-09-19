@@ -2,22 +2,23 @@
 
 buildGoModule rec {
   pname = "ergo";
-  version = "2.9.1";
+  version = "2.14.0";
 
   src = fetchFromGitHub {
     owner = "ergochat";
     repo = "ergo";
     rev = "v${version}";
-    sha256 = "sha256-RxsmkTfHymferS/FRW0sLnstKfvGXkW6cEb/JbeS4lc=";
+    sha256 = "sha256-vXspI0BkwpS9w7PQpj+U3REQcSPaPJAfIBRj62loQzQ=";
   };
 
-  vendorSha256 = null;
+  vendorHash = null;
 
   passthru.tests.ergochat = nixosTests.ergochat;
 
   meta = {
     changelog = "https://github.com/ergochat/ergo/blob/v${version}/CHANGELOG.md";
-    description = "A modern IRC server (daemon/ircd) written in Go";
+    description = "Modern IRC server (daemon/ircd) written in Go";
+    mainProgram = "ergo";
     homepage = "https://github.com/ergochat/ergo";
     license = lib.licenses.mit;
     maintainers = with lib.maintainers; [ lassulus tv ];

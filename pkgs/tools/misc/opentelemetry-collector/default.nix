@@ -1,28 +1,32 @@
-{ buildGoModule
+{ lib
+, buildGoModule
 , fetchFromGitHub
-, lib
-, writeScript
+, installShellFiles
+, testers
+, nixosTests
+, opentelemetry-collector
 }:
 
-let
-  otelcontribcol = writeScript "otelcontribcol" ''
-    echo 'ERROR: otelcontribcol is now in `pkgs.opentelemetry-collector-contrib`, call the collector with `otelcorecol` or move to `pkgs.opentelemetry-collector-contrib`' >&2
-    exit 1
-  '';
-in
 buildGoModule rec {
   pname = "opentelemetry-collector";
-  version = "0.51.0";
+  version = "0.109.0";
 
   src = fetchFromGitHub {
     owner = "open-telemetry";
     repo = "opentelemetry-collector";
     rev = "v${version}";
-    sha256 = "sha256-XCOyvFWvgGxjuOdyFk4Rh+HO8GBdRfWcR73h+7lF+8E=";
+    hash = "sha256-ShVUBohSnIoeq2aTWJ9IMXKt0CeRv3CZjlqpYHR9DhY=";
   };
   # there is a nested go.mod
-  sourceRoot = "source/cmd/otelcorecol";
-  vendorSha256 = "sha256-BAcJpiO6jFKcjtbBA9LDad1ifDpb47nWOylH8dDBUN0=";
+  sourceRoot = "${src.name}/cmd/otelcorecol";
+  vendorHash = "sha256-rXC4lm2ZvO3k6h1ZiYB+FskhW0c2uJyPLZg6n125MZE=";
+
+  nativeBuildInputs = [ installShellFiles ];
+
+  # upstream strongly recommends disabling CGO
+  # additionally dependencies have had issues when GCO was enabled that weren't caught upstream
+  # https://github.com/open-telemetry/opentelemetry-collector/blob/main/CONTRIBUTING.md#using-cgo
+  CGO_ENABLED = 0;
 
   preBuild = ''
     # set the build version, can't be done via ldflags
@@ -32,13 +36,25 @@ buildGoModule rec {
   ldflags = [ "-s" "-w" ];
 
   postInstall = ''
-    cp ${otelcontribcol} $out/bin/otelcontribcol
+    installShellCompletion --cmd otelcorecol \
+      --bash <($out/bin/otelcorecol completion bash) \
+      --fish <($out/bin/otelcorecol completion fish) \
+      --zsh <($out/bin/otelcorecol completion zsh)
   '';
+
+  passthru.tests = {
+    version = testers.testVersion {
+      inherit version;
+      package = opentelemetry-collector;
+      command = "otelcorecol -v";
+    };
+    inherit (nixosTests) opentelemetry-collector;
+  };
 
   meta = with lib; {
     homepage = "https://github.com/open-telemetry/opentelemetry-collector";
     changelog = "https://github.com/open-telemetry/opentelemetry-collector/blob/v${version}/CHANGELOG.md";
-    description = "OpenTelemetry Collector offers a vendor-agnostic implementation on how to receive, process and export telemetry data";
+    description = "Vendor-agnostic implementation on how to receive, process and export telemetry data";
     longDescription = ''
       The OpenTelemetry Collector offers a vendor-agnostic implementation on how
       to receive, process and export telemetry data. In addition, it removes the
@@ -48,5 +64,6 @@ buildGoModule rec {
     '';
     license = licenses.asl20;
     maintainers = with maintainers; [ uri-canva jk ];
+    mainProgram = "otelcorecol";
   };
 }

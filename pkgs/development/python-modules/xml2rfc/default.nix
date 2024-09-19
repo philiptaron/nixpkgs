@@ -1,81 +1,77 @@
-{ lib
-, buildPythonPackage
-, fetchFromGitHub
-, pythonOlder
-, intervaltree
-, pyflakes
-, requests
-, lxml
-, google-i18n-address
-, pycountry
-, html5lib
-, six
-, kitchen
-, pypdf2
-, dict2xml
-, weasyprint
-, pyyaml
-, jinja2
-, configargparse
-, appdirs
-, decorator
-, pycairo
-, pytestCheckHook
-, python-fontconfig
+{
+  lib,
+  appdirs,
+  buildPythonPackage,
+  configargparse,
+  decorator,
+  dict2xml,
+  fetchFromGitHub,
+  google-i18n-address,
+  html5lib,
+  intervaltree,
+  jinja2,
+  lxml,
+  markupsafe,
+  platformdirs,
+  pycairo,
+  pycountry,
+  pyflakes,
+  pypdf2,
+  pytestCheckHook,
+  python-fontconfig,
+  pythonOlder,
+  pyyaml,
+  requests,
+  wcwidth,
 }:
 
 buildPythonPackage rec {
   pname = "xml2rfc";
-  version = "3.12.4";
+  version = "3.23.0";
+  format = "setuptools";
 
-  disabled = pythonOlder "3.6";
+  disabled = pythonOlder "3.8";
 
   src = fetchFromGitHub {
     owner = "ietf-tools";
     repo = "xml2rfc";
-    rev = "v${version}";
-    sha256 = "sha256-TAu2Ls553t7wJ/Jhgu+Ff+H4P6az0Du8OL00JjZyCDs=";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-6yjWDHcEp1NLqyNopaKvLHtCstpVRPBdy2UiLa5Zvnw=";
   };
 
   postPatch = ''
     substituteInPlace Makefile \
-      --replace "SHELL := /bin/bash" "SHELL := bash" \
-      --replace "test flaketest" "test" \
-      --replace "python setup.py --quiet install" ""
-    substituteInPlace setup.py \
-      --replace "'tox'," ""
-    substituteInPlace requirements.txt \
-      --replace "jinja2>=2.11,<3.0" "jinja2" \
-      --replace "markupsafe==2.0.1" "markupsafe"
+      --replace-fail "SHELL := /bin/bash" "SHELL := bash" \
+      --replace-fail "test flaketest" "test"
   '';
 
   propagatedBuildInputs = [
+    appdirs
+    configargparse
+    dict2xml
+    google-i18n-address
+    html5lib
     intervaltree
     jinja2
+    lxml
+    markupsafe
+    platformdirs
+    pycountry
     pyflakes
+    pypdf2
     pyyaml
     requests
-    lxml
-    google-i18n-address
-    pycountry
-    html5lib
-    six
-    kitchen
-    pypdf2
-    dict2xml
-    weasyprint
-    configargparse
-    appdirs
+    wcwidth
   ];
 
-  checkInputs = [
+  nativeCheckInputs = [
     decorator
     pycairo
     pytestCheckHook
     python-fontconfig
   ];
 
-   # requires Noto Serif and Roboto Mono font
+  # Requires Noto Serif and Roboto Mono font
   doCheck = false;
 
   checkPhase = ''
@@ -86,10 +82,15 @@ buildPythonPackage rec {
 
   meta = with lib; {
     description = "Tool generating IETF RFCs and drafts from XML sources";
+    mainProgram = "xml2rfc";
     homepage = "https://github.com/ietf-tools/xml2rfc";
+    changelog = "https://github.com/ietf-tools/xml2rfc/blob/v${version}/CHANGELOG.md";
     # Well, parts might be considered unfree, if being strict; see:
     # http://metadata.ftp-master.debian.org/changelogs/non-free/x/xml2rfc/xml2rfc_2.9.6-1_copyright
     license = licenses.bsd3;
-    maintainers = with maintainers; [ vcunat yrashk ];
+    maintainers = with maintainers; [
+      vcunat
+      yrashk
+    ];
   };
 }

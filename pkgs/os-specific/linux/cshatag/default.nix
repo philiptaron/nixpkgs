@@ -2,16 +2,16 @@
 
 buildGoModule rec {
   pname = "cshatag";
-  version = "2.0";
+  version = "2.2.1";
 
   src = fetchFromGitHub {
     owner = "rfjakob";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-jSRMNLS+JnA3coZf9zkOL/buxZubhbftXnxDJx0nwuU=";
+    sha256 = "sha256-RqQPbqfliKg7XPA/C9D7Aq1SsN+tAW44tAFHt9p8Py0=";
   };
 
-  vendorSha256 = "sha256-BX7jbYhs3+yeOUvPvz08aV2p14bXNGTag4QYkCHr5DQ=";
+  vendorHash = "sha256-OYMnZub4Yi11uMHzL1O5l6/J1md6ORS5cWm9K4yP92Q=";
 
   ldflags = [ "-s" "-w" ];
 
@@ -21,7 +21,8 @@ buildGoModule rec {
   '';
 
   meta = with lib; {
-    description = "A tool to detect silent data corruption";
+    description = "Tool to detect silent data corruption";
+    mainProgram = "cshatag";
     homepage = "https://github.com/rfjakob/cshatag";
     license = licenses.mit;
     platforms = platforms.linux;

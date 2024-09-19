@@ -5,6 +5,7 @@
 , ninja
 , cmake
 , pkg-config
+, wayland-scanner
 , wayland-protocols
 , wayland
 , cairo
@@ -22,25 +23,31 @@ stdenv.mkDerivation rec {
     sha256 = "sha256-aHA4kXHYH+KvAJSep5X3DqsiK6WFpXr3rGQl/KNiUcY=";
   };
 
+  depsBuildBuild = [
+    pkg-config
+  ];
+
   nativeBuildInputs = [
     meson
     ninja
     cmake
     pkg-config
+    scdoc
+    wayland-scanner
   ];
 
   buildInputs = [
     wayland-protocols
     wayland
     cairo
-    scdoc
   ];
 
   meta = with lib; {
-    description = "A digital analog clock for Wayland desktops";
+    description = "Digital analog clock for Wayland desktops";
     homepage = "https://git.sr.ht/~leon_plickat/wlclock";
     license = licenses.gpl3;
     maintainers = with maintainers; [ nomisiv ];
     platforms = with platforms; linux;
+    mainProgram = "wlclock";
   };
 }

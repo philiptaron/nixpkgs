@@ -14,7 +14,7 @@ let
     in
       ''
         ${hostOpts.hostName} ${concatStringsSep " " hostOpts.serverAliases} {
-          bind ${concatStringsSep " " hostOpts.listenAddresses}
+          ${optionalString (hostOpts.listenAddresses != [ ]) "bind ${concatStringsSep " " hostOpts.listenAddresses}"}
           ${optionalString (hostOpts.useACMEHost != null) "tls ${sslCertDir}/cert.pem ${sslCertDir}/key.pem"}
           log {
             ${hostOpts.logFormat}
@@ -24,20 +24,32 @@ let
         }
       '';
 
-  configFile =
-    let
-      Caddyfile = pkgs.writeText "Caddyfile" ''
-        {
-          ${cfg.globalConfig}
-        }
-        ${cfg.extraConfig}
-      '';
+  settingsFormat = pkgs.formats.json { };
 
-      Caddyfile-formatted = pkgs.runCommand "Caddyfile-formatted" { nativeBuildInputs = [ cfg.package ]; } ''
-        ${cfg.package}/bin/caddy fmt ${Caddyfile} > $out
-      '';
-    in
-      if pkgs.stdenv.buildPlatform == pkgs.stdenv.hostPlatform then Caddyfile-formatted else Caddyfile;
+  configFile =
+    if cfg.settings != { } then
+      settingsFormat.generate "caddy.json" cfg.settings
+    else
+      let
+        Caddyfile = pkgs.writeTextDir "Caddyfile" ''
+          {
+            ${cfg.globalConfig}
+          }
+          ${cfg.extraConfig}
+          ${concatMapStringsSep "\n" mkVHostConf virtualHosts}
+        '';
+
+        Caddyfile-formatted = pkgs.runCommand "Caddyfile-formatted" { nativeBuildInputs = [ cfg.package ]; } ''
+          mkdir -p $out
+          cp --no-preserve=mode ${Caddyfile}/Caddyfile $out/Caddyfile
+          caddy fmt --overwrite $out/Caddyfile
+        '';
+      in
+      "${if pkgs.stdenv.buildPlatform == pkgs.stdenv.hostPlatform then Caddyfile-formatted else Caddyfile}/Caddyfile";
+
+  etcConfigFile = "caddy/caddy_config";
+
+  configPath = "/etc/${etcConfigFile}";
 
   acmeHosts = unique (catAttrs "useACMEHost" acmeVHosts);
 
@@ -60,11 +72,11 @@ in
       description = ''
         User account under which caddy runs.
 
-        <note><para>
-          If left as the default value this user will automatically be created
-          on system activation, otherwise you are responsible for
-          ensuring the user exists before the Caddy service starts.
-        </para></note>
+        ::: {.note}
+        If left as the default value this user will automatically be created
+        on system activation, otherwise you are responsible for
+        ensuring the user exists before the Caddy service starts.
+        :::
       '';
     };
 
@@ -72,24 +84,17 @@ in
       default = "caddy";
       type = types.str;
       description = ''
-        Group account under which caddy runs.
+        Group under which caddy runs.
 
-        <note><para>
-          If left as the default value this user will automatically be created
-          on system activation, otherwise you are responsible for
-          ensuring the user exists before the Caddy service starts.
-        </para></note>
+        ::: {.note}
+        If left as the default value this group will automatically be created
+        on system activation, otherwise you are responsible for
+        ensuring the group exists before the Caddy service starts.
+        :::
       '';
     };
 
-    package = mkOption {
-      default = pkgs.caddy;
-      defaultText = literalExpression "pkgs.caddy";
-      type = types.package;
-      description = ''
-        Caddy package to use.
-      '';
-    };
+    package = mkPackageOption pkgs "caddy" { };
 
     dataDir = mkOption {
       type = types.path;
@@ -97,17 +102,14 @@ in
       description = ''
         The data directory for caddy.
 
-        <note>
-          <para>
-            If left as the default value this directory will automatically be created
-            before the Caddy server starts, otherwise you are responsible for ensuring
-            the directory exists with appropriate ownership and permissions.
-          </para>
-          <para>
-            Caddy v2 replaced <literal>CADDYPATH</literal> with XDG directories.
-            See <link xlink:href="https://caddyserver.com/docs/conventions#file-locations"/>.
-          </para>
-        </note>
+        ::: {.note}
+        If left as the default value this directory will automatically be created
+        before the Caddy server starts, otherwise you are responsible for ensuring
+        the directory exists with appropriate ownership and permissions.
+
+        Caddy v2 replaced `CADDYPATH` with XDG directories.
+        See <https://caddyserver.com/docs/conventions#file-locations>.
+        :::
       '';
     };
 
@@ -117,11 +119,11 @@ in
       description = ''
         Directory for storing Caddy access logs.
 
-        <note><para>
-          If left as the default value this directory will automatically be created
-          before the Caddy server starts, otherwise the sysadmin is responsible for
-          ensuring the directory exists with appropriate ownership and permissions.
-        </para></note>
+        ::: {.note}
+        If left as the default value this directory will automatically be created
+        before the Caddy server starts, otherwise the sysadmin is responsible for
+        ensuring the directory exists with appropriate ownership and permissions.
+        :::
       '';
     };
 
@@ -135,7 +137,7 @@ in
       '';
       description = ''
         Configuration for the default logger. See
-        <link xlink:href="https://caddyserver.com/docs/caddyfile/options#log"/>
+        <https://caddyserver.com/docs/caddyfile/options#log>
         for details.
       '';
     };
@@ -156,22 +158,34 @@ in
       description = ''
         Override the configuration file used by Caddy. By default,
         NixOS generates one automatically.
+
+        The configuration file is exposed at {file}`${configPath}`.
       '';
     };
 
     adapter = mkOption {
-      default = "caddyfile";
-      example = "nginx";
-      type = types.str;
+      default = if ((cfg.configFile != configFile) || (builtins.baseNameOf cfg.configFile) == "Caddyfile") then "caddyfile" else null;
+      defaultText = literalExpression ''
+        if ((cfg.configFile != configFile) || (builtins.baseNameOf cfg.configFile) == "Caddyfile") then "caddyfile" else null
+      '';
+      example = literalExpression "nginx";
+      type = with types; nullOr str;
       description = ''
         Name of the config adapter to use.
-        See <link xlink:href="https://caddyserver.com/docs/config-adapters"/>
+        See <https://caddyserver.com/docs/config-adapters>
         for the full list.
 
-        <note><para>
-          Any value other than <literal>caddyfile</literal> is only valid when
-          providing your own <option>configFile</option>.
-        </para></note>
+        If `null` is specified, the `--adapter` argument is omitted when
+        starting or restarting Caddy. Notably, this allows specification of a
+        configuration file in Caddy's native JSON format, as long as the
+        filename does not start with `Caddyfile` (in which case the `caddyfile`
+        adapter is implicitly enabled). See
+        <https://caddyserver.com/docs/command-line#caddy-run> for details.
+
+        ::: {.note}
+        Any value other than `null` or `caddyfile` is only valid when providing
+        your own `configFile`.
+        :::
       '';
     };
 
@@ -179,7 +193,7 @@ in
       default = false;
       type = types.bool;
       description = ''
-        Use saved config, if any (and prefer over any specified configuration passed with <literal>--config</literal>).
+        Use saved config, if any (and prefer over any specified configuration passed with `--config`).
       '';
     };
 
@@ -196,9 +210,9 @@ in
       '';
       description = ''
         Additional lines of configuration appended to the global config section
-        of the <literal>Caddyfile</literal>.
+        of the `Caddyfile`.
 
-        Refer to <link xlink:href="https://caddyserver.com/docs/caddyfile/options#global-options"/>
+        Refer to <https://caddyserver.com/docs/caddyfile/options#global-options>
         for details on supported values.
       '';
     };
@@ -215,7 +229,7 @@ in
       '';
       description = ''
         Additional lines of configuration appended to the automatically
-        generated <literal>Caddyfile</literal>.
+        generated `Caddyfile`.
       '';
     };
 
@@ -228,7 +242,7 @@ in
             serverAliases = [ "www.hydra.example.com" ];
             extraConfig = '''
               encode gzip
-              root /srv/http
+              root * /srv/http
             ''';
           };
         };
@@ -239,15 +253,23 @@ in
     };
 
     acmeCA = mkOption {
-      default = "https://acme-v02.api.letsencrypt.org/directory";
-      example = "https://acme-staging-v02.api.letsencrypt.org/directory";
+      default = null;
+      example = "https://acme-v02.api.letsencrypt.org/directory";
       type = with types; nullOr str;
       description = ''
-        The URL to the ACME CA's directory. It is strongly recommended to set
-        this to Let's Encrypt's staging endpoint for testing or development.
+        ::: {.note}
+        Sets the [`acme_ca` option](https://caddyserver.com/docs/caddyfile/options#acme-ca)
+        in the global options block of the resulting Caddyfile.
+        :::
 
-        Set it to <literal>null</literal> if you want to write a more
-        fine-grained configuration manually.
+        The URL to the ACME CA's directory. It is strongly recommended to set
+        this to `https://acme-staging-v02.api.letsencrypt.org/directory` for
+        Let's Encrypt's [staging endpoint](https://letsencrypt.org/docs/staging-environment/)
+        while testing or in development.
+
+        Value `null` should be prefered for production setups,
+        as it omits the `acme_ca` option to enable
+        [automatic issuer fallback](https://caddyserver.com/docs/automatic-https#issuer-fallback).
       '';
     };
 
@@ -261,14 +283,50 @@ in
       '';
     };
 
+    enableReload = mkOption {
+      default = true;
+      type = types.bool;
+      description = ''
+        Reload Caddy instead of restarting it when configuration file changes.
+
+        Note that enabling this option requires the [admin API](https://caddyserver.com/docs/caddyfile/options#admin)
+        to not be turned off.
+
+        If you enable this option, consider setting [`grace_period`](https://caddyserver.com/docs/caddyfile/options#grace-period)
+        to a non-infinite value in {option}`services.caddy.globalConfig`
+        to prevent Caddy waiting for active connections to finish,
+        which could delay the reload essentially indefinitely.
+      '';
+    };
+
+    settings = mkOption {
+      type = settingsFormat.type;
+      default = {};
+      description = ''
+        Structured configuration for Caddy to generate a Caddy JSON configuration file.
+        See <https://caddyserver.com/docs/json/> for available options.
+
+        ::: {.warning}
+        Using a [Caddyfile](https://caddyserver.com/docs/caddyfile) instead of a JSON config is highly recommended by upstream.
+        There are only very few exception to this.
+
+        Please use a Caddyfile via {option}`services.caddy.configFile`, {option}`services.caddy.virtualHosts` or
+        {option}`services.caddy.extraConfig` with {option}`services.caddy.globalConfig` instead.
+        :::
+
+        ::: {.note}
+        Takes presence over most `services.caddy.*` options, such as {option}`services.caddy.configFile` and {option}`services.caddy.virtualHosts`, if specified.
+        :::
+      '';
+    };
   };
 
   # implementation
   config = mkIf cfg.enable {
 
     assertions = [
-      { assertion = cfg.adapter != "caddyfile" -> cfg.configFile != configFile;
-        message = "Any value other than 'caddyfile' is only valid when providing your own `services.caddy.configFile`";
+      { assertion = cfg.configFile == configFile -> cfg.adapter == "caddyfile" || cfg.adapter == null;
+        message = "To specify an adapter other than 'caddyfile' please provide your own configuration via `services.caddy.configFile`";
       }
     ] ++ map (name: mkCertOwnershipAssertion {
       inherit (cfg) group user;
@@ -276,7 +334,6 @@ in
       groups = config.users.groups;
     }) acmeHosts;
 
-    services.caddy.extraConfig = concatMapStringsSep "\n" mkVHostConf virtualHosts;
     services.caddy.globalConfig = ''
       ${optionalString (cfg.email != null) "email ${cfg.email}"}
       ${optionalString (cfg.acmeCA != null) "acme_ca ${cfg.acmeCA}"}
@@ -284,6 +341,10 @@ in
         ${cfg.logFormat}
       }
     '';
+
+    # https://github.com/quic-go/quic-go/wiki/UDP-Buffer-Sizes
+    boot.kernel.sysctl."net.core.rmem_max" = mkDefault 2500000;
+    boot.kernel.sysctl."net.core.wmem_max" = mkDefault 2500000;
 
     systemd.packages = [ cfg.package ];
     systemd.services.caddy = {
@@ -294,21 +355,26 @@ in
       wantedBy = [ "multi-user.target" ];
       startLimitIntervalSec = 14400;
       startLimitBurst = 10;
+      reloadTriggers = optional cfg.enableReload cfg.configFile;
+      restartTriggers = optional (! cfg.enableReload) cfg.configFile;
 
-      serviceConfig = {
+      serviceConfig = let
+        runOptions = ''--config ${configPath} ${optionalString (cfg.adapter != null) "--adapter ${cfg.adapter}"}'';
+      in {
+        # Override the `ExecStart` line from upstream's systemd unit file by our own:
         # https://www.freedesktop.org/software/systemd/man/systemd.service.html#ExecStart=
         # If the empty string is assigned to this option, the list of commands to start is reset, prior assignments of this option will have no effect.
-        ExecStart = [ "" "${cfg.package}/bin/caddy run --config ${cfg.configFile} --adapter ${cfg.adapter} ${optionalString cfg.resume "--resume"}" ];
-        ExecReload = [ "" "${cfg.package}/bin/caddy reload --config ${cfg.configFile} --adapter ${cfg.adapter}" ];
-
-        ExecStartPre = "${cfg.package}/bin/caddy validate --config ${cfg.configFile} --adapter ${cfg.adapter}";
+        ExecStart = [ "" ''${cfg.package}/bin/caddy run ${runOptions} ${optionalString cfg.resume "--resume"}'' ];
+        # Validating the configuration before applying it ensures we’ll get a proper error that will be reported when switching to the configuration
+        ExecReload = [ "" ] ++ lib.optional cfg.enableReload "${lib.getExe cfg.package} reload ${runOptions} --force";
         User = cfg.user;
         Group = cfg.group;
-        ReadWriteDirectories = cfg.dataDir;
+        ReadWritePaths = [ cfg.dataDir ];
         StateDirectory = mkIf (cfg.dataDir == "/var/lib/caddy") [ "caddy" ];
         LogsDirectory = mkIf (cfg.logDir == "/var/log/caddy") [ "caddy" ];
-        Restart = "on-abnormal";
-        SupplementaryGroups = mkIf (length acmeVHosts != 0) [ "acme" ];
+        Restart = "on-failure";
+        RestartPreventExitStatus = 1;
+        RestartSec = "5s";
 
         # TODO: attempt to upstream these options
         NoNewPrivileges = true;
@@ -331,9 +397,13 @@ in
 
     security.acme.certs =
       let
-        reloads = map (useACMEHost: nameValuePair useACMEHost { reloadServices = [ "caddy.service" ]; }) acmeHosts;
+        certCfg = map (useACMEHost: nameValuePair useACMEHost {
+          group = mkDefault cfg.group;
+          reloadServices = [ "caddy.service" ];
+        }) acmeHosts;
       in
-        listToAttrs reloads;
+        listToAttrs certCfg;
 
+    environment.etc.${etcConfigFile}.source = cfg.configFile;
   };
 }

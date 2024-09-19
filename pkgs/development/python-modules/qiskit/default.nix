@@ -1,20 +1,25 @@
-{ lib
-, pythonOlder
-, buildPythonPackage
-, fetchFromGitHub
+{
+  lib,
+  pythonOlder,
+  buildPythonPackage,
+  fetchFromGitHub,
+
+  # build-system
+  setuptools,
+
   # Python Inputs
-, qiskit-aer
-, qiskit-ibmq-provider
-, qiskit-ignis
-, qiskit-terra
+  qiskit-aer,
+  qiskit-ibmq-provider,
+  qiskit-ignis,
+  qiskit-terra,
   # Optional inputs
-, withOptionalPackages ? true
-, qiskit-finance
-, qiskit-machine-learning
-, qiskit-nature
-, qiskit-optimization
+  withOptionalPackages ? true,
+  qiskit-finance,
+  qiskit-machine-learning,
+  qiskit-nature,
+  qiskit-optimization,
   # Check Inputs
-, pytestCheckHook
+  pytestCheckHook,
 }:
 
 let
@@ -28,16 +33,19 @@ in
 buildPythonPackage rec {
   pname = "qiskit";
   # NOTE: This version denotes a specific set of subpackages. See https://qiskit.org/documentation/release_notes.html#version-history
-  version = "0.36.1";
+  version = "1.0.1";
+  pyproject = true;
 
   disabled = pythonOlder "3.6";
 
   src = fetchFromGitHub {
     owner = "Qiskit";
     repo = "qiskit";
-    rev = version;
-    sha256 = "sha256-cprFWWvYgfoJXvK0Xoi67BwOXQfz7XeHT/JbfErqblk=";
+    rev = "refs/tags/${version}";
+    hash = "sha256-Cjfn+9h8W08FcAlVC7b7O8Z+VGx5UeHosSgYJin/evE=";
   };
+
+  nativeBuildInputs = [ setuptools ];
 
   propagatedBuildInputs = [
     qiskit-aer
@@ -46,7 +54,7 @@ buildPythonPackage rec {
     qiskit-terra
   ] ++ lib.optionals withOptionalPackages optionalQiskitPackages;
 
-  checkInputs = [ pytestCheckHook ];
+  nativeCheckInputs = [ pytestCheckHook ];
 
   pythonImportsCheck = [
     "qiskit"
@@ -62,6 +70,9 @@ buildPythonPackage rec {
     downloadPage = "https://github.com/QISKit/qiskit/releases";
     changelog = "https://qiskit.org/documentation/release_notes.html";
     license = licenses.asl20;
-    maintainers = with maintainers; [ drewrisinger pandaman ];
+    maintainers = with maintainers; [
+      drewrisinger
+      pandaman
+    ];
   };
 }

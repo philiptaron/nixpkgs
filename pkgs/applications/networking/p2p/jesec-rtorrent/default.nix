@@ -21,6 +21,14 @@ stdenv.mkDerivation rec {
     hash = "sha256-i7c1jSawHshj1kaXl8tdpelIKU24okeg9K5/+ht6t2k=";
   };
 
+  patches = [
+    ./avoid-stack-overflow-for-lockfile-buf.patch
+  ];
+
+  passthru = {
+    inherit libtorrent;
+  };
+
   nativeBuildInputs = [
     cmake
   ];
@@ -41,7 +49,7 @@ stdenv.mkDerivation rec {
 
   doCheck = true;
 
-  checkInputs = [
+  nativeCheckInputs = [
     gtest
   ];
 
@@ -56,10 +64,11 @@ stdenv.mkDerivation rec {
   '';
 
   meta = with lib; {
-    description = "An ncurses client for libtorrent, ideal for use with screen, tmux, or dtach (jesec's fork)";
+    description = "Ncurses client for libtorrent, ideal for use with screen, tmux, or dtach (jesec's fork)";
     homepage = "https://github.com/jesec/rtorrent";
     license = licenses.gpl2Plus;
     maintainers = with maintainers; [ winter AndersonTorres ];
     platforms = platforms.linux;
+    mainProgram = "rtorrent";
   };
 }

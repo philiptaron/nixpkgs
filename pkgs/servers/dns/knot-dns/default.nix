@@ -1,15 +1,18 @@
 { lib, stdenv, fetchurl, pkg-config, gnutls, liburcu, lmdb, libcap_ng, libidn2, libunistring
 , systemd, nettle, libedit, zlib, libiconv, libintl, libmaxminddb, libbpf, nghttp2, libmnl
-, autoreconfHook, nixosTests, knot-resolver
+, ngtcp2-gnutls, xdp-tools
+, sphinx
+, autoreconfHook
+, nixosTests, knot-resolver, knot-dns, runCommandLocal
 }:
 
 stdenv.mkDerivation rec {
   pname = "knot-dns";
-  version = "3.1.8";
+  version = "3.4.0";
 
   src = fetchurl {
     url = "https://secure.nic.cz/files/knot-dns/knot-${version}.tar.xz";
-    sha256 = "767e458a56277a1270b359294c3be6c63fd734884d62a045e01756a46507aa94";
+    sha256 = "2730b11398944faa5151c51b0655cf26631090343c303597814f2a57df424736";
   };
 
   outputs = [ "bin" "out" "dev" ];
@@ -27,18 +30,20 @@ stdenv.mkDerivation rec {
     ./runtime-deps.patch
   ];
 
-  nativeBuildInputs = [ pkg-config autoreconfHook ];
+  # FIXME: sphinx is needed for now to get man-pages
+  nativeBuildInputs = [ pkg-config autoreconfHook sphinx ];
   buildInputs = [
     gnutls liburcu libidn2 libunistring
     nettle libedit
     libiconv lmdb libintl
     nghttp2 # DoH support in kdig
+    ngtcp2-gnutls  # DoQ support in kdig (and elsewhere but not much use there yet)
     libmaxminddb # optional for geoip module (it's tiny)
     # without sphinx &al. for developer documentation
     # TODO: add dnstap support?
   ] ++ lib.optionals stdenv.isLinux [
     libcap_ng systemd
-    libbpf libmnl # XDP support (it's Linux kernel API)
+    xdp-tools libbpf libmnl # XDP support (it's Linux kernel API)
   ] ++ lib.optional stdenv.isDarwin zlib; # perhaps due to gnutls
 
   enableParallelBuilding = true;
@@ -46,7 +51,7 @@ stdenv.mkDerivation rec {
   CFLAGS = [ "-O2" "-DNDEBUG" ];
 
   doCheck = true;
-  checkFlags = "V=1"; # verbose output in case some test fails
+  checkFlags = [ "V=1" ]; # verbose output in case some test fails
   doInstallCheck = true;
 
   postInstall = ''
@@ -56,7 +61,21 @@ stdenv.mkDerivation rec {
   passthru.tests = {
     inherit knot-resolver;
   } // lib.optionalAttrs stdenv.isLinux {
-    inherit (nixosTests) knot;
+    inherit (nixosTests) knot kea;
+    prometheus-exporter = nixosTests.prometheus-exporters.knot;
+    # Some dependencies are very version-sensitive, so the might get dropped
+    # or embedded after some update, even if the nixPackagers didn't intend to.
+    # For non-linux I don't know a good replacement for `ldd`.
+    deps = runCommandLocal "knot-deps-test"
+      { nativeBuildInputs = [ (lib.getBin stdenv.cc.libc) ]; }
+      ''
+        for libname in libngtcp2 libxdp libbpf; do
+          echo "Checking for $libname:"
+          ldd '${knot-dns.bin}/bin/knotd' | grep -F "$libname"
+          echo "OK"
+        done
+        touch "$out"
+      '';
   };
 
   meta = with lib; {
@@ -65,5 +84,6 @@ stdenv.mkDerivation rec {
     license = licenses.gpl3Plus;
     platforms = platforms.unix;
     maintainers = [ maintainers.vcunat ];
+    mainProgram = "knotd";
   };
 }

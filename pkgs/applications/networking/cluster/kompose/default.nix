@@ -1,19 +1,19 @@
-{ lib, buildGoModule, fetchFromGitHub, installShellFiles, testers, kompose }:
+{ lib, buildGoModule, fetchFromGitHub, installShellFiles, testers, kompose, git }:
 
 buildGoModule rec {
   pname = "kompose";
-  version = "1.26.1";
+  version = "1.34.0";
 
   src = fetchFromGitHub {
     owner = "kubernetes";
     repo = "kompose";
     rev = "v${version}";
-    sha256 = "sha256-NfzqGG5ZwPpmjhvcvXN1AA+kfZG/oujbAEtXkm1mzeU=";
+    hash = "sha256-lBNf/pNJulex3WNRx8ZQcGag2nUPqjPKU9X/xDNxQjc=";
   };
 
-  vendorSha256 = "sha256-OR5U2PnebO0a+lwU09Dveh0Yxk91cmSRorTxQIO5lHc=";
+  vendorHash = "sha256-SakezUp2Gj1PxY1Gwf8tH2yShtB/MPIqGjM/scrGG4I=";
 
-  nativeBuildInputs = [ installShellFiles ];
+  nativeBuildInputs = [ installShellFiles git ];
 
   ldflags = [ "-s" "-w" ];
 
@@ -32,10 +32,10 @@ buildGoModule rec {
   };
 
   meta = with lib; {
-    description = "A tool to help users who are familiar with docker-compose move to Kubernetes";
+    description = "Tool to help users who are familiar with docker-compose move to Kubernetes";
+    mainProgram = "kompose";
     homepage = "https://kompose.io";
     license = licenses.asl20;
     maintainers = with maintainers; [ thpham vdemeester ];
-    platforms = platforms.unix;
   };
 }

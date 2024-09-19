@@ -8,13 +8,13 @@
 , glib
 , gtk3
 , gobject-introspection
-, wrapGAppsHook
+, wrapGAppsHook3
 , fetchFromGitHub
 }:
 
 python3Packages.buildPythonApplication rec {
   pname = "tuhi";
-  version = "0.5";
+  version = "0.6";
 
   format = "other";
 
@@ -22,7 +22,7 @@ python3Packages.buildPythonApplication rec {
     owner = "tuhiproject";
     repo = "tuhi";
     rev = version;
-    sha256 = "17kggm9c423vj7irxx248fjc8sxvkp9w1mgawlx1snrii817p3db";
+    sha256 = "sha256-NwyG2KhOrAKRewgmU23OMO0+A9SjkQZsDL4SGnLVCvo=";
   };
 
   dontWrapGApps = true;
@@ -33,13 +33,14 @@ python3Packages.buildPythonApplication rec {
   nativeBuildInputs = [
     pkg-config meson ninja
     appstream-glib desktop-file-utils
-    wrapGAppsHook
+    wrapGAppsHook3
+    gobject-introspection
   ];
   buildInputs = [
-    gtk3 gobject-introspection
+    gtk3
     glib
   ];
-  checkInputs = with python3Packages; [ flake8 pytest ];
+  nativeCheckInputs = with python3Packages; [ flake8 pytest ];
   propagatedBuildInputs = with python3Packages; [
     svgwrite pyxdg pycairo pygobject3 setuptools-scm
   ];
@@ -55,6 +56,7 @@ python3Packages.buildPythonApplication rec {
 
   meta = with lib; {
     description = "DBus daemon to access Wacom SmartPad devices";
+    mainProgram = "tuhi";
     homepage = "https://github.com/tuhiproject/tuhi";
     license = licenses.gpl2;
     platforms = platforms.linux;

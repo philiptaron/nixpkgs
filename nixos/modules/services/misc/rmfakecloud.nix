@@ -11,14 +11,11 @@ in {
     services.rmfakecloud = {
       enable = mkEnableOption "rmfakecloud remarkable self-hosted cloud";
 
-      package = mkOption {
-        type = types.package;
-        default = pkgs.rmfakecloud;
-        defaultText = literalExpression "pkgs.rmfakecloud";
-        description = ''
-          rmfakecloud package to use.
-
+      package = mkPackageOption pkgs "rmfakecloud" {
+        extraDescription = ''
+          ::: {.note}
           The default does not include the web user interface.
+          :::
         '';
       };
 
@@ -138,7 +135,7 @@ in {
         SystemCallArchitectures = "native";
         WorkingDirectory = serviceDataDir;
         StateDirectory = baseNameOf serviceDataDir;
-        UMask = 0027;
+        UMask = "0027";
       };
     };
   };

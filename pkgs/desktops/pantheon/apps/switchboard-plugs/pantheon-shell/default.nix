@@ -7,30 +7,30 @@
 , pkg-config
 , vala
 , glib
+, libadwaita
 , libgee
-, granite
+, granite7
 , gexiv2
 , gnome-settings-daemon
 , elementary-settings-daemon
-, gtk3
-, gnome-desktop
+, gtk4
 , gala
 , wingpanel
-, elementary-dock
+, wingpanel-indicator-keyboard
+, wingpanel-quick-settings
 , switchboard
 , gettext
-, bamf
 }:
 
 stdenv.mkDerivation rec {
   pname = "switchboard-plug-pantheon-shell";
-  version = "6.1.0";
+  version = "8.0.0";
 
   src = fetchFromGitHub {
     owner = "elementary";
     repo = pname;
     rev = version;
-    sha256 = "sha256-rwneQ1bqpWDyTHULMtGqhPdpSDa4ObnVortmL0E+gHA=";
+    sha256 = "sha256-Cv1Ldvk0+VzNsKnDFwDtLZ5ixUOGV+PWYAqN9KV9g/s=";
   };
 
   nativeBuildInputs = [
@@ -42,25 +42,30 @@ stdenv.mkDerivation rec {
   ];
 
   buildInputs = [
-    bamf
-    elementary-dock
     elementary-settings-daemon
     gnome-settings-daemon
     gala
     gexiv2
     glib
-    gnome-desktop
-    granite
-    gtk3
+    granite7
+    gtk4
+    libadwaita
     libgee
     switchboard
     wingpanel
+    wingpanel-indicator-keyboard # gsettings schemas
+    wingpanel-quick-settings # gsettings schemas
   ];
 
+  postPatch = ''
+    # Hide these before we land the new dock
+    substituteInPlace src/Views/Dock.vala \
+      --replace-fail "box.append (icon_box);" "" \
+      --replace-fail "box.append (hide_box);" ""
+  '';
+
   passthru = {
-    updateScript = nix-update-script {
-      attrPath = "pantheon.${pname}";
-    };
+    updateScript = nix-update-script { };
   };
 
   meta = with lib; {

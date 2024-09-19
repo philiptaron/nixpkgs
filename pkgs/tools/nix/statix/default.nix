@@ -5,16 +5,16 @@ rustPlatform.buildRustPackage rec {
   # also update version of the vim plugin in
   # pkgs/applications/editors/vim/plugins/overrides.nix
   # the version can be found in flake.nix of the source code
-  version = "0.5.4";
+  version = "0.5.8";
 
   src = fetchFromGitHub {
     owner = "nerdypepper";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-9208bR3awxXR1MSh9HbsKeen5V4r4hPuJFkK/CMJRfg=";
+    sha256 = "sha256-bMs3XMiGP6sXCqdjna4xoV6CANOIWuISSzCaL5LYY4c=";
   };
 
-  cargoSha256 = "sha256-f1/PMbXUiqjFI8Y0mvgEyNqGGYqGq3nV094mg1aZIHM=";
+  cargoHash = "sha256-QF7P0CWlKfBzVQC//eKhf/u1qV9AfLIJDxWDDWzMG8g=";
 
   buildFeatures = lib.optional withJson "json";
 
@@ -25,6 +25,7 @@ rustPlatform.buildRustPackage rec {
     description = "Lints and suggestions for the nix programming language";
     homepage = "https://github.com/nerdypepper/statix";
     license = licenses.mit;
+    mainProgram = "statix";
     maintainers = with maintainers; [ figsoda nerdypepper ];
   };
 }

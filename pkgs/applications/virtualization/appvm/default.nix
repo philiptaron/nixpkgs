@@ -3,7 +3,6 @@
 , fetchFromGitHub
 , nix
 , virt-viewer
-, fetchpatch
 , makeWrapper }:
 
 let
@@ -30,9 +29,9 @@ buildGoModule rec {
     sha256 = "sha256-FL5olOy1KufULyqI2dJeS0OnKzC3LfPWxnia2i4f4yY=";
   };
 
-  vendorSha256 = "sha256-8eU+Mf5dxL/bAMMShXvj8I1Kdd4ysBTWvgYIXwLStPI=";
+  vendorHash = "sha256-8eU+Mf5dxL/bAMMShXvj8I1Kdd4ysBTWvgYIXwLStPI=";
 
-  buildInputs = [ makeWrapper ];
+  nativeBuildInputs = [ makeWrapper ];
 
   postFixup = ''
     wrapProgram $out/bin/appvm \

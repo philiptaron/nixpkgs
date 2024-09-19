@@ -1,4 +1,4 @@
-{ stdenv, runCommand, lib, fetchFromGitHub, fetchpatch, cmake, flex, bison, systemd
+{ stdenv, runCommand, lib, fetchFromGitHub, cmake, flex, bison, systemd
 , boost, openssl, patchelf, mariadb-connector-c, postgresql, zlib, tzdata
 # Databases
 , withMysql ? true, withPostgresql ? false
@@ -9,13 +9,13 @@
 
 stdenv.mkDerivation rec {
   pname = "icinga2${nameSuffix}";
-  version = "2.13.3";
+  version = "2.14.2";
 
   src = fetchFromGitHub {
     owner = "icinga";
     repo = "icinga2";
     rev = "v${version}";
-    sha256 = "sha256:1z8wzhlhl8vb7m8axvayfyqgf86lz67gaa02n3r17049vwswdgmb";
+    sha256 = "sha256-vUtLGkTLGObx3zbfRTboNVsl9AmpAkHc+IhWhnKupSM=";
   };
 
   patches = [
@@ -60,7 +60,7 @@ stdenv.mkDerivation rec {
   nativeBuildInputs = [ cmake flex bison patchelf ];
 
   doCheck = true;
-  checkInputs = [ tzdata ]; # legacytimeperiod/dst needs this
+  nativeCheckInputs = [ tzdata ]; # legacytimeperiod/dst needs this
 
   postFixup = ''
     rm -r $out/etc/logrotate.d $out/etc/sysconfig $out/lib/icinga2/prepare-dirs
@@ -82,7 +82,7 @@ stdenv.mkDerivation rec {
     ''}
   '';
 
-  vim = runCommand "vim-icinga2-${version}" {} ''
+  vim = runCommand "vim-icinga2-${version}" { pname = "vim-icinga2"; } ''
     mkdir -p $out/share/vim-plugins
     cp -r "${src}/tools/syntax/vim" $out/share/vim-plugins/icinga2
   '';
@@ -92,6 +92,6 @@ stdenv.mkDerivation rec {
     homepage = "https://www.icinga.com";
     license = lib.licenses.gpl2Plus;
     platforms = lib.platforms.linux;
-    maintainers = with lib.maintainers; [ das_j ];
+    maintainers = lib.teams.helsinki-systems.members;
   };
 }

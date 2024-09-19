@@ -40,28 +40,31 @@
 , at-spi2-atk
 , at-spi2-core
 , autoPatchelfHook
-, wrapGAppsHook
+, wrapGAppsHook3
+, qt6
+, proprietaryCodecs ? false
+, vivaldi-ffmpeg-codecs
 }:
 
 let
-
   mirror = "https://get.geo.opera.com/pub/opera/desktop";
-
-in stdenv.mkDerivation rec {
-
+in
+stdenv.mkDerivation rec {
   pname = "opera";
-  version = "84.0.4316.42";
+  version = "111.0.5168.61";
 
   src = fetchurl {
     url = "${mirror}/${version}/linux/${pname}-stable_${version}_amd64.deb";
-    sha256 = "sha256-ZjVuw30YfHQ69BVxPvIde6VuOcqtnXrGwhZpA26vLpw=";
+    hash = "sha256-O2QqosmhhFk6KfiAdlpDYOsZUqGhvtwzYFi2I90Hemo=";
   };
 
-  unpackCmd = "${dpkg}/bin/dpkg-deb -x $curSrc .";
+  unpackPhase = "dpkg-deb -x $src .";
 
   nativeBuildInputs = [
+    dpkg
     autoPatchelfHook
-    wrapGAppsHook
+    wrapGAppsHook3
+    qt6.wrapQtAppsHook
   ];
 
   buildInputs = [
@@ -100,6 +103,7 @@ in stdenv.mkDerivation rec {
     nss
     pango
     stdenv.cc.cc.lib
+    qt6.qtbase
   ];
 
   runtimeDependencies = [
@@ -115,17 +119,28 @@ in stdenv.mkDerivation rec {
     # "Illegal instruction (core dumped)"
     gtk3
     gtk4
+  ] ++ lib.optionals proprietaryCodecs [
+    vivaldi-ffmpeg-codecs
   ];
 
+  dontWrapQtApps = true;
+
   installPhase = ''
-    mkdir -p $out
-    cp -r . $out/
+    mkdir -p $out/bin
+    cp -r usr $out
+    cp -r usr/share $out/share
+
+    # we already using QT6, autopatchelf wants to patch this as well
+    rm $out/usr/lib/x86_64-linux-gnu/opera/libqt5_shim.so
+    ln -s $out/usr/bin/opera $out/bin/opera
   '';
 
   meta = with lib; {
     homepage = "https://www.opera.com";
-    description = "Web browser";
+    description = "Faster, safer and smarter web browser";
     platforms = [ "x86_64-linux" ];
     license = licenses.unfree;
+    sourceProvenance = with sourceTypes; [ binaryNativeCode ];
+    maintainers = with maintainers; [ kindrowboat ];
   };
 }

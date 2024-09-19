@@ -5,17 +5,18 @@
 , dotnetCorePackages
 , openssl
 , mono
+, nixosTests
 }:
 
 buildDotnetModule rec {
   pname = "jackett";
-  version = "0.20.709";
+  version = "0.21.2831";
 
   src = fetchFromGitHub {
     owner = pname;
     repo = pname;
     rev = "v${version}";
-    sha256 = "Gx1VHjs37XBcvw20pQNrA/meLuVmogdGIzroRXvTv5Q=";
+    hash = "sha512-Ka993M45A9RYs6txl3gxhoq8c/vKRJzeLP2Ycx2L9uiNPWFsKlDwDr2rPLvZ9H0soZJs7sjeBAt0RFHSAlSvBg==";
   };
 
   projectFile = "src/Jackett.Server/Jackett.Server.csproj";
@@ -28,7 +29,7 @@ buildDotnetModule rec {
   runtimeDeps = [ openssl ];
 
   doCheck = !(stdenv.isDarwin && stdenv.isAarch64); # mono is not available on aarch64-darwin
-  checkInputs = [ mono ];
+  nativeCheckInputs = [ mono ];
   testProjectFile = "src/Jackett.Test/Jackett.Test.csproj";
 
   postFixup = ''
@@ -36,13 +37,15 @@ buildDotnetModule rec {
     ln -s $out/bin/jackett $out/bin/Jackett || :
     ln -s $out/bin/Jackett $out/bin/jackett || :
   '';
+  passthru.updateScript = ./updater.sh;
+
+  passthru.tests = { inherit (nixosTests) jackett; };
 
   meta = with lib; {
     description = "API Support for your favorite torrent trackers";
     homepage = "https://github.com/Jackett/Jackett/";
+    changelog = "https://github.com/Jackett/Jackett/releases/tag/v${version}";
     license = licenses.gpl2Only;
     maintainers = with maintainers; [ edwtjo nyanloutre purcell ];
-    platforms = platforms.all;
   };
-  passthru.updateScript = ./updater.sh;
 }

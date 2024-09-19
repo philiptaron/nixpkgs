@@ -1,12 +1,14 @@
-{ lib
-, buildPythonPackage
-, fetchFromGitHub
-, requests
-, requests-toolbelt
-, requests-oauthlib
-, pytestCheckHook
-, responses
-, pythonOlder
+{
+  lib,
+  buildPythonPackage,
+  fetchFromGitHub,
+  requests,
+  requests-toolbelt,
+  requests-oauthlib,
+  six,
+  pytestCheckHook,
+  responses,
+  pythonOlder,
 }:
 
 buildPythonPackage rec {
@@ -27,9 +29,10 @@ buildPythonPackage rec {
     requests
     requests-toolbelt
     requests-oauthlib
+    six
   ];
 
-  checkInputs = [
+  nativeCheckInputs = [
     pytestCheckHook
     responses
   ];
@@ -53,12 +56,10 @@ buildPythonPackage rec {
     "test_xmlnode_format_error"
   ];
 
-  pythonImportsCheck = [
-    "flickrapi"
-  ];
+  pythonImportsCheck = [ "flickrapi" ];
 
   meta = with lib; {
-    description = "A Python interface to the Flickr API";
+    description = "Python interface to the Flickr API";
     homepage = "https://stuvel.eu/flickrapi";
     license = licenses.psfl;
     maintainers = with maintainers; [ obadz ];

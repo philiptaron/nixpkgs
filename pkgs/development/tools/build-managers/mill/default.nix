@@ -1,12 +1,12 @@
 { lib, stdenv, fetchurl, jre, makeWrapper }:
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation (finalAttrs: {
   pname = "mill";
-  version = "0.10.4";
+  version = "0.11.12";
 
   src = fetchurl {
-    url = "https://github.com/com-lihaoyi/mill/releases/download/${version}/${version}-assembly";
-    hash = "sha256-psSbz5ZcgLDkS/9Q/PLe4Ufj7GOR8Sv1rLhA2Hs3zsw=";
+    url = "https://github.com/com-lihaoyi/mill/releases/download/${finalAttrs.version}/${finalAttrs.version}-assembly";
+    hash = "sha256-k4/oMHvtq5YXY8hRlX4gWN16ClfjXEAn6mRIoEBHNJo=";
   };
 
   nativeBuildInputs = [ makeWrapper ];
@@ -38,7 +38,8 @@ stdenv.mkDerivation rec {
   meta = with lib; {
     homepage = "https://com-lihaoyi.github.io/mill/";
     license = licenses.mit;
-    description = "A build tool for Scala, Java and more";
+    description = "Build tool for Scala, Java and more";
+    mainProgram = "mill";
     longDescription = ''
       Mill is a build tool borrowing ideas from modern tools like Bazel, to let you build
       your projects in a way that's simple, fast, and predictable. Mill has built in
@@ -46,7 +47,7 @@ stdenv.mkDerivation rec {
       SBT, but can also be extended to support any other language or platform via
       modules (written in Java or Scala) or through an external subprocesses.
     '';
-    maintainers = with maintainers; [ scalavision ];
+    maintainers = with maintainers; [ scalavision zenithal ];
     platforms = lib.platforms.all;
   };
-}
+})

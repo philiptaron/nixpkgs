@@ -68,12 +68,12 @@ in
           like datacenter.  The tiers and order must be the same on all nodes.
           Including more tiers is better than including fewer. For example:
 
-          <literal>
+          ```
               country=us,region=us-west,datacenter=us-west-1b,rack=12
               country=ca,region=ca-east,datacenter=ca-east-2,rack=4
 
               planet=earth,province=manitoba,colo=secondary,power=3
-          </literal>
+          ```
         '';
       };
 
@@ -121,9 +121,9 @@ in
 
           This can be a percentage, expressed with a fraction sign or as a
           decimal-point number, or any bytes-based unit. For example,
-          <literal>"25%"</literal>, <literal>"0.25"</literal> both represent
+          `"25%"`, `"0.25"` both represent
           25% of the available system memory. The values
-          <literal>"1000000000"</literal> and <literal>"1GB"</literal> both
+          `"1000000000"` and `"1GB"` both
           represent 1 gigabyte of memory.
 
         '';
@@ -138,20 +138,15 @@ in
 
           This can be a percentage, expressed with a fraction sign or as a
           decimal-point number, or any bytes-based unit. For example,
-          <literal>"25%"</literal>, <literal>"0.25"</literal> both represent
+          `"25%"`, `"0.25"` both represent
           25% of the available system memory. The values
-          <literal>"1000000000"</literal> and <literal>"1GB"</literal> both
+          `"1000000000"` and `"1GB"` both
           represent 1 gigabyte of memory.
         '';
       };
 
-      package = mkOption {
-        type = types.package;
-        default = pkgs.cockroachdb;
-        defaultText = literalExpression "pkgs.cockroachdb";
-        description = ''
-          The CockroachDB derivation to use for running the service.
-
+      package = mkPackageOption pkgs "cockroachdb" {
+        extraDescription = ''
           This would primarily be useful to enable Enterprise Edition features
           in your own custom CockroachDB build (Nixpkgs CockroachDB binaries
           only contain open source features and open source code).
@@ -163,8 +158,8 @@ in
         default = [];
         example = [ "--advertise-addr" "[fe80::f6f2:::]" ];
         description = ''
-          Extra CLI arguments passed to <command>cockroach start</command>.
-          For the full list of supported argumemnts, check <link xlink:href="https://www.cockroachlabs.com/docs/stable/cockroach-start.html#flags"/>
+          Extra CLI arguments passed to {command}`cockroach start`.
+          For the full list of supported arguments, check <https://www.cockroachlabs.com/docs/stable/cockroach-start.html#flags>
         '';
       };
     };

@@ -31,14 +31,11 @@ stdenv.mkDerivation rec {
     gtk3
   ];
 
-  passthru.updateScript = gitUpdater {
-    inherit pname version;
-    attrPath = "xfce.thunar-dropbox-plugin";
-  };
+  passthru.updateScript = gitUpdater { };
 
   meta = with lib; {
     homepage = "https://github.com/Jeinzi/thunar-dropbox";
-    description = "A plugin that adds context-menu items for Dropbox to Thunar";
+    description = "Plugin that adds context-menu items for Dropbox to Thunar";
     license = licenses.gpl3Only;
     platforms = platforms.linux;
     maintainers = with maintainers; [ ] ++ teams.xfce.members;

@@ -1,12 +1,22 @@
-{ lib, buildPythonPackage, fetchPypi, debtcollector, oslotest, stestr, pbr }:
+{
+  lib,
+  buildPythonPackage,
+  fetchPypi,
+  debtcollector,
+  oslotest,
+  stestr,
+  pbr,
+  setuptools,
+}:
 
 buildPythonPackage rec {
   pname = "oslo.context";
-  version = "4.1.0";
+  version = "5.6.0";
+  pyproject = true;
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-damnIqVS+6ionooBAo+oKmGQqzF6lZG7gzA6IhCnkUQ=";
+    hash = "sha256-UiLDJja+BwojDfnTFBoLJ6lfCjtpePTBSFvK2kekw8s=";
   };
 
   postPatch = ''
@@ -15,18 +25,22 @@ buildPythonPackage rec {
     rm test-requirements.txt
   '';
 
-  propagatedBuildInputs = [
+  build-system = [ setuptools ];
+
+  dependencies = [
     debtcollector
     pbr
   ];
 
-  checkInputs = [
+  nativeCheckInputs = [
     oslotest
     stestr
   ];
 
   checkPhase = ''
+    runHook preCheck
     stestr run
+    runHook postCheck
   '';
 
   pythonImportsCheck = [ "oslo_context" ];

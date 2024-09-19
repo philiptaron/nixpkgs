@@ -14,7 +14,19 @@ stdenv.mkDerivation rec {
     sha256 = "sha256-swapHA/ZO8QoDPwumMt6s5gf91oYe+oyk4EfRSyJqMg=";
   };
 
+  # https://gitweb.gentoo.org/repo/gentoo.git/tree/sys-devel/m4/m4-1.4.19-r1.ebuild
+  patches = lib.optional stdenv.hostPlatform.isLoongArch64 ./loong-fix-build.patch;
+  # this could be accomplished by updateAutotoolsGnuConfigScriptsHook, but that causes infinite recursion
+  # necessary for FreeBSD code path in configure
+  postPatch = ''
+    substituteInPlace ./build-aux/config.guess --replace-fail /usr/bin/uname uname
+  '' + lib.optionalString stdenv.hostPlatform.isLoongArch64 ''
+    touch ./aclocal.m4 ./lib/config.hin ./configure ./doc/stamp-vti || die
+    find . -name Makefile.in -exec touch {} + || die
+  '';
+
   strictDeps = true;
+
   enableParallelBuilding = true;
 
   doCheck = false;

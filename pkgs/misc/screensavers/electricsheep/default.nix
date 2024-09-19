@@ -1,23 +1,52 @@
-{ lib, stdenv, fetchFromGitHub, autoreconfHook, wxGTK30, ffmpeg, lua5_1, curl
-, libpng, xorg, pkg-config, flam3, libgtop, boost, tinyxml, freeglut, libGLU, libGL
-, glee }:
+{ lib
+, stdenv
+, fetchFromGitHub
+, autoreconfHook
+, wxGTK32
+, ffmpeg_7
+, lua5_1
+, curl
+, libpng
+, xorg
+, pkg-config
+, flam3
+, libgtop
+, boost179
+, tinyxml
+, libglut
+, libGLU
+, libGL
+, glee
+}:
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation {
   pname = "electricsheep";
-  version = "3.0.2-2019-10-05";
+  version = "3.0.2-unstable-2024-02-13";
 
   src = fetchFromGitHub {
     owner = "scottdraves";
-    repo = pname;
-    rev = "37ba0fd692d6581f8fe009ed11c9650cd8174123";
-    sha256 = "sha256-v/+2dxOY/p6wNAywcFHUAfsZEJw31Syu2MacN/KeyWg=";
+    repo = "electricsheep";
+    rev = "5fbbb684752be06ccbea41639968aa7f1cc678dd";
+    hash = "sha256-X3EZ1/VcLEU1GkZbskWSsqQWYTnsH3pbFDvDLpdLmcU=";
   };
 
   nativeBuildInputs = [ autoreconfHook pkg-config ];
 
   buildInputs = [
-    wxGTK30 ffmpeg lua5_1 curl libpng xorg.libXrender
-    flam3 libgtop boost tinyxml freeglut libGLU libGL glee
+    wxGTK32
+    ffmpeg_7
+    lua5_1
+    curl
+    libpng
+    xorg.libXrender
+    flam3
+    libgtop
+    boost179
+    tinyxml
+    libglut
+    libGLU
+    libGL
+    glee
   ];
 
   preAutoreconf = ''
@@ -40,8 +69,8 @@ stdenv.mkDerivation rec {
   meta = with lib; {
     description = "Electric Sheep, a distributed screen saver for evolving artificial organisms";
     homepage = "https://electricsheep.org/";
-    maintainers = with maintainers; [ fpletz ];
+    maintainers = [ ];
     platforms = platforms.linux;
-    license = licenses.gpl1;
+    license = licenses.gpl2Only;
   };
 }

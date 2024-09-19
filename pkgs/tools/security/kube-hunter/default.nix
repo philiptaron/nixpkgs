@@ -21,7 +21,6 @@ python3.pkgs.buildPythonApplication rec {
   propagatedBuildInputs = with python3.pkgs; [
     netaddr
     netifaces
-    scapy
     requests
     prettytable
     urllib3
@@ -32,7 +31,8 @@ python3.pkgs.buildPythonApplication rec {
     kubernetes
   ];
 
-  checkInputs = with python3.pkgs; [
+  nativeCheckInputs = with python3.pkgs; [
+    pytest-cov-stub
     pytestCheckHook
     requests-mock
   ];
@@ -40,12 +40,16 @@ python3.pkgs.buildPythonApplication rec {
   postPatch = ''
     substituteInPlace setup.cfg \
       --replace "dataclasses" "" \
-      --replace "kubernetes==12.0.1" "kubernetes" \
-      --replace "--cov=kube_hunter" ""
+      --replace "kubernetes==12.0.1" "kubernetes"
   '';
 
   pythonImportsCheck = [
     "kube_hunter"
+  ];
+
+  disabledTests = [
+    # Test is out-dated
+    "test_K8sCveHunter"
   ];
 
   meta = with lib; {
@@ -53,5 +57,6 @@ python3.pkgs.buildPythonApplication rec {
     homepage = "https://github.com/aquasecurity/kube-hunter";
     license = with licenses; [ asl20 ];
     maintainers = with maintainers; [ fab ];
+    mainProgram = "kube-hunter";
   };
 }

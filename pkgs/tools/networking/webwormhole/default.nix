@@ -2,16 +2,16 @@
 
 buildGoModule rec {
   pname = "webwormhole";
-  version = "unstable-2021-01-16";
+  version = "0-unstable-2023-11-15";
 
   src = fetchFromGitHub {
     owner = "saljam";
     repo = pname;
-    rev = "c85e196c8a8a885815136aa8aee1958ad80a3bb5";
-    sha256 = "D10xmBwmEbeR3nU4CmppFBzdeE4Pm2+o/Vb5Yd+pPtM=";
+    rev = "6ceee76274ee881e828bd48c5cc15c758b9ad77c";
+    hash = "sha256-C9r6wFhP5BkIClgTQol7LyMUHXOzyrX9Pn91VqBaqFQ=";
   };
 
-  vendorSha256 = "sha256-yK04gjDO6JSDcJULcbJBBuPBhx792JNn+B227lDUrWk=";
+  vendorHash = "sha256-+7ctAm2wnjmfMd6CHXlcAUwiUMS7cH4koDAvlEUAXEg=";
 
   meta = with lib; {
     description = "Send files using peer authenticated WebRTC";

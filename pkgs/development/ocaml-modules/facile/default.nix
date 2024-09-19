@@ -1,5 +1,8 @@
 { lib, fetchurl, buildDunePackage, ocaml }:
 
+lib.throwIf (lib.versionAtLeast ocaml.version "5.0")
+  "facile is not available for OCaml ≥ 5.0"
+
 buildDunePackage rec {
   pname = "facile";
   version = "1.1.4";
@@ -11,12 +14,12 @@ buildDunePackage rec {
 
   doCheck = true;
 
-  useDune2 = lib.versionAtLeast ocaml.version "4.12";
-  postPatch = lib.optionalString useDune2 "dune upgrade";
+  duneVersion = if lib.versionAtLeast ocaml.version "4.12" then "2" else "1";
+  postPatch = lib.optionalString (duneVersion != "1") "dune upgrade";
 
   meta = {
     homepage = "http://opti.recherche.enac.fr/facile/";
     license = lib.licenses.lgpl21Plus;
-    description = "A Functional Constraint Library";
+    description = "Functional Constraint Library";
   };
 }

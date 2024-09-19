@@ -1,43 +1,39 @@
 { lib
 , stdenv
 , fetchFromGitHub
-, fetchpatch
 , cmake
 , python ? null
 , swig
 , llvmPackages
 }:
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation (finalAttrs: {
   pname = "plfit";
-  version = "0.9.3";
+  version = "0.9.6";
 
   src = fetchFromGitHub {
     owner = "ntamas";
     repo = "plfit";
-    rev = version;
-    hash = "sha256-y4n6AlGtuuUuA+33oF7lGOYuKSqea4GMSJlv9PaSpQ8=";
+    rev = finalAttrs.version;
+    hash = "sha256-XRl6poEdgPNorFideQmEJHCU+phs4rIhMYa8iAOtL1A=";
   };
 
-  patches = [
-    # https://github.com/ntamas/plfit/pull/41
-    (fetchpatch {
-      name = "use-cmake-install-full-dir.patch";
-      url = "https://github.com/ntamas/plfit/commit/d0e77c80e6e899298240e6be465cf580603f6ee2.patch";
-      hash = "sha256-wi3qCp6ZQtrKuM7XDA6xCXunCiqsyhnkxmg2eSmxjYM=";
-    })
-  ];
+  postPatch = lib.optionalString (python != null) ''
+    substituteInPlace src/CMakeLists.txt \
+      --replace-fail ' ''${Python3_SITEARCH}' ' ${placeholder "out"}/${python.sitePackages}' \
+      --replace-fail ' ''${Python3_SITELIB}' ' ${placeholder "out"}/${python.sitePackages}'
+  '';
 
   nativeBuildInputs = [
     cmake
-  ] ++ lib.optionals (!isNull python) [
+  ] ++ lib.optionals (python != null) [
     python
     swig
   ];
 
   cmakeFlags = [
     "-DPLFIT_USE_OPENMP=ON"
-  ] ++ lib.optionals (!isNull python) [
+  ] ++ lib.optionals (python != null) [
     "-DPLFIT_COMPILE_PYTHON_MODULE=ON"
   ];
 
@@ -45,10 +41,13 @@ stdenv.mkDerivation rec {
     llvmPackages.openmp
   ];
 
+  doCheck = true;
+
   meta = with lib; {
     description = "Fitting power-law distributions to empirical data";
     homepage = "https://github.com/ntamas/plfit";
+    changelog = "https://github.com/ntamas/plfit/blob/${finalAttrs.src.rev}/CHANGELOG.md";
     license = licenses.gpl2Plus;
     maintainers = with maintainers; [ dotlambda ];
   };
-}
+})

@@ -11,18 +11,17 @@
 
 stdenv.mkDerivation rec {
   pname = "ncnn";
-  version = "20220216";
+  version = "20240820";
 
   src = fetchFromGitHub {
     owner = "Tencent";
     repo = pname;
     rev = version;
-    sha256 = "sha256-QHLD5NQZA7WR4mRQ0NIaXuAu59IV4SjXHOOlar5aOew=";
+    hash = "sha256-KFRWpPajSqYeasPKaNMVe0WTIXwCI5v9GLo5ygN/22M=";
   };
 
   patches = [
     ./cmakelists.patch
-    ./gpu-include.patch
   ];
 
   cmakeFlags = [
@@ -34,9 +33,9 @@ stdenv.mkDerivation rec {
     "-DNCNN_BUILD_TOOLS=0"
     "-DNCNN_SYSTEM_GLSLANG=1"
     "-DNCNN_PYTHON=0" # Should be an attribute
-
-    "-DGLSLANG_TARGET_DIR=${glslang}/lib/cmake"
-  ];
+  ]
+  # Requires setting `Vulkan_LIBRARY` on Darwin. Otherwise the build fails due to missing symbols.
+  ++ lib.optionals stdenv.isDarwin [ "-DVulkan_LIBRARY=-lvulkan" ];
 
   nativeBuildInputs = [ cmake ];
   buildInputs = [ vulkan-headers vulkan-loader glslang opencv protobuf ];
@@ -46,5 +45,6 @@ stdenv.mkDerivation rec {
     homepage = "https://github.com/Tencent/ncnn";
     license = licenses.bsd3;
     maintainers = with maintainers; [ tilcreator ];
+    platforms = platforms.all;
   };
 }

@@ -1,24 +1,21 @@
-{ lib, stdenv, fetchFromGitHub, cmake, fftw, catch2 }:
+{ lib, stdenv, fetchpatch, fetchFromGitHub, cmake, fftw, catch2_3 }:
 
 stdenv.mkDerivation rec {
   pname = "libkeyfinder";
-  version = "2.2.6";
+  version = "2.2.8";
 
   src = fetchFromGitHub {
     owner = "mixxxdj";
     repo = "libkeyfinder";
-    rev = "v${version}";
-    sha256 = "sha256-7w/Wc9ncLinbnM2q3yv5DBtFoJFAM2e9xAUTsqvE9mg=";
+    rev = version;
+    hash = "sha256-Et8u5j/ke9u2bwHFriPCCBiXkPel37gwx+kwuViAr4o=";
   };
-
-  # needed for finding libkeyfinder.so to link it into keyfinder-tests executable
-  cmakeFlags = [ "-DCMAKE_SKIP_BUILD_RPATH=OFF" ];
 
   nativeBuildInputs = [ cmake ];
 
   buildInputs = [ fftw ];
 
-  checkInputs = [ catch2 ];
+  nativeCheckInputs = [ catch2_3 ];
 
   doCheck = true;
 

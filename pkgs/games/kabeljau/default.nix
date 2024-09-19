@@ -6,10 +6,10 @@ stdenvNoCC.mkDerivation rec {
 
   src = fetchFromGitea {
     domain = "codeberg.org";
-    owner = "papojari";
+    owner = "annaaurora";
     repo = "kabeljau";
     rev = "v${version}";
-    sha256 = "sha256-RedVItgfr6vgqXHA3bOiHXDpfGuHI+sX4jCHL9G5jYk=";
+    hash = "sha256-RedVItgfr6vgqXHA3bOiHXDpfGuHI+sX4jCHL9G5jYk=";
   };
 
   # Inkscape is needed in a just recipe where it is used to export the SVG icon to several different sized PNGs.
@@ -33,8 +33,9 @@ stdenvNoCC.mkDerivation rec {
 
   meta = with lib; {
     description = "Survive as a stray cat in an ncurses game";
-    homepage = "https://codeberg.org/papojari/kabeljau";
+    mainProgram = "kabeljau";
+    homepage = "https://codeberg.org/annaaurora/kabeljau";
     license = licenses.lgpl3Only;
-    maintainers = with maintainers; [ papojari ];
+    maintainers = with maintainers; [ annaaurora ];
   };
 }

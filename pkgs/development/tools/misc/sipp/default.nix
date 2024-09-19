@@ -18,6 +18,9 @@ stdenv.mkDerivation rec {
     "-DUSE_PCAP=1"
     "-DUSE_SSL=1"
     "-DUSE_SCTP=${if stdenv.isLinux then "1" else "0"}"
+
+    # file RPATH_CHANGE could not write new RPATH
+    "-DCMAKE_SKIP_BUILD_RPATH=ON"
   ];
   enableParallelBuilding = true;
 
@@ -27,7 +30,8 @@ stdenv.mkDerivation rec {
 
   meta = with lib; {
     homepage = "http://sipp.sf.net";
-    description = "The SIPp testing tool";
+    description = "SIPp testing tool";
+    mainProgram = "sipp";
     license = licenses.gpl3;
     platforms = platforms.unix;
   };

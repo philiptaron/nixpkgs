@@ -1,95 +1,106 @@
-{ lib
-, stdenv
-, callPackage
-, buildPythonPackage
-, fetchPypi
-, rustPlatform
-, setuptools-rust
-, openssl
-, Security
-, packaging
-, six
-, isPyPy
-, cffi
-, pytestCheckHook
-, pytest-subtests
-, pretend
-, libiconv
-, iso8601
-, pytz
-, hypothesis
+{
+  lib,
+  stdenv,
+  buildPythonPackage,
+  callPackage,
+  setuptools,
+  bcrypt,
+  certifi,
+  cffi,
+  cryptography-vectors ? (callPackage ./vectors.nix { }),
+  fetchPypi,
+  isPyPy,
+  libiconv,
+  libxcrypt,
+  openssl,
+  pkg-config,
+  pretend,
+  pytest-xdist,
+  pytestCheckHook,
+  pythonOlder,
+  rustPlatform,
+  Security,
 }:
 
-let
-  cryptography-vectors = callPackage ./vectors.nix { };
-in
 buildPythonPackage rec {
   pname = "cryptography";
-  version = "36.0.2"; # Also update the hash in vectors.nix
+  version = "43.0.0"; # Also update the hash in vectors.nix
+  pyproject = true;
+
+  disabled = pythonOlder "3.7";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-cPj097sqyfNAZVy6yJ1oxSevW7Q4dSKoQT6EHj5mKMk=";
+    hash = "sha256-uIB1raLVGqnxgoNTLJ9g5yFwBBu6iNfzfknLsQJ1KZ4=";
   };
 
   cargoDeps = rustPlatform.fetchCargoTarball {
     inherit src;
     sourceRoot = "${pname}-${version}/${cargoRoot}";
     name = "${pname}-${version}";
-    sha256 = "sha256-6C4N445h4Xf2nCc9rJWpSZaNPilR9GfgbmKvNlSIFqg=";
+    hash = "sha256-TEQy8PrIaZshiBFTqR/OJp3e/bVM1USjcmpDYcjPJPM=";
   };
+
+  postPatch = ''
+    substituteInPlace pyproject.toml \
+      --replace-fail "--benchmark-disable" ""
+  '';
 
   cargoRoot = "src/rust";
 
-  outputs = [ "out" "dev" ];
-
-  nativeBuildInputs = lib.optionals (!isPyPy) [
-    cffi
-  ] ++ [
+  build-system = [
     rustPlatform.cargoSetupHook
-    setuptools-rust
-  ] ++ (with rustPlatform; [ rust.cargo rust.rustc ]);
+    rustPlatform.maturinBuildHook
+    pkg-config
+    setuptools
+  ] ++ lib.optionals (!isPyPy) [ cffi ];
 
-  buildInputs = [ openssl ]
-    ++ lib.optionals stdenv.isDarwin [ Security libiconv ];
+  buildInputs =
+    [ openssl ]
+    ++ lib.optionals stdenv.isDarwin [
+      Security
+      libiconv
+    ]
+    ++ lib.optionals (pythonOlder "3.9") [ libxcrypt ];
 
-  propagatedBuildInputs = lib.optionals (!isPyPy) [
-    cffi
-  ];
+  dependencies = lib.optionals (!isPyPy) [ cffi ];
 
-  checkInputs = [
+  optional-dependencies.ssh = [ bcrypt ];
+
+  nativeCheckInputs = [
+    certifi
     cryptography-vectors
-    hypothesis
-    iso8601
     pretend
     pytestCheckHook
-    pytest-subtests
-    pytz
+    pytest-xdist
+  ] ++ optional-dependencies.ssh;
+
+  pytestFlagsArray = [ "--disable-pytest-warnings" ];
+
+  disabledTestPaths = [
+    # save compute time by not running benchmarks
+    "tests/bench"
   ];
 
-  pytestFlagsArray = [
-    "--disable-pytest-warnings"
-  ];
-
-  disabledTestPaths = lib.optionals (stdenv.isDarwin && stdenv.isAarch64) [
-    # aarch64-darwin forbids W+X memory, but this tests depends on it:
-    # * https://cffi.readthedocs.io/en/latest/using.html#callbacks
-    "tests/hazmat/backends/test_openssl_memleak.py"
-  ];
+  passthru = {
+    vectors = cryptography-vectors;
+  };
 
   meta = with lib; {
-    description = "A package which provides cryptographic recipes and primitives";
+    description = "Package which provides cryptographic recipes and primitives";
     longDescription = ''
       Cryptography includes both high level recipes and low level interfaces to
       common cryptographic algorithms such as symmetric ciphers, message
       digests, and key derivation functions.
-      Our goal is for it to be your "cryptographic standard library". It
-      supports Python 2.7, Python 3.5+, and PyPy 5.4+.
     '';
     homepage = "https://github.com/pyca/cryptography";
-    changelog = "https://cryptography.io/en/latest/changelog/#v"
-      + replaceStrings [ "." ] [ "-" ] version;
-    license = with licenses; [ asl20 bsd3 psfl ];
+    changelog =
+      "https://cryptography.io/en/latest/changelog/#v" + replaceStrings [ "." ] [ "-" ] version;
+    license = with licenses; [
+      asl20
+      bsd3
+      psfl
+    ];
     maintainers = with maintainers; [ SuperSandro2000 ];
   };
 }

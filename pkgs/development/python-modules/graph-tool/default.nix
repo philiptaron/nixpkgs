@@ -1,56 +1,104 @@
-{ fetchurl, python, cairomm, sparsehash, pycairo, autoreconfHook
-, pkg-config, boost, expat, scipy, cgal, gmp, mpfr
-, gobject-introspection, pygobject3, gtk3, matplotlib, ncurses
-, buildPythonPackage
-, lib
+{
+  buildPythonPackage,
+  lib,
+  fetchurl,
+  stdenv,
+
+  autoreconfHook,
+  boost185,
+  cairomm,
+  cgal,
+  expat,
+  gmp,
+  gobject-introspection,
+  gtk3,
+  llvmPackages,
+  matplotlib,
+  mpfr,
+  numpy,
+  pkg-config,
+  pycairo,
+  pygobject3,
+  python,
+  scipy,
+  sparsehash,
+  gitUpdater,
 }:
 
+let
+  # graph-tool doesn't build against boost181 on Darwin
+  boost = boost185.override {
+    enablePython = true;
+    inherit python;
+  };
+in
 buildPythonPackage rec {
   pname = "graph-tool";
+  version = "2.77";
   format = "other";
-  version = "2.43";
 
   src = fetchurl {
     url = "https://downloads.skewed.de/graph-tool/graph-tool-${version}.tar.bz2";
-    hash = "sha256-XxvuCUIgz7JIaNsPr0f44v/Sb3fdcJmVhC5NnomNqGw=";
+    hash = "sha256-mu/6r1Uo836ZTxuIL3UdsKvuUz+H1FZY9Y3ZbEBK0LQ=";
   };
+
+  # Remove error messages about tput during build process without adding ncurses,
+  # and replace unavailable git commit hash and date.
+  postPatch = ''
+    substituteInPlace configure.ac \
+      --replace-fail 'tput setaf $1' : \
+      --replace-fail 'tput sgr0' : \
+      --replace-fail \
+        "\"esyscmd(git show | head -n 1 | sed 's/commit //' |  grep -o -e '.\{8\}' | head -n 1 |tr -d '\n')\"" \
+        '["(nixpkgs-${version})"]' \
+      --replace-fail \
+        "\"esyscmd(git log -1 | head -n 3 | grep 'Date:' | sed s/'Date:   '// | tr -d '\n')\"" \
+        '["(unavailable)"]'
+  '';
 
   configureFlags = [
     "--with-python-module-path=$(out)/${python.sitePackages}"
     "--with-boost-libdir=${boost}/lib"
-    "--with-expat=${expat}"
     "--with-cgal=${cgal}"
-    "--enable-openmp"
   ];
 
-  nativeBuildInputs = [ autoreconfHook pkg-config ];
-  buildInputs = [ ncurses ];
+  enableParallelBuilding = true;
 
-  propagatedBuildInputs = [
+  build-system = [
+    autoreconfHook
+    pkg-config
+  ];
+
+  # https://graph-tool.skewed.de/installation.html#manual-compilation
+  dependencies = [
     boost
+    cairomm
     cgal
     expat
     gmp
-    mpfr
-    python
-    scipy
-    # optional
-    sparsehash
-    # drawing
-    cairomm
     gobject-introspection
     gtk3
-    pycairo
     matplotlib
+    mpfr
+    numpy
+    pycairo
     pygobject3
-  ];
+    scipy
+    sparsehash
+  ] ++ lib.optionals stdenv.cc.isClang [ llvmPackages.openmp ];
 
-  enableParallelBuilding = false;
+  pythonImportsCheck = [ "graph_tool" ];
 
-  meta = with lib; {
+  passthru.updateScript = gitUpdater {
+    url = "https://git.skewed.de/count0/graph-tool";
+    rev-prefix = "release-";
+  };
+
+  meta = {
     description = "Python module for manipulation and statistical analysis of graphs";
-    homepage    = "https://graph-tool.skewed.de/";
-    license     = licenses.gpl3;
-    maintainers = [ maintainers.joelmo ];
+    homepage = "https://graph-tool.skewed.de";
+    changelog = "https://git.skewed.de/count0/graph-tool/commits/release-${version}";
+    license = lib.licenses.lgpl3Plus;
+    maintainers = [ lib.maintainers.mjoerg ];
   };
 }

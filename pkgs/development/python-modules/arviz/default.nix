@@ -1,64 +1,78 @@
-{ lib
-, buildPythonPackage
-, fetchFromGitHub
-, bokeh
-, emcee
-, matplotlib
-, netcdf4
-, numba
-, numpy
-, pandas
-, pytest
-, setuptools
-, cloudpickle
-, pytestCheckHook
-, scipy
-, packaging
-, typing-extensions
-, pythonOlder
-, xarray
-, xarray-einstats
-, zarr
-, h5py
-, jaxlib
-, torchvision
-, jax
-  # , pymc3 (circular dependency)
-, pyro-ppl
+{
+  lib,
+  buildPythonPackage,
+  pythonOlder,
+  fetchFromGitHub,
+
+  # build-system
+  packaging,
+  setuptools,
+
+  # dependencies
+  dm-tree,
+  h5netcdf,
+  matplotlib,
+  numpy,
+  pandas,
+  scipy,
+  typing-extensions,
+  xarray,
+  xarray-einstats,
+
+  # checks
+  bokeh,
+  cloudpickle,
+  emcee,
+  ffmpeg,
+  h5py,
+  jax,
+  jaxlib,
+  numba,
+  numpyro,
+  #, pymc3 (circular dependency)
+  pyro-ppl,
   #, pystan (not packaged)
-, numpyro
+  pytestCheckHook,
+  torchvision,
+  zarr,
 }:
 
 buildPythonPackage rec {
   pname = "arviz";
-  version = "0.12.1";
-  format = "setuptools";
+  version = "0.19.0";
+  pyproject = true;
 
-  disabled = pythonOlder "3.7";
+  disabled = pythonOlder "3.10";
 
   src = fetchFromGitHub {
     owner = "arviz-devs";
-    repo = pname;
-    rev = "v${version}";
-    hash = "sha256-5P6EXXAAS1Q2eNQuj/5JrDg0lPHfA5K4WaYfKaaXm9s=";
+    repo = "arviz";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-fwDCl1KWClIOBWIL/ETw3hJUyHdpVpLnRmZoZXL3QXI=";
   };
 
-  propagatedBuildInputs = [
-    matplotlib
-    netcdf4
-    numpy
+  build-system = [
     packaging
+    setuptools
+  ];
+
+  dependencies = [
+    dm-tree
+    h5netcdf
+    matplotlib
+    numpy
     pandas
     scipy
-    setuptools
+    typing-extensions
     xarray
     xarray-einstats
   ];
 
-  checkInputs = [
+  nativeCheckInputs = [
     bokeh
     cloudpickle
     emcee
+    ffmpeg
     h5py
     jax
     jaxlib
@@ -76,30 +90,27 @@ buildPythonPackage rec {
     export HOME=$(mktemp -d);
   '';
 
-  pytestFlagsArray = [
-    "arviz/tests/base_tests/"
-  ];
-
-  disabledTestPaths = [
-    # Remove tests as dependency creates a circular dependency
-    "arviz/tests/external_tests/test_data_pymc.py"
-  ];
+  pytestFlagsArray = [ "arviz/tests/base_tests/" ];
 
   disabledTests = [
     # Tests require network access
+    "test_plot_ppc_transposed"
     "test_plot_separation"
     "test_plot_trace_legend"
     "test_cov"
+    # countourpy is not available at the moment
+    "test_plot_kde"
+    "test_plot_kde_2d"
+    "test_plot_pair"
   ];
 
-  pythonImportsCheck = [
-    "arviz"
-  ];
+  pythonImportsCheck = [ "arviz" ];
 
-  meta = with lib; {
+  meta = {
     description = "Library for exploratory analysis of Bayesian models";
     homepage = "https://arviz-devs.github.io/arviz/";
-    license = licenses.asl20;
-    maintainers = with maintainers; [ omnipotententity ];
+    changelog = "https://github.com/arviz-devs/arviz/blob/v${version}/CHANGELOG.md";
+    license = lib.licenses.asl20;
+    maintainers = with lib.maintainers; [ omnipotententity ];
   };
 }

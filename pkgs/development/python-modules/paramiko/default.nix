@@ -1,25 +1,28 @@
-{ lib
-, bcrypt
-, buildPythonPackage
-, cryptography
-, fetchPypi
-, invoke
-, mock
-, pyasn1
-, pynacl
-, pytest-relaxed
-, pytestCheckHook
-, fetchpatch
+{
+  lib,
+  bcrypt,
+  buildPythonPackage,
+  cryptography,
+  fetchpatch,
+  fetchPypi,
+  gssapi,
+  icecream,
+  invoke,
+  mock,
+  pyasn1,
+  pynacl,
+  pytestCheckHook,
+  six,
 }:
 
 buildPythonPackage rec {
   pname = "paramiko";
-  version = "2.10.4";
+  version = "3.4.0";
   format = "setuptools";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-PS5lC2gSzm0WCr/3AdbvRDTsl5NLE+lc8a09pw/7XFg=";
+    hash = "sha256-qsCPJqMdxN/9koIVJ9FoLZnVL572hRloEUqHKPPCdNM=";
   };
 
   patches = [
@@ -27,7 +30,12 @@ buildPythonPackage rec {
     # https://github.com/paramiko/paramiko/pull/1606/
     (fetchpatch {
       url = "https://github.com/paramiko/paramiko/commit/18e38b99f515056071fb27b9c1a4f472005c324a.patch";
-      sha256 = "sha256-bPDghPeLo3NiOg+JwD5CJRRLv2VEqmSx1rOF2Tf8ZDA=";
+      hash = "sha256-bPDghPeLo3NiOg+JwD5CJRRLv2VEqmSx1rOF2Tf8ZDA=";
+    })
+    (fetchpatch {
+      name = "paramiko-pytest8-compat.patch";
+      url = "https://github.com/paramiko/paramiko/commit/d71046151d9904df467ff72709585cde39cdd4ca.patch";
+      hash = "sha256-4CTIZ9BmzRdh+HOwxSzfM9wkUGJOnndctK5swqqsIvU=";
     })
   ];
 
@@ -35,35 +43,40 @@ buildPythonPackage rec {
     bcrypt
     cryptography
     pyasn1
-    pynacl
-  ];
+    six
+  ] ++ passthru.optional-dependencies.ed25519; # remove on 3.0 update
 
-  checkInputs = [
-    invoke
+  passthru.optional-dependencies = {
+    gssapi = [
+      pyasn1
+      gssapi
+    ];
+    ed25519 = [
+      pynacl
+      bcrypt
+    ];
+    invoke = [ invoke ];
+  };
+
+  nativeCheckInputs = [
+    icecream
     mock
-    pytest-relaxed
     pytestCheckHook
-  ];
-
-  # with python 3.9.6+, the deprecation warnings will fail the test suite
-  # see: https://github.com/pyinvoke/invoke/issues/829
-  # pytest-relaxed does not work with pytest 6
-  # see: https://github.com/bitprophet/pytest-relaxed/issues/12
-  doCheck = false;
+  ] ++ lib.flatten (builtins.attrValues passthru.optional-dependencies);
 
   disabledTestPaths = [
-    "tests/test_sftp.py"
-    "tests/test_config.py"
+    # disable tests that require pytest-relaxed, which is broken
+    "tests/test_client.py"
+    "tests/test_ssh_gss.py"
   ];
 
-  pythonImportsCheck = [
-    "paramiko"
-  ];
+  pythonImportsCheck = [ "paramiko" ];
 
   __darwinAllowLocalNetworking = true;
 
   meta = with lib; {
     homepage = "https://github.com/paramiko/paramiko/";
+    changelog = "https://github.com/paramiko/paramiko/blob/${version}/sites/www/changelog.rst";
     description = "Native Python SSHv2 protocol library";
     license = licenses.lgpl21Plus;
     longDescription = ''
@@ -72,6 +85,6 @@ buildPythonPackage rec {
       between python scripts. All major ciphers and hash methods are
       supported. SFTP client and server mode are both supported too.
     '';
-    maintainers = with maintainers; [ SuperSandro2000 ];
+    maintainers = [ ];
   };
 }

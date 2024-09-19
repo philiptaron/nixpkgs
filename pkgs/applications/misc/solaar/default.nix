@@ -3,32 +3,44 @@
 , gobject-introspection
 , gtk3
 , python3Packages
-, wrapGAppsHook
+, wrapGAppsHook3
 , gdk-pixbuf
 , libappindicator
 , librsvg
 }:
 
 # Although we copy in the udev rules here, you probably just want to use
-# logitech-udev-rules instead of adding this to services.udev.packages on NixOS
+# `logitech-udev-rules`, which is an alias to `udev` output of this derivation,
+# instead of adding this to `services.udev.packages` on NixOS,
 python3Packages.buildPythonApplication rec {
   pname = "solaar";
-  version = "1.1.3";
+  version = "1.1.13";
 
   src = fetchFromGitHub {
     owner = "pwr-Solaar";
     repo = "Solaar";
-    rev = version;
-    hash = "sha256-6z22MnhUL9Da3G7UDmZsBAi2gHLNpiFEwe+pAtnP91s=";
+    rev = "refs/tags/${version}";
+    hash = "sha256-sYJrVAeZi0a7yD0i/zIIxcu9X/c5HvgoI/n50eXD47s=";
   };
 
-  nativeBuildInputs = [ wrapGAppsHook gdk-pixbuf ];
-  buildInputs = [ libappindicator librsvg ];
+  outputs = [ "out" "udev" ];
+
+  nativeBuildInputs = [
+    gdk-pixbuf
+    gobject-introspection
+    wrapGAppsHook3
+  ];
+
+  buildInputs = [
+    libappindicator
+    librsvg
+  ];
 
   propagatedBuildInputs = with python3Packages; [
     evdev
-    gobject-introspection
+    dbus-python
     gtk3
+    hid-parser
     psutil
     pygobject3
     pyudev
@@ -41,11 +53,19 @@ python3Packages.buildPythonApplication rec {
   postInstall = ''
     ln -s $out/bin/solaar $out/bin/solaar-cli
 
-    install -Dm444 -t $out/etc/udev/rules.d rules.d/*.rules
+    install -Dm444 -t $udev/etc/udev/rules.d rules.d-uinput/*.rules
   '';
 
-  # No tests
+  dontWrapGApps = true;
+
+  preFixup = ''
+    makeWrapperArgs+=("''${gappsWrapperArgs[@]}")
+  '';
+
+  # no tests
   doCheck = false;
+
+  pythonImportsCheck = [ "solaar" ];
 
   meta = with lib; {
     description = "Linux devices manager for the Logitech Unifying Receiver";
@@ -61,7 +81,7 @@ python3Packages.buildPythonApplication rec {
     '';
     homepage = "https://pwr-solaar.github.io/Solaar/";
     license = licenses.gpl2Only;
-    maintainers = with maintainers; [ spinus ysndr ];
+    maintainers = with maintainers; [ spinus ysndr oxalica ];
     platforms = platforms.linux;
   };
 }

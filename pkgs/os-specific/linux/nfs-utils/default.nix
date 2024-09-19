@@ -1,7 +1,7 @@
 { stdenv, fetchurl, fetchpatch, lib, pkg-config, util-linux, libcap, libtirpc, libevent
 , sqlite, libkrb5, kmod, libuuid, keyutils, lvm2, systemd, coreutils, tcp_wrappers
-, python3, buildPackages, nixosTests, rpcsvc-proto
-, enablePython ? true
+, python3, buildPackages, nixosTests, rpcsvc-proto, openldap, libxml2
+, enablePython ? true, enableLdap ? true
 }:
 
 let
@@ -10,11 +10,11 @@ in
 
 stdenv.mkDerivation rec {
   pname = "nfs-utils";
-  version = "2.5.1";
+  version = "2.7.1";
 
   src = fetchurl {
-    url = "https://kernel.org/pub/linux/utils/nfs-utils/${version}/${pname}-${version}.tar.xz";
-    sha256 = "1i1h3n2m35q9ixs1i2qf1rpjp10cipa3c25zdf1xj1vaw5q8270g";
+    url = "mirror://kernel/linux/utils/nfs-utils/${version}/${pname}-${version}.tar.xz";
+    hash = "sha256-iFyUioSli8pBSPRZWI+ac2nbtA3MRm8E5FXGsQ/Qqkg=";
   };
 
   # libnfsidmap is built together with nfs-utils from the same source,
@@ -25,8 +25,9 @@ stdenv.mkDerivation rec {
 
   buildInputs = [
     libtirpc libcap libevent sqlite lvm2
-    libuuid keyutils libkrb5 tcp_wrappers
-  ] ++ lib.optional enablePython python3;
+    libuuid keyutils libkrb5 tcp_wrappers libxml2
+  ] ++ lib.optional enablePython python3
+    ++ lib.optional enableLdap  openldap;
 
   enableParallelBuilding = true;
 
@@ -46,13 +47,10 @@ stdenv.mkDerivation rec {
       "--enable-libmount-mount"
       "--with-pluginpath=${placeholder "lib"}/lib/libnfsidmap" # this installs libnfsidmap
       "--with-rpcgen=${buildPackages.rpcsvc-proto}/bin/rpcgen"
-    ];
+      "--with-modprobedir=${placeholder "out"}/etc/modprobe.d"
+    ] ++ lib.optional enableLdap "--with-ldap";
 
   patches = lib.optionals stdenv.hostPlatform.isMusl [
-    (fetchpatch {
-      url = "https://raw.githubusercontent.com/alpinelinux/aports/cb880042d48d77af412d4688f24b8310ae44f55f/main/nfs-utils/0011-exportfs-only-do-glibc-specific-hackery-on-glibc.patch";
-      sha256 = "0rrddrykz8prk0dcgfvmnz0vxn09dbgq8cb098yjjg19zz6d7vid";
-    })
     # http://openwall.com/lists/musl/2015/08/18/10
     (fetchpatch {
       url = "https://raw.githubusercontent.com/alpinelinux/aports/cb880042d48d77af412d4688f24b8310ae44f55f/main/nfs-utils/musl-getservbyport.patch";
@@ -70,6 +68,9 @@ stdenv.mkDerivation rec {
 
       substituteInPlace systemd/nfs-utils.service \
         --replace "/bin/true" "${coreutils}/bin/true"
+
+      substituteInPlace tools/nfsrahead/Makefile.in systemd/Makefile.in \
+        --replace "/usr/lib/udev/rules.d/" "$out/lib/udev/rules.d/"
 
       substituteInPlace utils/mount/Makefile.in \
         --replace "chmod 4511" "chmod 0511"
@@ -124,7 +125,7 @@ stdenv.mkDerivation rec {
     '';
 
     homepage = "https://linux-nfs.org/";
-    license = licenses.gpl2;
+    license = licenses.gpl2Plus;
     platforms = platforms.linux;
     maintainers = with maintainers; [ abbradar ];
   };

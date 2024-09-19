@@ -4,7 +4,7 @@
 , copyDesktopItems
 , gobject-introspection
 , poetry-core
-, wrapGAppsHook
+, wrapGAppsHook3
 , gtksourceview4
 , pango
 , gaphas
@@ -27,21 +27,17 @@ buildPythonApplication rec {
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-+qqsSLjdY2I19fxdfkOEQ9DhTTHccUDll4O5yqtLiz0=";
+    hash = "sha256-+qqsSLjdY2I19fxdfkOEQ9DhTTHccUDll4O5yqtLiz0=";
   };
 
   nativeBuildInputs = [
     copyDesktopItems
     gobject-introspection
     poetry-core
-    wrapGAppsHook
+    wrapGAppsHook3
   ];
 
-  # Setting gobject-introspection on booth nativeBuildInputs and
-  # buildInputs because of #56943. This recognizes pango, avoiding
-  # a "ValueError: Namespace PangoCairo not available".
   buildInputs = [
-    gobject-introspection
     gtksourceview4
     pango
   ];
@@ -63,7 +59,7 @@ buildPythonApplication rec {
     desktopName = "Gaphor";
   };
 
-  # We need to wrap it manually to resolve all icons
+  # Disable automatic wrapGAppsHook3 to prevent double wrapping
   dontWrapGApps = true;
 
   postInstall = ''
@@ -71,15 +67,16 @@ buildPythonApplication rec {
   '';
 
   preFixup = ''
-    wrapProgram $out/bin/gaphor \
-        ''${gappsWrapperArgs[@]} \
-        --prefix XDG_DATA_DIRS : "${gtk3}/share/gsettings-schemas/${gtk3.name}/" \
-        --set GDK_PIXBUF_MODULE_FILE "${librsvg.out}/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
+    makeWrapperArgs+=(
+      "''${gappsWrapperArgs[@]}" \
+      --prefix XDG_DATA_DIRS : "${gtk3}/share/gsettings-schemas/${gtk3.name}/" \
+      --set GDK_PIXBUF_MODULE_FILE "${librsvg.out}/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
+    )
   '';
 
   meta = with lib; {
     description = "Simple modeling tool written in Python";
-    maintainers = with maintainers; [ wolfangaukang ];
+    maintainers = [ ];
     homepage = "https://github.com/gaphor/gaphor";
     license = licenses.asl20;
     platforms = [ "x86_64-linux" ];

@@ -2,13 +2,13 @@
 
 stdenv.mkDerivation rec {
   pname = "gsimplecal";
-  version = "2.2";
+  version = "2.5.1";
 
   src = fetchFromGitHub {
     owner = "dmedvinsky";
     repo = "gsimplecal";
     rev = "v${version}";
-    sha256 = "sha256-r7OitN7WSY7vxpQCraLyokgUNgvaVFjE17ghBGgxzuM=";
+    sha256 = "sha256-Q8vK+rIRr+Tzwq0Xw5a1pYoLkSwF6PEdqc3/Dk01++o=";
   };
 
   postPatch = ''
@@ -40,5 +40,6 @@ stdenv.mkDerivation rec {
     license = lib.licenses.bsd3;
     maintainers = [ lib.maintainers.romildo ];
     platforms = lib.platforms.linux;
+    mainProgram = "gsimplecal";
   };
 }

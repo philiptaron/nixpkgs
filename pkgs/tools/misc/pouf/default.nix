@@ -1,29 +1,29 @@
 { lib
-, stdenv
-, fetchFromGitHub
 , rustPlatform
+, fetchFromGitHub
 }:
 
 rustPlatform.buildRustPackage rec {
   pname = "pouf";
-  version = "0.4.3";
+  version = "0.6.3";
 
   src = fetchFromGitHub {
     owner = "mothsart";
     repo = pname;
     rev = version;
-    sha256 = "1dgk2g13hz64vdx9sqkixl0321cnfnhrm7hxp68vwfcfx3gvfjv8";
+    hash = "sha256-tW86b9a7u1jyfmHjwjs+5DaUujRZH+VhGQsj0CBj0yk=";
   };
 
-  cargoSha256 = "0ipyc9l9kr7izh3dmvczq1i7al56yiaz20yaarz8bpsfcrmgwy3s";
+  cargoHash = "sha256-rVJAaeg27SdM8cTx12rKLIGEYtXUhLHXUYpT78oVNlo=";
 
   postInstall = "make PREFIX=$out copy-data";
 
   meta = with lib; {
-    description = "A cli program for produce fake datas.";
+    description = "CLI program for produce fake datas";
     homepage = "https://github.com/mothsart/pouf";
     changelog = "https://github.com/mothsart/pouf/releases/tag/${version}";
     maintainers = with maintainers; [ mothsart ];
     license = with licenses; [ mit ];
+    mainProgram = "pouf";
   };
 }

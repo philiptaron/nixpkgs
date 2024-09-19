@@ -1,7 +1,7 @@
-{ callPackage, ... } @ args:
+{ callPackage, ... }:
 
-callPackage ./generic.nix (args // {
-  version = "5.0.6";
+callPackage ./generic.nix {
+  version = "5.2.3";
   kde-channel = "stable";
-  sha256 = "sha256:0qhf7vm13v33yk67n7wdcgrqpk7yvajdlkqcp7zhrl2z7qdnvmzd";
-})
+  hash = "sha256-RmpG7bk8PjetZSB8+WAjSJCnJ0Tg9E8shV3kx9iCXMA=";
+}

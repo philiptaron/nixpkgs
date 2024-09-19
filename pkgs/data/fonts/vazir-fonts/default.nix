@@ -1,24 +1,29 @@
-{ lib, fetchFromGitHub }:
+{ lib, stdenvNoCC, fetchFromGitHub }:
 
-let
+stdenvNoCC.mkDerivation rec {
   pname = "vazir-fonts";
-  version = "32.0.0";
-in fetchFromGitHub {
-  name = "${pname}-${version}";
+  version = "33.003";
 
-  owner = "rastikerdar";
-  repo = "vazir-font";
-  rev = "v${version}";
+  src = fetchFromGitHub {
+    owner = "rastikerdar";
+    repo = "vazir-font";
+    rev = "v${version}";
+    hash = "sha256-C1UtfrRFzz0uv/hj8e7huXe4sNd5h7ozVhirWEAyXGg=";
+  };
 
-  postFetch = ''
-    tar xf $downloadedFile --strip=1
+  dontBuild = true;
+
+  installPhase = ''
+    runHook preInstall
+
     find . -name '*.ttf' -exec install -m444 -Dt $out/share/fonts/truetype {} \;
+
+    runHook postInstall
   '';
-  sha256 = "sha256-Uy8hgBtCcTLwXu9FkLN1WavUfP74Jf53ChxVGS3UBVM=";
 
   meta = with lib; {
     homepage = "https://github.com/rastikerdar/vazir-font";
-    description = "A Persian (Farsi) Font - قلم (فونت) فارسی وزیر";
+    description = "Persian (Farsi) Font - قلم (فونت) فارسی وزیر";
     license = licenses.ofl;
     platforms = platforms.all;
     maintainers = [ ];

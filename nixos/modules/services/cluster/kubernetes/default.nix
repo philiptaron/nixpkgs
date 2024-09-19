@@ -61,13 +61,13 @@ let
   etcdEndpoints = ["https://${cfg.masterAddress}:2379"];
 
   mkCert = { name, CN, hosts ? [], fields ? {}, action ? "",
-             privateKeyOwner ? "kubernetes" }: rec {
+             privateKeyOwner ? "kubernetes", privateKeyGroup ? "kubernetes" }: rec {
     inherit name caCert CN hosts fields action;
     cert = secret name;
     key = secret "${name}-key";
     privateKeyOptions = {
       owner = privateKeyOwner;
-      group = "nogroup";
+      group = privateKeyGroup;
       mode = "0600";
       path = key;
     };
@@ -122,12 +122,7 @@ in {
       type = types.listOf (types.enum ["master" "node"]);
     };
 
-    package = mkOption {
-      description = "Kubernetes package to use.";
-      type = types.package;
-      default = pkgs.kubernetes;
-      defaultText = literalExpression "pkgs.kubernetes";
-    };
+    package = mkPackageOption pkgs "kubernetes" { };
 
     kubeconfig = mkKubeConfigOptions "Default kubeconfig";
 
@@ -160,8 +155,8 @@ in {
 
     featureGates = mkOption {
       description = "List set of feature gates.";
-      default = [];
-      type = types.listOf types.str;
+      default = {};
+      type = types.attrsOf types.bool;
     };
 
     masterAddress = mkOption {
@@ -266,7 +261,7 @@ in {
           name = "service-account";
           CN = "system:service-account-signer";
           action = ''
-            systemctl reload \
+            systemctl restart \
               kube-apiserver.service \
               kube-controller-manager.service
           '';
@@ -290,7 +285,7 @@ in {
       systemd.tmpfiles.rules = [
         "d /opt/cni/bin 0755 root root -"
         "d /run/kubernetes 0755 kubernetes kubernetes -"
-        "d /var/lib/kubernetes 0755 kubernetes kubernetes -"
+        "d ${cfg.dataDir} 0755 kubernetes kubernetes -"
       ];
 
       users.users.kubernetes = {
@@ -299,6 +294,7 @@ in {
         group = "kubernetes";
         home = cfg.dataDir;
         createHome = true;
+        homeMode = "755";
       };
       users.groups.kubernetes.gid = config.ids.gids.kubernetes;
 

@@ -3,24 +3,35 @@
 , fetchzip
 , makeWrapper
 , jre
-, writeText
 , nixosTests
 , callPackage
-
 , confFile ? null
 , plugins ? [ ]
+, extraFeatures ? [ ]
+, disabledFeatures ? [ ]
 }:
 
-stdenv.mkDerivation rec {
+let
+  featuresSubcommand = ''
+    ${lib.optionalString (extraFeatures != [ ]) "--features=${lib.concatStringsSep "," extraFeatures}"} \
+    ${lib.optionalString (disabledFeatures != [ ]) "--features-disabled=${lib.concatStringsSep "," disabledFeatures}"}
+  '';
+in stdenv.mkDerivation rec {
   pname = "keycloak";
-  version = "18.0.0";
+  version = "25.0.5";
 
   src = fetchzip {
     url = "https://github.com/keycloak/keycloak/releases/download/${version}/keycloak-${version}.zip";
-    sha256 = "0fxf9m50hpjplj077z2zjp0qibixz5y4lbc8159cnxbd4gzpkaaf";
+    hash = "sha256-2PEQjdz+r/qRJxlu0jI2watkNOUkf4bUCkcNPrLsaMg=";
   };
 
   nativeBuildInputs = [ makeWrapper jre ];
+
+  patches = [
+    # Make home.dir and config.dir configurable through the
+    # KC_HOME_DIR and KC_CONF_DIR environment variables.
+    ./config_vars.patch
+  ];
 
   buildPhase = ''
     runHook preBuild
@@ -28,19 +39,18 @@ stdenv.mkDerivation rec {
     install -m 0600 ${confFile} conf/keycloak.conf
   '' + ''
     install_plugin() {
-    if [ -d "$1" ]; then
-      find "$1" -type f \( -iname \*.ear -o -iname \*.jar \) -exec install -m 0500 "{}" "providers/" \;
-    else
-      install -m 0500 "$1" "providers/"
-    fi
+      if [ -d "$1" ]; then
+        find "$1" -type f \( -iname \*.ear -o -iname \*.jar \) -exec install -m 0500 "{}" "providers/" \;
+      else
+        install -m 0500 "$1" "providers/"
+      fi
     }
     ${lib.concatMapStringsSep "\n" (pl: "install_plugin ${lib.escapeShellArg pl}") plugins}
   '' + ''
-    export KC_HOME_DIR=$out
-    export KC_CONF_DIR=$out/conf
-
     patchShebangs bin/kc.sh
-    bin/kc.sh build
+    export KC_HOME_DIR=$(pwd)
+    export KC_CONF_DIR=$(pwd)/conf
+    bin/kc.sh build ${featuresSubcommand}
 
     runHook postBuild
   '';
@@ -57,9 +67,6 @@ stdenv.mkDerivation rec {
   '';
 
   postFixup = ''
-    substituteInPlace $out/bin/kc.sh --replace ${lib.escapeShellArg "-Dkc.home.dir='$DIRNAME'/../"} '-Dkc.home.dir=$KC_HOME_DIR'
-    substituteInPlace $out/bin/kc.sh --replace ${lib.escapeShellArg "-Djboss.server.config.dir='$DIRNAME'/../conf"} '-Djboss.server.config.dir=$KC_CONF_DIR'
-
     for script in $(find $out/bin -type f -executable); do
       wrapProgram "$script" --set JAVA_HOME ${jre} --prefix PATH : ${jre}/bin
     done
@@ -77,7 +84,7 @@ stdenv.mkDerivation rec {
     sourceProvenance = with sourceTypes; [ binaryBytecode ];
     license = licenses.asl20;
     platforms = jre.meta.platforms;
-    maintainers = with maintainers; [ ngerstle talyz ];
+    maintainers = with maintainers; [ ngerstle talyz nickcao ];
   };
 
 }

@@ -10,7 +10,6 @@
 , libevdev
 , libtool
 , libxml2
-, xz
 , pkg-config
 , lib, stdenv
 , upower
@@ -18,7 +17,7 @@
 
 stdenv.mkDerivation rec {
   pname = "thermald";
-  version = "2.4.9";
+  version = "2.5.8";
 
   outputs = [ "out" "devdoc" ];
 
@@ -26,7 +25,7 @@ stdenv.mkDerivation rec {
     owner = "intel";
     repo = "thermal_daemon";
     rev = "v${version}";
-    sha256 = "sha256-82O4vrUo3lMNzGOI5WyV1eponF0za0WM6mtd54xqUh8=";
+    sha256 = "sha256-aqNaXg+XznIgsMzORcRcwfTI5tBYmSGA2pma2oUu8K4=";
   };
 
   nativeBuildInputs = [
@@ -45,7 +44,6 @@ stdenv.mkDerivation rec {
     dbus-glib
     libevdev
     libxml2
-    xz
     upower
   ];
 
@@ -55,7 +53,6 @@ stdenv.mkDerivation rec {
     "--enable-gtk-doc"
     "--with-dbus-sys-dir=${placeholder "out"}/share/dbus-1/system.d"
     "--with-systemdsystemunitdir=${placeholder "out"}/etc/systemd/system"
-    "--disable-werror"
   ];
 
   preConfigure = "NO_CONFIGURE=1 ./autogen.sh";
@@ -71,5 +68,6 @@ stdenv.mkDerivation rec {
     license = licenses.gpl2Plus;
     platforms = [ "x86_64-linux" "i686-linux" ];
     maintainers = with maintainers; [ abbradar ];
+    mainProgram = "thermald";
   };
 }

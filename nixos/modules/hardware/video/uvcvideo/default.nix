@@ -1,8 +1,4 @@
-
 { config, lib, pkgs, ... }:
-
-with lib;
-
 let
 
   cfg = config.services.uvcvideo;
@@ -19,38 +15,38 @@ in
   options = {
     services.uvcvideo.dynctrl = {
 
-      enable = mkOption {
-        type = types.bool;
+      enable = lib.mkOption {
+        type = lib.types.bool;
         default = false;
         description = ''
-          Whether to enable <command>uvcvideo</command> dynamic controls.
+          Whether to enable {command}`uvcvideo` dynamic controls.
 
-          Note that enabling this brings the <command>uvcdynctrl</command> tool
+          Note that enabling this brings the {command}`uvcdynctrl` tool
           into your environment and register all dynamic controls from
-          specified <command>packages</command> to the <command>uvcvideo</command> driver.
+          specified {command}`packages` to the {command}`uvcvideo` driver.
         '';
       };
 
-      packages = mkOption {
-        type = types.listOf types.path;
-        example = literalExpression "[ pkgs.tiscamera ]";
+      packages = lib.mkOption {
+        type = lib.types.listOf lib.types.path;
+        example = lib.literalExpression "[ pkgs.tiscamera ]";
         description = ''
-          List of packages containing <command>uvcvideo</command> dynamic controls
+          List of packages containing {command}`uvcvideo` dynamic controls
           rules. All files found in
-          <filename><replaceable>pkg</replaceable>/share/uvcdynctrl/data</filename>
+          {file}`«pkg»/share/uvcdynctrl/data`
           will be included.
 
-          Note that these will serve as input to the <command>libwebcam</command>
-          package which through its own <command>udev</command> rule will register
-          the dynamic controls from specified packages to the <command>uvcvideo</command>
+          Note that these will serve as input to the {command}`libwebcam`
+          package which through its own {command}`udev` rule will register
+          the dynamic controls from specified packages to the {command}`uvcvideo`
           driver.
         '';
-        apply = map getBin;
+        apply = map lib.getBin;
       };
     };
   };
 
-  config = mkIf cfg.dynctrl.enable {
+  config = lib.mkIf cfg.dynctrl.enable {
 
     services.udev.packages = [
       (uvcdynctrl-udev-rules cfg.dynctrl.packages)

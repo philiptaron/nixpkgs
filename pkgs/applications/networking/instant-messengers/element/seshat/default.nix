@@ -1,25 +1,25 @@
-{ lib, stdenv, rustPlatform, fetchFromGitHub, callPackage, sqlcipher, nodejs-14_x, python3, yarn, fixup_yarn_lock, CoreServices, fetchYarnDeps, removeReferencesTo }:
+{ lib, stdenv, rustPlatform, fetchFromGitHub, rust, sqlcipher, nodejs, python3, yarn, fixup-yarn-lock, CoreServices, fetchYarnDeps, removeReferencesTo }:
 
 let
   pinData = lib.importJSON ./pin.json;
 
 in rustPlatform.buildRustPackage rec {
   pname = "seshat-node";
-  inherit (pinData) version;
+  inherit (pinData) version cargoHash;
 
   src = fetchFromGitHub {
     owner = "matrix-org";
     repo = "seshat";
     rev = version;
-    sha256 = pinData.srcHash;
+    hash = pinData.srcHash;
   };
 
-  sourceRoot = "source/seshat-node/native";
+  sourceRoot = "${src.name}/seshat-node/native";
 
-  nativeBuildInputs = [ nodejs-14_x python3 yarn ];
+  nativeBuildInputs = [ nodejs python3 yarn fixup-yarn-lock ];
   buildInputs = [ sqlcipher ] ++ lib.optional stdenv.isDarwin CoreServices;
 
-  npm_config_nodedir = nodejs-14_x;
+  npm_config_nodedir = nodejs;
 
   yarnOfflineCache = fetchYarnDeps {
     yarnLock = src + "/seshat-node/yarn.lock";
@@ -32,11 +32,11 @@ in rustPlatform.buildRustPackage rec {
     chmod u+w . ./yarn.lock
     export HOME=$PWD/tmp
     mkdir -p $HOME
-    yarn config --offline set yarn-offline-mirror ${yarnOfflineCache}
-    ${fixup_yarn_lock}/bin/fixup_yarn_lock yarn.lock
+    yarn config --offline set yarn-offline-mirror $yarnOfflineCache
+    fixup-yarn-lock yarn.lock
     yarn install --offline --frozen-lockfile --ignore-platform --ignore-scripts --no-progress --non-interactive
     patchShebangs node_modules/
-    node_modules/.bin/neon build --release
+    node_modules/.bin/neon build --release -- --target ${stdenv.hostPlatform.rust.rustcTarget} -Z unstable-options --out-dir target/release
     runHook postBuild
   '';
 
@@ -53,6 +53,4 @@ in rustPlatform.buildRustPackage rec {
   '';
 
   disallowedReferences = [ stdenv.cc.cc ];
-
-  cargoSha256 = pinData.cargoHash;
 }

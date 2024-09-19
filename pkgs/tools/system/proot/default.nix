@@ -1,20 +1,18 @@
 { lib, stdenv, fetchFromGitHub
 , talloc
 , pkg-config
-, libarchive
-, git
 , ncurses
 , docutils, swig, python3, coreutils, enablePython ? true }:
 
 stdenv.mkDerivation rec {
   pname = "proot";
-  version = "5.3.0";
+  version = "5.4.0";
 
   src = fetchFromGitHub {
     repo = "proot";
     owner = "proot-me";
     rev = "v${version}";
-    sha256 = "sha256-89d1a5QBusra0vd3Ph0lQalXrblBwogi6bNgvvpQL+Q=";
+    sha256 = "sha256-Z9Y7ccWp5KEVuo9xfHcgo58XqYVdFo7ck1jH7cnT2KA=";
   };
 
   postPatch = ''
@@ -24,7 +22,7 @@ stdenv.mkDerivation rec {
     sed -i /CROSS_COMPILE/d src/GNUmakefile
   '';
 
-  buildInputs = [ ncurses libarchive talloc ] ++ lib.optional enablePython python3;
+  buildInputs = [ ncurses talloc ] ++ lib.optional enablePython python3;
   nativeBuildInputs = [ pkg-config docutils ] ++ lib.optional enablePython swig;
 
   enableParallelBuilding = true;
@@ -48,7 +46,8 @@ stdenv.mkDerivation rec {
     homepage = "https://proot-me.github.io";
     description = "User-space implementation of chroot, mount --bind and binfmt_misc";
     platforms = platforms.linux;
-    license = licenses.gpl2;
-    maintainers = with maintainers; [ ianwookim makefu veprbl dtzWill ];
+    license = licenses.gpl2Plus;
+    maintainers = with maintainers; [ ianwookim makefu veprbl ];
+    mainProgram = "proot";
   };
 }

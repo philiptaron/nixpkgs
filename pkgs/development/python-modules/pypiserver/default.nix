@@ -1,58 +1,92 @@
-{ buildPythonPackage
-, fetchFromGitHub
-, lib
-, passlib
-, pytestCheckHook
-, setuptools
-, setuptools-git
-, twine
-, webtest
+{
+  lib,
+  buildPythonPackage,
+  distutils,
+  fetchFromGitHub,
+  passlib,
+  pip,
+  pytestCheckHook,
+  pythonOlder,
+  setuptools-git,
+  setuptools,
+  twine,
+  watchdog,
+  webtest,
+  wheel,
 }:
 
 buildPythonPackage rec {
   pname = "pypiserver";
-  version = "1.5.0";
+  version = "2.0.1";
+  pyproject = true;
+
+  disabled = pythonOlder "3.7";
 
   src = fetchFromGitHub {
-    owner = pname;
-    repo = pname;
-    rev = "v${version}";
-    sha256 = "sha256-BK5vQsaWIMOnUqyeofAWJC1nQJPsTvmzl9i2893JCDI=";
+    owner = "pypiserver";
+    repo = "pypiserver";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-Eh/3URt7pcJhoDDLRP8iHyjlPsE5E9M/0Hixqi5YNdg=";
   };
 
-  nativeBuildInputs = [ setuptools-git ];
+  build-system = [
+    setuptools
+    setuptools-git
+    wheel
+  ];
 
-  propagatedBuildInputs = [ setuptools ];
+  dependencies = [
+    distutils
+    pip
+  ];
+
+  optional-dependencies = {
+    passlib = [ passlib ];
+    cache = [ watchdog ];
+  };
+
+  nativeCheckInputs = [
+    pip
+    pytestCheckHook
+    setuptools
+    twine
+    webtest
+  ] ++ lib.flatten (builtins.attrValues optional-dependencies);
+
+  __darwinAllowLocalNetworking = true;
+
+  # Tests need these permissions in order to use the FSEvents API on macOS.
+  sandboxProfile = ''
+    (allow mach-lookup (global-name "com.apple.FSEvents"))
+  '';
 
   preCheck = ''
     export HOME=$TMPDIR
   '';
 
-  checkInputs = [
-    passlib
-    pytestCheckHook
-    twine
-    webtest
-  ];
-
   disabledTests = [
-    # fails to install the package
+    # Fails to install the package
     "test_hash_algos"
     "test_pip_install_authed_succeeds"
     "test_pip_install_open_succeeds"
   ];
 
   disabledTestPaths = [
-    # requires docker service running
+    # Test requires docker service running
     "docker/test_docker.py"
   ];
 
   pythonImportsCheck = [ "pypiserver" ];
 
   meta = with lib; {
-    homepage = "https://github.com/pypiserver/pypiserver";
     description = "Minimal PyPI server for use with pip/easy_install";
-    license = with licenses; [ mit zlib ];
-    maintainers = with maintainers; [ austinbutler SuperSandro2000 ];
+    homepage = "https://github.com/pypiserver/pypiserver";
+    changelog = "https://github.com/pypiserver/pypiserver/releases/tag/v${version}";
+    license = with licenses; [
+      mit
+      zlib
+    ];
+    maintainers = with maintainers; [ austinbutler ];
+    mainProgram = "pypi-server";
   };
 }

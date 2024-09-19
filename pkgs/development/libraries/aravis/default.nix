@@ -13,7 +13,7 @@
 , enableViewer ? true
 , gst_all_1
 , gtk3
-, wrapGAppsHook
+, wrapGAppsHook3
 
 , enableUsb ? true
 , libusb1
@@ -25,17 +25,17 @@
 assert enableGstPlugin -> gst_all_1 != null;
 assert enableViewer -> enableGstPlugin;
 assert enableViewer -> gtk3 != null;
-assert enableViewer -> wrapGAppsHook != null;
+assert enableViewer -> wrapGAppsHook3 != null;
 
 stdenv.mkDerivation rec {
   pname = "aravis";
-  version = "0.8.21";
+  version = "0.8.33";
 
   src = fetchFromGitHub {
     owner = "AravisProject";
     repo = pname;
     rev = version;
-    sha256 = "sha256-z4fuo8tVyHf2Bw73ZfAEpAYmzbr9UIzEWPC5f95wnD8=";
+    sha256 = "sha256-D6zcTCaFJxJ2VhhsgEFu5+3Xx1MJov4ryrtA0VkjZlY=";
   };
 
   outputs = [ "bin" "dev" "out" "lib" ];
@@ -45,10 +45,11 @@ stdenv.mkDerivation rec {
     ninja
     pkg-config
     gi-docgen
-  ] ++ lib.optional enableViewer wrapGAppsHook;
+    gobject-introspection
+  ] ++ lib.optional enableViewer wrapGAppsHook3;
 
   buildInputs =
-    [ glib libxml2 gobject-introspection ]
+    [ glib libxml2 ]
     ++ lib.optional enableUsb libusb1
     ++ lib.optionals (enableViewer || enableGstPlugin) (with gst_all_1; [ gstreamer gst-plugins-base (gst-plugins-good.override { gtkSupport = true; }) gst-plugins-bad ])
     ++ lib.optionals (enableViewer) [ gtk3 ];

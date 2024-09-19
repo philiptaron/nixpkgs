@@ -5,15 +5,18 @@ import os
 import pprint
 import subprocess
 import sys
+import json
+from fnmatch import fnmatch
 from collections import defaultdict
 from contextlib import contextmanager
 from dataclasses import dataclass
 from itertools import chain
 from pathlib import Path, PurePath
-from typing import DefaultDict, Iterator, List, Optional, Set, Tuple
+from typing import DefaultDict, Generator, Iterator, Optional
 
 from elftools.common.exceptions import ELFError  # type: ignore
 from elftools.elf.dynamic import DynamicSection  # type: ignore
+from elftools.elf.sections import NoteSection  # type: ignore
 from elftools.elf.elffile import ELFFile  # type: ignore
 from elftools.elf.enums import ENUM_E_TYPE, ENUM_EI_OSABI  # type: ignore
 
@@ -37,7 +40,7 @@ def is_dynamic_executable(elf: ELFFile) -> bool:
     return bool(elf.get_section_by_name(".interp"))
 
 
-def get_dependencies(elf: ELFFile) -> List[str]:
+def get_dependencies(elf: ELFFile) -> list[list[Path]]:
     dependencies = []
     # This convoluted code is here on purpose. For some reason, using
     # elf.get_section_by_name(".dynamic") does not always return an
@@ -45,13 +48,34 @@ def get_dependencies(elf: ELFFile) -> List[str]:
     for section in elf.iter_sections():
         if isinstance(section, DynamicSection):
             for tag in section.iter_tags('DT_NEEDED'):
-                dependencies.append(tag.needed)
+                dependencies.append([Path(tag.needed)])
             break # There is only one dynamic section
 
     return dependencies
 
 
-def get_rpath(elf: ELFFile) -> List[str]:
+def get_dlopen_dependencies(elf: ELFFile) -> list[list[Path]]:
+    """
+    Extracts dependencies from the `.note.dlopen` section.
+    This is a FreeDesktop standard to annotate binaries with libraries that it may `dlopen`.
+    See https://systemd.io/ELF_DLOPEN_METADATA/
+    """
+    dependencies = []
+    for section in elf.iter_sections():
+        if not isinstance(section, NoteSection) or section.name != ".note.dlopen":
+            continue
+        for note in section.iter_notes():
+            if note["n_type"] != 0x407C0C0A or note["n_name"] != "FDO":
+                continue
+            note_desc = note["n_desc"]
+            text = note_desc.decode("utf-8").rstrip("\0")
+            j = json.loads(text)
+            for d in j:
+                dependencies.append([Path(soname) for soname in d["soname"]])
+    return dependencies
+
+
+def get_rpath(elf: ELFFile) -> list[str]:
     # This convoluted code is here on purpose. For some reason, using
     # elf.get_section_by_name(".dynamic") does not always return an
     # instance of DynamicSection, but that is required to call iter_tags
@@ -108,14 +132,21 @@ def osabi_are_compatible(wanted: str, got: str) -> bool:
 
 
 def glob(path: Path, pattern: str, recursive: bool) -> Iterator[Path]:
-    return path.rglob(pattern) if recursive else path.glob(pattern)
+    if path.is_dir():
+        return path.rglob(pattern) if recursive else path.glob(pattern)
+    else:
+        # path.glob won't return anything if the path is not a directory.
+        # We extend that behavior by matching the file name against the pattern.
+        # This allows to pass single files instead of dirs to auto_patchelf,
+        # for greater control on the files to consider.
+        return [path] if path.match(pattern) else []
 
 
-cached_paths: Set[Path] = set()
-soname_cache: DefaultDict[Tuple[str, str], List[Tuple[Path, str]]] = defaultdict(list)
+cached_paths: set[Path] = set()
+soname_cache: DefaultDict[tuple[str, str], list[tuple[Path, str]]] = defaultdict(list)
 
 
-def populate_cache(initial: List[Path], recursive: bool =False) -> None:
+def populate_cache(initial: list[Path], recursive: bool =False) -> None:
     lib_dirs = list(initial)
 
     while lib_dirs:
@@ -130,7 +161,14 @@ def populate_cache(initial: List[Path], recursive: bool =False) -> None:
             if not path.is_file():
                 continue
 
+            # As an optimisation, resolve the symlinks here, as the target is unique
+            # XXX: (layus, 2022-07-25) is this really an optimisation in all cases ?
+            # It could make the rpath bigger or break the fragile precedence of $out.
             resolved = path.resolve()
+            # Do not use resolved paths when names do not match
+            if resolved.name != path.name:
+                resolved = path
+
             try:
                 with open_elf(path) as elf:
                     osabi = get_osabi(elf)
@@ -159,7 +197,7 @@ class Dependency:
     found: bool = False     # Whether it was found somewhere
 
 
-def auto_patchelf_file(path: Path, runtime_deps: list[Path]) -> list[Dependency]:
+def auto_patchelf_file(path: Path, runtime_deps: list[Path], append_rpaths: list[Path] = [], keep_libc: bool = False, extra_args: list[str] = []) -> list[Dependency]:
     try:
         with open_elf(path) as elf:
 
@@ -189,7 +227,7 @@ def auto_patchelf_file(path: Path, runtime_deps: list[Path]) -> list[Dependency]
 
             file_is_dynamic_executable = is_dynamic_executable(elf)
 
-            file_dependencies = map(Path, get_dependencies(elf))
+            file_dependencies = get_dependencies(elf) + get_dlopen_dependencies(elf)
 
     except ELFError:
         return []
@@ -198,7 +236,7 @@ def auto_patchelf_file(path: Path, runtime_deps: list[Path]) -> list[Dependency]
     if file_is_dynamic_executable:
         print("setting interpreter of", path)
         subprocess.run(
-                ["patchelf", "--set-interpreter", interpreter_path.as_posix(), path.as_posix()],
+                ["patchelf", "--set-interpreter", interpreter_path.as_posix(), path.as_posix()] + extra_args,
                 check=True)
         rpath += runtime_deps
 
@@ -208,24 +246,56 @@ def auto_patchelf_file(path: Path, runtime_deps: list[Path]) -> list[Dependency]
     # failing at the first one, because it's more useful when working
     # on a new package where you don't yet know the dependencies.
     for dep in file_dependencies:
-        if dep.is_absolute() and dep.is_file():
-            # This is an absolute path. If it exists, just use it.
-            # Otherwise, we probably want this to produce an error when
-            # checked (because just updating the rpath won't satisfy
-            # it).
-            continue
-        elif (libc_lib / dep).is_file():
-            # This library exists in libc, and will be correctly
-            # resolved by the linker.
-            continue
+        was_found = False
+        for candidate in dep:
 
-        if found_dependency := find_dependency(dep.name, file_arch, file_osabi):
-            rpath.append(found_dependency)
-            dependencies.append(Dependency(path, dep, True))
-            print(f"    {dep} -> found: {found_dependency}")
-        else:
-            dependencies.append(Dependency(path, dep, False))
-            print(f"    {dep} -> not found!")
+            # This loop determines which candidate for a given
+            # dependency can be found, and how. There may be multiple
+            # candidates for a dep because of '.note.dlopen'
+            # dependencies.
+            #
+            # 1. If a candidate is an absolute path, it is already a
+            #    valid dependency if that path exists, and nothing needs
+            #    to be done. It should be an error if that path does not exist.
+            # 2. If a candidate is found within libc, it should be dropped
+            #    and resolved automatically by the dynamic linker, unless
+            #    keep_libc is enabled.
+            # 3. If a candidate is found in our library dependencies, that
+            #    dependency should be added to rpath.
+            # 4. If all of the above fail, libc dependencies should still be
+            #    considered found. This is in contrast to step 2, because
+            #    enabling keep_libc should allow libc to be found in step 3
+            #    if possible to preserve its presence in rpath.
+            #
+            # These conditions are checked in this order, because #2
+            # and #3 may both be true. In that case, we still want to
+            # add the dependency to rpath, as the original binary
+            # presumably had it and this should be preserved.
+
+            is_libc = (libc_lib / candidate).is_file()
+
+            if candidate.is_absolute() and candidate.is_file():
+                was_found = True
+                break
+            elif is_libc and not keep_libc:
+                was_found = True
+                break
+            elif found_dependency := find_dependency(candidate.name, file_arch, file_osabi):
+                rpath.append(found_dependency)
+                dependencies.append(Dependency(path, candidate, found=True))
+                print(f"    {candidate} -> found: {found_dependency}")
+                was_found = True
+                break
+            elif is_libc and keep_libc:
+                was_found = True
+                break
+
+        if not was_found:
+            dep_name = dep[0] if len(dep) == 1 else f"any({', '.join(map(str, dep))})"
+            dependencies.append(Dependency(path, dep_name, found=False))
+            print(f"    {dep_name} -> not found!")
+
+    rpath.extend(append_rpaths)
 
     # Dedup the rpath
     rpath_str = ":".join(dict.fromkeys(map(Path.as_posix, rpath)))
@@ -233,18 +303,21 @@ def auto_patchelf_file(path: Path, runtime_deps: list[Path]) -> list[Dependency]
     if rpath:
         print("setting RPATH to:", rpath_str)
         subprocess.run(
-                ["patchelf", "--set-rpath", rpath_str, path.as_posix()],
+                ["patchelf", "--set-rpath", rpath_str, path.as_posix()] + extra_args,
                 check=True)
 
     return dependencies
 
 
 def auto_patchelf(
-        paths_to_patch: List[Path],
-        lib_dirs: List[Path],
-        runtime_deps: List[Path],
-        recursive: bool =True,
-        ignore_missing: List[str] = []) -> None:
+        paths_to_patch: list[Path],
+        lib_dirs: list[Path],
+        runtime_deps: list[Path],
+        recursive: bool = True,
+        ignore_missing: list[str] = [],
+        append_rpaths: list[Path] = [],
+        keep_libc: bool = False,
+        extra_args: list[str] = []) -> None:
 
     if not paths_to_patch:
         sys.exit("No paths to patch, stopping.")
@@ -257,7 +330,7 @@ def auto_patchelf(
     dependencies = []
     for path in chain.from_iterable(glob(p, '*', recursive) for p in paths_to_patch):
         if not path.is_symlink() and path.is_file():
-            dependencies += auto_patchelf_file(path, runtime_deps)
+            dependencies += auto_patchelf_file(path, runtime_deps, append_rpaths, keep_libc, extra_args)
 
     missing = [dep for dep in dependencies if not dep.found]
 
@@ -265,8 +338,10 @@ def auto_patchelf(
     print(f"auto-patchelf: {len(missing)} dependencies could not be satisfied")
     failure = False
     for dep in missing:
-        if dep.name.name in ignore_missing or "*" in ignore_missing:
-            print(f"warn: auto-patchelf ignoring missing {dep.name} wanted by {dep.file}")
+        for pattern in ignore_missing:
+            if fnmatch(dep.name.name, pattern):
+                print(f"warn: auto-patchelf ignoring missing {dep.name} wanted by {dep.file}")
+                break
         else:
             print(f"error: auto-patchelf could not satisfy dependency {dep.name} wanted by {dep.file}")
             failure = True
@@ -292,16 +367,42 @@ def main() -> None:
         "--no-recurse",
         dest="recursive",
         action="store_false",
-        help="Patch only the provided paths, and ignore their children")
+        help="Disable the recursive traversal of paths to patch.")
     parser.add_argument(
         "--paths", nargs="*", type=Path,
-        help="Paths whose content needs to be patched.")
+        help="Paths whose content needs to be patched."
+             " Single files and directories are accepted."
+             " Directories are traversed recursively by default.")
     parser.add_argument(
         "--libs", nargs="*", type=Path,
-        help="Paths where libraries are searched for.")
+        help="Paths where libraries are searched for."
+             " Single files and directories are accepted."
+             " Directories are not searched recursively.")
     parser.add_argument(
         "--runtime-dependencies", nargs="*", type=Path,
-        help="Paths to prepend to the runtime path of executable binaries.")
+        help="Paths to prepend to the runtime path of executable binaries."
+             " Subject to deduplication, which may imply some reordering.")
+    parser.add_argument(
+        "--append-rpaths",
+        nargs="*",
+        type=Path,
+        help="Paths to append to all runtime paths unconditionally",
+    )
+    parser.add_argument(
+        "--keep-libc",
+        dest="keep_libc",
+        action="store_true",
+        help="Attempt to search for and relink libc dependencies.",
+    )
+    parser.add_argument(
+        "--extra-args",
+        # Undocumented Python argparse feature: consume all remaining arguments
+        # as values for this one. This means this argument should always be passed
+        # last.
+        nargs="...",
+        type=str,
+        help="Extra arguments to pass to patchelf. This argument should always come last."
+    )
 
     print("automatically fixing dependencies for ELF files")
     args = parser.parse_args()
@@ -312,7 +413,10 @@ def main() -> None:
         args.libs,
         args.runtime_dependencies,
         args.recursive,
-        args.ignore_missing)
+        args.ignore_missing,
+        append_rpaths=args.append_rpaths,
+        keep_libc=args.keep_libc,
+        extra_args=args.extra_args)
 
 
 interpreter_path: Path  = None # type: ignore

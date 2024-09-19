@@ -29,7 +29,7 @@ buildPythonPackage rec {
     sortedcontainers
   ] ++ lib.optional (!isPy3k) enum34;
 
-  checkInputs = [ pytest pytest-xdist flaky mock pexpect ];
+  nativeCheckInputs = [ pytest pytest-xdist flaky mock pexpect ];
   inherit doCheck;
 
   checkPhase = ''
@@ -38,7 +38,7 @@ buildPythonPackage rec {
   '';
 
   meta = with lib; {
-    description = "A Python library for property based testing";
+    description = "Python library for property based testing";
     homepage = "https://github.com/HypothesisWorks/hypothesis";
     license = licenses.mpl20;
   };

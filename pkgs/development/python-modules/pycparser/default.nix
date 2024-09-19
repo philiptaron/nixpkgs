@@ -1,17 +1,28 @@
-{ lib, buildPythonPackage, fetchPypi, python }:
+{
+  lib,
+  buildPythonPackage,
+  fetchPypi,
+  unittestCheckHook,
+  pythonOlder,
+}:
 
 buildPythonPackage rec {
   pname = "pycparser";
-  version = "2.21";
+  version = "2.22";
+  format = "setuptools";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "e644fdec12f7872f86c58ff790da456218b10f863970249516d60a5eaca77206";
+    hash = "sha256-SRyL6cBA9TkPW/RKWwd1K9B/Vu35kjgbBccBQ57sEPY=";
   };
 
-  checkPhase = ''
-    ${python.interpreter} -m unittest discover -s tests
-  '';
+  nativeCheckInputs = [ unittestCheckHook ];
+  disabled = pythonOlder "3.8";
+
+  unittestFlagsArray = [
+    "-s"
+    "tests"
+  ];
 
   meta = with lib; {
     description = "C parser in Python";

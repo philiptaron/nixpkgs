@@ -12,7 +12,7 @@ in
 {
   options = {
     services.galene = {
-      enable = mkEnableOption "Galene Service.";
+      enable = mkEnableOption "Galene Service";
 
       stateDir = mkOption {
         default = defaultstateDir;
@@ -110,14 +110,7 @@ in
         description = "Web server directory.";
       };
 
-      package = mkOption {
-        default = pkgs.galene;
-        defaultText = literalExpression "pkgs.galene";
-        type = types.package;
-        description = ''
-          Package for running Galene.
-        '';
-      };
+      package = mkPackageOption pkgs "galene" { };
     };
   };
 
@@ -186,12 +179,12 @@ in
           ProtectSystem = "strict";
           ReadWritePaths = cfg.recordingsDir;
           RemoveIPC = true;
-          RestrictAddressFamilies = [ "AF_INET" "AF_INET6" ];
+          RestrictAddressFamilies = [ "AF_INET" "AF_INET6" "AF_NETLINK" ];
           RestrictNamespaces = true;
           RestrictRealtime = true;
           RestrictSUIDSGID = true;
           SystemCallArchitectures = "native";
-          SystemCallFilter = [ "@system-service" "~@privileged" "~@resources" ];
+          SystemCallFilter = [ "@system-service" "~@privileged" ];
           UMask = "0077";
         }
       ];

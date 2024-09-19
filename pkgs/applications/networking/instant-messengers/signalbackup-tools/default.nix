@@ -1,42 +1,53 @@
-{ lib, stdenv, fetchFromGitHub, openssl, sqlite }:
+{
+  lib,
+  stdenv,
+  fetchFromGitHub,
+
+  cmake,
+  pkg-config,
+
+  darwin,
+  dbus,
+  openssl,
+  sqlite,
+}:
 
 stdenv.mkDerivation rec {
   pname = "signalbackup-tools";
-  version = "20220526";
+  version = "20240913";
 
   src = fetchFromGitHub {
     owner = "bepaald";
-    repo = pname;
+    repo = "signalbackup-tools";
     rev = version;
-    sha256 = "sha256-vFq9NvQboqGVzwiH2KPhT6jsdY5i2oKIgEaZKfBsb/o=";
+    hash = "sha256-Rtoxa0LYL2ElBtt6KxRmKAkRDc8PNvRCoP0s51h+sIM=";
   };
 
-  # Remove when Apple SDK is >= 10.13
-  patches = lib.optional (stdenv.system == "x86_64-darwin") ./apple-sdk-missing-utimensat.patch;
-
-  buildInputs = [ openssl sqlite ];
-  buildFlags = [
-    "-Wall"
-    "-Wextra"
-    "-Wshadow"
-    "-Wold-style-cast"
-    "-Woverloaded-virtual"
-    "-pedantic"
-    "-std=c++2a"
-    "-O3"
-    "-march=native"
+  nativeBuildInputs = [
+    cmake
+  ] ++ lib.optionals stdenv.isLinux [
+    pkg-config
   ];
-  buildPhase = ''
-    $CXX $buildFlags */*.cc *.cc -lcrypto -lsqlite3 -o signalbackup-tools
-  '';
+
+  buildInputs = [
+    openssl
+    sqlite
+  ] ++ lib.optionals stdenv.isLinux [
+    dbus
+  ] ++ lib.optionals stdenv.isDarwin [
+    darwin.apple_sdk_11_0.frameworks.Security
+  ];
 
   installPhase = ''
+    runHook preInstall
     mkdir -p $out/bin
     cp signalbackup-tools $out/bin/
+    runHook postInstall
   '';
 
   meta = with lib; {
     description = "Tool to work with Signal Backup files";
+    mainProgram = "signalbackup-tools";
     homepage = "https://github.com/bepaald/signalbackup-tools";
     license = licenses.gpl3Only;
     maintainers = [ maintainers.malo ];

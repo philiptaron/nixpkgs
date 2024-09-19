@@ -1,25 +1,29 @@
-{ lib, stdenv, fetchFromGitHub, pkg-config, zlib }:
+{ lib, stdenv, fetchFromGitHub, cctools, pkg-config, Carbon, zlib }:
 
 stdenv.mkDerivation rec {
-  version = "2.0.0";
   pname = "gpac";
+  version = "2.4.0";
 
   src = fetchFromGitHub {
     owner = "gpac";
     repo = "gpac";
     rev = "v${version}";
-    sha256 = "sha256-MIX32lSqf/lrz9240h4wMIQp/heUmwvDJz8WN08yf6c=";
+    hash = "sha256-RADDqc5RxNV2EfRTzJP/yz66p0riyn81zvwU3r9xncM=";
   };
-
-  postPatch = ''
-    substituteInPlace Makefile --replace 'dh_link' 'ln -s'
-  '';
 
   # this is the bare minimum configuration, as I'm only interested in MP4Box
   # For most other functionality, this should probably be extended
-  nativeBuildInputs = [ pkg-config ];
+  nativeBuildInputs = [
+    pkg-config
+  ] ++ lib.optionals stdenv.isDarwin [
+    cctools
+  ];
 
-  buildInputs = [ zlib ];
+  buildInputs = [
+    zlib
+  ] ++ lib.optionals stdenv.isDarwin [
+    Carbon
+  ];
 
   enableParallelBuilding = true;
 
@@ -40,6 +44,6 @@ stdenv.mkDerivation rec {
     homepage = "https://gpac.wp.imt.fr";
     license = licenses.lgpl21;
     maintainers = with maintainers; [ bluescreen303 mgdelacroix ];
-    platforms = platforms.linux;
+    platforms = platforms.unix;
   };
 }

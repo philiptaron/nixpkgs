@@ -1,10 +1,10 @@
 { stdenv
 , lib
 , fetchFromGitLab
-, kio
 , cmake
 , extra-cmake-modules
 , libvlc
+, libv4l
 , libX11
 , kidletime
 , kdelibs4support
@@ -33,6 +33,7 @@ stdenv.mkDerivation rec {
 
   buildInputs = [
     libvlc
+    libv4l
     libX11
     kidletime
     qtx11extras
@@ -46,5 +47,6 @@ stdenv.mkDerivation rec {
     license = licenses.gpl2;
     maintainers = [ maintainers.pasqui23 ];
     platforms = platforms.all;
+    mainProgram = "kaffeine";
   };
 }

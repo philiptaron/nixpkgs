@@ -2,11 +2,11 @@
 
 stdenv.mkDerivation rec {
   pname = "google-java-format";
-  version = "1.15.0";
+  version = "1.23.0";
 
   src = fetchurl {
     url = "https://github.com/google/google-java-format/releases/download/v${version}/google-java-format-${version}-all-deps.jar";
-    sha256 = "sha256-o1a7AjaynFejq2ePF6ewJ6rWA7CWDBg6GPH+Mi5POOo=";
+    sha256 = "sha256-fGN1rCS0glvmu+YZAOi1ixo+iUShNnqDYyEPntLQhXA=";
   };
 
   dontUnpack = true;
@@ -42,5 +42,6 @@ stdenv.mkDerivation rec {
     license = licenses.asl20;
     maintainers = [ maintainers.emptyflask ];
     platforms = platforms.all;
+    mainProgram = "google-java-format";
   };
 }

@@ -26,6 +26,8 @@ in
         '';
       };
 
+      package = mkPackageOption pkgs "nix-serve" { };
+
       openFirewall = mkOption {
         type = types.bool;
         default = false;
@@ -43,7 +45,7 @@ in
           nix-store --generate-binary-cache-key key-name secret-key-file public-key-file
           ```
 
-          For more details see <citerefentry><refentrytitle>nix-store</refentrytitle><manvolnum>1</manvolnum></citerefentry>.
+          For more details see {manpage}`nix-store(1)`.
         '';
       };
 
@@ -58,6 +60,10 @@ in
   };
 
   config = mkIf cfg.enable {
+    nix.settings = lib.optionalAttrs (lib.versionAtLeast config.nix.package.version "2.4") {
+      extra-allowed-users = [ "nix-serve" ];
+    };
+
     systemd.services.nix-serve = {
       description = "nix-serve binary cache server";
       after = [ "network.target" ];
@@ -70,7 +76,7 @@ in
         ${lib.optionalString (cfg.secretKeyFile != null) ''
           export NIX_SECRET_KEY_FILE="$CREDENTIALS_DIRECTORY/NIX_SECRET_KEY_FILE"
         ''}
-        exec ${pkgs.nix-serve}/bin/nix-serve --listen ${cfg.bindAddress}:${toString cfg.port} ${cfg.extraParams}
+        exec ${cfg.package}/bin/nix-serve --listen ${cfg.bindAddress}:${toString cfg.port} ${cfg.extraParams}
       '';
 
       serviceConfig = {

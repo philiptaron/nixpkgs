@@ -18,6 +18,7 @@
 , sox
 , libopus
 , openscad
+, libxcrypt
 }:
 
 stdenv.mkDerivation {
@@ -46,7 +47,7 @@ stdenv.mkDerivation {
   '';
 
   nativeBuildInputs = [ pkg-config openscad makeWrapper ];
-  buildInputs = [ coreutils portaudio libbsd libpng libvorbis SDL2 lua5_2 glew openssl picotts sox alsa-utils libopus ];
+  buildInputs = [ coreutils portaudio libbsd libpng libvorbis SDL2 lua5_2 glew openssl picotts sox alsa-utils libopus libxcrypt ];
 
   postBuild = ''
     make models -j$NIX_BUILD_CORES
@@ -66,7 +67,7 @@ stdenv.mkDerivation {
   meta = with lib; {
     description = "Space Nerds In Space, a multi-player spaceship bridge simulator";
     homepage = "https://smcameron.github.io/space-nerds-in-space/";
-    license = licenses.gpl2;
+    license = licenses.gpl2Plus;
     maintainers = with maintainers; [ alyaeanyx ];
     platforms = platforms.linux;
   };

@@ -2,35 +2,36 @@
 , fetchurl
 , lib
 , makeWrapper
-, electron_17
+, electron
 , makeDesktopItem
-, graphicsmagick
+, imagemagick
 , writeScript
 , undmg
 , unzip
+, commandLineArgs ? ""
 }:
 let
-  inherit (stdenv.hostPlatform) system;
   pname = "obsidian";
-  version = "0.14.15";
+  version = "1.6.7";
   appname = "Obsidian";
   meta = with lib; {
-    description = "A powerful knowledge base that works on top of a local folder of plain text Markdown files";
+    description = "Powerful knowledge base that works on top of a local folder of plain text Markdown files";
     homepage = "https://obsidian.md";
     downloadPage = "https://github.com/obsidianmd/obsidian-releases/releases";
+    mainProgram = "obsidian";
     license = licenses.obsidian;
-    maintainers = with maintainers; [ atila conradmearns zaninime opeik ];
+    maintainers = with maintainers; [ atila conradmearns zaninime qbit kashw2 w-lfchen ];
   };
 
-  filename = if stdenv.isDarwin then "Obsidian-${version}-universal.dmg" else "obsidian-${version}.tar.gz";
+  filename = if stdenv.isDarwin then "Obsidian-${version}.dmg" else "obsidian-${version}.tar.gz";
   src = fetchurl {
     url = "https://github.com/obsidianmd/obsidian-releases/releases/download/v${version}/${filename}";
-    sha256 = if stdenv.isDarwin then "10c5255nbgqiigcwq6kmhzcgafq91k25wnxj3jxabzc0hs7pn4m5" else "sha256-bSLt4EnlCtxZeKIahr618qMuK9ogUhxn+NKO2GPkjOQ=";
+    hash = if stdenv.isDarwin then "sha256-rFXmhlxXlVz5nCrXMmfYGaxe4/wnBRdFxsfiwiIDHgw=" else "sha256-ok1fedN8+OXBisFpVXbKRW2OhE4o9MC9lJmtMMST6V8=";
   };
 
   icon = fetchurl {
-    url = "https://forum.obsidian.md/uploads/default/original/1X/bf119bd48f748f4fd2d65f2d1bb05d3c806883b5.png";
-    sha256 = "18ylnbvxr6k4x44c4i1d55wxy2dq4fdppp43a4wl6h6zar0sc9s2";
+    url = "https://obsidian.md/images/obsidian-logo-gradient.svg";
+    hash = "sha256-EZsBuWyZ9zYJh0LDKfRAMTtnY70q6iLK/ggXlplDEoA=";
   };
 
   desktopItem = makeDesktopItem {
@@ -46,19 +47,21 @@ let
   linux = stdenv.mkDerivation {
     inherit pname version src desktopItem icon;
     meta = meta // { platforms = [ "x86_64-linux" "aarch64-linux" ]; };
-    nativeBuildInputs = [ makeWrapper graphicsmagick ];
+    nativeBuildInputs = [ makeWrapper imagemagick ];
     installPhase = ''
       runHook preInstall
       mkdir -p $out/bin
-      makeWrapper ${electron_17}/bin/electron $out/bin/obsidian \
-        --add-flags $out/share/obsidian/app.asar
+      makeWrapper ${electron}/bin/electron $out/bin/obsidian \
+        --add-flags $out/share/obsidian/app.asar \
+        --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform=wayland}}" \
+        --add-flags ${lib.escapeShellArg commandLineArgs}
       install -m 444 -D resources/app.asar $out/share/obsidian/app.asar
       install -m 444 -D resources/obsidian.asar $out/share/obsidian/obsidian.asar
       install -m 444 -D "${desktopItem}/share/applications/"* \
         -t $out/share/applications/
       for size in 16 24 32 48 64 128 256 512; do
         mkdir -p $out/share/icons/hicolor/"$size"x"$size"/apps
-        gm convert -resize "$size"x"$size" ${icon} $out/share/icons/hicolor/"$size"x"$size"/apps/obsidian.png
+        convert -background none -resize "$size"x"$size" ${icon} $out/share/icons/hicolor/"$size"x"$size"/apps/obsidian.png
       done
       runHook postInstall
     '';

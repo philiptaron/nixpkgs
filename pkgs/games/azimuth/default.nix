@@ -14,7 +14,7 @@ stdenv.mkDerivation rec {
   nativeBuildInputs = [ which ];
   buildInputs = [ SDL ];
 
-  NIX_CFLAGS_COMPILE = [ "-Wno-error=maybe-uninitialized" ];
+  env.NIX_CFLAGS_COMPILE = toString [ "-Wno-error=maybe-uninitialized" ];
 
   preConfigure = ''
     substituteInPlace data/azimuth.desktop \
@@ -31,7 +31,8 @@ stdenv.mkDerivation rec {
   enableParallelBuilding = true;
 
   meta = {
-    description = "A metroidvania game using only vectorial graphic";
+    description = "Metroidvania game using only vectorial graphic";
+    mainProgram = "azimuth";
     longDescription = ''
       Azimuth is a metroidvania game, and something of an homage to the previous
       greats of the genre (Super Metroid in particular). You will need to pilot

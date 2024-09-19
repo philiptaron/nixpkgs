@@ -12,11 +12,11 @@ let
   };
 in stdenv.mkDerivation rec {
   inherit pname;
-  version = "1.3.76";
+  version = "1.3.80";
 
   src = fetchurl {
     url = "https://firmware.ardupilot.org/Tools/MissionPlanner/MissionPlanner-${version}.zip";
-    sha256 = "sha256-vdunUGwLjDKf1LDhtyTQAExddecyWc1TdZOyuu0qMlk=";
+    sha256 = "sha256-iivlaQWtOMJHchmR92FoqTaosGJ9F1AgFtuFgDE/9qQ=";
   };
 
   nativeBuildInputs = [ makeWrapper mono unzip ];
@@ -45,7 +45,8 @@ in stdenv.mkDerivation rec {
   '';
 
   meta = with lib; {
-    description = "An ArduPilot ground station";
+    description = "ArduPilot ground station";
+    mainProgram = "mission-planner";
     longDescription = ''
       Full-featured ground station application for the ArduPilot open source
       autopilot project.  Lets you both flash, configure and control ArduPilot

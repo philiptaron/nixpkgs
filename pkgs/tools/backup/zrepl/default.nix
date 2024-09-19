@@ -7,22 +7,24 @@
 }:
 buildGoModule rec {
   pname = "zrepl";
-  version = "0.5.0";
+  version = "0.6.1";
 
   src = fetchFromGitHub {
     owner = "zrepl";
     repo = "zrepl";
     rev = "v${version}";
-    sha256 = "4q/wwlF11HPDS2lTXUizJ3RFQ9sX5qNnWZUKAgnvDiE=";
+    sha256 = "sha256-sFSWcJ0aBMay+ngUqnr0PKBMOfCcKHgBjff6KRpPZrg=";
   };
 
-  vendorSha256 = "xToq9pKAxxknh4kE8S3uUg5ySPMbJkLftkMhofNxotc=";
+  vendorHash = "sha256-75fGejR7eiECsm1j3yIU1lAWaW9GrorrVnv8JEzkAtU=";
 
   subPackages = [ "." ];
 
   nativeBuildInputs = [
     makeWrapper
   ];
+
+  ldflags = [ "-s" "-w" "-X github.com/zrepl/zrepl/version.zreplVersion=${version}" ];
 
   postInstall = ''
     mkdir -p $out/lib/systemd/system
@@ -39,9 +41,10 @@ buildGoModule rec {
 
   meta = with lib; {
     homepage = "https://zrepl.github.io/";
-    description = "A one-stop, integrated solution for ZFS replication";
+    description = "One-stop, integrated solution for ZFS replication";
     platforms = platforms.linux;
     license = licenses.mit;
-    maintainers = with maintainers; [ cole-h danderson mdlayher ];
+    maintainers = with maintainers; [ cole-h mdlayher ];
+    mainProgram = "zrepl";
   };
 }

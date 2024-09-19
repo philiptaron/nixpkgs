@@ -1,5 +1,4 @@
 { lib
-, ocaml
 , buildDunePackage
 , mirage-crypto
 , dune-configurator
@@ -21,14 +20,13 @@ buildDunePackage rec {
   pname = "mirage-crypto-ec";
 
   inherit (mirage-crypto)
-    minimumOCamlVersion
     src
-    version
-    useDune2;
+    version;
+
+  duneVersion = "3";
 
   nativeBuildInputs = [ pkg-config ];
   buildInputs = [
-    ocaml
     dune-configurator
   ];
   propagatedBuildInputs = [
@@ -39,7 +37,7 @@ buildDunePackage rec {
     ocaml-freestanding
   ];
 
-  strictDeps = !doCheck;
+  strictDeps = true;
 
   doCheck = true;
   checkInputs = [

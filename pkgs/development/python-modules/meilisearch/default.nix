@@ -1,31 +1,35 @@
-{ lib
-, buildPythonPackage
-, fetchFromGitHub
-, pythonOlder
-, requests
+{
+  lib,
+  buildPythonPackage,
+  camel-converter,
+  fetchFromGitHub,
+  pythonOlder,
+  setuptools,
+  requests,
 }:
 
 buildPythonPackage rec {
   pname = "meilisearch";
-  version = "0.18.3";
-  format = "setuptools";
+  version = "0.31.5";
+  pyproject = true;
 
-  disabled = pythonOlder "3.7";
+  disabled = pythonOlder "3.8";
 
   src = fetchFromGitHub {
     owner = "meilisearch";
     repo = "meilisearch-python";
-    rev = "v${version}";
-    hash = "sha256-Ym3AbIEf8eMSrtP8W1dPXqL0mTVN2bd8hlxdFhW/dkQ=";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-br+FnUnwDt64dvZAMEK/oqESCWZuOUt9Lp9HGcIPqxc=";
   };
 
-  propagatedBuildInputs = [
-    requests
-  ];
+  build-system = [ setuptools ];
 
-  pythonImportsCheck = [
-    "meilisearch"
-  ];
+  dependencies = [
+    camel-converter
+    requests
+  ] ++ camel-converter.optional-dependencies.pydantic;
+
+  pythonImportsCheck = [ "meilisearch" ];
 
   # Tests spin up a local server and are not mocking the requests
   doCheck = false;
@@ -33,6 +37,7 @@ buildPythonPackage rec {
   meta = with lib; {
     description = "Client for the Meilisearch API";
     homepage = "https://github.com/meilisearch/meilisearch-python";
+    changelog = "https://github.com/meilisearch/meilisearch-python/releases/tag/v${version}";
     license = with licenses; [ mit ];
     maintainers = with maintainers; [ fab ];
   };

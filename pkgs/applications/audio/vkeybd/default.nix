@@ -19,15 +19,11 @@ stdenv.mkDerivation  rec {
 
   makeFlags = [ "TKLIB=-l${tk.libPrefix}" "TCLLIB=-l${tcl.libPrefix}" ];
 
-  postInstall = ''
-    wrapProgram $out/bin/vkeybd --set TK_LIBRARY "${tk}/lib/${tk.libPrefix}"
-  '';
-
   meta = with lib; {
     description = "Virtual MIDI keyboard";
     homepage = "https://www.alsa-project.org/~tiwai/alsa.html";
     license = licenses.gpl2Plus;
     platforms = platforms.linux;
-    maintainers = [ maintainers.goibhniu ];
+    maintainers = [ ];
   };
 }

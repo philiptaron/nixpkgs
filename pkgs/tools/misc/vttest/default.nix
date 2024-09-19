@@ -2,14 +2,14 @@
 
 stdenv.mkDerivation rec {
   pname = "vttest";
-  version = "20220215";
+  version = "20240708";
 
   src = fetchurl {
     urls = [
-      "https://invisible-mirror.net/archives/${pname}/${pname}-${version}.tgz"
-      "ftp://ftp.invisible-island.net/${pname}/${pname}-${version}.tgz"
+      "https://invisible-mirror.net/archives/vttest/vttest-${version}.tgz"
+      "ftp://ftp.invisible-island.net/vttest/vttest-${version}.tgz"
     ];
-    sha256 = "sha256-SmWZjF4SzwjO0s/OEZrbRPqEKsFJXQ8VDyHIpnhZFaE=";
+    sha256 = "sha256-wZVEnrLSKZyjwKJHiKmqtWn+QcLg6DEotcKbqW5auxs=";
   };
 
   meta = with lib; {
@@ -17,6 +17,7 @@ stdenv.mkDerivation rec {
     homepage = "https://invisible-island.net/vttest/";
     license = licenses.mit;
     platforms = platforms.all;
+    mainProgram = "vttest";
   };
 }
 

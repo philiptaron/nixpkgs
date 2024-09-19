@@ -1,25 +1,54 @@
-{ lib, stdenv, fetchgit, autoreconfHook, pkg-config, openssl, attr, keyutils, asciidoc, libxslt, docbook_xsl }:
+{
+  lib,
+  stdenv,
+  fetchFromGitHub,
+  autoreconfHook,
+  pkg-config,
+  openssl,
+  tpm2-tss,
+  keyutils,
+  asciidoc,
+  libxslt,
+  docbook_xsl,
+}:
 
 stdenv.mkDerivation rec {
   pname = "ima-evm-utils";
-  version = "1.4";
+  version = "1.6.2";
 
-  src = fetchgit {
-    url = "git://git.code.sf.net/p/linux-ima/ima-evm-utils";
-    rev = "v${version}";
-    sha256 = "1zmyv82232lzqk52m0s7fap9zb9hb1x6nsi5gznk0cbsnq2m67pc";
+  src = fetchFromGitHub {
+    owner = "linux-integrity";
+    repo = "ima-evm-utils";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-vIu12Flc2DiEqUSKAfoUi7Zg6D25pURvlYKEQKHER4I=";
   };
 
-  nativeBuildInputs = [ autoreconfHook pkg-config ];
-  buildInputs = [ openssl attr keyutils asciidoc libxslt ];
+  strictDeps = true;
 
-  MANPAGE_DOCBOOK_XSL = "${docbook_xsl}/xml/xsl/docbook/manpages/docbook.xsl";
+  nativeBuildInputs = [
+    autoreconfHook
+    pkg-config
+    asciidoc
+    libxslt
+  ];
+
+  buildInputs = [
+    keyutils
+    openssl
+    tpm2-tss
+  ];
+
+  env.MANPAGE_DOCBOOK_XSL = "${docbook_xsl}/xml/xsl/docbook/manpages/docbook.xsl";
 
   meta = {
     description = "evmctl utility to manage digital signatures of the Linux kernel integrity subsystem (IMA/EVM)";
-    homepage = "https://sourceforge.net/projects/linux-ima/";
-    license = lib.licenses.gpl2;
+    mainProgram = "evmctl";
+    homepage = "https://github.com/linux-integrity/ima-evm-utils";
+    license = with lib.licenses; [
+      lgpl2Plus # libimaevm
+      gpl2Plus # evmctl
+    ];
     platforms = lib.platforms.linux;
-    maintainers = with lib.maintainers; [ tstrobel ];
+    maintainers = with lib.maintainers; [ nickcao ];
   };
 }

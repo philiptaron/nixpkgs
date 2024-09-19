@@ -12,17 +12,23 @@ assert enablePrinting -> cups != null;
 
 stdenv.mkDerivation rec {
   pname = "xpdf";
-  version = "4.04";
+  version = "4.05";
 
   src = fetchzip {
-    url = "https://dl.xpdfreader.com/xpdf-${version}.tar.gz";
-    hash = "sha256-ujH9KDwFRjPIKwdMg79Mab9BfA2HooY5+2PESUgnGDY=";
+    urls = [
+      "https://dl.xpdfreader.com/xpdf-${version}.tar.gz"
+      "https://dl.xpdfreader.com/old/xpdf-${version}.tar.gz"
+    ];
+    hash = "sha256-LBxKSrXTdoulZDjPiyYMaJr63jFHHI+VCgVJx310i/w=";
   };
 
   # Fix "No known features for CXX compiler", see
   # https://cmake.org/pipermail/cmake/2016-December/064733.html and the note at
   # https://cmake.org/cmake/help/v3.10/command/cmake_minimum_required.html
-  patches = lib.optional stdenv.isDarwin  ./cmake_version.patch;
+  postPatch = lib.optionalString stdenv.isDarwin ''
+    substituteInPlace CMakeLists.txt --replace \
+        'cmake_minimum_required(VERSION 2.8.12)' 'cmake_minimum_required(VERSION 3.1.0)'
+    '';
 
   nativeBuildInputs =
     [ cmake ]
@@ -70,11 +76,14 @@ stdenv.mkDerivation rec {
     platforms = platforms.unix;
     maintainers = with maintainers; [ sikmir ];
     knownVulnerabilities = [
-      "CVE-2018-7453: loop in PDF objects"
-      "CVE-2018-16369: loop in PDF objects"
-      "CVE-2019-9587: loop in PDF objects"
-      "CVE-2019-9588: loop in PDF objects"
-      "CVE-2019-16088: loop in PDF objects"
+      "CVE-2023-26930"
+      "CVE-2024-2971"
+      "CVE-2024-3247"
+      "CVE-2024-3248"
+      "CVE-2024-3900"
+      "CVE-2024-4141"
+      "CVE-2024-4568"
+      "CVE-2024-4976"
     ];
   };
 }

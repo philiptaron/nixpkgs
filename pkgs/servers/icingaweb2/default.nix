@@ -1,14 +1,14 @@
-{ stdenvNoCC, lib, fetchFromGitHub, makeWrapper, php }:
+{ stdenvNoCC, lib, fetchFromGitHub, makeWrapper, php, nixosTests }:
 
 stdenvNoCC.mkDerivation rec {
   pname = "icingaweb2";
-  version = "2.10.1";
+  version = "2.12.1";
 
   src = fetchFromGitHub {
     owner = "Icinga";
     repo = "icingaweb2";
     rev = "v${version}";
-    sha256 = "sha256-X4RaAJjhUnSALJyFYiwagN3cHyW+GyB5MPkW7l+Zv10=";
+    hash = "sha256-j101HsFvJZrzpK395TF4seztYfCCQKnqrpEpGj5xrtQ=";
   };
 
   nativeBuildInputs = [ makeWrapper ];
@@ -20,6 +20,8 @@ stdenvNoCC.mkDerivation rec {
 
     wrapProgram $out/bin/icingacli --prefix PATH : "${lib.makeBinPath [ php ]}"
   '';
+
+  passthru.tests = { inherit (nixosTests) icingaweb2; };
 
   meta = with lib; {
     description = "Webinterface for Icinga 2";

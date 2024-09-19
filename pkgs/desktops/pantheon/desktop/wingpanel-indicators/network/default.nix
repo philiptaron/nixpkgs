@@ -10,6 +10,7 @@
 , gtk3
 , granite
 , networkmanager
+, polkit
 , libnma
 , wingpanel
 , libgee
@@ -17,13 +18,13 @@
 
 stdenv.mkDerivation rec {
   pname = "wingpanel-indicator-network";
-  version = "2.3.2";
+  version = "7.1.1";
 
   src = fetchFromGitHub {
     owner = "elementary";
     repo = pname;
     rev = version;
-    sha256 = "sha256-4Fg8/Gm9mUqaL3wEc8h+/pMvOfD75ILjo7LhLz6LQmo=";
+    sha256 = "sha256-B3loX1yAUQktqNztikUCOHM1DgIu48fMFFol1N4BN7A=";
   };
 
   nativeBuildInputs = [
@@ -38,14 +39,13 @@ stdenv.mkDerivation rec {
     gtk3
     libgee
     networkmanager
+    polkit
     libnma
     wingpanel
   ];
 
   passthru = {
-    updateScript = nix-update-script {
-      attrPath = "pantheon.${pname}";
-    };
+    updateScript = nix-update-script { };
   };
 
   meta = with lib; {

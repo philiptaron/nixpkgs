@@ -2,7 +2,8 @@
 , fetchFromGitHub
 , lib
 , envoy
-, zip
+, mkYarnPackage
+, fetchYarnDeps
 , nixosTests
 , pomerium-cli
 }:
@@ -12,17 +13,48 @@ let
 in
 buildGoModule rec {
   pname = "pomerium";
-  version = "0.17.1";
+  version = "0.26.1";
   src = fetchFromGitHub {
     owner = "pomerium";
     repo = "pomerium";
     rev = "v${version}";
-    hash = "sha256:0b9mdzyfn7c6gwgslqk787yyrrcmdjf3282vx2zvhcr3psz0xqwx";
+    hash = "sha256-lMI6dVCTInqHsz4N0HsOVUQo8TkheAwr54FW46r+DUA=";
   };
 
-  vendorSha256 = "sha256:1cq4m5a7z64yg3v1c68d15ilw78il6p53vaqzxgn338zjggr3kig";
+  vendorHash = "sha256-AHlnhAh4RBz8aJoFJjbX/MUDHq81xK7b7gvCyuV3gjU=";
+
+  ui = mkYarnPackage {
+    inherit version;
+    src = "${src}/ui";
+
+    packageJSON = ./package.json;
+    offlineCache = fetchYarnDeps {
+      yarnLock = "${src}/ui/yarn.lock";
+      sha256 = lib.fileContents ./yarn-hash;
+    };
+
+    buildPhase = ''
+      runHook preBuild
+      yarn --offline build
+      runHook postBuild
+    '';
+
+    installPhase = ''
+      runHook preInstall
+      cp -R deps/pomerium/dist $out
+      runHook postInstall
+    '';
+
+    doDist = false;
+  };
+
   subPackages = [
     "cmd/pomerium"
+  ];
+
+  # patch pomerium to allow use of external envoy
+  patches = [
+    ./0001-envoy-allow-specification-of-external-binary.patch
   ];
 
   ldflags = let
@@ -34,7 +66,7 @@ buildGoModule rec {
         ProjectName = "pomerium";
         ProjectURL = "github.com/pomerium/pomerium";
       };
-      "github.com/pomerium/pomerium/internal/envoy" = {
+      "github.com/pomerium/pomerium/pkg/envoy" = {
         OverrideEnvoyPath = "${envoy}/bin/envoy";
       };
     };
@@ -54,8 +86,8 @@ buildGoModule rec {
     # Replace embedded envoy with nothing.
     # We set OverrideEnvoyPath above, so rawBinary should never get looked at
     # but we still need to set a checksum/version.
-    rm internal/envoy/files/files_{darwin,linux}*.go
-    cat <<EOF >internal/envoy/files/files_generic.go
+    rm pkg/envoy/files/files_{darwin,linux}*.go
+    cat <<EOF >pkg/envoy/files/files_external.go
     package files
 
     import _ "embed" // embed
@@ -68,24 +100,31 @@ buildGoModule rec {
     //go:embed envoy.version
     var rawVersion string
     EOF
-    sha256sum '${envoy}/bin/envoy' > internal/envoy/files/envoy.sha256
-    echo '${envoy.version}' > internal/envoy/files/envoy.version
+    sha256sum '${envoy}/bin/envoy' > pkg/envoy/files/envoy.sha256
+    echo '${envoy.version}' > pkg/envoy/files/envoy.version
+
+    # put the built UI files where they will be picked up as part of binary build
+    cp -r ${ui}/* ui/dist
   '';
 
   installPhase = ''
     install -Dm0755 $GOPATH/bin/pomerium $out/bin/pomerium
   '';
 
-  passthru.tests = {
-    inherit (nixosTests) pomerium;
-    inherit pomerium-cli;
+  passthru = {
+    tests = {
+      inherit (nixosTests) pomerium;
+      inherit pomerium-cli;
+    };
+    updateScript = ./updater.sh;
   };
 
   meta = with lib; {
     homepage = "https://pomerium.io";
     description = "Authenticating reverse proxy";
+    mainProgram = "pomerium";
     license = licenses.asl20;
-    maintainers = with maintainers; [ lukegb ];
+    maintainers = with maintainers; [ lukegb devusb ];
     platforms = [ "x86_64-linux" "aarch64-linux" ];
   };
 }

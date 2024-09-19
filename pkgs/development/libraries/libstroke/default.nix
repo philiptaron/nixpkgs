@@ -1,4 +1,10 @@
-{lib, stdenv, fetchurl, automake, autoconf, xlibsWrapper}:
+{ lib
+, stdenv
+, fetchurl
+, automake
+, autoconf
+, libX11
+}:
 
 stdenv.mkDerivation rec {
   pname = "libstroke";
@@ -10,7 +16,7 @@ stdenv.mkDerivation rec {
   };
 
   nativeBuildInputs = [ automake autoconf ];
-  buildInputs = [ xlibsWrapper ];
+  buildInputs = [ libX11 ];
 
   # libstroke ships with an ancient config.sub that doesn't know about x86_64, so regenerate it.
   # Also, modern automake doesn't like things and returns error code 63.  But it generates the file.
@@ -21,7 +27,7 @@ stdenv.mkDerivation rec {
     '';
 
   meta = {
-    description = "A library for simple gesture recognition";
+    description = "Library for simple gesture recognition";
     homepage = "https://web.archive.org/web/20161204100704/http://etla.net/libstroke/";
     license = lib.licenses.gpl2;
 

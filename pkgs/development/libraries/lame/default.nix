@@ -11,11 +11,6 @@
 , debugSupport ? false # Debugging (disables optimizations)
 }:
 
-let
-  mkFlag = optSet: flag: if optSet then "--enable-${flag}" else "--disable-${flag}";
-in
-
-with lib;
 stdenv.mkDerivation rec {
   pname = "lame";
   version = "3.100";
@@ -29,25 +24,25 @@ stdenv.mkDerivation rec {
   outputMan = "out";
 
   nativeBuildInputs = [ ]
-    ++ optional nasmSupport nasm;
+    ++ lib.optional nasmSupport nasm;
 
   buildInputs = [ ]
     #++ optional efenceSupport libefence
     #++ optional mp3xSupport gtk1
-    ++ optional sndfileFileIOSupport libsndfile;
+    ++ lib.optional sndfileFileIOSupport libsndfile;
 
   configureFlags = [
-    (mkFlag nasmSupport "nasm")
-    (mkFlag cpmlSupport "cpml")
-    #(mkFlag efenceSupport "efence")
+    (lib.enableFeature nasmSupport "nasm")
+    (lib.enableFeature cpmlSupport "cpml")
+    #(enableFeature efenceSupport "efence")
     (if sndfileFileIOSupport then "--with-fileio=sndfile" else "--with-fileio=lame")
-    (mkFlag analyzerHooksSupport "analyzer-hooks")
-    (mkFlag decoderSupport "decoder")
-    (mkFlag frontendSupport "frontend")
-    (mkFlag frontendSupport "dynamic-frontends")
-    #(mkFlag mp3xSupport "mp3x")
-    (mkFlag mp3rtpSupport "mp3rtp")
-    (if debugSupport then "--enable-debug=alot" else "")
+    (lib.enableFeature analyzerHooksSupport "analyzer-hooks")
+    (lib.enableFeature decoderSupport "decoder")
+    (lib.enableFeature frontendSupport "frontend")
+    (lib.enableFeature frontendSupport "dynamic-frontends")
+    #(enableFeature mp3xSupport "mp3x")
+    (lib.enableFeature mp3rtpSupport "mp3rtp")
+    (lib.optionalString debugSupport "--enable-debug=alot")
   ];
 
   preConfigure = ''
@@ -56,11 +51,12 @@ stdenv.mkDerivation rec {
     sed -i '/lame_init_old/d' include/libmp3lame.sym
   '';
 
-  meta = {
-    description = "A high quality MPEG Audio Layer III (MP3) encoder";
+  meta = with lib; {
+    description = "High quality MPEG Audio Layer III (MP3) encoder";
     homepage    = "http://lame.sourceforge.net";
     license     = licenses.lgpl2;
-    maintainers = with maintainers; [ codyopel fpletz ];
+    maintainers = with maintainers; [ codyopel ];
     platforms   = platforms.all;
+    mainProgram = "lame";
   };
 }

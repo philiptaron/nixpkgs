@@ -15,15 +15,15 @@
 , enableTUI ? false, ncurses, sealcurses
 }:
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation (finalAttrs: {
   pname = "lagrange";
-  version = "1.13.6";
+  version = "1.17.6";
 
   src = fetchFromGitHub {
     owner = "skyjake";
     repo = "lagrange";
-    rev = "v${version}";
-    sha256 = "sha256-5EIXbdVBFkmftD8xK1VJmZH3Ul99fhFSpFLOQNqSXoU=";
+    rev = "v${finalAttrs.version}";
+    hash = "sha256-ZF2HMfEI0LpvJrnB9MN8sQQDyBl/mRsI7pt6lfN4wdU=";
   };
 
   nativeBuildInputs = [ cmake pkg-config zip ];
@@ -50,16 +50,14 @@ stdenv.mkDerivation rec {
   '';
 
   passthru = {
-    updateScript = nix-update-script {
-      attrPath = pname;
-    };
+    updateScript = nix-update-script { };
   };
 
   meta = with lib; {
-    description = "A Beautiful Gemini Client";
+    description = "Beautiful Gemini Client";
     homepage = "https://gmi.skyjake.fi/lagrange/";
     license = licenses.bsd2;
     maintainers = with maintainers; [ sikmir ];
     platforms = platforms.unix;
   };
-}
+})

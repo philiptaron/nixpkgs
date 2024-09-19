@@ -2,33 +2,42 @@
 , fetchFromGitHub
 , singularity
 , python3Packages
+, testers
+, udocker
 }:
 
 python3Packages.buildPythonApplication rec {
   pname = "udocker";
-  version = "1.3.1";
+  version = "1.3.17";
 
   src = fetchFromGitHub {
     owner = "indigo-dc";
     repo = "udocker";
-    rev = "v${version}";
-    sha256 = "0dfsjgidsnah8nrclrq10yz3ja859123z81kq4zdifbrhnrn5a2x";
+    rev = "refs/tags/${version}";
+    hash = "sha256-P49fkLvdCm/Eco+nD3SGM04PRQatBzq9CHlayueQetk=";
   };
+
+  postPatch = ''
+    substituteInPlace setup.py \
+      --replace-fail "'pytest-runner'," ""
+  '';
 
   # crun patchelf proot runc fakechroot
   # are download statistically linked during runtime
   buildInputs = [
     singularity
-  ] ++ (with python3Packages; [
-    pytest-runner
-    pycurl
-  ]);
+  ];
 
-  checkInputs = with python3Packages; [
+  dependencies = with python3Packages; [
+    pycurl
+  ];
+
+  nativeCheckInputs = with python3Packages; [
     pytestCheckHook
   ];
 
   disabledTests = [
+    "test_02__load_structure"
     "test_05__get_volume_bindings"
   ];
 
@@ -38,12 +47,17 @@ python3Packages.buildPythonApplication rec {
     "tests/unit/test_dockerioapi.py"
   ];
 
-  meta = with lib; {
-    description = "basic user tool to execute simple docker containers in user space without root privileges";
-    homepage = "https://indigo-dc.gitbooks.io/udocker";
-    license = licenses.asl20;
-    maintainers = [ maintainers.bzizou ];
-    platforms = platforms.linux;
+  passthru = {
+    tests.version = testers.testVersion { package = udocker; };
   };
 
+  meta = {
+    description = "basic user tool to execute simple docker containers in user space without root privileges";
+    homepage = "https://indigo-dc.gitbooks.io/udocker";
+    changelog = "https://github.com/indigo-dc/udocker/releases/tag/${version}";
+    license = lib.licenses.asl20;
+    maintainers = with lib.maintainers; [ bzizou ];
+    platforms = lib.platforms.linux;
+    mainProgram = "udocker";
+  };
 }

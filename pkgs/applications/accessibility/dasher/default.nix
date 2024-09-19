@@ -3,7 +3,7 @@
 , fetchFromGitLab
 , autoreconfHook
 , pkg-config
-, wrapGAppsHook
+, wrapGAppsHook3
 , glib
 , gtk3
 , expat
@@ -15,7 +15,7 @@
 , libxslt
 , libxml2
 , speechSupport ? true
-, speechd
+, speechd-minimal
 }:
 
 stdenv.mkDerivation {
@@ -39,7 +39,7 @@ stdenv.mkDerivation {
 
   nativeBuildInputs = [
     autoreconfHook
-    wrapGAppsHook
+    wrapGAppsHook3
     pkg-config
     # doc generation
     gnome-doc-utils
@@ -56,7 +56,7 @@ stdenv.mkDerivation {
     # at-spi2 needs dbus to be recognized by pkg-config
     at-spi2-core
     dbus
-  ] ++ lib.optional speechSupport speechd;
+  ] ++ lib.optional speechSupport speechd-minimal;
 
   enableParallelBuilding = true;
 
@@ -64,7 +64,8 @@ stdenv.mkDerivation {
     homepage = "https://www.inference.org.uk/dasher/";
     description = "Information-efficient text-entry interface, driven by natural continuous pointing gestures";
     license = lib.licenses.gpl2Only;
-    maintainers = [ lib.maintainers.Profpatsch ];
+    maintainers = [ ];
     platforms = lib.platforms.all;
+    mainProgram = "dasher";
   };
 }

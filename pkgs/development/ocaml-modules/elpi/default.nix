@@ -2,15 +2,24 @@
 , buildDunePackage, camlp5
 , ocaml
 , menhir, menhirLib
+, atdgen
 , stdlib-shims
 , re, perl, ncurses
 , ppxlib, ppx_deriving
 , ppxlib_0_15, ppx_deriving_0_15
 , coqPackages
-, version ? if lib.versionAtLeast ocaml.version "4.07" then "1.15.2" else "1.14.1"
+, version ? if lib.versionAtLeast ocaml.version "4.08" then "1.18.1"
+    else if lib.versionAtLeast ocaml.version "4.07" then "1.15.2" else "1.14.1"
 }:
-with lib;
+
+let p5 = camlp5; in
+let camlp5 = p5.override { legacy = true; }; in
+
 let fetched = coqPackages.metaFetch ({
+    release."1.19.2".sha256 = "sha256-7VTUbsFVoNT6srLwcAn5WNSsWC7cVUdphKRWBHHiH5M=";
+    release."1.18.1".sha256 = "sha256-zgBJefQDe3JyCGbC0wvMcx/9iMVbftBJ43NPogkNeHY=";
+    release."1.17.0".sha256 = "sha256-DTxE8CvYl0et20pxueydI+WzraI6UPHMNvxyp2gU/+w=";
+    release."1.16.5".sha256 = "sha256-tKX5/cVPoBeHiUe+qn7c5FIRYCwY0AAukN7vSd/Nz9A=";
     release."1.15.2".sha256 = "sha256-XgopNP83POFbMNyl2D+gY1rmqGg03o++Ngv3zJfCn2s=";
     release."1.15.0".sha256 = "sha256:1ngdc41sgyzyz3i3lkzjhnj66gza5h912virkh077dyv17ysb6ar";
     release."1.14.1".sha256 = "sha256-BZPVL8ymjrE9kVGyf6bpc+GA2spS5JBpkUtZi04nPis=";
@@ -28,13 +37,21 @@ buildDunePackage rec {
   pname = "elpi";
   inherit (fetched) version src;
 
-  minimalOCamlVersion = "4.04";
+  patches = lib.optional (version == "1.16.5")
+    ./atd_2_10.patch;
 
-  buildInputs = [ perl ncurses ]
-  ++ optional (versionAtLeast version "1.15" || version == "dev") menhir;
+  minimalOCamlVersion = "4.04";
+  duneVersion = "3";
+
+  # atdgen is both a library and executable
+  nativeBuildInputs = [ perl ]
+  ++ [ (if lib.versionAtLeast version "1.15" || version == "dev" then menhir else camlp5) ]
+  ++ lib.optional (lib.versionAtLeast version "1.16" || version == "dev") atdgen;
+  buildInputs = [ ncurses ]
+  ++ lib.optional (lib.versionAtLeast version "1.16" || version == "dev") atdgen;
 
   propagatedBuildInputs = [ re stdlib-shims ]
-  ++ (if versionAtLeast version "1.15" || version == "dev"
+  ++ (if lib.versionAtLeast version "1.15" || version == "dev"
      then [ menhirLib ]
      else [ camlp5 ]
   )
@@ -43,7 +60,7 @@ buildDunePackage rec {
      else [ ppxlib_0_15 ppx_deriving_0_15 ]
   );
 
-  meta = {
+  meta = with lib; {
     description = "Embeddable λProlog Interpreter";
     license = licenses.lgpl21Plus;
     maintainers = [ maintainers.vbgl ];

@@ -1,6 +1,8 @@
-{ lib, stdenv, fetchurl, fetchpatch, autoreconfHook, removeReferencesTo
-, file, openssl, perl, perlPackages, nettools
-, withPerlTools ? false }: let
+{ lib, stdenv, fetchurl, fetchpatch
+, file, openssl, perl, nettools
+, autoreconfHook
+, withPerlTools ? false
+, darwin }: let
 
   perlWithPkgs = perl.withPackages (ps: with ps; [
     JSON
@@ -10,21 +12,26 @@
 
 in stdenv.mkDerivation rec {
   pname = "net-snmp";
-  version = "5.9.1";
+  version = "5.9.4";
 
   src = fetchurl {
     url = "mirror://sourceforge/net-snmp/${pname}-${version}.tar.gz";
-    sha256 = "sha256-63/UpE3mzdv/2akqha0TCeXBBU+51afdkweciVP0jD8=";
+    sha256 = "sha256-i03gE5HnTjxwFL60OWGi1tb6A6zDQoC5WF9JMHRbBUQ=";
   };
 
   patches =
-    let fetchAlpinePatch = name: sha256: fetchpatch {
-      url = "https://git.alpinelinux.org/aports/plain/main/net-snmp/${name}?id=f25d3fb08341b60b6ccef424399f060dfcf3f1a5";
+    let fetchAlpinePatch = name: sha256: fetchurl {
+      url = "https://git.alpinelinux.org/aports/plain/main/net-snmp/${name}?id=ebb21045c31f4d5993238bcdb654f21d8faf8123";
       inherit name sha256;
     };
   in [
     (fetchAlpinePatch "fix-includes.patch" "0zpkbb6k366qpq4dax5wknwprhwnhighcp402mlm7950d39zfa3m")
     (fetchAlpinePatch "netsnmp-swinst-crash.patch" "0gh164wy6zfiwiszh58fsvr25k0ns14r3099664qykgpmickkqid")
+    (fetchpatch {
+      name = "configure-musl.patch";
+      url = "https://github.com/net-snmp/net-snmp/commit/a62169f1fa358be8f330ea8519ade0610fac525b.patch";
+      hash = "sha256-+vWH095fFL3wE6XLsTaPXgMDya0LRWdlL6urD5AIBUs=";
+    })
   ];
 
   outputs = [ "bin" "out" "dev" "lib" ];
@@ -44,11 +51,27 @@ in stdenv.mkDerivation rec {
     substituteInPlace testing/fulltests/support/simple_TESTCONF.sh --replace "/bin/netstat" "${nettools}/bin/netstat"
   '';
 
-  nativeBuildInputs = [ autoreconfHook nettools removeReferencesTo file ];
+  postConfigure = ''
+    # libraries contain configure options. Mangle store paths out from
+    # ./configure-generated file.
+    sed -i include/net-snmp/net-snmp-config.h \
+      -e "/NETSNMP_CONFIGURE_OPTIONS/ s|$NIX_STORE/[a-z0-9]\{32\}-|$NIX_STORE/eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee-|g"
+  '';
+
+  nativeBuildInputs = [ nettools file autoreconfHook ];
   buildInputs = [ openssl ]
-    ++ lib.optional withPerlTools perlWithPkgs;
+    ++ lib.optional withPerlTools perlWithPkgs
+    ++ lib.optionals stdenv.isDarwin [
+      darwin.apple_sdk.frameworks.ApplicationServices
+      darwin.apple_sdk.frameworks.CoreServices
+      darwin.apple_sdk.frameworks.IOKit
+      darwin.apple_sdk.frameworks.DiskArbitration
+    ];
 
   enableParallelBuilding = true;
+  # Missing dependencies during relinking:
+  #   ./.libs/libnetsnmpagent.so: file not recognized: file format not recognized
+  enableParallelInstalling = false;
   doCheck = false;  # tries to use networking
 
   postInstall = ''
@@ -57,15 +80,12 @@ in stdenv.mkDerivation rec {
     done
     mkdir $dev/bin
     mv $bin/bin/net-snmp-config $dev/bin
-    # libraries contain configure options
-    find $lib/lib -type f -exec remove-references-to -t $bin '{}' +
-    find $lib/lib -type f -exec remove-references-to -t $dev '{}' +
   '';
 
   meta = with lib; {
     description = "Clients and server for the SNMP network monitoring protocol";
     homepage = "http://www.net-snmp.org/";
     license = licenses.bsd3;
-    platforms = platforms.linux;
+    platforms = platforms.unix;
   };
 }

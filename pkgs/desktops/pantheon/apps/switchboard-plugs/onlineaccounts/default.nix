@@ -6,25 +6,23 @@
 , ninja
 , pkg-config
 , vala
-, evolution-data-server
+, evolution-data-server-gtk4
 , glib
-, granite
-, gtk3
-, libgdata
-, libhandy
-, sqlite
+, granite7
+, gtk4
+, libadwaita
 , switchboard
 }:
 
 stdenv.mkDerivation rec {
   pname = "switchboard-plug-onlineaccounts";
-  version = "6.5.0";
+  version = "8.0.0";
 
   src = fetchFromGitHub {
     owner = "elementary";
     repo = pname;
     rev = version;
-    sha256 = "sha256-Q/vvXKyeedn5o7HnL9F5ixSjJS3OWrvvHbzvx2fW2qY=";
+    sha256 = "sha256-OlivtKz3kE81CZ6KJgvVvqf0BSVJbh6C0F7O+/+4xZU=";
   };
 
   nativeBuildInputs = [
@@ -35,20 +33,16 @@ stdenv.mkDerivation rec {
   ];
 
   buildInputs = [
-    evolution-data-server
+    evolution-data-server-gtk4
     glib
-    granite
-    gtk3
-    libgdata
-    libhandy
-    sqlite # needed for camel-1.2
+    granite7
+    gtk4
+    libadwaita
     switchboard
   ];
 
   passthru = {
-    updateScript = nix-update-script {
-      attrPath = "pantheon.${pname}";
-    };
+    updateScript = nix-update-script { };
   };
 
   meta = with lib; {

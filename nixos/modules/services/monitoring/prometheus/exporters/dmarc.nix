@@ -1,9 +1,8 @@
-{ config, lib, pkgs, options }:
-
-with lib;
+{ config, lib, pkgs, options, ... }:
 
 let
   cfg = config.services.prometheus.exporters.dmarc;
+  inherit (lib) mkOption types optionalString;
 
   json = builtins.toJSON {
     inherit (cfg) folders port;
@@ -93,7 +92,7 @@ in {
       type = types.bool;
       default = false;
       description = ''
-        Whether to declare enable <literal>--debug</literal>.
+        Whether to declare enable `--debug`.
       '';
     };
   };

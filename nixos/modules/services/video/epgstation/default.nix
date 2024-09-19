@@ -80,11 +80,11 @@ in
   options.services.epgstation = {
     enable = lib.mkEnableOption description;
 
-    package = lib.mkOption {
-      default = pkgs.epgstation;
-      type = lib.types.package;
-      defaultText = lib.literalExpression "pkgs.epgstation";
-      description = "epgstation package to use";
+    package = lib.mkPackageOption pkgs "epgstation" { };
+
+    ffmpeg = lib.mkPackageOption pkgs "ffmpeg" {
+      default = "ffmpeg-headless";
+      example = "ffmpeg-full";
     };
 
     usePreconfiguredStreaming = lib.mkOption {
@@ -94,7 +94,7 @@ in
         Use preconfigured default streaming options.
 
         Upstream defaults:
-        <link xlink:href="https://github.com/l3tnun/EPGStation/blob/master/config/config.yml.template"/>
+        <https://github.com/l3tnun/EPGStation/blob/master/config/config.yml.template>
       '';
     };
 
@@ -104,13 +104,11 @@ in
       description = ''
         Open ports in the firewall for the EPGStation web interface.
 
-        <warning>
-          <para>
-            Exposing EPGStation to the open internet is generally advised
-            against. Only use it inside a trusted local network, or consider
-            putting it behind a VPN if you want remote access.
-          </para>
-        </warning>
+        ::: {.warning}
+        Exposing EPGStation to the open internet is generally advised
+        against. Only use it inside a trusted local network, or consider
+        putting it behind a VPN if you want remote access.
+        :::
       '';
     };
 
@@ -128,7 +126,7 @@ in
         example = "/run/keys/epgstation-db-password";
         description = ''
           A file containing the password for the database named
-          <option>database.name</option>.
+          {option}`database.name`.
         '';
       };
     };
@@ -148,7 +146,7 @@ in
         Options to add to config.yml.
 
         Documentation:
-        <link xlink:href="https://github.com/l3tnun/EPGStation/blob/master/doc/conf-manual.md"/>
+        <https://github.com/l3tnun/EPGStation/blob/master/doc/conf-manual.md>
       '';
 
       default = { };
@@ -174,7 +172,7 @@ in
           defaultText = lib.literalExpression "config.${opt.settings}.port + 1";
           description = ''
             Socket.io port for EPGStation to listen on. It is valid to share
-            ports with <option>${opt.settings}.port</option>.
+            ports with {option}`${opt.settings}.port`.
           '';
         };
 
@@ -184,7 +182,7 @@ in
           defaultText = lib.literalExpression "config.${opt.settings}.socketioPort";
           description = ''
             Socket.io port that the web client is going to connect to. This may
-            be different from <option>${opt.settings}.socketioPort</option> if
+            be different from {option}`${opt.settings}.socketioPort` if
             EPGStation is hidden behind a reverse proxy.
           '';
         };
@@ -266,6 +264,9 @@ in
       description = "EPGStation user";
       group = config.users.groups.epgstation.name;
       isSystemUser = true;
+
+      # NPM insists on creating ~/.npm
+      home = "/var/cache/epgstation";
     };
 
     users.groups.epgstation = { };
@@ -277,6 +278,8 @@ in
       package = lib.mkDefault pkgs.mariadb;
       ensureDatabases = [ cfg.database.name ];
       # FIXME: enable once mysqljs supports auth_socket
+      # https://github.com/mysqljs/mysql/issues/1507
+      #
       # ensureUsers = [ {
       #   name = username;
       #   ensurePermissions = { "${cfg.database.name}.*" = "ALL PRIVILEGES"; };
@@ -294,8 +297,8 @@ in
             database = cfg.database.name;
           };
 
-          ffmpeg = lib.mkDefault "${pkgs.ffmpeg-full}/bin/ffmpeg";
-          ffprobe = lib.mkDefault "${pkgs.ffmpeg-full}/bin/ffprobe";
+          ffmpeg = lib.mkDefault "${cfg.ffmpeg}/bin/ffmpeg";
+          ffprobe = lib.mkDefault "${cfg.ffmpeg}/bin/ffprobe";
 
           # for disambiguation with TypeScript files
           recordedFileExtension = lib.mkDefault ".m2ts";
@@ -306,11 +309,25 @@ in
         (lib.mkIf cfg.usePreconfiguredStreaming streamingConfig)
       ];
 
-    systemd.tmpfiles.rules = [
-      "d '/var/lib/epgstation/streamfiles' - ${username} ${groupname} - -"
-      "d '/var/lib/epgstation/recorded' - ${username} ${groupname} - -"
-      "d '/var/lib/epgstation/thumbnail' - ${username} ${groupname} - -"
-    ];
+    systemd.tmpfiles.settings."10-epgstation" =
+      lib.listToAttrs
+        (map (dir: lib.nameValuePair dir {
+          d = {
+            user = username;
+            group = groupname;
+          };
+        })
+        [
+          "/var/lib/epgstation/key"
+          "/var/lib/epgstation/streamfiles"
+          "/var/lib/epgstation/drop"
+          "/var/lib/epgstation/recorded"
+          "/var/lib/epgstation/thumbnail"
+          "/var/lib/epgstation/db/subscribers"
+          "/var/lib/epgstation/db/migrations/mysql"
+          "/var/lib/epgstation/db/migrations/postgres"
+          "/var/lib/epgstation/db/migrations/sqlite"
+        ]);
 
     systemd.services.epgstation = {
       inherit description;
@@ -320,11 +337,14 @@ in
         ++ lib.optional config.services.mirakurun.enable "mirakurun.service"
         ++ lib.optional config.services.mysql.enable "mysql.service";
 
+      environment.NODE_ENV = "production";
+
       serviceConfig = {
         ExecStart = "${cfg.package}/bin/epgstation start";
         ExecStartPre = "+${preStartScript}";
         User = username;
         Group = groupname;
+        CacheDirectory = "epgstation";
         StateDirectory = "epgstation";
         LogsDirectory = "epgstation";
         ConfigurationDirectory = "epgstation";

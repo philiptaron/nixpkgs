@@ -1,19 +1,24 @@
-{ lib
-, stdenv
-, buildPythonPackage
-, python
-, ndtypes
-, libndtypes
-, libxnd
-, isPy27
+{
+  lib,
+  stdenv,
+  fetchpatch,
+  buildPythonPackage,
+  python,
+  ndtypes,
+  libndtypes,
+  libxnd,
+  isPy27,
 }:
 
 buildPythonPackage {
   pname = "xnd";
+  format = "setuptools";
   disabled = isPy27;
   inherit (libxnd) version src meta;
 
   propagatedBuildInputs = [ ndtypes ];
+
+  buildInputs = [ libndtypes ];
 
   postPatch = ''
     substituteInPlace setup.py \
@@ -25,12 +30,14 @@ buildPythonPackage {
                 'runtime_library_dirs = ["${libndtypes}/lib", "${libxnd}/lib"]' \
   '';
 
-  postInstall = ''
-    mkdir $out/include
-    cp python/xnd/*.h $out/include
-  '' + lib.optionalString stdenv.isDarwin ''
-    install_name_tool -add_rpath ${libxnd}/lib $out/${python.sitePackages}/xnd/_xnd.*.so
-  '';
+  postInstall =
+    ''
+      mkdir $out/include
+      cp python/xnd/*.h $out/include
+    ''
+    + lib.optionalString stdenv.isDarwin ''
+      install_name_tool -add_rpath ${libxnd}/lib $out/${python.sitePackages}/xnd/_xnd.*.so
+    '';
 
   checkPhase = ''
     pushd python

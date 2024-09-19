@@ -1,4 +1,4 @@
-{ lib, stdenv, perl, buildPerl, toPerlModule }:
+{ lib, stdenv, perl, toPerlModule }:
 
 { buildInputs ? []
 , nativeBuildInputs ? []
@@ -24,42 +24,34 @@
 # https://metacpan.org/pod/release/XSAWYERX/perl-5.26.0/pod/perldelta.pod#Removal-of-the-current-directory-%28%22.%22%29-from-@INC
 , PERL_USE_UNSAFE_INC ? "1"
 
+, env ? {}
+
 , ...
 }@attrs:
 
-assert attrs?pname -> attrs?version;
-assert attrs?pname -> !(attrs?name);
-
-lib.warnIf (attrs ? name) "builtPerlPackage: `name' (\"${attrs.name}\") is deprecated, use `pname' and `version' instead"
+lib.throwIf (attrs ? name) "buildPerlPackage: `name` (\"${attrs.name}\") is deprecated, use `pname` and `version` instead"
 
 (let
   defaultMeta = {
-    homepage = "https://metacpan.org/release/${lib.getName attrs}"; # TODO: phase-out `attrs.name`
-    mainProgram = attrs.pname or (builtins.parseDrvName attrs.name).name;
-    platforms = perl.meta.platforms;
+    homepage = "https://metacpan.org/dist/${attrs.pname}";
+    inherit (perl.meta) platforms;
   };
 
-  cleanedAttrs = builtins.removeAttrs attrs [
-    "meta" "builder" "version" "pname" "fullperl"
-    "buildInputs" "nativeBuildInputs" "buildInputs"
-    "PERL_AUTOINSTALL" "AUTOMATED_TESTING" "PERL_USE_UNSAFE_INC"
-    ];
-
-  package = stdenv.mkDerivation ({
-    pname = "perl${perl.version}-${lib.getName attrs}"; # TODO: phase-out `attrs.name`
-    version = lib.getVersion attrs;                     # TODO: phase-out `attrs.name`
+  package = stdenv.mkDerivation (attrs // {
+    name = "perl${perl.version}-${attrs.pname}-${attrs.version}";
 
     builder = ./builder.sh;
 
     buildInputs = buildInputs ++ [ perl ];
-    nativeBuildInputs = nativeBuildInputs ++ [ (perl.mini or perl) ];
-
-    fullperl = buildPerl;
+    nativeBuildInputs = nativeBuildInputs ++ (if stdenv.buildPlatform != stdenv.hostPlatform then [ perl.mini ] else [ perl ]);
 
     inherit outputs src doCheck checkTarget enableParallelBuilding;
-    inherit PERL_AUTOINSTALL AUTOMATED_TESTING PERL_USE_UNSAFE_INC;
+    env = {
+      inherit PERL_AUTOINSTALL AUTOMATED_TESTING PERL_USE_UNSAFE_INC;
+      fullperl = perl.__spliced.buildHost or perl;
+    } // env;
 
     meta = defaultMeta // (attrs.meta or { });
-  } // cleanedAttrs);
+  });
 
 in toPerlModule package)

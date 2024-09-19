@@ -2,13 +2,13 @@
 
 buildGoModule rec {
   pname = "yubikey-agent";
-  version = "0.1.5";
 
+  version = "0.1.6";
   src = fetchFromGitHub {
     owner = "FiloSottile";
-    repo = pname;
+    repo = "yubikey-agent";
     rev = "v${version}";
-    sha256 = "14s61jgcmpqh70jz0krrai8xg0xqhwmillxkij50vbsagpxjssk6";
+    sha256 = "sha256-Knk1ipBOzjmjrS2OFUMuxi1TkyDcSYlVKezDWT//ERY=";
   };
 
   buildInputs =
@@ -21,7 +21,7 @@ buildGoModule rec {
     substituteInPlace main.go --replace 'notify-send' ${libnotify}/bin/notify-send
   '';
 
-  vendorSha256 = "1v4ccn7ysh8ax1nkf1v9fcgsdnz6zjyh6j6ivyljyfvma1lmcrmk";
+  vendorHash = "sha256-+IRPs3wm3EvIgfQRpzcVpo2JBaFQlyY/RI1G7XfVS84=";
 
   doCheck = false;
 
@@ -36,7 +36,8 @@ buildGoModule rec {
   '';
 
   meta = with lib; {
-    description = "A seamless ssh-agent for YubiKeys";
+    description = "Seamless ssh-agent for YubiKeys";
+    mainProgram = "yubikey-agent";
     license = licenses.bsd3;
     homepage = "https://filippo.io/yubikey-agent";
     maintainers = with lib.maintainers; [ philandstuff rawkode ];

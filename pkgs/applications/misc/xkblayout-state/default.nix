@@ -1,4 +1,4 @@
-{ lib, stdenv, fetchFromGitHub, qt4 }:
+{ lib, stdenv, fetchFromGitHub, libX11 }:
 
 stdenv.mkDerivation rec {
   pname = "xkblayout-state";
@@ -11,7 +11,7 @@ stdenv.mkDerivation rec {
     sha256 = "sha256-diorqwDEBdzcBteKvhRisQaY3bx5seaOaWSaPwBkWDo=";
   };
 
-  buildInputs = [ qt4 ];
+  buildInputs = [ libX11 ];
 
   installPhase = ''
     mkdir -p $out/bin
@@ -19,10 +19,11 @@ stdenv.mkDerivation rec {
   '';
 
   meta = with lib; {
-    description = "A small command-line program to get/set the current XKB keyboard layout";
+    description = "Small command-line program to get/set the current XKB keyboard layout";
     homepage = "https://github.com/nonpop/xkblayout-state";
     license = licenses.gpl2;
     maintainers = [ maintainers.jagajaga ];
     platforms = platforms.linux;
+    mainProgram = "xkblayout-state";
   };
 }

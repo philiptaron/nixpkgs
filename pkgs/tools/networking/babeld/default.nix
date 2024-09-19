@@ -1,17 +1,27 @@
-{ lib, stdenv, fetchurl, nixosTests }:
+{ lib
+, stdenv
+, fetchurl
+, nixosTests
+}:
 
 stdenv.mkDerivation rec {
   pname = "babeld";
-  version = "1.12.1";
+  version = "1.13.1";
 
   src = fetchurl {
     url = "https://www.irif.fr/~jch/software/files/${pname}-${version}.tar.gz";
-    sha256 = "sha256-mrWdesdB82MN8j+cO2fGApTYs0q2IjmPm4l3OoeOyx4=";
+    hash = "sha256-FfJNJtoMz8Bzq83vAwnygeRoTyqnESb4JlcsTIRejdk=";
   };
 
-  preBuild = ''
-    makeFlags="PREFIX=$out ETCDIR=$out/etc"
-  '';
+  outputs = [
+    "out"
+    "man"
+  ];
+
+  makeFlags = [
+    "PREFIX=${placeholder "out"}"
+    "ETCDIR=${placeholder "out"}/etc"
+  ];
 
   passthru.tests.babeld = nixosTests.babeld;
 
@@ -19,7 +29,8 @@ stdenv.mkDerivation rec {
     homepage = "http://www.irif.fr/~jch/software/babel/";
     description = "Loop-avoiding distance-vector routing protocol";
     license = licenses.mit;
-    maintainers = with maintainers; [ fpletz hexa ];
+    maintainers = with maintainers; [ hexa ];
     platforms = platforms.linux;
+    mainProgram = "babeld";
   };
 }

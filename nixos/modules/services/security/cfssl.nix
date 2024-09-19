@@ -14,12 +14,12 @@ in {
       description = ''
         The work directory for CFSSL.
 
-        <note><para>
-          If left as the default value this directory will automatically be
-          created before the CFSSL server starts, otherwise you are
-          responsible for ensuring the directory exists with appropriate
-          ownership and permissions.
-        </para></note>
+        ::: {.note}
+        If left as the default value this directory will automatically be
+        created before the CFSSL server starts, otherwise you are
+        responsible for ensuring the directory exists with appropriate
+        ownership and permissions.
+        :::
       '';
     };
 

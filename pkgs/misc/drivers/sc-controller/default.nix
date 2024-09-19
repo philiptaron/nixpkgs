@@ -1,4 +1,4 @@
-{ lib, buildPythonApplication, fetchFromGitHub, wrapGAppsHook
+{ lib, buildPythonApplication, fetchFromGitHub, wrapGAppsHook3
 , pytestCheckHook
 , gtk3, gobject-introspection, libappindicator-gtk3, librsvg
 , evdev, pygobject3, pylibacl, bluez, vdf
@@ -8,25 +8,22 @@
 
 buildPythonApplication rec {
   pname = "sc-controller";
-  version = "0.4.8.7";
+  version = "0.4.8.21";
 
   src = fetchFromGitHub {
-    owner  = "Ryochan7";
-    repo   = pname;
-    rev    = "v${version}";
-    sha256 = "03514sb1spaxdr7x1gq7b54z74in4kd060adj6sq1xjj6d9b297i";
+    owner = "C0rn3j";
+    repo = pname;
+    rev = "refs/tags/v${version}";
+    hash = "sha256-XakbCuwjIAXYFZxvJsAlDIJEl09pwFPT12h04onXd34=";
   };
 
-  # see https://github.com/NixOS/nixpkgs/issues/56943
-  strictDeps = false;
+  nativeBuildInputs = [ wrapGAppsHook3 gobject-introspection ];
 
-  nativeBuildInputs = [ wrapGAppsHook ];
-
-  buildInputs = [ gtk3 gobject-introspection libappindicator-gtk3 librsvg ];
+  buildInputs = [ gtk3 libappindicator-gtk3 librsvg ];
 
   propagatedBuildInputs = [ evdev pygobject3 pylibacl vdf ];
 
-  checkInputs = [ pytestCheckHook ];
+  nativeCheckInputs = [ pytestCheckHook ];
 
   postPatch = ''
     substituteInPlace scc/paths.py --replace sys.prefix "'$out'"
@@ -50,10 +47,10 @@ buildPythonApplication rec {
   '';
 
   meta = with lib; {
-    homepage    = "https://github.com/Ryochan7/sc-controller";
+    homepage    = "https://github.com/C0rn3j/sc-controller";
     # donations: https://www.patreon.com/kozec
     description = "User-mode driver and GUI for Steam Controller and other controllers";
-    license     = licenses.gpl2;
+    license     = licenses.gpl2Only;
     platforms   = platforms.linux;
     maintainers = with maintainers; [ orivej rnhmjoj ];
   };

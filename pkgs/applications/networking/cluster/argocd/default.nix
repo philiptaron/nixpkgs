@@ -2,16 +2,17 @@
 
 buildGoModule rec {
   pname = "argocd";
-  version = "2.3.4";
+  version = "2.12.3";
 
   src = fetchFromGitHub {
     owner = "argoproj";
     repo = "argo-cd";
     rev = "v${version}";
-    sha256 = "sha256-pWDwmsLCXoK8EzipOPXUdYu75hPm5AIExXmgoA102Dg=";
+    hash = "sha256-XD/+alC0OZUDExXpAnxmN6zcGPrsYGxaWGU9KgdoCgM=";
   };
 
-  vendorSha256 = "sha256-XrIIMnn65Y10KnVTsmw6vLE53Zra1lWNFgklmaj3gF8=";
+  proxyVendor = true; # darwin/linux hash mismatch
+  vendorHash = "sha256-8BX0QErfe2mxTbIToNgZ3U9OtpIy887936U68Qr+3W0=";
 
   # Set target as ./cmd per cli-local
   # https://github.com/argoproj/argo-cd/blob/master/Makefile#L227
@@ -26,9 +27,9 @@ buildGoModule rec {
       "-X ${package_url}.gitCommit=${src.rev}"
       "-X ${package_url}.gitTag=${src.rev}"
       "-X ${package_url}.gitTreeState=clean"
-      "-X ${package_url}.kubectlVersion=v0.23.1"
+      "-X ${package_url}.kubectlVersion=v0.24.2"
       # NOTE: Update kubectlVersion when upgrading this package with
-      # go list -m k8s.io/client-go | head -n 1 | rev | cut -d' ' -f1 | rev
+      # https://github.com/argoproj/argo-cd/blob/v${version}/go.mod#L95
       # Per https://github.com/argoproj/argo-cd/blob/master/Makefile#L18
       # Will need a way to automate it :P
     ];
@@ -55,9 +56,10 @@ buildGoModule rec {
 
   meta = with lib; {
     description = "Declarative continuous deployment for Kubernetes";
+    mainProgram = "argocd";
     downloadPage = "https://github.com/argoproj/argo-cd";
     homepage = "https://argo-cd.readthedocs.io/en/stable/";
     license = licenses.asl20;
-    maintainers = with maintainers; [ shahrukh330 bryanasdev000 ];
+    maintainers = with maintainers; [ shahrukh330 bryanasdev000 qjoly ];
   };
 }

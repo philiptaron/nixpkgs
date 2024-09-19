@@ -124,7 +124,7 @@ stdenv.mkDerivation rec {
 
   configurePhase = ''
     export GIT_VERSION=${builtins.substring 0 7 src.rev}
-    buildFlags="$buildFlags ''${enableParallelBuilding:+-j$NIX_BUILD_CORES -l$NIX_BUILD_CORES}"
+    buildFlags="$buildFlags ''${enableParallelBuilding:+-j$NIX_BUILD_CORES}"
   '' + optionalString enableX11 ''
     cd x11
     substituteInPlace Makefile.am \
@@ -157,7 +157,7 @@ stdenv.mkDerivation rec {
   enableParallelBuilding = true;
 
   # TODO Remove when bumping past rev22
-  NIX_CFLAGS_COMPILE = lib.optionalString stdenv.hostPlatform.isDarwin "-D_DARWIN_C_SOURCE";
+  env.NIX_CFLAGS_COMPILE = lib.optionalString stdenv.hostPlatform.isDarwin "-D_DARWIN_C_SOURCE";
 
   buildPhase = optionalString enableSDL ''
     cd sdl2
@@ -190,7 +190,7 @@ stdenv.mkDerivation rec {
   '';
 
   meta = with lib; {
-    description = "A PC-9801 series emulator";
+    description = "PC-9801 series emulator";
     homepage = "https://github.com/AZO234/NP2kai";
     license = licenses.mit;
     maintainers = with maintainers; [ OPNA2608 ];

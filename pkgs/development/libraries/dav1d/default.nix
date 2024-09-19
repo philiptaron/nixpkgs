@@ -1,24 +1,41 @@
-{ lib, stdenv, fetchFromGitLab
-, meson, ninja, nasm, pkg-config
+{ lib
+, stdenv
+, fetchFromGitHub
+, meson
+, ninja
+, nasm
+, pkg-config
 , xxHash
 , withTools ? false # "dav1d" binary
-, withExamples ? false, SDL2 # "dav1dplay" binary
-, useVulkan ? false, libplacebo, vulkan-loader, vulkan-headers
+, withExamples ? false
+, SDL2 # "dav1dplay" binary
+, useVulkan ? false
+, libplacebo
+, vulkan-loader
+, vulkan-headers
+
+  # for passthru.tests
+, ffmpeg
+, gdal
+, handbrake
+, libavif
+, libheif
 }:
 
 assert useVulkan -> withExamples;
 
 stdenv.mkDerivation rec {
   pname = "dav1d";
-  version = "1.0.0";
+  version = "1.4.3";
 
-  src = fetchFromGitLab {
-    domain = "code.videolan.org";
+  src = fetchFromGitHub {
     owner = "videolan";
     repo = pname;
     rev = version;
-    sha256 = "sha256-RVr7NFVxY+6MBD8NV7eMW8TEWuCgcfqpula1o1VZe0o=";
+    hash = "sha256-uudtA9ZpGIpw1yfCzbywFyH7EWYHuXfE6pBb2eksx1g=";
   };
+
+  outputs = [ "out" "dev" ];
 
   nativeBuildInputs = [ meson ninja nasm pkg-config ];
   # TODO: doxygen (currently only HTML and not build by default).
@@ -26,15 +43,24 @@ stdenv.mkDerivation rec {
     ++ lib.optional withExamples SDL2
     ++ lib.optionals useVulkan [ libplacebo vulkan-loader vulkan-headers ];
 
-  mesonFlags= [
+  mesonFlags = [
     "-Denable_tools=${lib.boolToString withTools}"
     "-Denable_examples=${lib.boolToString withExamples}"
   ];
 
   doCheck = true;
 
+  passthru.tests = {
+    inherit
+      ffmpeg
+      gdal
+      handbrake
+      libavif
+      libheif;
+  };
+
   meta = with lib; {
-    description = "A cross-platform AV1 decoder focused on speed and correctness";
+    description = "Cross-platform AV1 decoder focused on speed and correctness";
     longDescription = ''
       The goal of this project is to provide a decoder for most platforms, and
       achieve the highest speed possible to overcome the temporary lack of AV1
@@ -45,7 +71,7 @@ stdenv.mkDerivation rec {
     changelog = "https://code.videolan.org/videolan/dav1d/-/tags/${version}";
     # More technical: https://code.videolan.org/videolan/dav1d/blob/${version}/NEWS
     license = licenses.bsd2;
-    platforms = platforms.unix;
+    platforms = platforms.unix ++ platforms.windows;
     maintainers = with maintainers; [ primeos ];
   };
 }

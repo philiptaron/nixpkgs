@@ -4,6 +4,7 @@
 , writeText
 , writeShellScript
 , sqlite
+, nixosTests
 }:
 let
   pypkgs = python3.pkgs;
@@ -37,15 +38,15 @@ pypkgs.buildPythonApplication rec {
   version = "unstable-2021-01-25";
 
   src = fetchFromGitHub {
-    owner = "SystemRage";
+    owner = "Py-KMS-Organization";
     repo = "py-kms";
-    rev = "a3b0c85b5b90f63b33dfa5ae6085fcd52c6da2ff";
-    sha256 = "sha256-u0R0uJMQxHnJUDenxglhQkZza3/1DcyXCILcZVceygA=";
+    rev = "1435c86fe4f11aa7fd42d77fa61715ca3015eeab";
+    hash = "sha256-9KiMbS0uKTbWSZVIv5ziIeR9c8+EKfKd20yPmjCX7GQ=";
   };
 
-  sourceRoot = "source/py-kms";
+  sourceRoot = "${src.name}/py-kms";
 
-  propagatedBuildInputs = with pypkgs; [ systemd pytz tzlocal ];
+  propagatedBuildInputs = with pypkgs; [ systemd pytz tzlocal dnspython ];
 
   postPatch = ''
     siteDir=$out/${python3.sitePackages}
@@ -64,11 +65,14 @@ pypkgs.buildPythonApplication rec {
 
     mkdir -p $siteDir
 
+    PYTHONPATH="$PYTHONPATH:$siteDir"
+
     mv * $siteDir
     for b in Client Server ; do
       makeWrapper ${python3.interpreter} $out/bin/''${b,,} \
         --argv0 pykms-''${b,,} \
-        --add-flags $siteDir/pykms_$b.py
+        --add-flags $siteDir/pykms_$b.py \
+        --set PYTHONPATH $PYTHONPATH
     done
 
     install -Dm755 ${dbScript} $out/libexec/create_pykms_db.sh
@@ -80,10 +84,12 @@ pypkgs.buildPythonApplication rec {
     runHook postInstall
   '';
 
+  passthru.tests = { inherit (nixosTests) pykms; };
+
   meta = with lib; {
     description = "Windows KMS (Key Management Service) server written in Python";
-    homepage = "https://github.com/SystemRage/py-kms";
+    homepage = "https://github.com/Py-KMS-Organization/py-kms";
     license = licenses.unlicense;
-    maintainers = with maintainers; [ peterhoeg ];
+    maintainers = with maintainers; [ peterhoeg zopieux ];
   };
 }

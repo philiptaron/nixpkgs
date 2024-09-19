@@ -1,5 +1,4 @@
 { lib, mkCoqDerivation, coq, version ? null }:
-with lib;
 
 mkCoqDerivation rec {
   pname = "semantics";
@@ -15,8 +14,8 @@ mkCoqDerivation rec {
   release."8.6.0".sha256 = "sha256-GltkGQ3tJqUPAbdDkqqvKLLhMOap50XvGaCkjshiNdY=";
 
   inherit version;
-  defaultVersion = with versions; switch coq.coq-version [
-    { case = range "8.10" "8.15"; out = "8.14.0"; }
+  defaultVersion = with lib.versions; lib.switch coq.coq-version [
+    { case = range "8.10" "8.18"; out = "8.14.0"; }
     { case = "8.9"; out = "8.9.0"; }
     { case = "8.8"; out = "8.8.0"; }
     { case = "8.7"; out = "8.7.0"; }
@@ -34,8 +33,8 @@ mkCoqDerivation rec {
     done
   '';
 
-  meta = {
-    description = "A survey of programming language semantics styles in Coq";
+  meta = with lib; {
+    description = "Survey of programming language semantics styles in Coq";
     longDescription = ''
       A survey of semantics styles in Coq, from natural semantics through
       structural operational, axiomatic, and denotational semantics, to

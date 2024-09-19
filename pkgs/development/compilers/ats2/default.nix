@@ -34,20 +34,27 @@ stdenv.mkDerivation rec {
     hash = "sha256-UWgDjFojPBYgykrCrJyYvVWY+Gc5d4aRGjTWjc528AM=";
   };
 
+  postPatch = lib.optionalString stdenv.cc.isClang ''
+    sed -i 's/gcc/clang/g' utils/*/DATS/atscc_util.dats
+  '';
+
   buildInputs = [ gmp ];
 
   # Disable parallel build, errors:
   #  *** No rule to make target 'patscc.dats', needed by 'patscc_dats.c'.  Stop.
   enableParallelBuilding = false;
 
-  setupHook = with lib;
+  makeFlags = [
+    "CC=${stdenv.cc.targetPrefix}cc"
+    "CCOMP=${stdenv.cc.targetPrefix}cc"
+  ];
+
+  setupHook =
     let
-      hookFiles =
-        [ ./setup-hook.sh ]
-        ++ optional withContrib ./setup-contrib-hook.sh;
+      hookFiles = [ ./setup-hook.sh ] ++ lib.optional withContrib ./setup-contrib-hook.sh;
     in
       builtins.toFile "setupHook.sh"
-      (concatMapStringsSep "\n" builtins.readFile hookFiles);
+      (lib.concatMapStringsSep "\n" builtins.readFile hookFiles);
 
   postInstall = postInstallContrib + postInstallEmacs;
 
@@ -55,7 +62,7 @@ stdenv.mkDerivation rec {
     description = "Functional programming language with dependent types";
     homepage    = "http://www.ats-lang.org";
     license     = licenses.gpl3Plus;
-    platforms   = platforms.linux;
+    platforms   = platforms.unix;
     maintainers = with maintainers; [ thoughtpolice ttuegel bbarker ];
   };
 }

@@ -1,30 +1,42 @@
-{ lib, stdenv, fetchFromGitHub, autoreconfHook, perl, libX11 }:
+{ lib, stdenv, fetchFromGitHub, autoreconfHook, makeWrapper, perl
+, ffmpeg-full, gawk, imagemagick, xdpyinfo, xprop, xrectsel, xwininfo
+}:
 
 stdenv.mkDerivation rec {
   pname = "ffcast";
-  version = "2.5.0";
+  version = "2.5.1";
 
   src = fetchFromGitHub {
-    owner = "lolilolicon";
+    owner = "ropery";
     repo = "FFcast";
     rev = version;
-    sha256 = "047y32bixhc8ksr98vwpgd0k1xxgsv2vs0n3kc2xdac4krc9454h";
+    sha256 = "sha256-kxqwDGEguFTFHkQzXctXqxslt0+bYnfUdQ8C/8+eTXo=";
   };
 
-  nativeBuildInputs = [ autoreconfHook ];
-  buildInputs = [ perl libX11 ];
+  nativeBuildInputs = [ autoreconfHook makeWrapper perl /*for pod2man*/ ];
 
   configureFlags = [ "--disable-xrectsel" ];
 
-  postBuild = ''
-    make install
+  postInstall = let
+    binPath = lib.makeBinPath [
+      ffmpeg-full
+      gawk
+      imagemagick
+      xdpyinfo
+      xprop
+      xrectsel
+      xwininfo
+    ];
+  in ''
+    wrapProgram $out/bin/ffcast --prefix PATH : ${binPath}
   '';
 
-  meta = with lib; {
+  meta = {
     description = "Run commands on rectangular screen regions";
-    homepage = "https://github.com/lolilolicon/FFcast";
-    license = licenses.gpl3;
-    maintainers = [ maintainers.guyonvarch ];
-    platforms = platforms.linux;
+    homepage = "https://github.com/ropery/FFcast";
+    license = lib.licenses.gpl3Plus;
+    maintainers = with lib.maintainers; [ sikmir ];
+    platforms = lib.platforms.linux;
+    mainProgram = "ffcast";
   };
 }

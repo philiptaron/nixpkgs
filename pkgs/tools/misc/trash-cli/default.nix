@@ -1,22 +1,31 @@
-{ lib, fetchFromGitHub, python3Packages }:
+{ lib, fetchFromGitHub, installShellFiles, nix-update-script, python3Packages }:
 
 python3Packages.buildPythonApplication rec {
   pname = "trash-cli";
-  version = "0.22.4.16";
+  version = "0.24.5.26";
 
   src = fetchFromGitHub {
     owner = "andreafrancia";
     repo = "trash-cli";
     rev = version;
-    sha256 = "0j8iwr6cdc24gp5raxrq5483d7sfsyi8sy947w4hr2sc4j738dg5";
+    hash = "sha256-ltuMnxtG4jTTSZd6ZHWl8wI0oQMMFqW0HAPetZMfGtc=";
   };
 
-  propagatedBuildInputs = [ python3Packages.psutil ];
+  propagatedBuildInputs = with python3Packages; [ psutil six ];
 
-  checkInputs = with python3Packages; [
+  nativeBuildInputs = with python3Packages; [
+    installShellFiles
+    shtab
+  ];
+
+  nativeCheckInputs = with python3Packages; [
     mock
     pytestCheckHook
   ];
+
+  postPatch = ''
+    sed -i '/typing/d' setup.cfg
+  '';
 
   doInstallCheck = true;
   installCheckPhase = ''
@@ -39,13 +48,22 @@ python3Packages.buildPythonApplication rec {
 
     runHook postInstallCheck
   '';
+  postInstall = ''
+    for bin in trash-empty trash-list trash-restore trash-put trash; do
+      installShellCompletion --cmd "$bin" \
+        --bash <("$out/bin/$bin" --print-completion bash) \
+        --zsh  <("$out/bin/$bin" --print-completion zsh)
+    done
+  '';
+
+  passthru.updateScript = nix-update-script { };
 
   meta = with lib; {
     homepage = "https://github.com/andreafrancia/trash-cli";
-    description = "Command line tool for the desktop trash can";
+    description = "Command line interface to the freedesktop.org trashcan";
     maintainers = [ maintainers.rycee ];
     platforms = platforms.unix;
-    license = licenses.gpl2;
+    license = licenses.gpl2Plus;
     mainProgram = "trash";
   };
 }

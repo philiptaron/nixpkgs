@@ -1,122 +1,213 @@
-{ lib, stdenv, buildPackages, fetchurl, pkg-config, pcre, perl, flex, bison, gettext, libpcap, libnl, c-ares
-, gnutls, libgcrypt, libgpg-error, geoip, openssl, lua5, python3, libcap, glib
-, libssh, nghttp2, zlib, cmake, makeWrapper, wrapGAppsHook
-, withQt ? true, qt5 ? null
-, ApplicationServices, SystemConfiguration, gmp
+{ lib
+, stdenv
+, fetchFromGitLab
+
+, ApplicationServices
 , asciidoctor
+, bcg729
+, bison
+, buildPackages
+, c-ares
+, cmake
+, fixDarwinDylibNames
+, flex
+, gettext
+, glib
+, gmp
+, gnutls
+, libcap
+, libgcrypt
+, libgpg-error
+, libkrb5
+, libmaxminddb
+, libnl
+, libopus
+, libpcap
+, libsmi
+, libssh
+, lua5
+, lz4
+, makeWrapper
+, minizip
+, nghttp2
+, nghttp3
+, ninja
+, opencore-amr
+, openssl
+, pcre2
+, perl
+, pkg-config
+, python3
+, sbc
+, snappy
+, spandsp3
+, speexdsp
+, SystemConfiguration
+, wrapGAppsHook3
+, zlib
+, zstd
+
+, withQt ? true
+, qt6 ? null
 }:
-
-assert withQt  -> qt5  != null;
-
-with lib;
-
 let
-  version = "3.6.5";
-  variant = if withQt then "qt" else "cli";
+  isAppBundle = withQt && stdenv.isDarwin;
+in
+assert withQt -> qt6 != null;
 
-in stdenv.mkDerivation {
-  pname = "wireshark-${variant}";
-  inherit version;
+stdenv.mkDerivation rec {
+  pname = "wireshark-${if withQt then "qt" else "cli"}";
+  version = "4.2.6";
+
   outputs = [ "out" "dev" ];
 
-  src = fetchurl {
-    url = "https://www.wireshark.org/download/src/all-versions/wireshark-${version}.tar.xz";
-    sha256 = "sha256-otdB1g/zUWE31LnzjNwH7uVKVuw2BG9MOv7mv7T26qE=";
+  src = fetchFromGitLab {
+    repo = "wireshark";
+    owner = "wireshark";
+    rev = "v${version}";
+    hash = "sha256-zlFTUgsEKraE9crS5SZ13r93JJzUb6eyBhusJbbGwsE=";
   };
 
-  cmakeFlags = [
-    "-DBUILD_wireshark=${if withQt then "ON" else "OFF"}"
-    "-DENABLE_APPLICATION_BUNDLE=${if withQt && stdenv.isDarwin then "ON" else "OFF"}"
-    # Fix `extcap` and `plugins` paths. See https://bugs.wireshark.org/bugzilla/show_bug.cgi?id=16444
-    "-DCMAKE_INSTALL_LIBDIR=lib"
-    "-DLEMON_C_COMPILER=cc"
-  ] ++ lib.optionals (stdenv.buildPlatform != stdenv.hostPlatform) [
-    "-DHAVE_C99_VSNPRINTF_EXITCODE=0"
-    "-DHAVE_C99_VSNPRINTF_EXITCODE__TRYRUN_OUTPUT="
+  patches = [
+    ./patches/lookup-dumpcap-in-path.patch
   ];
 
-  # Avoid referencing -dev paths because of debug assertions.
-  NIX_CFLAGS_COMPILE = [ "-DQT_NO_DEBUG" ];
+  depsBuildBuild = lib.optionals (stdenv.buildPlatform != stdenv.hostPlatform) [
+    buildPackages.stdenv.cc
+  ];
 
-  nativeBuildInputs = [ asciidoctor bison cmake flex makeWrapper pkg-config python3 perl ]
-    ++ optionals withQt [ qt5.wrapQtAppsHook wrapGAppsHook ];
-
-  depsBuildBuild = [ buildPackages.stdenv.cc ];
+  nativeBuildInputs = [
+    asciidoctor
+    bison
+    cmake
+    flex
+    makeWrapper
+    ninja
+    perl
+    pkg-config
+    python3
+  ] ++ lib.optionals withQt [
+    qt6.wrapQtAppsHook
+    wrapGAppsHook3
+  ] ++ lib.optionals stdenv.isDarwin [
+    fixDarwinDylibNames
+  ];
 
   buildInputs = [
-    gettext pcre libpcap lua5 libssh nghttp2 openssl libgcrypt
-    libgpg-error gnutls geoip c-ares glib zlib
-  ] ++ optionals withQt  (with qt5; [ qtbase qtmultimedia qtsvg qttools ])
-    ++ optionals stdenv.isLinux  [ libcap libnl ]
-    ++ optionals stdenv.isDarwin [ SystemConfiguration ApplicationServices gmp ]
-    ++ optionals (withQt && stdenv.isDarwin) (with qt5; [ qtmacextras ]);
+    bcg729
+    c-ares
+    gettext
+    glib
+    gnutls
+    libgcrypt
+    libgpg-error
+    libkrb5
+    libmaxminddb
+    libopus
+    libpcap
+    libsmi
+    libssh
+    lua5
+    lz4
+    minizip
+    nghttp2
+    nghttp3
+    opencore-amr
+    openssl
+    pcre2
+    snappy
+    spandsp3
+    speexdsp
+    zlib
+    zstd
+  ] ++ lib.optionals withQt (with qt6; [
+    qt5compat
+    qtbase
+    qtmultimedia
+    qtsvg
+    qttools
+  ]) ++ lib.optionals (withQt && stdenv.isLinux) [
+    qt6.qtwayland
+  ] ++ lib.optionals stdenv.isLinux [
+    libcap
+    libnl
+    sbc
+  ] ++ lib.optionals stdenv.isDarwin [
+    ApplicationServices
+    gmp
+    SystemConfiguration
+  ];
 
   strictDeps = true;
 
-  patches = [ ./wireshark-lookup-dumpcap-in-path.patch ];
+  cmakeFlags = [
+    "-DBUILD_wireshark=${if withQt then "ON" else "OFF"}"
+    # Fix `extcap` and `plugins` paths. See https://bugs.wireshark.org/bugzilla/show_bug.cgi?id=16444
+    "-DCMAKE_INSTALL_LIBDIR=lib"
+    "-DENABLE_APPLICATION_BUNDLE=${if isAppBundle then "ON" else "OFF"}"
+    "-DLEMON_C_COMPILER=cc"
+  ] ++ lib.optionals (stdenv.buildPlatform != stdenv.hostPlatform) [
+    "-DHAVE_C99_VSNPRINTF_EXITCODE__TRYRUN_OUTPUT="
+    "-DHAVE_C99_VSNPRINTF_EXITCODE=0"
+  ];
 
-  postPatch = ''
-    sed -i -e '1i cmake_policy(SET CMP0025 NEW)' CMakeLists.txt
-  '';
-
-  preBuild = ''
-    export LD_LIBRARY_PATH="$PWD/run"
-  '';
-
-  postInstall = ''
-    # to remove "cycle detected in the references"
-    mkdir -p $dev/lib/wireshark
-    mv $out/lib/wireshark/cmake $dev/lib/wireshark
-  '' + (if stdenv.isDarwin && withQt then ''
-    mkdir -p $out/Applications
-    mv $out/bin/Wireshark.app $out/Applications/Wireshark.app
-
-    for f in $(find $out/Applications/Wireshark.app/Contents/PlugIns -name "*.so"); do
-        for dylib in $(otool -L $f | awk '/^\t*lib/ {print $1}'); do
-            install_name_tool -change "$dylib" "$out/lib/$dylib" "$f"
-        done
-    done
-  '' else optionalString withQt ''
-    install -Dm644 -t $out/share/applications ../org.wireshark.Wireshark.desktop
-
-    install -Dm644 ../image/wsicon.svg $out/share/icons/wireshark.svg
-    mkdir $dev/include/{epan/{wmem,ftypes,dfilter},wsutil/wmem,wiretap} -pv
-
-    cp config.h $dev/include/wireshark/
-    cp ../ws_*.h $dev/include
-    cp ../epan/*.h $dev/include/epan/
-    cp ../epan/ftypes/*.h $dev/include/epan/ftypes/
-    cp ../epan/dfilter/*.h $dev/include/epan/dfilter/
-    cp ../wsutil/*.h $dev/include/wsutil/
-    cp ../wsutil/wmem/*.h $dev/include/wsutil/wmem/
-    cp ../wiretap/*.h $dev/include/wiretap
-  '');
+  # Avoid referencing -dev paths because of debug assertions.
+  env.NIX_CFLAGS_COMPILE = toString [ "-DQT_NO_DEBUG" ];
 
   dontFixCmake = true;
-
-  # Prevent double-wrapping, inject wrapper args manually instead.
   dontWrapGApps = true;
-  preFixup = ''
-    qtWrapperArgs+=("''${gappsWrapperArgs[@]}")
-  '';
 
   shellHook = ''
     # to be able to run the resulting binary
     export WIRESHARK_RUN_FROM_BUILD_DIRECTORY=1
   '';
 
-  meta = with lib; {
-    homepage = "https://www.wireshark.org/";
-    changelog = "https://www.wireshark.org/docs/relnotes/wireshark-${version}.html";
-    description = "Powerful network protocol analyzer";
-    license = licenses.gpl2Plus;
+  postPatch = ''
+    sed -i -e '1i cmake_policy(SET CMP0025 NEW)' CMakeLists.txt
+  '';
 
+  postInstall = ''
+    cmake --install . --prefix "''${!outputDev}" --component Development
+  '' + lib.optionalString isAppBundle ''
+    mkdir -p $out/Applications
+    mv $out/bin/Wireshark.app $out/Applications/Wireshark.app
+  '' + lib.optionalString stdenv.isDarwin ''
+    local flags=()
+    for file in $out/lib/*.dylib; do
+      flags+=(-change @rpath/"$(basename "$file")" "$file")
+    done
+
+    for file in $out/lib/wireshark/extcap/*; do
+      if [ -L "$file" ]; then continue; fi
+      echo "$file: fixing dylib references"
+      # note that -id does nothing on binaries
+      install_name_tool -id "$file" "''${flags[@]}" "$file"
+    done
+  '';
+
+  preFixup = ''
+    qtWrapperArgs+=("''${gappsWrapperArgs[@]}")
+  '';
+
+  # This is done to remove some binary wrappers that wrapQtApps adds in *.app directories.
+  # Copying because unfortunately pointing Wireshark (when built as an appbundle) at $out/lib instead is nontrivial.
+  postFixup = lib.optionalString isAppBundle ''
+    rm -rf $out/Applications/Wireshark.app/Contents/MacOS/extcap $out/Applications/Wireshark.app/Contents/PlugIns
+    mkdir -p $out/Applications/Wireshark.app/Contents/PlugIns/wireshark
+    cp -r $out/lib/wireshark/plugins/4-2 $out/Applications/Wireshark.app/Contents/PlugIns/wireshark/4-2
+    cp -r $out/lib/wireshark/extcap $out/Applications/Wireshark.app/Contents/MacOS/extcap
+  '';
+
+  meta = with lib; {
+    description = "Powerful network protocol analyzer";
     longDescription = ''
       Wireshark (formerly known as "Ethereal") is a powerful network
       protocol analyzer developed by an international team of networking
       experts. It runs on UNIX, macOS and Windows.
     '';
-
+    homepage = "https://www.wireshark.org";
+    changelog = "https://www.wireshark.org/docs/relnotes/wireshark-${version}.html";
+    license = licenses.gpl2Plus;
     platforms = platforms.linux ++ platforms.darwin;
     maintainers = with maintainers; [ bjornfor fpletz ];
     mainProgram = if withQt then "wireshark" else "tshark";

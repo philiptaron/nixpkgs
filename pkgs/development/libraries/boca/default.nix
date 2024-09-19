@@ -14,13 +14,13 @@
 
 stdenv.mkDerivation rec {
   pname = "BoCA";
-  version = "1.0.6a";
+  version = "1.0.7";
 
   src = fetchFromGitHub {
     owner = "enzo1982";
     repo = "boca";
     rev = "v${version}";
-    sha256 = "sha256-LndlwdM5NlTv73Z1lMkHuIZkVfn48P/LssBnE4X9Sgc=";
+    sha256 = "sha256-HIYUMFj5yiEC+liZLMXD9otPyoEb1sxHlECTYtYXc2I=";
   };
 
   nativeBuildInputs = [
@@ -42,7 +42,7 @@ stdenv.mkDerivation rec {
   ];
 
   meta = with lib; {
-    description = "A component library used by the fre:ac audio converter";
+    description = "Component library used by the fre:ac audio converter";
     license = licenses.gpl2Plus;
     homepage = "https://github.com/enzo1982/boca";
     maintainers = with maintainers; [ shamilton ];

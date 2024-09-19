@@ -14,15 +14,16 @@ stdenv.mkDerivation rec {
 
   buildInputs = [ texinfo ];
 
-  checkInputs = [ which ];
+  nativeCheckInputs = [ which ];
 
   strictDeps = true;
 
   meta = with lib; {
     homepage = "https://www.gnu.org/software/wdiff/";
     description = "Comparing files on a word by word basis";
+    mainProgram = "wdiff";
     license = licenses.gpl3Plus;
-    maintainers = with maintainers; [ eelco SuperSandro2000 ];
+    maintainers = with maintainers; [ SuperSandro2000 ];
     platforms = platforms.unix;
   };
 }

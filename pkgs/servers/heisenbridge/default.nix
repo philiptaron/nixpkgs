@@ -1,13 +1,14 @@
-{ lib, fetchFromGitHub, fetchpatch, python3 }:
+{ lib, fetchFromGitHub, python3 }:
+
 python3.pkgs.buildPythonApplication rec {
   pname = "heisenbridge";
-  version = "1.13.0";
+  version = "1.14.6";
 
   src = fetchFromGitHub {
     owner = "hifi";
     repo = pname;
     rev = "refs/tags/v${version}";
-    sha256 = "sha256-3YCYLhJqZAWIwpwOd8J1+uYsxw0q6jQy35Vp+ttVKhI=";
+    sha256 = "sha256-1ljRwJYdIKWuTRDnH2EcZ6zQp4o4Rx+/9OqjX6J4gDA=";
   };
 
   postPatch = ''
@@ -15,21 +16,21 @@ python3.pkgs.buildPythonApplication rec {
   '';
 
   propagatedBuildInputs = with python3.pkgs; [
-    aiohttp
     irc
+    ruamel-yaml
     mautrix
     python-socks
-    pyyaml
   ];
 
-  checkInputs = with python3.pkgs; [
+  nativeCheckInputs = with python3.pkgs; [
     pytestCheckHook
   ];
 
   meta = with lib; {
-    description = "A bouncer-style Matrix-IRC bridge.";
+    description = "Bouncer-style Matrix-IRC bridge";
     homepage = "https://github.com/hifi/heisenbridge";
     license = licenses.mit;
     maintainers = [ maintainers.sumnerevans ];
+    mainProgram = "heisenbridge";
   };
 }

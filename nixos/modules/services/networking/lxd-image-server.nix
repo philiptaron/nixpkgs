@@ -1,7 +1,4 @@
 { config, pkgs, lib, ... }:
-
-with lib;
-
 let
   cfg = config.services.lxd-image-server;
   format = pkgs.formats.toml {};
@@ -11,29 +8,29 @@ in
 {
   options = {
     services.lxd-image-server = {
-      enable = mkEnableOption "lxd-image-server";
+      enable = lib.mkEnableOption "lxd-image-server";
 
-      group = mkOption {
-        type = types.str;
+      group = lib.mkOption {
+        type = lib.types.str;
         description = "Group assigned to the user and the webroot directory.";
         default = "nginx";
         example = "www-data";
       };
 
-      settings = mkOption {
+      settings = lib.mkOption {
         type = format.type;
         description = ''
           Configuration for lxd-image-server.
 
-          Example see <link xlink:href="https://github.com/Avature/lxd-image-server/blob/master/config.toml"/>.
+          Example see <https://github.com/Avature/lxd-image-server/blob/master/config.toml>.
         '';
         default = {};
       };
 
       nginx = {
-        enable = mkEnableOption "nginx";
-        domain = mkOption {
-          type = types.str;
+        enable = lib.mkEnableOption "nginx";
+        domain = lib.mkOption {
+          type = lib.types.str;
           description = "Domain to use for nginx virtual host.";
           example = "images.example.org";
         };
@@ -41,8 +38,8 @@ in
     };
   };
 
-  config = mkMerge [
-    (mkIf (cfg.enable) {
+  config = lib.mkMerge [
+    (lib.mkIf (cfg.enable) {
       users.users.lxd-image-server = {
         isSystemUser = true;
         group = cfg.group;
@@ -87,13 +84,13 @@ in
         };
       };
     })
-    # this is seperate so it can be enabled on mirrored hosts
-    (mkIf (cfg.nginx.enable) {
+    # this is separate so it can be enabled on mirrored hosts
+    (lib.mkIf (cfg.nginx.enable) {
       # https://github.com/Avature/lxd-image-server/blob/master/resources/nginx/includes/lxd-image-server.pkg.conf
       services.nginx.virtualHosts = {
         "${cfg.nginx.domain}" = {
           forceSSL = true;
-          enableACME = mkDefault true;
+          enableACME = lib.mkDefault true;
 
           root = location;
 

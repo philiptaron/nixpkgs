@@ -1,12 +1,13 @@
-{ stdenv
-, fetchzip
-, lib
-, makeWrapper
-, autoPatchelfHook
-, openjdk11
-, pam
-, makeDesktopItem
-, icoutils
+{
+  stdenv,
+  fetchzip,
+  lib,
+  makeWrapper,
+  autoPatchelfHook,
+  openjdk17,
+  pam,
+  makeDesktopItem,
+  icoutils,
 }:
 
 let
@@ -20,23 +21,25 @@ let
     desktopName = "Ghidra";
     genericName = "Ghidra Software Reverse Engineering Suite";
     categories = [ "Development" ];
+    terminal = false;
+    startupWMClass = "ghidra-Ghidra";
   };
 
-in stdenv.mkDerivation rec {
+in
+stdenv.mkDerivation rec {
   pname = "ghidra";
-  version = "10.1.4";
-  versiondate = "20220519";
+  version = "10.4";
+  versiondate = "20230928";
 
   src = fetchzip {
     url = "https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_${version}_build/ghidra_${version}_PUBLIC_${versiondate}.zip";
-    sha256 = "sha256-cOrmM+uE2ajGaYg9CmDHT3/hje7K9cmsq6u9MjkCHWk=";
+    hash = "sha256-IiAQ9OKmr8ZgqmGftuW0ITdG06fb9Lr30n2H9GArctk=";
   };
 
   nativeBuildInputs = [
     makeWrapper
     icoutils
-  ]
-  ++ lib.optionals stdenv.isLinux [ autoPatchelfHook ];
+  ] ++ lib.optionals stdenv.isLinux [ autoPatchelfHook ];
 
   buildInputs = [
     stdenv.cc.cc.lib
@@ -63,18 +66,27 @@ in stdenv.mkDerivation rec {
   postFixup = ''
     mkdir -p "$out/bin"
     ln -s "${pkg_path}/ghidraRun" "$out/bin/ghidra"
+    ln -s "${pkg_path}/support/analyzeHeadless" "$out/bin/ghidra-analyzeHeadless"
 
     wrapProgram "${pkg_path}/support/launch.sh" \
-      --prefix PATH : ${lib.makeBinPath [ openjdk11 ]}
+      --prefix PATH : ${lib.makeBinPath [ openjdk17 ]}
   '';
 
   meta = with lib; {
-    description = "A software reverse engineering (SRE) suite of tools developed by NSA's Research Directorate in support of the Cybersecurity mission";
+    description = "Software reverse engineering (SRE) suite of tools developed by NSA's Research Directorate in support of the Cybersecurity mission";
+    mainProgram = "ghidra";
     homepage = "https://github.com/NationalSecurityAgency/ghidra";
-    platforms = [ "x86_64-linux" "x86_64-darwin" ];
+    platforms = [
+      "x86_64-linux"
+      "x86_64-darwin"
+    ];
     sourceProvenance = with sourceTypes; [ binaryBytecode ];
     license = licenses.asl20;
-    maintainers = with maintainers; [ ck3d govanify mic92 ];
+    maintainers = with maintainers; [
+      ck3d
+      govanify
+      mic92
+    ];
   };
 
 }

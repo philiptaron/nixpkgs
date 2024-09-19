@@ -5,26 +5,23 @@
 , sharutils
 , file
 , getconf
-, flint
+, flint3
 , ntl
+, mpfr
 , cddlib
 , gfan
 , lrcalc
 , doxygen
 , graphviz
 , latex2html
-# upstream generates docs with texinfo 4. later versions of texinfo
-# use letters instead of numbers for post-appendix chapters, and we
-# want it to match the upstream format because sage depends on it.
-, texinfo4
-, texlive
+, texinfo
+, texliveSmall
 , enableDocs ? true
-, enableGfanlib ? true
 }:
 
 stdenv.mkDerivation rec {
   pname = "singular";
-  version = "4.3.0";
+  version = "4.3.2p16";
 
   # since the tarball does not contain tests, we fetch from GitHub.
   src = fetchFromGitHub {
@@ -33,9 +30,8 @@ stdenv.mkDerivation rec {
 
     # if a release is tagged (which sometimes does not happen), it will
     # be in the format below.
-    # rev = "Release-${lib.replaceStrings ["."] ["-"] version}";
-    rev = "d895b0f1f543c61eb03adddad20f08655a419d4e";
-    sha256 = "sha256-c5Qr6VUuPKjfw8fowjJJz3oGAyUwo/K0WeMvU5djzVA=";
+    rev = "Release-${lib.replaceStrings ["."] ["-"] version}";
+    hash = "sha256-5JZgI5lnfX4JlBSEAL7Wv6uao/57GBaMqwgslJt9Bjk=";
 
     # the repository's .gitattributes file contains the lines "/Tst/
     # export-ignore" and "/doc/ export-ignore" so some directories are
@@ -44,12 +40,11 @@ stdenv.mkDerivation rec {
   };
 
   configureFlags = [
+    "--enable-gfanlib"
     "--with-ntl=${ntl}"
-    "--disable-pyobject-module"
+    "--with-flint=${flint3}"
   ] ++ lib.optionals enableDocs [
     "--enable-doc-build"
-  ] ++ lib.optionals enableGfanlib [
-    "--enable-gfanlib"
   ];
 
   prePatch = ''
@@ -65,14 +60,15 @@ stdenv.mkDerivation rec {
   buildInputs = [
     # necessary
     gmp
+    flint3
     # by upstream recommended but optional
     ncurses
     readline
     ntl
-    flint
+    mpfr
     lrcalc
+    # for gfanlib
     gfan
-  ] ++ lib.optionals enableGfanlib [
     cddlib
   ];
 
@@ -86,8 +82,8 @@ stdenv.mkDerivation rec {
     doxygen
     graphviz
     latex2html
-    texinfo4
-    texlive.combined.scheme-small
+    texinfo
+    texliveSmall
   ] ++ lib.optionals stdenv.isDarwin [ getconf ];
   depsBuildBuild = [ buildPackages.stdenv.cc ];
 
@@ -104,6 +100,8 @@ stdenv.mkDerivation rec {
   doCheck = true; # very basic checks, does not test any libraries
 
   installPhase = ''
+    # clean up any artefacts a previous non-sandboxed docbuild may have left behind
+    rm /tmp/conic.log /tmp/conic.tex /tmp/tropicalcurve*.tex || true
     make install
   '' + lib.optionalString enableDocs ''
     # Sage uses singular.info, which is not installed by default
@@ -122,8 +120,8 @@ stdenv.mkDerivation rec {
     "Buch/buch.lst"
     "Plural/short.lst"
     "Old/factor.tst"
-  ] ++ lib.optionals enableGfanlib [
     # tests that require gfanlib
+    # requires "DivRemIdU", a syzextra (undocumented) command
     "Short/ok_s.lst"
   ];
 
@@ -160,13 +158,13 @@ stdenv.mkDerivation rec {
   enableParallelBuilding = true;
 
   meta = with lib; {
-    description = "A CAS for polynomial computations";
+    description = "CAS for polynomial computations";
     maintainers = teams.sage.members;
     # 32 bit x86 fails with some link error: `undefined reference to `__divmoddi4@GCC_7.0.0'`
     # https://www.singular.uni-kl.de:8002/trac/ticket/837
     platforms = subtractLists platforms.i686 platforms.unix;
     license = licenses.gpl3; # Or GPLv2 at your option - but not GPLv4
-    homepage = "http://www.singular.uni-kl.de";
+    homepage = "https://www.singular.uni-kl.de";
     downloadPage = "http://www.mathematik.uni-kl.de/ftp/pub/Math/Singular/SOURCES/";
     mainProgram = "Singular";
   };

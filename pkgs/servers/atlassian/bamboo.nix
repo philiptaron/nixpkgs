@@ -5,11 +5,11 @@
 
 stdenvNoCC.mkDerivation rec {
   pname = "atlassian-bamboo";
-  version = "8.1.4";
+  version = "9.6.4";
 
   src = fetchurl {
     url = "https://product-downloads.atlassian.com/software/bamboo/downloads/atlassian-bamboo-${version}.tar.gz";
-    sha256 = "sha256-v30Q3yGKkpHQFitOcH764SE6KuCdUJWn50buY7pb/Ng=";
+    hash = "sha256-Gd4+rH/40s9AvJi/waEVfVwWtT0H3bSlknNV6wxGpNg=";
   };
 
   buildPhase = ''
@@ -29,7 +29,7 @@ stdenvNoCC.mkDerivation rec {
   '';
 
   meta = with lib; {
-    description = "Bamboo Data Center is a continuous delivery server.";
+    description = "Bamboo Data Center is a continuous delivery server";
     homepage = "https://www.atlassian.com/software/bamboo";
     sourceProvenance = with sourceTypes; [ binaryBytecode ];
     license = with licenses; [ unfree ];

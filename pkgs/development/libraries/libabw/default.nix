@@ -1,4 +1,4 @@
-{ lib, stdenv, fetchurl, boost, doxygen, gperf, pkg-config, librevenge, libxml2, perl }:
+{ lib, stdenv, fetchurl, boost, doxygen, gperf, pkg-config, librevenge, libxml2, perl, zlib }:
 
 stdenv.mkDerivation rec {
   pname = "libabw";
@@ -9,14 +9,14 @@ stdenv.mkDerivation rec {
     sha256 = "1vbfrmnvib3cym0yyyabnd8xpx4f7wp20vnn09s6dln347fajqz7";
   };
 
-  # Boost 1.59 compatability fix
+  # Boost 1.59 compatibility fix
   # Attempt removing when updating
   postPatch = ''
     sed -i 's,^CPPFLAGS.*,\0 -DBOOST_ERROR_CODE_HEADER_ONLY -DBOOST_SYSTEM_NO_DEPRECATED,' src/lib/Makefile.in
   '';
 
   nativeBuildInputs = [ pkg-config ];
-  buildInputs = [ boost doxygen gperf librevenge libxml2 perl ];
+  buildInputs = [ boost doxygen gperf librevenge libxml2 perl zlib ];
 
   meta = with lib; {
     homepage = "https://wiki.documentfoundation.org/DLP/Libraries/libabw";

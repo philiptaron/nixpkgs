@@ -1,23 +1,29 @@
 { lib
-, runCommandLocal
+, stdenvNoCC
 , fetchFromGitHub
 , python3
 }:
 
-runCommandLocal "er-patcher" rec {
+stdenvNoCC.mkDerivation rec {
   pname = "er-patcher";
-  version = "1.04-1";
+  version = "1.12-3";
 
   src = fetchFromGitHub {
     owner = "gurrgur";
     repo = "er-patcher";
     rev = "v${version}";
-    sha256 = "sha256-SnqYGtdtl1KMwUAWvdPK0heHMBtwpH2Jk6lieng6ngw=";
+    sha256 = "sha256-D+XYZI3kmK5sb+i8RxtODTvbTgzhpDzwB/JM61ddcTA=";
   };
 
   buildInputs = [
     python3
   ];
+
+  installPhase = ''
+    mkdir -p $out/bin
+    install -Dm755 $src/er-patcher $out/bin/er-patcher
+    patchShebangs $out/bin/er-patcher
+  '';
 
   meta = with lib; {
     homepage = "https://github.com/gurrgur/er-patcher";
@@ -29,10 +35,7 @@ runCommandLocal "er-patcher" rec {
       that ensures the patched executable is never run with EAC enabled (unless explicity told to do so). Use at your own risk!
     '';
     license = licenses.mit;
-    maintainers = [ maintainers.ivar ];
+    maintainers = [ ];
+    mainProgram = "er-patcher";
   };
-} ''
-  mkdir -p $out/bin
-  install -Dm755 $src/er-patcher $out/bin/er-patcher
-  patchShebangs $out/bin/er-patcher
-''
+}

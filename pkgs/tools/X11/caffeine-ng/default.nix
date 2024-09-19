@@ -1,53 +1,78 @@
-{ gdk-pixbuf, glib, gobject-introspection, gtk3, lib, libnotify,
-  procps, xset, xautolock, xscreensaver, python3Packages, wrapGAppsHook
+{ fetchFromGitea
+, meson
+, ninja
+, pkg-config
+, scdoc
+, gobject-introspection
+, lib
+, libayatana-appindicator
+, libnotify
+, python3Packages
+, procps
+, xset
+, xautolock
+, xscreensaver
+, xfce
+, wrapGAppsHook3
 }:
 
 python3Packages.buildPythonApplication rec {
   pname = "caffeine-ng";
-  version = "3.5.1";
+  version = "4.2.0";
+  format = "other";
 
-  src = python3Packages.fetchPypi{
-    inherit pname version;
-    sha256="0akzldqvxnqngpj1s6y2phgj7ch8wfm02j6z2drqvsbvaadw0jbm";
+  src = fetchFromGitea {
+    domain = "codeberg.org";
+    owner = "WhyNotHugo";
+    repo = pname;
+    rev = "v${version}";
+    hash = "sha256-uYzLRZ+6ZgIwhSuJWRBpLYHgonX7sFXgUZid0V26V0Q=";
   };
 
-  nativeBuildInputs = [ wrapGAppsHook glib ];
+  nativeBuildInputs = [ gobject-introspection meson ninja pkg-config wrapGAppsHook3 ];
+
   buildInputs = [
-    gdk-pixbuf gobject-introspection libnotify gtk3
-    python3Packages.setuptools-scm
-  ];
-  pythonPath = with python3Packages; [
-    dbus-python docopt ewmh pygobject3 pyxdg
-    setproctitle pulsectl
+    libayatana-appindicator
+    libnotify
   ];
 
-  doCheck = false; # There are no tests.
+  pythonPath = with python3Packages; [
+    click
+    dbus-python
+    ewmh
+    pulsectl
+    pygobject3
+    scdoc
+    setproctitle
+  ];
+
+  dontWrapGApps = true;
+
+  patches = [
+    ./fix-build.patch
+  ];
 
   postPatch = ''
-    substituteInPlace caffeine/inhibitors.py \
-      --replace 'os.system("xset' 'os.system("${xset}/bin/xset' \
-      --replace 'os.system("xautolock' 'os.system("${xautolock}/bin/xautolock' \
-      --replace 'os.system("pgrep' 'os.system("${procps}/bin/pgrep' \
-      --replace 'os.system("xscreensaver-command' 'os.system("${xscreensaver}/bin/xscreensaver-command'
+    echo "${version}" > version
   '';
 
   postInstall = ''
-    mkdir -p $out/share
-    cp -r share $out/
-    cp -r caffeine/assets/icons $out/share/icons
-    # autostart file
-    cp -r $out/lib/python*/site-packages/etc $out/etc/
-    glib-compile-schemas --strict $out/share/glib-2.0/schemas
-    for i in $(find $out -name "*.desktop"); do
-      substituteInPlace $i --replace /usr $out
-    done
+    glib-compile-schemas $out/share/glib-2.0/schemas
+  '';
+
+  preFixup = ''
+    gappsWrapperArgs+=(
+      --prefix PATH : ${lib.makeBinPath [ procps xautolock xscreensaver xfce.xfconf xset ]}
+    )
+    makeWrapperArgs+=("''${gappsWrapperArgs[@]}")
   '';
 
   meta = with lib; {
     mainProgram = "caffeine";
     maintainers = with maintainers; [ marzipankaiser ];
     description = "Status bar application to temporarily inhibit screensaver and sleep mode";
-    homepage = "https://github.com/caffeine-ng/caffeine-ng";
+    homepage = "https://codeberg.org/WhyNotHugo/caffeine-ng";
+    changelog = "https://codeberg.org/WhyNotHugo/caffeine-ng/src/tag/v${version}/CHANGELOG.rst";
     license = licenses.gpl3;
     platforms = platforms.linux;
   };

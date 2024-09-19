@@ -17,9 +17,8 @@ stdenv.mkDerivation rec {
   pname = "sage";
   src = sage-with-env.env.lib.src;
 
-  buildInputs = [
-    makeWrapper
-  ] ++ lib.optionals requireSageTests [
+  nativeBuildInputs = [ makeWrapper ];
+  buildInputs = lib.optionals requireSageTests [
     # This is a hack to make sure sage-tests is evaluated. It doesn't acutally
     # produce anything of value, it just decouples the tests from the build.
     sage-tests
@@ -48,15 +47,19 @@ stdenv.mkDerivation rec {
   passthru = {
     tests = sage-tests;
     quicktest = sage-tests.override { longTests = false; timeLimit = 600; }; # as many tests as possible in ~10m
-    doc = sagedoc;
     lib = sage-with-env.env.lib;
+    with-env = sage-with-env;
     kernelspec = jupyter-kernel-definition;
+  } // lib.optionalAttrs withDoc {
+    doc = sagedoc;
   };
 
   meta = with lib; {
     description = "Open Source Mathematics Software, free alternative to Magma, Maple, Mathematica, and Matlab";
+    mainProgram = "sage";
     homepage = "https://www.sagemath.org";
     license = licenses.gpl2Plus;
     maintainers = teams.sage.members;
+    platforms = platforms.linux ++ [ "aarch64-darwin" ];
   };
 }

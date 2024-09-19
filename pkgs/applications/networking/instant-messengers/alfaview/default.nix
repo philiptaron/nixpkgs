@@ -1,22 +1,22 @@
-{ stdenv, lib, fetchurl, dpkg, autoPatchelfHook, makeWrapper, wrapGAppsHook
+{ stdenv, lib, fetchurl, dpkg, autoPatchelfHook, makeWrapper, wrapGAppsHook3
 , alsa-lib, dbus, fontconfig, freetype, glib, gst_all_1, libGL
 , libinput, libpulseaudio, libsecret, libtiff, libxkbcommon
 , mesa, openssl, systemd, xorg }:
 
 stdenv.mkDerivation rec {
   pname = "alfaview";
-  version = "8.45.0";
+  version = "9.14.0";
 
   src = fetchurl {
-    url = "https://production-alfaview-assets.alfaview.com/stable/linux/${pname}_${version}.deb";
-    sha256 = "sha256-qSLKPtBjhbPGX9axbQnyCb+Tcq47xDMvVGj18hEPw28=";
+    url = "https://assets.alfaview.com/stable/linux/deb/${pname}_${version}.deb";
+    hash = "sha256-YBC6zjcxSnOOY3RSo0X1ixTY1to2vEEkj1/9rItLzNA=";
   };
 
   nativeBuildInputs = [
     dpkg
     makeWrapper
     autoPatchelfHook
-    wrapGAppsHook
+    wrapGAppsHook3
   ];
 
   buildInputs = [
@@ -73,8 +73,10 @@ stdenv.mkDerivation rec {
   meta = with lib; {
     description = "Video-conferencing application, specialized in virtual online meetings, seminars, training sessions and conferences";
     homepage = "https://alfaview.com";
+    sourceProvenance = with sourceTypes; [ binaryNativeCode ];
     license = licenses.unfree;
-    maintainers = with maintainers; [ wolfangaukang hexchen ];
+    maintainers = [ ];
+    mainProgram = "alfaview";
     platforms = [ "x86_64-linux" ];
   };
 }

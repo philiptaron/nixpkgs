@@ -139,7 +139,7 @@ in {
         description = ''
           Additional environment variables to be passed to the Go.CD agent process.
           As a base environment, Go.CD agent receives NIX_PATH from
-          <option>environment.sessionVariables</option>, NIX_REMOTE is set to
+          {option}`environment.sessionVariables`, NIX_REMOTE is set to
           "daemon".
         '';
       };

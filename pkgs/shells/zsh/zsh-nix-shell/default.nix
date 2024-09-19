@@ -5,13 +5,13 @@
 
 stdenv.mkDerivation rec {
   pname = "zsh-nix-shell";
-  version = "0.4.0";
+  version = "0.8.0";
 
   src = fetchFromGitHub {
     owner = "chisui";
     repo = "zsh-nix-shell";
     rev = "v${version}";
-    sha256 = "sha256-719lVo6p55G1tt3+6nMhZ904nyvlq0Q5exb0il36/Aw=";
+    sha256 = "sha256-Z6EYQdasvpl1P78poj9efnnLj7QQg13Me8x1Ryyw+dM=";
   };
 
   strictDeps = true;

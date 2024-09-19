@@ -1,31 +1,21 @@
 # TODO check that no license information gets lost
-{ callPackage, config, lib, vimUtils, vim, darwin, llvmPackages, luaPackages }:
+{ callPackage, config, lib, vimUtils, vim, darwin, llvmPackages
+, neovimUtils
+, luaPackages
+}:
 
 let
 
   inherit (vimUtils.override {inherit vim;})
-    buildVimPluginFrom2Nix vimGenDocHook vimCommandCheckHook;
+    buildVimPlugin;
 
   inherit (lib) extends;
 
-  initialPackages = self: {
-    # Convert derivation to a vim plugin.
-    toVimPlugin = drv:
-      drv.overrideAttrs(oldAttrs: {
-
-        nativeBuildInputs = oldAttrs.nativeBuildInputs or [] ++ [
-          vimGenDocHook
-          vimCommandCheckHook
-        ];
-        passthru = (oldAttrs.passthru or {}) // {
-          vimPlugin = true;
-        };
-      });
-  };
+  initialPackages = self: { };
 
   plugins = callPackage ./generated.nix {
-    inherit buildVimPluginFrom2Nix;
-    inherit (vimUtils) buildNeovimPluginFrom2Nix;
+    inherit buildVimPlugin;
+    inherit (neovimUtils) buildNeovimPlugin;
   };
 
   # TL;DR
@@ -36,7 +26,7 @@ let
   # add to ./overrides.nix.
   overrides = callPackage ./overrides.nix {
     inherit (darwin.apple_sdk.frameworks) Cocoa CoreFoundation CoreServices;
-    inherit buildVimPluginFrom2Nix;
+    inherit buildVimPlugin;
     inherit llvmPackages luaPackages;
   };
 

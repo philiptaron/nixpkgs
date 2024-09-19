@@ -8,18 +8,15 @@ import ./make-test-python.nix ({ pkgs, lib, ... }: {
     node1 = { ... }: {
       virtualisation.vlans = [ ];
       virtualisation.memorySize = 4 * 1024;
-      virtualisation.useBootLoader = true;
-      virtualisation.useEFIBoot = true;
-      boot.loader.systemd-boot.enable = true;
-      boot.loader.efi.canTouchEfiVariables = true;
     };
 
     node2 = { modulesPath, ... }: {
       virtualisation.vlans = [ ];
       environment.systemPackages = [ pkgs.hello ];
       imports = [
-        "${modulesPath}/installer/kexec/kexec-boot.nix"
-        "${modulesPath}/profiles/minimal.nix"
+        "${modulesPath}/installer/netboot/netboot-minimal.nix"
+        "${modulesPath}/testing/test-instrumentation.nix"
+        "${modulesPath}/profiles/qemu-guest.nix"
       ];
     };
   };
@@ -33,14 +30,17 @@ import ./make-test-python.nix ({ pkgs, lib, ... }: {
     node1.connect()
     node1.wait_for_unit("multi-user.target")
 
-    # Check if the machine with kexec-boot.nix profile boots up
+    # Check if the machine with netboot-minimal.nix profile boots up
     node2.wait_for_unit("multi-user.target")
     node2.shutdown()
 
     # Kexec node1 to the toplevel of node2 via the kexec-boot script
     node1.succeed('touch /run/foo')
     node1.fail('hello')
-    node1.execute('${nodes.node2.config.system.build.kexecBoot}/kexec-boot', check_return=False)
+    node1.execute('${nodes.node2.system.build.kexecTree}/kexec-boot', check_output=False)
+    node1.connected = False
+    node1.connect()
+    node1.wait_for_unit("multi-user.target")
     node1.succeed('! test -e /run/foo')
     node1.succeed('hello')
     node1.succeed('[ "$(hostname)" = "node2" ]')

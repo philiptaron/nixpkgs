@@ -1,34 +1,32 @@
-{ lib
-, buildPythonPackage
-, fetchPypi
-, pythonOlder
-, setuptools
-, pytest
+{
+  lib,
+  buildPythonPackage,
+  fetchPypi,
+  pythonOlder,
+  setuptools,
+  pytest,
+  pytest-cov-stub,
 }:
 
 buildPythonPackage rec {
   pname = "pglast";
-  version = "3.11";
-  format = "setuptools";
+  version = "6.2";
+  pyproject = true;
 
   disabled = pythonOlder "3.7";
 
   src = fetchPypi {
     inherit pname version;
-    hash = "sha256-JvWYrfo4HmvzwJ4vi8iGMfUKTMmpN6FS8fx2McKDj3Y=";
+    hash = "sha256-mGP7o52Wun6AdE2jMAJBmLR10EmN50qzbMzB06BFXMg=";
   };
 
-  propagatedBuildInputs = [
-    setuptools
-  ];
+  build-system = [ setuptools ];
 
-  postPatch = ''
-    substituteInPlace setup.cfg \
-      --replace "--cov=pglast --cov-report term-missing" ""
-  '';
+  dependencies = [ setuptools ];
 
-  checkInputs = [
+  nativeCheckInputs = [
     pytest
+    pytest-cov-stub
   ];
 
   # pytestCheckHook doesn't work
@@ -37,11 +35,17 @@ buildPythonPackage rec {
     pytest
   '';
 
+  pythonImportsCheck = [
+    "pglast"
+    "pglast.parser"
+  ];
+
   meta = with lib; {
     homepage = "https://github.com/lelit/pglast";
     description = "PostgreSQL Languages AST and statements prettifier";
-    changelog = "https://github.com/lelit/pglast/raw/v${version}/CHANGES.rst";
+    changelog = "https://github.com/lelit/pglast/blob/v${version}/CHANGES.rst";
     license = licenses.gpl3Plus;
-    maintainers = with maintainers; [ marsam ];
+    maintainers = [ ];
+    mainProgram = "pgpp";
   };
 }

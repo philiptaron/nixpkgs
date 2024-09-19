@@ -1,7 +1,9 @@
 { lib
 , stdenv
 , fetchurl
+, writeScript
 , libX11
+, libXext
 , alsa-lib
 , autoPatchelfHook
 , releasePath ? null
@@ -15,19 +17,27 @@
 
 stdenv.mkDerivation rec {
   pname = "redux";
-  version = "1.2.2";
+  version = "1.3.5";
 
   src = if releasePath != null then releasePath
     else fetchurl {
-      url = "https://files.renoise.com/demo/Renoise_Redux_${lib.replaceStrings ["."] ["_"] version}_Demo_Linux.tar.gz";
-      sha256 = "0zbwsg7nh9x3q29jv2kpqb3vwi0ksdwybhb4m2qr95rxrpx1kxhm";
+      urls = [
+        "https://files.renoise.com/demo/Renoise_Redux_${lib.replaceStrings ["."] ["_"] version}_Demo_Linux_x86_64.tar.gz"
+        "https://files.renoise.com/demo/archive/Renoise_Redux_${lib.replaceStrings ["."] ["_"] version}_Demo_Linux_x86_64.tar.gz"
+      ];
+      sha256 = "sha256-eznsdLzgdJ7MyWe5WAEg1MHId5VlfyanoZ6+I9nI/0I=";
     };
 
   nativeBuildInputs = [
     autoPatchelfHook
   ];
 
-  buildInputs = [ libX11 alsa-lib stdenv.cc.cc.lib ];
+  buildInputs = [
+    libX11
+    libXext
+    alsa-lib
+    stdenv.cc.cc.lib
+  ];
 
   installPhase = ''
     runHook preInstall
@@ -39,9 +49,27 @@ stdenv.mkDerivation rec {
     runHook postInstall
   '';
 
+
+  passthru.updateScript = writeScript "update-redux" ''
+    #!/usr/bin/env nix-shell
+    #!nix-shell -I nixpkgs=./. -i bash -p curl htmlq common-updater-scripts
+    set -euo pipefail
+
+    new_version="$(
+      curl 'https://files.renoise.com/demo/' \
+        | htmlq a --text \
+        | grep -E '^Renoise_Redux_([0-9]+_?)+_Demo_Linux_x86_64\.tar\.gz$' \
+        | grep -Eo '[0-9]+(_[0-9]+)*' \
+        | head -n1 \
+        | tr _ .
+    )"
+    update-source-version redux "$new_version" --system="x86_64-linux"
+  '';
+
   meta = with lib; {
     description = "Sample-based instrument, with a powerful phrase sequencer";
     homepage = "https://www.renoise.com/products/redux";
+    sourceProvenance = with sourceTypes; [ binaryNativeCode ];
     license = licenses.unfree;
     maintainers = with maintainers; [ mihnea-s ];
     platforms = [ "x86_64-linux" ];

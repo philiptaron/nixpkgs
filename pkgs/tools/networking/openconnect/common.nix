@@ -13,12 +13,15 @@
 , libxml2
 , stoken
 , zlib
+, pcsclite
 , vpnc-scripts
 , PCSC
+, useDefaultExternalBrowser ? stdenv.isLinux && stdenv.buildPlatform == stdenv.hostPlatform # xdg-utils doesn't cross-compile
+, xdg-utils
 , autoreconfHook
 }:
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation {
   pname = "openconnect";
   inherit version src;
 
@@ -32,7 +35,8 @@ stdenv.mkDerivation rec {
 
   buildInputs = [ gmp libxml2 stoken zlib (if useOpenSSL then openssl else gnutls) ]
     ++ lib.optional stdenv.isDarwin PCSC
-    ++ lib.optional stdenv.isLinux p11-kit;
+    ++ lib.optionals stdenv.isLinux [ p11-kit pcsclite ]
+    ++ lib.optional useDefaultExternalBrowser xdg-utils;
   nativeBuildInputs = [ pkg-config autoreconfHook ];
 
   meta = with lib; {
@@ -41,5 +45,6 @@ stdenv.mkDerivation rec {
     license = licenses.lgpl21Only;
     maintainers = with maintainers; [ pradeepchhetri tricktron alyaeanyx ];
     platforms = lib.platforms.unix;
+    mainProgram = "openconnect";
   };
 }

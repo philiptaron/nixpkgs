@@ -8,15 +8,15 @@
 buildGoModule rec {
   pname = "bosh-cli";
 
-  version = "6.4.17";
+  version = "7.7.2";
 
   src = fetchFromGitHub {
     owner = "cloudfoundry";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-oVL7tBtdFJt6ktctSZiNZMd6g1LEWQ/Hra4rcGM6BnQ=";
+    sha256 = "sha256-orn1pxHefYCp0vPsZ4TI5Y76tpR8dOcEmxA3cHwfYQU=";
   };
-  vendorSha256 = null;
+  vendorHash = null;
 
   postPatch = ''
     substituteInPlace cmd/version.go --replace '[DEV BUILD]' '${version}'
@@ -34,7 +34,7 @@ buildGoModule rec {
   '';
 
   meta = with lib; {
-    description = "A command line interface to CloudFoundry BOSH";
+    description = "Command line interface to CloudFoundry BOSH";
     homepage = "https://bosh.io";
     changelog = "https://github.com/cloudfoundry/bosh-cli/releases/tag/v${version}";
     license = licenses.asl20;

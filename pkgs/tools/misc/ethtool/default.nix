@@ -8,11 +8,11 @@
 
 stdenv.mkDerivation rec {
   pname = "ethtool";
-  version = "5.17";
+  version = "6.9";
 
   src = fetchurl {
-    url = "mirror://kernel/software/network/${pname}/${pname}-${version}.tar.xz";
-    sha256 = "sha256-ZKuRS5xrRQRyRdkfQLh2CycomSqeWvInF8ZEI46IkTM=";
+    url = "mirror://kernel/software/network/ethtool/ethtool-${version}.tar.xz";
+    sha256 = "sha256-pxsDVAEGYcXPF4vGBu1Q/LkYBc8Yl60OsoGDh6X9DNk=";
   };
 
   nativeBuildInputs = [
@@ -35,7 +35,7 @@ stdenv.mkDerivation rec {
       new_version="$(curl -s https://mirrors.edge.kernel.org/pub/software/network/ethtool/ |
           pcregrep -o1 '<a href="ethtool-([0-9.]+)[.]tar[.]xz">' |
           head -n1)"
-      update-source-version ${pname} "$new_version"
+      update-source-version ethtool "$new_version"
     '';
   };
 
@@ -45,5 +45,6 @@ stdenv.mkDerivation rec {
     license = licenses.gpl2Plus;
     platforms = platforms.linux;
     maintainers = with maintainers; [ bjornfor ];
+    mainProgram = "ethtool";
   };
 }

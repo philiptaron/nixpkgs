@@ -2,20 +2,19 @@
 , rustPlatform
 , fetchCrate
 , pkg-config
-, stdenv
 }:
 
 rustPlatform.buildRustPackage rec {
   pname = "writedisk";
-  version = "1.2.0";
+  version = "1.3.0";
 
   src = fetchCrate {
     inherit version;
     pname = "writedisk";
-    sha256 = "sha256-f5+Qw9Agepx2wIUmsAA2M9g/ajbFjjLR5RPPtQncRKU=";
+    hash = "sha256-MZFnNb8rJMu/nlH8rfnD//bhqPSkhyXucbTrwsRM9OY=";
   };
 
-  cargoSha256 = "sha256-SMAhh7na+XQyVtbfzsBGOCdBRLP58JL1fPSBVKFkhdc=";
+  cargoHash = "sha256-DGroBBozAViibbIYbtqH2SxIGLqdtyJ9XKyz7O1L05g=";
 
   nativeBuildInputs = [ pkg-config ];
 

@@ -5,7 +5,7 @@
 }:
 
 let
-  inherit (stdenv.targetPlatform) system;
+  inherit (stdenv.hostPlatform) system;
   throwSystem = throw "Unsupported system: ${system}";
 
   os = {
@@ -41,7 +41,9 @@ stdenv.mkDerivation rec {
 
   meta = with lib; {
     description = "Library and command line interface for interacting with a Flywheel site";
+    mainProgram = "fw";
     homepage = "https://gitlab.com/flywheel-io/public/python-cli";
+    sourceProvenance = with sourceTypes; [ binaryNativeCode ];
     license = licenses.mit;
     maintainers = with maintainers; [ rbreslow ];
     platforms = [ "x86_64-darwin" "x86_64-linux" ];

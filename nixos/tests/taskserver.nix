@@ -69,28 +69,19 @@ in {
         testOrganisation.users = [ "alice" "foo" ];
         anotherOrganisation.users = [ "bob" ];
       };
-    };
 
-    # New generation of the server with manual config
-    newServer = { lib, nodes, ... }: {
-      imports = [ server ];
-      services.taskserver.pki.manual = {
-        ca.cert = snakeOil.cacert;
-        server.cert = snakeOil.cert;
-        server.key = snakeOil.key;
-        server.crl = snakeOil.crl;
-      };
-      # This is to avoid assigning a different network address to the new
-      # generation.
-      networking = lib.mapAttrs (lib.const lib.mkForce) {
-        interfaces.eth1.ipv4 = nodes.server.config.networking.interfaces.eth1.ipv4;
-        inherit (nodes.server.config.networking)
-          hostName primaryIPAddress extraHosts;
+      specialisation.manual_config.configuration = {
+        services.taskserver.pki.manual = {
+          ca.cert = snakeOil.cacert;
+          server.cert = snakeOil.cert;
+          server.key = snakeOil.key;
+          server.crl = snakeOil.crl;
+        };
       };
     };
 
     client1 = { pkgs, ... }: {
-      environment.systemPackages = [ pkgs.taskwarrior pkgs.gnutls ];
+      environment.systemPackages = [ pkgs.taskwarrior2 pkgs.gnutls ];
       users.users.alice.isNormalUser = true;
       users.users.bob.isNormalUser = true;
       users.users.foo.isNormalUser = true;
@@ -103,7 +94,8 @@ in {
   testScript = { nodes, ... }: let
     cfg = nodes.server.config.services.taskserver;
     portStr = toString cfg.listenPort;
-    newServerSystem = nodes.newServer.config.system.build.toplevel;
+    specialisations = "${nodes.server.system.build.toplevel}/specialisation";
+    newServerSystem = "${specialisations}/manual_config";
     switchToNewServer = "${newServerSystem}/bin/switch-to-configuration test";
   in ''
     from shlex import quote

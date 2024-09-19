@@ -6,6 +6,8 @@ buildDunePackage rec {
   pname = "genspio";
   version = "0.0.3";
 
+  duneVersion = "3";
+
   src = fetchFromGitHub {
     owner = "hammerlab";
     repo = pname;
@@ -14,6 +16,9 @@ buildDunePackage rec {
   };
 
   propagatedBuildInputs = [ base fmt ];
+
+  # base v0.17 compatibility
+  patches = [ ./genspio.patch ];
 
   doCheck = true;
 

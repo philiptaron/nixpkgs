@@ -1,25 +1,41 @@
-{ lib, fetchFromGitHub, buildGoPackage }:
+{ lib
+, fetchFromGitHub
+, buildGoModule
+}:
 
-buildGoPackage rec {
+buildGoModule rec {
   pname = "vegeta";
-  version = "12.8.4";
+  version = "12.12.0";
+  rev = "03ca49e9b419c106db29d687827c4c823d8b8ece";
 
   src = fetchFromGitHub {
-    owner  = "tsenart";
-    repo   = pname;
-    rev    = "v${version}";
-    sha256 = "0sw10k4g370c544dgw2c1sqdnxryld8lf6c1wnyknrm3zsfzn1hl";
+    owner = "tsenart";
+    repo = "vegeta";
+    rev = "v${version}";
+    hash = "sha256-nTtQ/BB5rU+0k4dPRCmukCRNI0iFTjHIJiSTN0cNR+Q=";
   };
 
-  goPackagePath = "github.com/tsenart/${pname}";
+  vendorHash = "sha256-0Ho1HYckFHaWEE6Ti3fIL/t0hBj5MnKOd4fOZx+LYiE=";
 
-  goDeps = ./deps.nix;
+  subPackages = [ "." ];
+
+  ldflags = (lib.mapAttrsToList (n: v: "-X main.${n}=${v}") {
+    Version = version;
+    Commit = rev;
+    Date = "1970-01-01T00:00:00Z";
+  }) ++ [ "-s" "-w" "-extldflags '-static'" ];
 
   meta = with lib; {
     description = "Versatile HTTP load testing tool";
-    license = licenses.mit;
+    longDescription = ''
+      Vegeta is a versatile HTTP load testing tool built out of a need to drill
+      HTTP services with a constant request rate. It can be used both as a
+      command line utility and a library.
+    '';
     homepage = "https://github.com/tsenart/vegeta/";
-    maintainers = [ maintainers.mmahut ];
+    changelog = "https://github.com/tsenart/vegeta/releases/tag/${src.rev}";
+    license = licenses.mit;
+    maintainers = with maintainers; [ mmahut ];
+    mainProgram = "vegeta";
   };
 }
-

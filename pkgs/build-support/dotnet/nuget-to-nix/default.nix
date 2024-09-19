@@ -4,20 +4,27 @@
 , substituteAll
 , nix
 , coreutils
-, findutils
-, gnused
+, jq
+, xmlstarlet
+, curl
+, gnugrep
+, gawk
+, cacert
 }:
 
 runCommandLocal "nuget-to-nix" {
   script = substituteAll {
     src = ./nuget-to-nix.sh;
-    inherit runtimeShell;
+    inherit runtimeShell cacert;
 
     binPath = lib.makeBinPath [
       nix
       coreutils
-      findutils
-      gnused
+      jq
+      xmlstarlet
+      curl
+      gnugrep
+      gawk
     ];
   };
 

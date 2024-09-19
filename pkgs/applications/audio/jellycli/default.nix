@@ -11,7 +11,7 @@ buildGoModule rec {
     sha256 = "1awzcxnf175a794rhzbmqxxjss77mfa1yrr0wgdxaivrlkibxjys";
   };
 
-  vendorSha256 = "02fwsnrhj09m0aa199plpqlsjrwpmrk4c80fszzm07s5vmjqvnfy";
+  vendorHash = "sha256-3tmNZd1FH1D/1w4gRmaul2epKb70phSUAjUBCbPV3Ak=";
 
   patches = [
     # Fixes log file path for tests.
@@ -30,5 +30,6 @@ buildGoModule rec {
     homepage = "https://github.com/tryffel/jellycli";
     license = licenses.gpl3Plus;
     maintainers = with maintainers; [ oxzi ];
+    mainProgram = "jellycli";
   };
 }

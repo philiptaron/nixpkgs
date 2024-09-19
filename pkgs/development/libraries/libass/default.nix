@@ -4,37 +4,40 @@
 , rasterizerSupport ? false # Internal rasterizer
 , largeTilesSupport ? false # Use larger tiles in the rasterizer
 , libiconv
+, darwin
 }:
 
 assert fontconfigSupport -> fontconfig != null;
 
-let
-  mkFlag = optSet: flag: if optSet then "--enable-${flag}" else "--disable-${flag}";
-in
-
-with lib;
 stdenv.mkDerivation rec {
   pname = "libass";
-  version = "0.15.2";
+  version = "0.17.3";
 
   src = fetchurl {
     url = "https://github.com/libass/libass/releases/download/${version}/${pname}-${version}.tar.xz";
-    sha256 = "sha256-G+LfnESFpX14uxjAqO0Ve8h6Wo3UjGYZYcYlyxEoMv0=";
+    hash = "sha256-6uQl2lDwAVwh97OpxyYqkQ8CGK9GniLikxRi/tPFCVk=";
   };
 
+  outputs = [ "out" "dev" ];
+
   configureFlags = [
-    (mkFlag fontconfigSupport "fontconfig")
-    (mkFlag rasterizerSupport "rasterizer")
-    (mkFlag largeTilesSupport "large-tiles")
+    (lib.enableFeature fontconfigSupport "fontconfig")
+    (lib.enableFeature rasterizerSupport "rasterizer")
+    (lib.enableFeature largeTilesSupport "large-tiles")
   ];
 
   nativeBuildInputs = [ pkg-config yasm ];
 
   buildInputs = [ freetype fribidi harfbuzz ]
-    ++ optional fontconfigSupport fontconfig
-    ++ optional stdenv.isDarwin libiconv;
+    ++ lib.optional fontconfigSupport fontconfig
+    ++ lib.optional stdenv.isDarwin [
+      libiconv
+      darwin.apple_sdk.frameworks.ApplicationServices
+      darwin.apple_sdk.frameworks.CoreFoundation
+      darwin.apple_sdk.frameworks.CoreText
+    ];
 
-  meta = {
+  meta = with lib; {
     description = "Portable ASS/SSA subtitle renderer";
     homepage    = "https://github.com/libass/libass";
     license     = licenses.isc;

@@ -1,6 +1,5 @@
 { config, lib, pkgs, ... }:
 
-with lib;
 let
   nncpCfgFile = "/run/nncp.hjson";
   programCfg = config.programs.nncp;
@@ -11,10 +10,10 @@ in {
   options.programs.nncp = {
 
     enable =
-      mkEnableOption "NNCP (Node to Node copy) utilities and configuration";
+      lib.mkEnableOption "NNCP (Node to Node copy) utilities and configuration";
 
-    group = mkOption {
-      type = types.str;
+    group = lib.mkOption {
+      type = lib.types.str;
       default = "uucp";
       description = ''
         The group under which NNCP files shall be owned.
@@ -23,41 +22,36 @@ in {
       '';
     };
 
-    package = mkOption {
-      type = types.package;
-      default = pkgs.nncp;
-      defaultText = literalExpression "pkgs.nncp";
-      description = "The NNCP package to use system-wide.";
-    };
+    package = lib.mkPackageOption pkgs "nncp" { };
 
-    secrets = mkOption {
-      type = with types; listOf str;
+    secrets = lib.mkOption {
+      type = with lib.types; listOf str;
       example = [ "/run/keys/nncp.hjson" ];
       description = ''
         A list of paths to NNCP configuration files that should not be
         in the Nix store. These files are layered on top of the values at
-        <xref linkend="opt-programs.nncp.settings"/>.
+        [](#opt-programs.nncp.settings).
       '';
     };
 
-    settings = mkOption {
+    settings = lib.mkOption {
       type = settingsFormat.type;
       description = ''
         NNCP configuration, see
-        <link xlink:href="http://www.nncpgo.org/Configuration.html"/>.
+        <http://www.nncpgo.org/Configuration.html>.
         At runtime these settings will be overlayed by the contents of
-        <xref linkend="opt-programs.nncp.secrets"/> into the file
-        <literal>${nncpCfgFile}</literal>. Node keypairs go in
-        <literal>secrets</literal>, do not specify them in
-        <literal>settings</literal> as they will be leaked into
-        <literal>/nix/store</literal>!
+        [](#opt-programs.nncp.secrets) into the file
+        `${nncpCfgFile}`. Node keypairs go in
+        `secrets`, do not specify them in
+        `settings` as they will be leaked into
+        `/nix/store`!
       '';
       default = { };
     };
 
   };
 
-  config = mkIf programCfg.enable {
+  config = lib.mkIf programCfg.enable {
 
     environment = {
       systemPackages = [ pkg ];
@@ -65,8 +59,8 @@ in {
     };
 
     programs.nncp.settings = {
-      spool = mkDefault "/var/spool/nncp";
-      log = mkDefault "/var/spool/nncp/log";
+      spool = lib.mkDefault "/var/spool/nncp";
+      log = lib.mkDefault "/var/spool/nncp/log";
     };
 
     systemd.tmpfiles.rules = [
@@ -82,7 +76,7 @@ in {
       script = ''
         umask u=rw
         nncpCfgDir=$(mktemp --directory nncp.XXX)
-        for f in ${jsonCfgFile} ${toString config.programs.nncp.secrets}; do
+        for f in ${jsonCfgFile} ${builtins.toString config.programs.nncp.secrets}; do
           tmpdir=$(mktemp --directory nncp.XXX)
           nncp-cfgdir -cfg $f -dump $tmpdir
           find $tmpdir -size 1c -delete

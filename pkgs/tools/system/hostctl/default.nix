@@ -6,16 +6,16 @@
 
 buildGoModule rec {
   pname = "hostctl";
-  version = "1.1.2";
+  version = "1.1.4";
 
   src = fetchFromGitHub {
     owner = "guumaster";
     repo = pname;
     rev = "v${version}";
-    hash = "sha256-rvUm31WRSLusM9VGsIHKGTH6Vs8LWPtzPDs3azA710w=";
+    hash = "sha256-9BbPHqAZKw8Rpjpdd/e9ip3V0Eh06tEFt/skQ97ij4g=";
   };
 
-  vendorSha256 = "sha256-rGDWrivIdl5FTu/kNR8nAfE2+1hE4cm3uDg7oBobE9M=";
+  vendorHash = "sha256-+p1gIqklTyd/AU1q0zbQN4BwxOM910fBFmkqvbFAbZA=";
 
   nativeBuildInputs = [
     installShellFiles
@@ -42,5 +42,6 @@ buildGoModule rec {
     homepage = "https://guumaster.github.io/hostctl/";
     license = licenses.mit;
     maintainers = with maintainers; [ blaggacao ];
+    mainProgram = "hostctl";
   };
 }

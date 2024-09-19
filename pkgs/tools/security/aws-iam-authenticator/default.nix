@@ -1,28 +1,37 @@
-{ lib, buildGoModule, fetchFromGitHub }:
+{ lib
+, buildGoModule
+, fetchFromGitHub
+}:
 
 buildGoModule rec {
   pname = "aws-iam-authenticator";
-  version = "0.5.7";
+  version = "0.6.26";
 
   src = fetchFromGitHub {
     owner = "kubernetes-sigs";
     repo = pname;
-    rev = "v${version}";
-    sha256 = "sha256-nFHshmGZZMzssF2INdEqpvARkFjBpd7qNV9tabySABU=";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-c7JhUDnANW4QihsfCioYiCe19JfqhTYP+pZgUSV6lHQ=";
   };
 
-  # Upstream has inconsistent vendoring, see https://github.com/kubernetes-sigs/aws-iam-authenticator/issues/377
-  deleteVendor = true;
-  vendorSha256 = null;
+  vendorHash = "sha256-xCNuFO+J0NXq8CPZXB0R2RmLLH27Vh/GMrBKk+mGk04=";
 
-  ldflags = [ "-s" "-w" "-X main.version=v${version}" ];
+  ldflags = let PKG = "sigs.k8s.io/aws-iam-authenticator"; in [
+    "-s"
+    "-w"
+    "-X=${PKG}/pkg.Version=${version}"
+    "-X=${PKG}/pkg.BuildDate=1970-01-01T01:01:01Z"
+    "-X ?${PKG}/pkg.CommitID=${version}"
+  ];
 
   subPackages = [ "cmd/aws-iam-authenticator" ];
 
   meta = with lib; {
     homepage = "https://github.com/kubernetes-sigs/aws-iam-authenticator";
     description = "AWS IAM credentials for Kubernetes authentication";
+    mainProgram = "aws-iam-authenticator";
+    changelog = "https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/tag/v${version}";
     license = licenses.asl20;
-    maintainers = [ maintainers.srhb ];
+    maintainers = with maintainers; [ srhb ];
   };
 }

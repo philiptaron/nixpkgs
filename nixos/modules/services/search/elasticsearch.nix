@@ -50,12 +50,7 @@ in
       type = types.bool;
     };
 
-    package = mkOption {
-      description = "Elasticsearch package to use.";
-      default = pkgs.elasticsearch;
-      defaultText = literalExpression "pkgs.elasticsearch";
-      type = types.package;
-    };
+    package = mkPackageOption pkgs "elasticsearch" { };
 
     listenAddress = mkOption {
       description = "Elasticsearch listen address.";
@@ -66,7 +61,7 @@ in
     port = mkOption {
       description = "Elasticsearch port to listen for HTTP traffic.";
       default = 9200;
-      type = types.int;
+      type = types.port;
     };
 
     tcp_port = mkOption {

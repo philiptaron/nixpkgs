@@ -45,7 +45,8 @@ stdenv.mkDerivation rec {
     '';
     homepage = "https://github.com/sergev/dmrconfig";
     license = licenses.asl20;
-    maintainers = [ maintainers.etu ];
+    maintainers = [ ];
     platforms = platforms.linux;
+    mainProgram = "dmrconfig";
   };
 }

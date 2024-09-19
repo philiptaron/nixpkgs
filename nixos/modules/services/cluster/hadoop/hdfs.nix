@@ -88,7 +88,7 @@ in
           ephemeral HDFS clusters with a single namenode.
           For HA clusters, initialization involves multiple steps across multiple nodes.
           Follow this guide to initialize an HA cluster manually:
-          <link xlink:href="https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HDFSHighAvailabilityWithQJM.html"/>
+          <https://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HDFSHighAvailabilityWithQJM.html>
         '';
       };
     };
@@ -158,8 +158,8 @@ in
         50010 # datanode.address
         50020 # datanode.ipc.address
       ];
-      extraConfig.services.hadoop.hdfsSiteInternal."dfs.datanode.data.dir" = let d = cfg.hdfs.datanode.dataDirs; in
-        if (d!= null) then (concatMapStringsSep "," (x: "["+x.type+"]file://"+x.path) cfg.hdfs.datanode.dataDirs) else d;
+      extraConfig.services.hadoop.hdfsSiteInternal."dfs.datanode.data.dir" = mkIf (cfg.hdfs.datanode.dataDirs!= null)
+        (concatMapStringsSep "," (x: "["+x.type+"]file://"+x.path) cfg.hdfs.datanode.dataDirs);
     })
 
     (hadoopServiceConfig {

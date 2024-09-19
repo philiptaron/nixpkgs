@@ -6,6 +6,7 @@
 , javahlBindings ? false
 , saslSupport ? false
 , lib, stdenv, fetchurl, apr, aprutil, zlib, sqlite, openssl, lz4, utf8proc
+, CoreServices, Security
 , autoconf, libtool
 , apacheHttpd ? null, expat, swig ? null, jdk ? null, python3 ? null, py3c ? null, perl ? null
 , sasl ? null, serf ? null
@@ -38,7 +39,8 @@ let
       ++ lib.optional httpSupport serf
       ++ lib.optionals pythonBindings [ python3 py3c ]
       ++ lib.optional perlBindings perl
-      ++ lib.optional saslSupport sasl;
+      ++ lib.optional saslSupport sasl
+      ++ lib.optionals stdenv.hostPlatform.isDarwin [ CoreServices Security ];
 
     patches = [ ./apr-1.patch ] ++ extraPatches;
 
@@ -46,6 +48,14 @@ let
     # -> https://issues.apache.org/jira/browse/SVN-4813
     # "-P" CPPFLAG is needed to build Python bindings and subversionClient
     CPPFLAGS = [ "-P" ];
+
+    env = lib.optionalAttrs stdenv.cc.isClang {
+      NIX_CFLAGS_COMPILE = lib.concatStringsSep " " [
+        "-Wno-error=implicit-function-declaration"
+        "-Wno-error=implicit-int"
+        "-Wno-int-conversion"
+      ];
+    };
 
     preConfigure = lib.optionalString needsAutogen ''
       ./autogen.sh
@@ -57,9 +67,10 @@ let
       (lib.withFeatureAs (pythonBindings || perlBindings) "swig" swig)
       (lib.withFeatureAs saslSupport "sasl" sasl)
       (lib.withFeatureAs httpSupport "serf" serf)
-      "--disable-keychain"
       "--with-zlib=${zlib.dev}"
       "--with-sqlite=${sqlite.dev}"
+      "--with-apr=${apr.dev}"
+      "--with-apr-util=${aprutil.dev}"
     ] ++ lib.optionals javahlBindings [
       "--enable-javahl"
       "--with-jdk=${jdk}"
@@ -99,15 +110,20 @@ let
     inherit perlBindings pythonBindings;
 
     enableParallelBuilding = true;
+    # Missing install dependencies:
+    # libtool:   error: error: relink 'libsvn_ra_serf-1.la' with the above command before installing it
+    # make: *** [build-outputs.mk:1316: install-serf-lib] Error 1
+    enableParallelInstalling = false;
 
-    checkInputs = [ python3 ];
+    nativeCheckInputs = [ python3 ];
     doCheck = false; # fails 10 out of ~2300 tests
 
     meta = with lib; {
-      description = "A version control system intended to be a compelling replacement for CVS in the open source community";
+      description = "Version control system intended to be a compelling replacement for CVS in the open source community";
       license = licenses.asl20;
       homepage = "https://subversion.apache.org/";
-      maintainers = with maintainers; [ eelco lovek323 ];
+      mainProgram = "svn";
+      maintainers = with maintainers; [ lovek323 ];
       platforms = platforms.linux ++ platforms.darwin;
     };
 
@@ -120,7 +136,7 @@ let
 
 in {
   subversion = common {
-    version = "1.14.2";
-    sha256 = "sha256-yRMOjQt1copm8OcDj8dwUuZxgw14W1YWqtU7SBDTzCg=";
+    version = "1.14.3";
+    sha256 = "sha256-lJ79RRoJQ19+hXNXTHHHtxsZTYRIkPpJzWHSJi6hpEA=";
   };
 }

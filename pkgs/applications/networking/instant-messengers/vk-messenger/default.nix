@@ -1,6 +1,6 @@
 { stdenv, lib, fetchurl, rpmextract, undmg, autoPatchelfHook
-, xorg, gtk3, gnome2, nss, alsa-lib, udev, libnotify
-, wrapGAppsHook }:
+, xorg, gtk3, nss, alsa-lib, udev, libnotify
+, wrapGAppsHook3 }:
 
 let
   pname = "vk-messenger";
@@ -24,6 +24,7 @@ let
   meta = with lib; {
     description = "Simple and Convenient Messaging App for VK";
     homepage = "https://vk.com/messenger";
+    sourceProvenance = with sourceTypes; [ binaryNativeCode ];
     license = licenses.unfree;
     maintainers = [ ];
     platforms = ["i686-linux" "x86_64-linux" "x86_64-darwin"];
@@ -32,7 +33,7 @@ let
   linux = stdenv.mkDerivation {
     inherit pname version src meta;
 
-    nativeBuildInputs = [ rpmextract autoPatchelfHook wrapGAppsHook ];
+    nativeBuildInputs = [ rpmextract autoPatchelfHook wrapGAppsHook3 ];
     buildInputs = (with xorg; [
       libXdamage libXtst libXScrnSaver libxkbfile
     ]) ++ [ gtk3 nss alsa-lib ];

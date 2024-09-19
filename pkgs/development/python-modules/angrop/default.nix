@@ -1,27 +1,31 @@
-{ lib
-, angr
-, buildPythonPackage
-, fetchFromGitHub
-, progressbar
-, pythonOlder
-, tqdm
+{
+  lib,
+  angr,
+  buildPythonPackage,
+  fetchFromGitHub,
+  progressbar,
+  pythonOlder,
+  setuptools,
+  tqdm,
 }:
 
 buildPythonPackage rec {
   pname = "angrop";
-  version = "9.2.6";
-  format = "pyproject";
+  version = "9.2.10";
+  pyproject = true;
 
   disabled = pythonOlder "3.6";
 
   src = fetchFromGitHub {
     owner = "angr";
-    repo = pname;
-    rev = "v${version}";
-    hash = "sha256-qaDAicmYZxLPTl17il61ij01prRv2H4xxe07Xg4KWhI=";
+    repo = "angrop";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-+epX+tCSv5Kit4lncDNtjokehCSl+tO7rbi3L+RrI+E=";
   };
 
-  propagatedBuildInputs = [
+  build-system = [ setuptools ];
+
+  dependencies = [
     angr
     progressbar
     tqdm
@@ -31,9 +35,7 @@ buildPythonPackage rec {
   # cle is executing the tests with the angr binaries already and is a requirement of angr
   doCheck = false;
 
-  pythonImportsCheck = [
-    "angrop"
-  ];
+  pythonImportsCheck = [ "angrop" ];
 
   meta = with lib; {
     description = "ROP gadget finder and chain builder";

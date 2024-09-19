@@ -1,32 +1,35 @@
-{ stdenv, lib, fetchFromGitHub, zlib, openssl, ncurses, libidn, pcre, libssh, libmysqlclient, postgresql
+{ stdenv, lib, fetchFromGitHub, zlib, openssl, ncurses, libidn, pcre, libssh, libmysqlclient, postgresql, samba
 , withGUI ? false, makeWrapper, pkg-config, gtk2 }:
 
 stdenv.mkDerivation rec {
   pname = "thc-hydra";
-  version = "9.3";
+  version = "9.5";
 
   src = fetchFromGitHub {
     owner = "vanhauser-thc";
     repo = "thc-hydra";
     rev = "v${version}";
-    sha256 = "sha256-SzbaU52IXw5+ztN/GKD6Ki6/cx2icoZEzLHBu/J8sk0=";
+    sha256 = "sha256-gdMxdFrBGVHA1ZBNFW89PBXwACnXTGJ/e/Z5+xVV5F0=";
   };
 
   postPatch = let
     makeDirs = output: subDir: lib.concatStringsSep " " (map (path: lib.getOutput output path + "/" + subDir) buildInputs);
   in ''
     substituteInPlace configure \
-      --replace '$LIBDIRS' "${makeDirs "lib" "lib"}" \
-      --replace '$INCDIRS' "${makeDirs "dev" "include"}" \
-      --replace "/usr/include/math.h" "${lib.getDev stdenv.cc.libc}/include/math.h" \
-      --replace "libcurses.so" "libncurses.so" \
-      --replace "-lcurses" "-lncurses"
+      --replace-fail '$LIBDIRS' "${makeDirs "lib" "lib"}" \
+      --replace-fail '$INCDIRS' "${makeDirs "dev" "include"}" \
+      --replace-fail "/usr/include/math.h" "${lib.getDev stdenv.cc.libc}/include/math.h" \
+      --replace-fail "libcurses.so" "libncurses.so" \
+      --replace-fail "-lcurses" "-lncurses"
   '';
+
+  env.NIX_CFLAGS_COMPILE = lib.optionalString stdenv.isDarwin "-Wno-undef-prefix";
 
   nativeBuildInputs = lib.optionals withGUI [ pkg-config makeWrapper ];
 
   buildInputs = [
     zlib openssl ncurses libidn pcre libssh libmysqlclient postgresql
+    samba
   ] ++ lib.optional withGUI gtk2;
 
   enableParallelBuilding = true;
@@ -39,12 +42,11 @@ stdenv.mkDerivation rec {
   '';
 
   meta = with lib; {
-    description = "A very fast network logon cracker which support many different services";
+    description = "Very fast network logon cracker which support many different services";
     homepage = "https://github.com/vanhauser-thc/thc-hydra"; # https://www.thc.org/
     changelog = "https://github.com/vanhauser-thc/thc-hydra/raw/v${version}/CHANGES";
     license = licenses.agpl3Plus;
     maintainers = with maintainers; [ offline ];
     platforms = platforms.unix;
-    badPlatforms = platforms.darwin; # fails to build since v9.3
   };
 }

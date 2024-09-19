@@ -1,17 +1,24 @@
-{ lib, fetchFromGitHub, rustPlatform }:
+{ lib, fetchFromGitHub, rustPlatform, wfa2-lib }:
 
 rustPlatform.buildRustPackage rec {
   pname = "biodiff";
-  version = "1.0.1";
+  version = "1.2.1";
 
   src = fetchFromGitHub {
     owner = "8051Enthusiast";
     repo = "biodiff";
     rev = "v${version}";
-    sha256 = "sha256-M1hwuIe5+quxcvFAacBkxQMiQyN6lhtWA6hEi5Buoho=";
+    hash = "sha256-ZLxjOV08sC5dKICvRUyL6FLMORkxwdLgNq7L45CDwa4=";
+    fetchSubmodules = true;
   };
 
-  cargoSha256 = "sha256-NIt4D2/T7Zl7rgksbQeVo6cNBt6cZkUGTJGztnp6SB0=";
+  cargoHash = "sha256-LxkwhOxXkegdXLmtbNLIB6nOAeCbpvIwSXbTF6jBcHs=";
+
+  buildInputs = [ wfa2-lib ];
+
+  # default statically links wfa2
+  buildNoDefaultFeatures = true;
+  buildFeatures = [ "wfa2" ];
 
   meta = with lib; {
     description = "Hex diff viewer using alignment algorithms from biology";

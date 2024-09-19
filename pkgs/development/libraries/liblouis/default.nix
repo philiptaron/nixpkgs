@@ -1,7 +1,6 @@
 { fetchFromGitHub
 , lib
 , stdenv
-, fetchpatch
 , autoreconfHook
 , pkg-config
 , gettext
@@ -12,32 +11,31 @@
 , perl
 }:
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation (finalAttrs: {
   pname = "liblouis";
-  version = "3.21.0";
+  version = "3.31.0";
+
+  outputs = [ "out" "dev" "info" "doc" ]
+    # configure: WARNING: cannot generate manual pages while cross compiling
+    ++ lib.optionals (stdenv.hostPlatform == stdenv.buildPlatform) [ "man" ];
 
   src = fetchFromGitHub {
     owner = "liblouis";
     repo = "liblouis";
-    rev = "v${version}";
-    sha256 = "sha256-Hfn0dfXihtUfO3R+qJaetrPwupcIwblvi1DQdHCF1s8=";
+    rev = "v${finalAttrs.version}";
+    hash = "sha256-0OnIvRwoL7GsuQPXJixA0DRf/tf8CNqwe9lHSahQbwk=";
   };
 
-  patches = [
-    (fetchpatch {
-      name = "parenthesize-memcpy-calls-clang.patch";
-      url = "https://github.com/liblouis/liblouis/commit/528f38938e9f539a251d9de92ad1c1b90401c4d0.patch";
-      sha256 = "0hlhqsvd5wflg70bd7bmssnchk8znzbr93in0zpspzbyap6xz112";
-    })
-  ];
-
-  outputs = [ "out" "dev" "man" "info" "doc" ];
-
+  strictDeps = true;
   nativeBuildInputs = [
     autoreconfHook
     pkg-config
     gettext
     python3
+    python3.pkgs.build
+    python3.pkgs.installer
+    python3.pkgs.setuptools
+    python3.pkgs.wheel
     # Docs, man, info
     texinfo
     help2man
@@ -46,7 +44,9 @@ stdenv.mkDerivation rec {
   buildInputs = [
     # lou_checkYaml
     libyaml
-    # maketable.d
+  ];
+
+  nativeCheckInputs = [
     perl
   ];
 
@@ -62,7 +62,8 @@ stdenv.mkDerivation rec {
 
   postInstall = ''
     pushd python
-    python setup.py install --prefix="$out" --optimize=1
+    python -m build --no-isolation --outdir dist/ --wheel
+    python -m installer --prefix $out dist/*.whl
     popd
   '';
 
@@ -70,9 +71,12 @@ stdenv.mkDerivation rec {
 
   meta = with lib; {
     description = "Open-source braille translator and back-translator";
-    homepage = "http://liblouis.org/";
-    license = licenses.lgpl21;
+    homepage = "https://liblouis.io/";
+    license = with licenses; [
+      lgpl21Plus # library
+      gpl3Plus # tools
+    ];
     maintainers = with maintainers; [ jtojnar ];
     platforms = platforms.unix;
   };
-}
+})

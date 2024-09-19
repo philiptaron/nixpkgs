@@ -1,6 +1,6 @@
-{ lib, stdenv, fetchurl, fetchpatch, python3Packages, makeWrapper, gettext, installShellFiles
+{ lib, stdenv, fetchurl, python3Packages, makeWrapper, gettext, installShellFiles
 , re2Support ? true
-, rustSupport ? stdenv.hostPlatform.isLinux, rustPlatform
+, rustSupport ? stdenv.hostPlatform.isLinux, cargo, rustPlatform, rustc
 , fullBuild ? false
 , gitSupport ? fullBuild
 , guiSupport ? fullBuild, tk
@@ -17,15 +17,15 @@
 }:
 
 let
-  inherit (python3Packages) docutils python fb-re2 pygit2 pygments;
+  inherit (python3Packages) docutils python fb-re2 pygit2 pygments setuptools;
 
   self = python3Packages.buildPythonApplication rec {
     pname = "mercurial${lib.optionalString fullBuild "-full"}";
-    version = "6.1.3";
+    version = "6.8.1";
 
     src = fetchurl {
       url = "https://mercurial-scm.org/release/mercurial-${version}.tar.gz";
-      sha256 = "sha256-4CLB7yjlUCeT9DBnJOhEPF1ycUhBkG9GyjUe/XupG3w=";
+      hash = "sha256-Aw6Kem1ZDk6utAPuJWdWFc2A0jbzq4oLVtzIQYEViwU=";
     };
 
     format = "other";
@@ -35,7 +35,7 @@ let
     cargoDeps = if rustSupport then rustPlatform.fetchCargoTarball {
       inherit src;
       name = "mercurial-${version}";
-      sha256 = "sha256-NL4rzP9ljhdBtcJOGq759dNnzg2jANhZzMvpez+CbpM=";
+      hash = "sha256-i5AVyi9m7qLLubhV8fBhhZ6/RYOjMdwmv9Bek9pT/xo=";
       sourceRoot = "mercurial-${version}/rust";
     } else null;
     cargoRoot = if rustSupport then "rust" else null;
@@ -43,12 +43,12 @@ let
     propagatedBuildInputs = lib.optional re2Support fb-re2
       ++ lib.optional gitSupport pygit2
       ++ lib.optional highlightSupport pygments;
-    nativeBuildInputs = [ makeWrapper gettext installShellFiles ]
-      ++ lib.optionals rustSupport (with rustPlatform; [
-           cargoSetupHook
-           rust.cargo
-           rust.rustc
-         ]);
+    nativeBuildInputs = [ makeWrapper gettext installShellFiles setuptools ]
+      ++ lib.optionals rustSupport [
+           rustPlatform.cargoSetupHook
+           cargo
+           rustc
+         ];
     buildInputs = [ docutils ]
       ++ lib.optionals stdenv.isDarwin [ ApplicationServices ];
 
@@ -60,7 +60,7 @@ let
       cp contrib/hgk $out/bin
       cat >> $out/etc/mercurial/hgrc << EOF
       [extensions]
-      hgk=$out/lib/${python.libPrefix}/site-packages/hgext/hgk.py
+      hgk=$out/${python.sitePackages}/hgext/hgk.py
       EOF
       # setting HG so that hgk can be run itself as well (not only hg view)
       WRAP_TK=" --set TK_LIBRARY ${tk}/lib/${tk.libPrefix}
@@ -87,12 +87,14 @@ let
     };
 
     meta = with lib; {
-      description = "A fast, lightweight SCM system for very large distributed projects";
+      description = "Fast, lightweight SCM system for very large distributed projects";
       homepage = "https://www.mercurial-scm.org";
       downloadPage = "https://www.mercurial-scm.org/release/";
+      changelog = "https://wiki.mercurial-scm.org/Release${versions.majorMinor version}";
       license = licenses.gpl2Plus;
-      maintainers = with maintainers; [ eelco lukegb pacien techknowlogick ];
+      maintainers = with maintainers; [ lukegb pacien techknowlogick ];
       platforms = platforms.unix;
+      mainProgram = "hg";
     };
   };
 
@@ -110,6 +112,9 @@ let
       gnupg
     ];
 
+    # https://bz.mercurial-scm.org/show_bug.cgi?id=6887
+    propagatedBuildInputs = [ setuptools ];
+
     postPatch = ''
       patchShebangs .
 
@@ -123,6 +128,12 @@ let
           --replace '*/hg:' '*/*hg*:' \${/* paths emitted by our wrapped hg look like ..hg-wrapped-wrapped */""}
           --replace '"$PYTHON" "$BINDIR"/hg' '"$BINDIR"/hg' ${/* 'hg' is a wrapper; don't run using python directly */""}
       done
+
+      # https://bz.mercurial-scm.org/show_bug.cgi?id=6887
+      # Adding setuptools to the python path is not enough for the distutils
+      # module to be found, so we patch usage directly:
+      substituteInPlace tests/hghave.py \
+        --replace-fail "distutils" "setuptools._distutils"
     '';
 
     # This runs Mercurial _a lot_ of times.
@@ -148,6 +159,25 @@ let
 
     # doesn't like the extra setlocale warnings emitted by our bash wrappers
     test-locale.t
+
+    # Python 3.10-3.12 deprecation warning: asyncore
+    # https://bz.mercurial-scm.org/show_bug.cgi?id=6727
+    test-patchbomb-tls.t
+
+    # Python 3.12 _lsprof module change, breaking profile test
+    # https://bz.mercurial-scm.org/show_bug.cgi?id=6846
+    test-profile.t
+
+    # Python 3.12 deprecation warning: multi-threaded fork in worker.py
+    # https://bz.mercurial-scm.org/show_bug.cgi?id=6892
+    test-clone-stream.t
+    test-clonebundles.t
+    test-fix-topology.t
+    test-fix.t
+    test-persistent-nodemap.t
+    test-profile.t
+    test-simple-update.t
+
     EOF
 
     export HGTEST_REAL_HG="${mercurial}/bin/hg"

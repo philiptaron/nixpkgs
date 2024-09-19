@@ -5,22 +5,23 @@
 
 buildGoModule rec {
   pname = "gokart";
-  version = "0.4.0";
+  version = "0.5.1";
 
   src = fetchFromGitHub {
     owner = "praetorian-inc";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-HsjLNY5Z5UidsLDWSP+1bu3jrfn3oAERPrPV/AkTH8I=";
+    sha256 = "sha256-G1IjlJ/rmviFWy6RFfLtP+bhfYcDuB97leimU39YCoQ=";
   };
 
-  vendorSha256 = "sha256-S3RukCKAJnPH1KGVdnkgAJQKEDTZYpcMMdoQ4OnHZVg=";
+  vendorHash = "sha256-lgKYVgJlmUJ/msdIqG7EKAZuISie1lG7+VeCF/rcSlE=";
 
   # Would need files to scan which are not shipped by the project
   doCheck = false;
 
   meta = with lib; {
     description = "Static analysis tool for securing Go code";
+    mainProgram = "gokart";
     homepage = "https://github.com/praetorian-inc/gokart";
     license = licenses.asl20;
     maintainers = with maintainers; [ fab ];

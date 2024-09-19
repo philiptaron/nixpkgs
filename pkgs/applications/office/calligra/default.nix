@@ -69,7 +69,7 @@ mkDerivation rec {
 
   propagatedUserEnvPkgs = [ kproperty ];
 
-  NIX_CFLAGS_COMPILE = "-I${ilmbase.dev}/include/OpenEXR";
+  env.NIX_CFLAGS_COMPILE = "-I${ilmbase.dev}/include/OpenEXR";
 
   qtWrapperArgs = [
     "--prefix PATH : ${lib.getBin pstoedit}/bin"
@@ -77,7 +77,7 @@ mkDerivation rec {
   ];
 
   meta = with lib; {
-    description = "A suite of productivity applications";
+    description = "Suite of productivity applications";
     longDescription = ''
       Calligra Suite is a set of applications written to help
       you to accomplish your work. Calligra includes efficient

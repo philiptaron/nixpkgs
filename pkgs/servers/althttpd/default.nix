@@ -2,25 +2,28 @@
 
 stdenv.mkDerivation rec {
   pname = "althttpd";
-  version = "unstable-2022-01-10";
+  version = "unstable-2023-08-12";
 
   src = fetchfossil {
     url = "https://sqlite.org/althttpd/";
-    rev = "83196564d05f33c3";
-    sha256 = "sha256-z/XMVnDihcO56kJaXIJGUUdnz8mR5jlySrLZX1tkV5c=";
+    rev = "c0bdc68e6c56ef25";
+    sha256 = "sha256-VoDR5MlVlvar9wYA0kUhvDQVjxDwsZlqrNR3u4Tqw5c=";
   };
 
   buildInputs = [ openssl ];
+
+  makeFlags = [ "CC:=$(CC)" ];
 
   installPhase = ''
     install -Dm755 -t $out/bin althttpd
   '';
 
   meta = with lib; {
-    description = "The Althttpd webserver";
+    description = "Althttpd webserver";
     homepage = "https://sqlite.org/althttpd/";
     license = licenses.publicDomain;
     maintainers = with maintainers; [ siraben ];
     platforms = platforms.all;
+    mainProgram = "althttpd";
   };
 }

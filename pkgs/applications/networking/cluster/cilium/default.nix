@@ -1,23 +1,48 @@
-{ lib, buildGoModule, fetchFromGitHub }:
+{ lib, buildGoModule, fetchFromGitHub, installShellFiles }:
 
 buildGoModule rec {
   pname = "cilium-cli";
-  version = "0.11.7";
+  version = "0.16.15";
 
   src = fetchFromGitHub {
     owner = "cilium";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-4+4E7v/b74DDekqymH8PR7/GfH3GGzSQFQk24VJisQ0=";
+    hash = "sha256-5LqRHa0ytprwAAIl7iNZQ9zKnn5wNtFubQdvLuX9qGM=";
   };
 
-  vendorSha256 = null;
+  vendorHash = null;
 
-  meta = with lib; {
+  subPackages = [ "cmd/cilium" ];
+
+  ldflags = [
+    "-s" "-w"
+    "-X github.com/cilium/cilium-cli/defaults.CLIVersion=${version}"
+  ];
+
+  # Required to workaround install check error:
+  # 2022/06/25 10:36:22 Unable to start gops: mkdir /homeless-shelter: permission denied
+  HOME = "$TMPDIR";
+
+  doInstallCheck = true;
+  installCheckPhase = ''
+    $out/bin/cilium version --client | grep ${version} > /dev/null
+  '';
+
+  nativeBuildInputs = [ installShellFiles ];
+  postInstall = ''
+    installShellCompletion --cmd cilium \
+      --bash <($out/bin/cilium completion bash) \
+      --fish <($out/bin/cilium completion fish) \
+      --zsh <($out/bin/cilium completion zsh)
+  '';
+
+  meta = {
+    changelog = "https://github.com/cilium/cilium-cli/releases/tag/v${version}";
     description = "CLI to install, manage & troubleshoot Kubernetes clusters running Cilium";
-    license = licenses.asl20;
+    license = lib.licenses.asl20;
     homepage = "https://www.cilium.io/";
-    maintainers = with maintainers; [ humancalico ];
+    maintainers = with lib.maintainers; [ bryanasdev000 humancalico qjoly ];
     mainProgram = "cilium";
   };
 }

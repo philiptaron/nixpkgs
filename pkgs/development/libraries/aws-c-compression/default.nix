@@ -2,17 +2,18 @@
 , fetchFromGitHub
 , aws-c-common
 , cmake
+, nix
 }:
 
 stdenv.mkDerivation rec {
   pname = "aws-c-compression";
-  version = "0.2.14";
+  version = "0.2.19";
 
   src = fetchFromGitHub {
     owner = "awslabs";
     repo = "aws-c-compression";
     rev = "v${version}";
-    sha256 = "0fs3zhhzxsb9nfcjpvfbcq79hal7si2ia1c09scab9a8m264f4vd";
+    sha256 = "sha256-Zr1C47YaTkMlG7r2WtAkxRfjZRuBKeTXzNIGspdLap4=";
   };
 
   nativeBuildInputs = [
@@ -24,9 +25,12 @@ stdenv.mkDerivation rec {
   ];
 
   cmakeFlags = [
-    "-DCMAKE_SKIP_BUILD_RPATH=OFF"
     "-DBUILD_SHARED_LIBS=ON"
   ];
+
+  passthru.tests = {
+    inherit nix;
+  };
 
   meta = with lib; {
     description = "C99 implementation of huffman encoding/decoding";

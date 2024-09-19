@@ -67,14 +67,14 @@ in {
   options = {
     services.zoneminder = with lib; {
       enable = lib.mkEnableOption ''
-        ZoneMinder
-        </para><para>
+        ZoneMinder.
+
         If you intend to run the database locally, you should set
         `config.services.zoneminder.database.createLocally` to true. Otherwise,
         when set to `false` (the default), you will have to create the database
         and database user as well as populate the database yourself.
         Additionally, you will need to run `zmupdate.pl` yourself when
-        upgrading to a newer version.
+        upgrading to a newer version
       '';
 
       webserver = mkOption {
@@ -82,8 +82,6 @@ in {
         default = "nginx";
         description = ''
           The webserver to configure for the PHP frontend.
-          </para>
-          <para>
 
           Set it to `none` if you want to configure it yourself. PRs are welcome
           for support for other web servers.
@@ -99,7 +97,7 @@ in {
       };
 
       port = mkOption {
-        type = types.int;
+        type = types.port;
         default = 8095;
         description = ''
           The port on which to listen.
@@ -152,7 +150,7 @@ in {
           default = "zmpass";
           description = ''
             Username for accessing the database.
-            Not used if <literal>createLocally</literal> is set.
+            Not used if `createLocally` is set.
           '';
         };
       };
@@ -204,10 +202,11 @@ in {
     ];
 
     services = {
-      fcgiwrap = lib.mkIf useNginx {
-        enable = true;
-        preforkProcesses = cfg.cameras;
-        inherit user group;
+      fcgiwrap.instances.zoneminder = lib.mkIf useNginx {
+        process.prefork = cfg.cameras;
+        process.user = user;
+        process.group = group;
+        socket = { inherit (config.services.nginx) user group; };
       };
 
       mysql = lib.mkIf cfg.database.createLocally {
@@ -227,9 +226,7 @@ in {
             default = true;
             root = "${pkg}/share/zoneminder/www";
             listen = [ { addr = "0.0.0.0"; inherit (cfg) port; } ];
-            extraConfig = let
-              fcgi = config.services.fcgiwrap;
-            in ''
+            extraConfig = ''
               index index.php;
 
               location / {
@@ -259,7 +256,7 @@ in {
                   fastcgi_param HTTP_PROXY "";
                   fastcgi_intercept_errors on;
 
-                  fastcgi_pass ${fcgi.socketType}:${fcgi.socketAddress};
+                  fastcgi_pass unix:${config.services.fcgiwrap.instances.zoneminder.socket.address};
                 }
 
                 location /cache/ {
@@ -285,7 +282,8 @@ in {
       phpfpm = lib.mkIf useNginx {
         pools.zoneminder = {
           inherit user group;
-          phpPackage = pkgs.php.withExtensions ({ enabled, all }: enabled ++ [ all.apcu ]);
+          phpPackage = pkgs.php.withExtensions (
+            { enabled, all }: enabled ++ [ all.apcu all.sysvsem ]);
           phpOptions = ''
             date.timezone = "${config.time.timeZone}"
           '';
@@ -328,6 +326,15 @@ in {
           fi
 
           ${zoneminder}/bin/zmupdate.pl -nointeractive
+          ${zoneminder}/bin/zmupdate.pl --nointeractive -f
+
+          # Update ZM's Nix store path in the configuration table. Do nothing if the config doesn't
+          # contain ZM's Nix store path.
+          ${config.services.mysql.package}/bin/mysql -u zoneminder zm << EOF
+            UPDATE Config
+              SET Value = REGEXP_REPLACE(Value, "^/nix/store/[^-/]+-zoneminder-[^/]+", "${pkgs.zoneminder}")
+              WHERE Name = "ZM_FONT_FILE_LOCATION";
+          EOF
         '';
         serviceConfig = {
           User = user;
@@ -342,8 +349,8 @@ in {
           RestartSec = "10s";
           CacheDirectory = dirs cacheDirs;
           RuntimeDirectory = dirName;
-          ReadWriteDirectories = lib.mkIf useCustomDir [ cfg.storageDir ];
-          StateDirectory = dirs (if useCustomDir then [] else libDirs);
+          ReadWritePaths = lib.mkIf useCustomDir [ cfg.storageDir ];
+          StateDirectory = dirs (lib.optionals (!useCustomDir) libDirs);
           LogsDirectory = dirName;
           PrivateTmp = true;
           ProtectSystem = "strict";
@@ -366,5 +373,5 @@ in {
     };
   };
 
-  meta.maintainers = with lib.maintainers; [ ];
+  meta.maintainers = [ ];
 }

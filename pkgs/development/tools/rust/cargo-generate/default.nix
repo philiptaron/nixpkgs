@@ -1,22 +1,37 @@
-{ lib, stdenv, fetchFromGitHub, rustPlatform, Security, openssl, pkg-config, libiconv, curl }:
+{ lib
+, rustPlatform
+, fetchFromGitHub
+, pkg-config
+, libgit2
+, openssl
+, stdenv
+, darwin
+, git
+}:
 
 rustPlatform.buildRustPackage rec {
   pname = "cargo-generate";
-  version = "0.14.0";
+  version = "0.21.3";
 
   src = fetchFromGitHub {
-    owner = "ashleygwilliams";
+    owner = "cargo-generate";
     repo = "cargo-generate";
     rev = "v${version}";
-    sha256 = "sha256-OYYGOB1NfNnOl8bd8KozgMCyW4Gb39LoFtD80DPzpdw=";
+    sha256 = "sha256-1F/865UgdqwfpITFhXCuL7CmducL7w0lVDyfui9UzjU=";
   };
 
-  cargoSha256 = "sha256-qmRKjPhPLpzVVuTHuoo0iTlX3BnT2Udo1kFXvA3zNQE=";
+  cargoHash = "sha256-szPO1V09EThpo2N03Ll+ZJUpvjp2b+/C/sviOzFfG+k=";
 
   nativeBuildInputs = [ pkg-config ];
 
-  buildInputs = [ openssl  ]
-    ++ lib.optionals stdenv.isDarwin [ Security libiconv curl ];
+  buildInputs = [ libgit2 openssl ] ++ lib.optionals stdenv.isDarwin [
+    darwin.apple_sdk.frameworks.Security
+  ];
+
+  nativeCheckInputs = [ git ];
+
+  # disable vendored libgit2 and openssl
+  buildNoDefaultFeatures = true;
 
   preCheck = ''
     export HOME=$(mktemp -d) USER=nixbld
@@ -27,13 +42,22 @@ rustPlatform.buildRustPackage rec {
   # Exclude some tests that don't work in sandbox:
   # - favorites_default_to_git_if_not_defined: requires network access to github.com
   # - should_canonicalize: the test assumes that it will be called from the /Users/<project_dir>/ folder on darwin variant.
-  checkFlags = [ "--skip favorites::favorites_default_to_git_if_not_defined" ]
-      ++ lib.optionals stdenv.isDarwin [ "--skip git::should_canonicalize" ];
+  checkFlags = [
+    "--skip=favorites::favorites_default_to_git_if_not_defined"
+  ] ++ lib.optionals stdenv.isDarwin [
+    "--skip=git::utils::should_canonicalize"
+  ];
+
+  env = {
+    LIBGIT2_NO_VENDOR = 1;
+  };
 
   meta = with lib; {
-    description = "cargo, make me a project";
-    homepage = "https://github.com/ashleygwilliams/cargo-generate";
-    license = licenses.asl20;
-    maintainers = [ maintainers.turbomack ];
+    description = "Tool to generate a new Rust project by leveraging a pre-existing git repository as a template";
+    mainProgram = "cargo-generate";
+    homepage = "https://github.com/cargo-generate/cargo-generate";
+    changelog = "https://github.com/cargo-generate/cargo-generate/blob/v${version}/CHANGELOG.md";
+    license = with licenses; [ asl20 /* or */ mit ];
+    maintainers = with maintainers; [ figsoda turbomack matthiasbeyer ];
   };
 }

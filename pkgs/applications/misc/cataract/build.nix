@@ -30,7 +30,7 @@ stdenv.mkDerivation {
   # avoid build failures like:
   #   ld: stats.o:/build/cataract-675e647/src/stats.h:24: multiple definition of
   #     `stats_images'; cgg.o:/build/cataract-675e647/src/stats.h:24: first defined here
-  NIX_CFLAGS_COMPILE = "-fcommon";
+  env.NIX_CFLAGS_COMPILE = "-fcommon";
 
   installPhase = ''
     mkdir $out/{bin,share} -p
@@ -39,7 +39,7 @@ stdenv.mkDerivation {
 
   meta = with lib; {
     homepage = "http://cgg.bzatek.net/";
-    description = "A simple static web photo gallery, designed to be clean and easily usable";
+    description = "Simple static web photo gallery, designed to be clean and easily usable";
     license = licenses.gpl2;
     maintainers = [ maintainers.matthiasbeyer ];
     platforms = with platforms; linux ++ darwin;

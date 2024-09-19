@@ -60,12 +60,15 @@ stdenv.mkDerivation rec {
   nativeBuildInputs = [ which ];
   buildInputs = [ openssl readline ];
   enableParallelBuilding = true;
+  # ln: failed to create symbolic link '...-eresi-0.83-a3-phoenix//bin/elfsh': No such file or directory
+  # make: *** [Makefile:108: install64] Error 1
+  enableParallelInstalling = false;
 
   installTargets = lib.singleton "install"
                 ++ lib.optional stdenv.is64bit "install64";
 
   meta = {
-    description = "The ERESI Reverse Engineering Software Interface";
+    description = "ERESI Reverse Engineering Software Interface";
     license = lib.licenses.gpl2Only;
     homepage = "https://github.com/thorkill/eresi"; # Formerly http://www.eresi-project.org/
     platforms = lib.platforms.linux;

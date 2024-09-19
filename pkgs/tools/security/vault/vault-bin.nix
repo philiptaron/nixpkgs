@@ -1,8 +1,8 @@
-{ lib, stdenv, fetchurl, unzip, makeWrapper, gawk, glibc, fetchzip }:
+{ lib, stdenv, fetchzip }:
 
 stdenv.mkDerivation rec {
   pname = "vault-bin";
-  version = "1.10.3";
+  version = "1.17.5";
 
   src =
     let
@@ -15,17 +15,18 @@ stdenv.mkDerivation rec {
         x86_64-darwin = "darwin_amd64";
         aarch64-darwin = "darwin_arm64";
       };
-      sha256 = selectSystem {
-        x86_64-linux = "sha256-hz7u6sW415h/AsGlyghImo3K54gbAS92N6L0dI8vV8Q=";
-        aarch64-linux = "sha256-DIrVgHeVvDNx0vRwXt2gzf3HDYzDeYQ2JVy+7KlrLUo=";
-        i686-linux = "sha256-B0xamHI6GnHrKLjhIBvs89keShJ45fRgyM7M214S9jY=";
-        x86_64-darwin = "sha256-ubPcl/e0nwYYw5SrN2jfrGSwLHbi99jklYMDZuVdf6s=";
-        aarch64-darwin = "sha256-4CKrelIzaXu2GccWo2ZTzGSqCMTM1qmJ0drGD8F3c0k=";
+      hash = selectSystem {
+        x86_64-linux = "sha256-rh0ZVmAbiOmZFCpiiX9ClAYmQKx084VKCjxvD9bbYAk=";
+        aarch64-linux = "sha256-DtriOEQCuSMMjzfJJpJAf7z+wGJSbzU3V/X+glTLkv8=";
+        i686-linux = "sha256-EPS3Sx2l0Gv4PWeqrnIEoNYUF4Or075vdhn71vKXQEw=";
+        x86_64-darwin = "sha256-pi/sD88haBxUx6dSUEUv6ugQO2K/lhg4ne7xbcVzg3M=";
+        aarch64-darwin = "sha256-6ZESO3m5FCRwTNh3xlWjWw6c9sjiAwV09YA/hQ5Py/o=";
       };
     in
     fetchzip {
       url = "https://releases.hashicorp.com/vault/${version}/vault_${version}_${suffix}.zip";
-      inherit sha256;
+      stripRoot=false;
+      inherit hash;
     };
 
   dontConfigure = true;
@@ -52,10 +53,11 @@ stdenv.mkDerivation rec {
   passthru.updateScript = ./update-bin.sh;
 
   meta = with lib; {
-    description = "A tool for managing secrets, this binary includes the UI";
+    description = "Tool for managing secrets, this binary includes the UI";
     homepage = "https://www.vaultproject.io";
-    license = licenses.mpl20;
-    maintainers = with maintainers; teams.serokell.members ++ [ offline psyanticy Chili-Man techknowlogick ];
+    sourceProvenance = with sourceTypes; [ binaryNativeCode ];
+    license = licenses.bsl11;
+    maintainers = with maintainers; teams.serokell.members ++ [ offline psyanticy Chili-Man techknowlogick mkaito ];
     mainProgram = "vault";
     platforms = [ "x86_64-linux" "i686-linux" "x86_64-darwin" "aarch64-darwin" "aarch64-linux" ];
   };

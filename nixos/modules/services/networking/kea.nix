@@ -3,13 +3,9 @@
 , pkgs
 , ...
 }:
-
-with lib;
-
 let
   cfg = config.services.kea;
 
-  xor = x: y: (!x && y) || (x && !y);
   format = pkgs.formats.json {};
 
   chooseNotNull = x: y: if x != null then x else y;
@@ -33,75 +29,75 @@ let
   package = pkgs.kea;
 in
 {
-  options.services.kea = with types; {
-    ctrl-agent = mkOption {
+  options.services.kea = with lib.types; {
+    ctrl-agent = lib.mkOption {
       description = ''
         Kea Control Agent configuration
       '';
       default = {};
       type = submodule {
         options = {
-          enable = mkEnableOption "Kea Control Agent";
+          enable = lib.mkEnableOption "Kea Control Agent";
 
-          extraArgs = mkOption {
+          extraArgs = lib.mkOption {
             type = listOf str;
             default = [];
             description = ''
-              List of additonal arguments to pass to the daemon.
+              List of additional arguments to pass to the daemon.
             '';
           };
 
-          configFile = mkOption {
+          configFile = lib.mkOption {
             type = nullOr path;
             default = null;
             description = ''
-              Kea Control Agent configuration as a path, see <link xlink:href="https://kea.readthedocs.io/en/kea-${package.version}/arm/agent.html"/>.
+              Kea Control Agent configuration as a path, see <https://kea.readthedocs.io/en/kea-${package.version}/arm/agent.html>.
 
-              Takes preference over <link linkend="opt-services.kea.ctrl-agent.settings">settings</link>.
-              Most users should prefer using <link linkend="opt-services.kea.ctrl-agent.settings">settings</link> instead.
+              Takes preference over [settings](#opt-services.kea.ctrl-agent.settings).
+              Most users should prefer using [settings](#opt-services.kea.ctrl-agent.settings) instead.
             '';
           };
 
-          settings = mkOption {
+          settings = lib.mkOption {
             type = format.type;
             default = null;
             description = ''
-              Kea Control Agent configuration as an attribute set, see <link xlink:href="https://kea.readthedocs.io/en/kea-${package.version}/arm/agent.html"/>.
+              Kea Control Agent configuration as an attribute set, see <https://kea.readthedocs.io/en/kea-${package.version}/arm/agent.html>.
             '';
           };
         };
       };
     };
 
-    dhcp4 = mkOption {
+    dhcp4 = lib.mkOption {
       description = ''
         DHCP4 Server configuration
       '';
       default = {};
       type = submodule {
         options = {
-          enable = mkEnableOption "Kea DHCP4 server";
+          enable = lib.mkEnableOption "Kea DHCP4 server";
 
-          extraArgs = mkOption {
+          extraArgs = lib.mkOption {
             type = listOf str;
             default = [];
             description = ''
-              List of additonal arguments to pass to the daemon.
+              List of additional arguments to pass to the daemon.
             '';
           };
 
-          configFile = mkOption {
+          configFile = lib.mkOption {
             type = nullOr path;
             default = null;
             description = ''
-              Kea DHCP4 configuration as a path, see <link xlink:href="https://kea.readthedocs.io/en/kea-${package.version}/arm/dhcp4-srv.html"/>.
+              Kea DHCP4 configuration as a path, see <https://kea.readthedocs.io/en/kea-${package.version}/arm/dhcp4-srv.html>.
 
-              Takes preference over <link linkend="opt-services.kea.dhcp4.settings">settings</link>.
-              Most users should prefer using <link linkend="opt-services.kea.dhcp4.settings">settings</link> instead.
+              Takes preference over [settings](#opt-services.kea.dhcp4.settings).
+              Most users should prefer using [settings](#opt-services.kea.dhcp4.settings) instead.
             '';
           };
 
-          settings = mkOption {
+          settings = lib.mkOption {
             type = format.type;
             default = null;
             example = {
@@ -126,42 +122,42 @@ in
               } ];
             };
             description = ''
-              Kea DHCP4 configuration as an attribute set, see <link xlink:href="https://kea.readthedocs.io/en/kea-${package.version}/arm/dhcp4-srv.html"/>.
+              Kea DHCP4 configuration as an attribute set, see <https://kea.readthedocs.io/en/kea-${package.version}/arm/dhcp4-srv.html>.
             '';
           };
         };
       };
     };
 
-    dhcp6 = mkOption {
+    dhcp6 = lib.mkOption {
       description = ''
         DHCP6 Server configuration
       '';
       default = {};
       type = submodule {
         options = {
-          enable = mkEnableOption "Kea DHCP6 server";
+          enable = lib.mkEnableOption "Kea DHCP6 server";
 
-          extraArgs = mkOption {
+          extraArgs = lib.mkOption {
             type = listOf str;
             default = [];
             description = ''
-              List of additonal arguments to pass to the daemon.
+              List of additional arguments to pass to the daemon.
             '';
           };
 
-          configFile = mkOption {
+          configFile = lib.mkOption {
             type = nullOr path;
             default = null;
             description = ''
-              Kea DHCP6 configuration as a path, see <link xlink:href="https://kea.readthedocs.io/en/kea-${package.version}/arm/dhcp6-srv.html"/>.
+              Kea DHCP6 configuration as a path, see <https://kea.readthedocs.io/en/kea-${package.version}/arm/dhcp6-srv.html>.
 
-              Takes preference over <link linkend="opt-services.kea.dhcp6.settings">settings</link>.
-              Most users should prefer using <link linkend="opt-services.kea.dhcp6.settings">settings</link> instead.
+              Takes preference over [settings](#opt-services.kea.dhcp6.settings).
+              Most users should prefer using [settings](#opt-services.kea.dhcp6.settings) instead.
             '';
           };
 
-          settings = mkOption {
+          settings = lib.mkOption {
             type = format.type;
             default = null;
             example = {
@@ -187,42 +183,42 @@ in
               } ];
             };
             description = ''
-              Kea DHCP6 configuration as an attribute set, see <link xlink:href="https://kea.readthedocs.io/en/kea-${package.version}/arm/dhcp6-srv.html"/>.
+              Kea DHCP6 configuration as an attribute set, see <https://kea.readthedocs.io/en/kea-${package.version}/arm/dhcp6-srv.html>.
             '';
           };
         };
       };
     };
 
-    dhcp-ddns = mkOption {
+    dhcp-ddns = lib.mkOption {
       description = ''
         Kea DHCP-DDNS configuration
       '';
       default = {};
       type = submodule {
         options = {
-          enable = mkEnableOption "Kea DDNS server";
+          enable = lib.mkEnableOption "Kea DDNS server";
 
-          extraArgs = mkOption {
+          extraArgs = lib.mkOption {
             type = listOf str;
             default = [];
             description = ''
-              List of additonal arguments to pass to the daemon.
+              List of additional arguments to pass to the daemon.
             '';
           };
 
-          configFile = mkOption {
+          configFile = lib.mkOption {
             type = nullOr path;
             default = null;
             description = ''
-              Kea DHCP-DDNS configuration as a path, see <link xlink:href="https://kea.readthedocs.io/en/kea-${package.version}/arm/ddns.html"/>.
+              Kea DHCP-DDNS configuration as a path, see <https://kea.readthedocs.io/en/kea-${package.version}/arm/ddns.html>.
 
-              Takes preference over <link linkend="opt-services.kea.dhcp-ddns.settings">settings</link>.
-              Most users should prefer using <link linkend="opt-services.kea.dhcp-ddns.settings">settings</link> instead.
+              Takes preference over [settings](#opt-services.kea.dhcp-ddns.settings).
+              Most users should prefer using [settings](#opt-services.kea.dhcp-ddns.settings) instead.
             '';
           };
 
-          settings = mkOption {
+          settings = lib.mkOption {
             type = format.type;
             default = null;
             example = {
@@ -240,7 +236,7 @@ in
               };
             };
             description = ''
-              Kea DHCP-DDNS configuration as an attribute set, see <link xlink:href="https://kea.readthedocs.io/en/kea-${package.version}/arm/ddns.html"/>.
+              Kea DHCP-DDNS configuration as an attribute set, see <https://kea.readthedocs.io/en/kea-${package.version}/arm/ddns.html>.
             '';
           };
         };
@@ -255,17 +251,18 @@ in
       User = "kea";
       ConfigurationDirectory = "kea";
       RuntimeDirectory = "kea";
+      RuntimeDirectoryPreserve = true;
       StateDirectory = "kea";
       UMask = "0077";
     };
-  in mkIf (cfg.ctrl-agent.enable || cfg.dhcp4.enable || cfg.dhcp6.enable || cfg.dhcp-ddns.enable) (mkMerge [
+  in lib.mkIf (cfg.ctrl-agent.enable || cfg.dhcp4.enable || cfg.dhcp6.enable || cfg.dhcp-ddns.enable) (lib.mkMerge [
   {
     environment.systemPackages = [ package ];
   }
 
-  (mkIf cfg.ctrl-agent.enable {
+  (lib.mkIf cfg.ctrl-agent.enable {
     assertions = [{
-        assertion = xor (cfg.ctrl-agent.settings == null) (cfg.ctrl-agent.configFile == null);
+        assertion = lib.xor (cfg.ctrl-agent.settings == null) (cfg.ctrl-agent.configFile == null);
         message = "Either services.kea.ctrl-agent.settings or services.kea.ctrl-agent.configFile must be set to a non-null value.";
     }];
 
@@ -278,6 +275,9 @@ in
         "https://kea.readthedocs.io/en/kea-${package.version}/arm/agent.html"
       ];
 
+      wants = [
+        "network-online.target"
+      ];
       after = [
         "network-online.target"
         "time-sync.target"
@@ -298,16 +298,16 @@ in
       ];
 
       serviceConfig = {
-        ExecStart = "${package}/bin/kea-ctrl-agent -c /etc/kea/ctrl-agent.conf ${lib.escapeShellArgs cfg.dhcp4.extraArgs}";
+        ExecStart = "${package}/bin/kea-ctrl-agent -c /etc/kea/ctrl-agent.conf ${lib.escapeShellArgs cfg.ctrl-agent.extraArgs}";
         KillMode = "process";
         Restart = "on-failure";
       } // commonServiceConfig;
     };
   })
 
-  (mkIf cfg.dhcp4.enable {
+  (lib.mkIf cfg.dhcp4.enable {
     assertions = [{
-        assertion = xor (cfg.dhcp4.settings == null) (cfg.dhcp4.configFile == null);
+        assertion = lib.xor (cfg.dhcp4.settings == null) (cfg.dhcp4.configFile == null);
         message = "Either services.kea.dhcp4.settings or services.kea.dhcp4.configFile must be set to a non-null value.";
     }];
 
@@ -323,6 +323,9 @@ in
       after = [
         "network-online.target"
         "time-sync.target"
+      ];
+      wants = [
+        "network-online.target"
       ];
       wantedBy = [
         "multi-user.target"
@@ -352,9 +355,9 @@ in
     };
   })
 
-  (mkIf cfg.dhcp6.enable {
+  (lib.mkIf cfg.dhcp6.enable {
     assertions = [{
-        assertion = xor (cfg.dhcp6.settings == null) (cfg.dhcp6.configFile == null);
+        assertion = lib.xor (cfg.dhcp6.settings == null) (cfg.dhcp6.configFile == null);
         message = "Either services.kea.dhcp6.settings or services.kea.dhcp6.configFile must be set to a non-null value.";
     }];
 
@@ -370,6 +373,9 @@ in
       after = [
         "network-online.target"
         "time-sync.target"
+      ];
+      wants = [
+        "network-online.target"
       ];
       wantedBy = [
         "multi-user.target"
@@ -397,9 +403,9 @@ in
     };
   })
 
-  (mkIf cfg.dhcp-ddns.enable {
+  (lib.mkIf cfg.dhcp-ddns.enable {
     assertions = [{
-        assertion = xor (cfg.dhcp-ddns.settings == null) (cfg.dhcp-ddns.configFile == null);
+        assertion = lib.xor (cfg.dhcp-ddns.settings == null) (cfg.dhcp-ddns.configFile == null);
         message = "Either services.kea.dhcp-ddns.settings or services.kea.dhcp-ddns.configFile must be set to a non-null value.";
     }];
 
@@ -412,6 +418,7 @@ in
         "https://kea.readthedocs.io/en/kea-${package.version}/arm/ddns.html"
       ];
 
+      wants = [ "network-online.target" ];
       after = [
         "network-online.target"
         "time-sync.target"
@@ -443,7 +450,7 @@ in
 
   ]);
 
-  meta.maintainers = with maintainers; [ hexa ];
+  meta.maintainers = with lib.maintainers; [ hexa ];
   # uses attributes of the linked package
   meta.buildDocsInSandbox = false;
 }

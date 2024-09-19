@@ -1,28 +1,11 @@
-{ lib, stdenv, fetchurl, nixosTests }:
-
-stdenv.mkDerivation rec {
-  pname = "wordpress";
-  version = "5.9.3";
-
-  src = fetchurl {
-    url = "https://wordpress.org/${pname}-${version}.tar.gz";
-    sha256 = "sha256-cMvqXXLez7Ep9MyObD0BdepkvsaOl5YbbbA3cnilKlY=";
+{ callPackage }: builtins.mapAttrs (_: callPackage ./generic.nix) rec {
+  wordpress = wordpress_6_6;
+  wordpress_6_5 = {
+    version = "6.5.5";
+    hash = "sha256-bIRmTqmzIRo1KdhAcJa1GxhVcTEiEaLFPzlNFbzfLcQ=";
   };
-
-  installPhase = ''
-    mkdir -p $out/share/wordpress
-    cp -r . $out/share/wordpress
-  '';
-
-  passthru.tests = {
-    inherit (nixosTests) wordpress;
-  };
-
-  meta = with lib; {
-    homepage = "https://wordpress.org";
-    description = "WordPress is open source software you can use to create a beautiful website, blog, or app";
-    license = [ licenses.gpl2 ];
-    maintainers = [ maintainers.basvandijk ];
-    platforms = platforms.all;
+  wordpress_6_6 = {
+    version = "6.6.1";
+    hash = "sha256-YW6BhlP48okxLrpsJwPgynSHpbdRqyMoXaq9IBd8TlU=";
   };
 }

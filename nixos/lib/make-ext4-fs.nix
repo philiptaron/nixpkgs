@@ -58,9 +58,17 @@ pkgs.stdenv.mkDerivation {
       # Make a crude approximation of the size of the target image.
       # If the script starts failing, increase the fudge factors here.
       numInodes=$(find ./rootImage | wc -l)
-      numDataBlocks=$(du -s -c -B 4096 --apparent-size ./rootImage | tail -1 | awk '{ print int($1 * 1.10) }')
+      numDataBlocks=$(du -s -c -B 4096 --apparent-size ./rootImage | tail -1 | awk '{ print int($1 * 1.20) }')
       bytes=$((2 * 4096 * $numInodes + 4096 * $numDataBlocks))
       echo "Creating an EXT4 image of $bytes bytes (numInodes=$numInodes, numDataBlocks=$numDataBlocks)"
+
+      mebibyte=$(( 1024 * 1024 ))
+      # Round up to the nearest mebibyte.
+      # This ensures whole 512 bytes sector sizes in the disk image
+      # and helps towards aligning partitions optimally.
+      if (( bytes % mebibyte )); then
+        bytes=$(( ( bytes / mebibyte + 1) * mebibyte ))
+      fi
 
       truncate -s $bytes $img
 
@@ -77,6 +85,15 @@ pkgs.stdenv.mkDerivation {
       # We may want to shrink the file system and resize the image to
       # get rid of the unnecessary slack here--but see
       # https://github.com/NixOS/nixpkgs/issues/125121 for caveats.
+
+      # shrink to fit
+      resize2fs -M $img
+
+      # Add 16 MebiByte to the current_size
+      new_size=$(dumpe2fs -h $img | awk -F: \
+        '/Block count/{count=$2} /Block size/{size=$2} END{print (count*size+16*2**20)/size}')
+
+      resize2fs $img $new_size
 
       if [ ${builtins.toString compressImage} ]; then
         echo "Compressing image"

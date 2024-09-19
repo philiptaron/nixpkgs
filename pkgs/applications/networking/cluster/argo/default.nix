@@ -1,40 +1,59 @@
-{ lib, buildGoModule, buildGoPackage, fetchFromGitHub, installShellFiles, pkgsBuildBuild, stdenv }:
+{ lib
+, stdenv
+, buildGoModule
+, fetchFromGitHub
+, installShellFiles
+, pkgsBuildBuild
+}:
 
 let
   # Argo can package a static server in the CLI using the `staticfiles` go module.
   # We build the CLI without the static server for simplicity, but the tool is still required for
   # compilation to succeed.
   # See: https://github.com/argoproj/argo/blob/d7690e32faf2ac5842468831daf1443283703c25/Makefile#L117
-  staticfiles = pkgsBuildBuild.buildGoPackage rec {
+  staticfiles = pkgsBuildBuild.buildGoModule rec {
     name = "staticfiles";
+
     src = fetchFromGitHub {
       owner = "bouk";
       repo = "staticfiles";
       rev = "827d7f6389cd410d0aa3f3d472a4838557bf53dd";
-      sha256 = "0xarhmsqypl8036w96ssdzjv3k098p2d4mkmw5f6hkp1m3j67j61";
+      hash = "sha256-wchj5KjhTmhc4XVW0sRFCcyx5W9am8TNAIhej3WFWXU=";
     };
 
-    goPackagePath = "bou.ke/staticfiles";
+    vendorHash = null;
+
+    excludedPackages = [ "./example" ];
+
+    preBuild = ''
+      cp ${./staticfiles.go.mod} go.mod
+    '';
+
+    ldflags = [ "-s" "-w" ];
   };
 in
 buildGoModule rec {
   pname = "argo";
-  version = "3.3.5";
+  version = "3.5.10";
 
   src = fetchFromGitHub {
     owner = "argoproj";
     repo = "argo";
-    rev = "v${version}";
-    sha256 = "sha256-EeGpJliE38MroeScdmeMp36rEDld59zDEM5i4QqxYik=";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-35Hp5lISQuFNsbSOKsLRcD695ZRCgQue+H8rKEPma5M=";
   };
 
-  vendorSha256 = "sha256-cq452XEGMVbLvfJ/UiVyOvnUSJr196owB3SyBYnAmZ0=";
+  vendorHash = "sha256-dGDXDpjf1kWcqBhCMKLXGXax6ApOL9eIiiem86CxdGs=";
 
   doCheck = false;
 
-  subPackages = [ "cmd/argo" ];
+  subPackages = [
+    "cmd/argo"
+  ];
 
-  nativeBuildInputs = [ installShellFiles ];
+  nativeBuildInputs = [
+    installShellFiles
+  ];
 
   preBuild = ''
     mkdir -p ui/dist/app
@@ -44,7 +63,8 @@ buildGoModule rec {
   '';
 
   ldflags = [
-    "-s" "-w"
+    "-s"
+    "-w"
     "-X github.com/argoproj/argo-workflows/v3.buildDate=unknown"
     "-X github.com/argoproj/argo-workflows/v3.gitCommit=${src.rev}"
     "-X github.com/argoproj/argo-workflows/v3.gitTag=${src.rev}"
@@ -64,7 +84,9 @@ buildGoModule rec {
 
   meta = with lib; {
     description = "Container native workflow engine for Kubernetes";
+    mainProgram = "argo";
     homepage = "https://github.com/argoproj/argo";
+    changelog = "https://github.com/argoproj/argo-workflows/blob/v${version}/CHANGELOG.md";
     license = licenses.asl20;
     maintainers = with maintainers; [ groodt ];
     platforms = platforms.unix;

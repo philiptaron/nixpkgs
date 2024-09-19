@@ -25,6 +25,22 @@ in
       default = false;
       description = "Whether to build the PSW package in debug mode.";
     };
+    environment = mkOption {
+      type = with types; attrsOf str;
+      default = { };
+      description = "Additional environment variables to pass to the AESM service.";
+      # Example environment variable for `sgx-azure-dcap-client` provider library
+      example = {
+        AZDCAP_COLLATERAL_VERSION = "v2";
+        AZDCAP_DEBUG_LOG_LEVEL = "INFO";
+      };
+    };
+    quoteProviderLibrary = mkOption {
+      type = with types; nullOr path;
+      default = null;
+      example = literalExpression "pkgs.sgx-azure-dcap-client";
+      description = "Custom quote provider library to use.";
+    };
     settings = mkOption {
       description = "AESM configuration";
       default = { };
@@ -49,10 +65,10 @@ in
           '';
           example = "default";
           description = ''
-            Type of proxy to use. The <literal>default</literal> uses the system's default proxy.
-            If <literal>direct</literal> is given, uses no proxy.
-            A value of <literal>manual</literal> uses the proxy from
-            <option>services.aesmd.settings.proxy</option>.
+            Type of proxy to use. The `default` uses the system's default proxy.
+            If `direct` is given, uses no proxy.
+            A value of `manual` uses the proxy from
+            {option}`services.aesmd.settings.proxy`.
           '';
         };
         options.defaultQuotingType = mkOption {
@@ -83,7 +99,6 @@ in
         storeAesmFolder = "${sgx-psw}/aesm";
         # Hardcoded path AESM_DATA_FOLDER in psw/ae/aesm_service/source/oal/linux/aesm_util.cpp
         aesmDataFolder = "/var/opt/aesmd/data";
-        aesmStateDirSystemd = "%S/aesmd";
       in
       {
         description = "Intel Architectural Enclave Service Manager";
@@ -98,8 +113,8 @@ in
         environment = {
           NAME = "aesm_service";
           AESM_PATH = storeAesmFolder;
-          LD_LIBRARY_PATH = storeAesmFolder;
-        };
+          LD_LIBRARY_PATH = makeLibraryPath [ cfg.quoteProviderLibrary ];
+        } // cfg.environment;
 
         # Make sure any of the SGX application enclave devices is available
         unitConfig.AssertPathExists = [

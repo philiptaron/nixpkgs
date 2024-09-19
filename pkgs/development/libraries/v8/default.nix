@@ -1,7 +1,9 @@
-{ stdenv, lib, fetchgit, fetchFromGitHub
+{ stdenv, lib, fetchgit
 , gn, ninja, python3, glib, pkg-config, icu
-, xcbuild, darwin
+, xcbuild
 , fetchpatch
+, llvmPackages
+, symlinkJoin
 }:
 
 # Use update.sh to update all checksums.
@@ -77,6 +79,14 @@ stdenv.mkDerivation rec {
 
   patches = [
     ./darwin.patch
+
+    # gcc-13 build fix for mixxign <cstdint> includes
+    (fetchpatch {
+      name = "gcc-13.patch";
+      url  = "https://chromium.googlesource.com/v8/v8/+/c2792e58035fcbaa16d0cb70998852fbeb5df4cc^!?format=TEXT";
+      decode = "base64 -d";
+      hash = "sha256-hoPAkSaCmzXflPFXaKUwVPLECMpt6N6/8m8mBSTAHbU=";
+    })
   ];
 
   src = v8Src;
@@ -103,8 +113,15 @@ stdenv.mkDerivation rec {
         --replace 'current_toolchain == host_toolchain || !use_xcode_clang' \
                   'false'
     ''}
+    ${lib.optionalString stdenv.isDarwin ''
+      substituteInPlace build/config/compiler/BUILD.gn \
+        --replace "-Wl,-fatal_warnings" ""
+    ''}
     touch build/config/gclient_args.gni
+    sed '1i#include <utility>' -i src/heap/cppgc/prefinalizer-handler.h # gcc12
   '';
+
+  llvmCcAndBintools = symlinkJoin { name = "llvmCcAndBintools"; paths = [ stdenv.cc llvmPackages.llvm ]; };
 
   gnFlags = [
     "use_custom_libcxx=false"
@@ -123,10 +140,15 @@ stdenv.mkDerivation rec {
     # ''custom_toolchain="//build/toolchain/linux/unbundle:default"''
     ''host_toolchain="//build/toolchain/linux/unbundle:default"''
     ''v8_snapshot_toolchain="//build/toolchain/linux/unbundle:default"''
-  ] ++ lib.optional stdenv.cc.isClang ''clang_base_path="${stdenv.cc}"'';
+  ] ++ lib.optional stdenv.cc.isClang ''clang_base_path="${llvmCcAndBintools}"''
+  ++ lib.optional stdenv.isDarwin ''use_lld=false'';
 
-  NIX_CFLAGS_COMPILE = "-O2";
-  FORCE_MAC_SDK_MIN = stdenv.targetPlatform.sdkVer or "10.12";
+  env.NIX_CFLAGS_COMPILE = toString ([
+    "-O2"
+  ] ++ lib.optionals stdenv.cc.isClang [
+    "-Wno-error=enum-constexpr-conversion"
+  ]);
+  FORCE_MAC_SDK_MIN = stdenv.hostPlatform.sdkVer or "10.12";
 
   nativeBuildInputs = [
     myGn
@@ -135,7 +157,7 @@ stdenv.mkDerivation rec {
     python3
   ] ++ lib.optionals stdenv.isDarwin [
     xcbuild
-    darwin.DarwinTools
+    llvmPackages.llvm
     python3.pkgs.setuptools
   ];
   buildInputs = [ glib icu ];
@@ -148,6 +170,7 @@ stdenv.mkDerivation rec {
     install -D d8 $out/bin/d8
     install -D -m644 obj/libv8_monolith.a $out/lib/libv8.a
     install -D -m644 icudtl.dat $out/share/v8/icudtl.dat
+    ln -s libv8.a $out/lib/libv8_monolith.a
     cp -r ../../include $out
 
     mkdir -p $out/lib/pkgconfig
@@ -161,11 +184,12 @@ stdenv.mkDerivation rec {
   '';
 
   meta = with lib; {
+    homepage = "https://v8.dev/";
     description = "Google's open source JavaScript engine";
-    maintainers = with maintainers; [ cstrahan proglodyte matthewbauer ];
+    mainProgram = "d8";
+    maintainers = with maintainers; [ proglodyte matthewbauer ];
     platforms = platforms.unix;
     license = licenses.bsd3;
-    # Fails to build on Darwin, see https://github.com/NixOS/nixpkgs/issues/158076
-    broken = stdenv.isDarwin;
+    knownVulnerabilities = [ "Severely outdated with multiple publicly known vulnerabilities" ];
   };
 }

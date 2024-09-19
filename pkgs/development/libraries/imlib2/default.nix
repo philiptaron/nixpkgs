@@ -1,14 +1,16 @@
 { lib, stdenv, fetchurl
 # Image file formats
-, libjpeg, libtiff, giflib, libpng, libwebp
+, libjpeg, libtiff, giflib, libpng, libwebp, libjxl
+, libspectre
 # imlib2 can load images from ID3 tags.
 , libid3tag, librsvg, libheif
 , freetype , bzip2, pkg-config
-, x11Support ? true, xlibsWrapper ? null
-# Compilation error on Darwin with librsvg. For more information see:
-# https://github.com/NixOS/nixpkgs/pull/166452#issuecomment-1090725613
-, svgSupport ? !stdenv.isDarwin
-, heifSupport ? !stdenv.isDarwin
+, x11Support ? true
+, webpSupport ? true
+, svgSupport ? false
+, heifSupport ? false
+, jxlSupport ? false
+, psSupport ? false
 
 # for passthru.tests
 , libcaca
@@ -18,26 +20,33 @@
 , openbox
 , fluxbox
 , enlightenment
+, xorg
+, testers
+
+, gitUpdater
 }:
 
 let
-  inherit (lib) optional;
+  inherit (lib) optional optionals;
 in
-stdenv.mkDerivation rec {
+stdenv.mkDerivation (finalAttrs: {
   pname = "imlib2";
-  version = "1.8.1";
+  version = "1.12.3";
 
   src = fetchurl {
-    url = "mirror://sourceforge/enlightenment/${pname}-${version}.tar.xz";
-    hash = "sha256-Ui4ecOZbwO3f4gdhfRXJo5VmKnwJBmHaqiwpT7fZ/ao=";
+    url = "mirror://sourceforge/enlightenment/imlib2-${finalAttrs.version}.tar.xz";
+    hash = "sha256-liRGVldqPgpvWLeOUU3ckZYirGgGcRvCMYN+7mLB3jQ=";
   };
 
   buildInputs = [
-    libjpeg libtiff giflib libpng libwebp
+    libjpeg libtiff giflib libpng
     bzip2 freetype libid3tag
-  ] ++ optional x11Support xlibsWrapper
+  ] ++ optionals x11Support [ xorg.libXft xorg.libXext ]
     ++ optional heifSupport libheif
-    ++ optional svgSupport librsvg;
+    ++ optional svgSupport librsvg
+    ++ optional webpSupport libwebp
+    ++ optional jxlSupport libjxl
+    ++ optional psSupport libspectre;
 
   nativeBuildInputs = [ pkg-config ];
 
@@ -52,15 +61,23 @@ stdenv.mkDerivation rec {
 
   outputs = [ "bin" "out" "dev" ];
 
-  passthru.tests = {
-    inherit
-      libcaca
-      diffoscopeMinimal
-      feh
-      icewm
-      openbox
-      fluxbox
-      enlightenment;
+  passthru = {
+    tests = {
+      inherit
+        libcaca
+        diffoscopeMinimal
+        feh
+        icewm
+        openbox
+        fluxbox
+        enlightenment;
+      pkg-config = testers.testMetaPkgConfig finalAttrs.finalPackage;
+    };
+    updateScript = gitUpdater {
+      # No nicer place to find latest release.
+      url = "https://git.enlightenment.org/old/legacy-imlib2.git";
+      rev-prefix = "v";
+    };
   };
 
   meta = with lib; {
@@ -75,9 +92,10 @@ stdenv.mkDerivation rec {
     '';
 
     homepage = "https://docs.enlightenment.org/api/imlib2/html";
-    changelog = "https://git.enlightenment.org/legacy/imlib2.git/plain/ChangeLog?h=v${version}";
+    changelog = "https://git.enlightenment.org/old/legacy-imlib2/raw/tag/v${finalAttrs.version}/ChangeLog";
     license = licenses.imlib2;
+    pkgConfigModules = [ "imlib2" ];
     platforms = platforms.unix;
-    maintainers = with maintainers; [ spwhitt ];
+    maintainers = [ ];
   };
-}
+})

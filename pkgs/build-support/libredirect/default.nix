@@ -1,4 +1,4 @@
-{ lib, stdenv, bintools-unwrapped, llvmPackages_13, coreutils }:
+{ lib, stdenv, bintools-unwrapped, llvmPackages, coreutils }:
 
 if stdenv.hostPlatform.isStatic
 then throw ''
@@ -27,7 +27,7 @@ else stdenv.mkDerivation rec {
 
   outputs = ["out" "hook"];
 
-  libName = "libredirect" + stdenv.targetPlatform.extensions.sharedLibrary;
+  libName = "libredirect" + stdenv.hostPlatform.extensions.sharedLibrary;
 
   buildPhase = ''
     runHook preBuild
@@ -39,21 +39,21 @@ else stdenv.mkDerivation rec {
     # and the library search directory for libdl.
     # We can't build this on x86_64, because the libSystem we point to doesn't
     # like arm64(e).
-    PATH=${bintools-unwrapped}/bin:${llvmPackages_13.clang-unwrapped}/bin:$PATH \
+    PATH=${bintools-unwrapped}/bin:${llvmPackages.clang-unwrapped}/bin:$PATH \
       clang -arch x86_64 -arch arm64 -arch arm64e \
-      -isystem ${llvmPackages_13.clang.libc}/include \
-      -isystem ${llvmPackages_13.libclang.lib}/lib/clang/*/include \
-      -L${llvmPackages_13.clang.libc}/lib \
+      -isystem ${llvmPackages.clang.libc}/include \
+      -isystem ${llvmPackages.libclang.lib}/lib/clang/*/include \
+      -L${llvmPackages.clang.libc}/lib \
       -Wl,-install_name,$libName \
       -Wall -std=c99 -O3 -fPIC libredirect.c \
-      -ldl -shared -o "$libName"
+      -shared -o "$libName"
     '' else if stdenv.isDarwin then ''
     $CC -Wall -std=c99 -O3 -fPIC libredirect.c \
       -Wl,-install_name,$out/lib/$libName \
-      -ldl -shared -o "$libName"
+      -shared -o "$libName"
     '' else ''
     $CC -Wall -std=c99 -O3 -fPIC libredirect.c \
-      -ldl -shared -o "$libName"
+      -shared -o "$libName"
     ''}
 
     if [ -n "$doInstallCheck" ]; then
@@ -105,7 +105,7 @@ else stdenv.mkDerivation rec {
 
   meta = with lib; {
     platforms = platforms.unix;
-    description = "An LD_PRELOAD library to intercept and rewrite the paths in glibc calls";
+    description = "LD_PRELOAD library to intercept and rewrite the paths in glibc calls";
     longDescription = ''
       libredirect is an LD_PRELOAD library to intercept and rewrite the paths in
       glibc calls based on the value of $NIX_REDIRECTS, a colon-separated list

@@ -17,21 +17,18 @@
 , polkit
 , protobuf
 , audit
-, libgcrypt
 , libsodium
 }:
 
-assert libgcrypt != null -> libsodium == null;
-
 stdenv.mkDerivation rec {
-  version = "1.1.1";
+  version = "1.1.3";
   pname = "usbguard";
 
   src = fetchFromGitHub {
     owner = "USBGuard";
     repo = pname;
     rev = "usbguard-${version}";
-    sha256 = "sha256-lAh+l9GF+FHQqv2kEYU5JienZKGwR5e45BYAwjieYgw=";
+    hash = "sha256-8y8zaKJfoIXc9AvG1wi3EzZA7BR2wVFLuOyD+zpBY0s=";
     fetchSubmodules = true;
   };
 
@@ -44,6 +41,8 @@ stdenv.mkDerivation rec {
     libxml2 # xmllint
     docbook_xml_dtd_45
     docbook_xsl
+    dbus-glib # gdbus-codegen
+    protobuf # protoc
   ];
 
   buildInputs = [
@@ -51,21 +50,19 @@ stdenv.mkDerivation rec {
     libcap_ng
     libqb
     libseccomp
+    libsodium
     polkit
     protobuf
     audit
-  ]
-  ++ (lib.optional (libgcrypt != null) libgcrypt)
-  ++ (lib.optional (libsodium != null) libsodium);
+  ];
 
   configureFlags = [
     "--with-bundled-catch"
     "--with-bundled-pegtl"
     "--with-dbus"
+    "--with-crypto-library=sodium"
     "--with-polkit"
-  ]
-  ++ (lib.optional (libgcrypt != null) "--with-crypto-library=gcrypt")
-  ++ (lib.optional (libsodium != null) "--with-crypto-library=sodium");
+  ];
 
   enableParallelBuilding = true;
 
@@ -77,7 +74,7 @@ stdenv.mkDerivation rec {
   passthru.tests = nixosTests.usbguard;
 
   meta = with lib; {
-    description = "The USBGuard software framework helps to protect your computer against BadUSB";
+    description = "USBGuard software framework helps to protect your computer against BadUSB";
     longDescription = ''
       USBGuard is a software framework for implementing USB device authorization
       policies (what kind of USB devices are authorized) as well as method of
@@ -86,6 +83,7 @@ stdenv.mkDerivation rec {
     '';
     homepage = "https://usbguard.github.io/";
     license = licenses.gpl2Plus;
+    platforms = platforms.linux;
     maintainers = [ maintainers.tnias ];
   };
 }

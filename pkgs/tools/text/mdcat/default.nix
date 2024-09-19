@@ -1,34 +1,34 @@
 { lib
 , stdenv
-, fetchFromGitea
+, fetchFromGitHub
 , rustPlatform
 , pkg-config
 , asciidoctor
 , openssl
 , Security
+, SystemConfiguration
 , ansi2html
 , installShellFiles
 }:
 
 rustPlatform.buildRustPackage rec {
   pname = "mdcat";
-  version = "0.27.1";
+  version = "2.3.1";
 
-  src = fetchFromGitea {
-    domain = "codeberg.org";
-    owner = "flausch";
+  src = fetchFromGitHub {
+    owner = "swsnr";
     repo = "mdcat";
     rev = "mdcat-${version}";
-    sha256 = "sha256-iWFWpUyg/VYI+AKFsJe/rOYco+680l/bIHX0qXfD3u0=";
+    hash = "sha256-Geq4I4QjWg2dBfGw0j68gG5butWFLXynLC5c9AQTfPs=";
   };
 
   nativeBuildInputs = [ pkg-config asciidoctor installShellFiles ];
   buildInputs = [ openssl ]
-    ++ lib.optional stdenv.isDarwin Security;
+    ++ lib.optionals stdenv.isDarwin [ Security SystemConfiguration ];
 
-  cargoSha256 = "sha256-e/yupkCqWZZCfD8brVb2yD4pt3ExSfwCm2bmTyjRGpA=";
+  cargoHash = "sha256-G+vTW3hYNjZN3V5svltbKEeeUEolAVVbTOaAKVHEcUI=";
 
-  checkInputs = [ ansi2html ];
+  nativeCheckInputs = [ ansi2html ];
   # Skip tests that use the network and that include files.
   checkFlags = [
     "--skip magic::tests::detect_mimetype_of_larger_than_magic_param_bytes_max_length"
@@ -43,15 +43,20 @@ rustPlatform.buildRustPackage rec {
 
   postInstall = ''
     installManPage $releaseDir/build/mdcat-*/out/mdcat.1
-    installShellCompletion \
-      --bash $releaseDir/build/mdcat-*/out/completions/mdcat.bash \
-      --fish $releaseDir/build/mdcat-*/out/completions/mdcat.fish \
-      --zsh $releaseDir/build/mdcat-*/out/completions/_mdcat
+    ln -sr $out/bin/{mdcat,mdless}
+  '' + lib.optionalString (stdenv.buildPlatform.canExecute stdenv.hostPlatform) ''
+    for bin in mdcat mdless; do
+      installShellCompletion --cmd $bin \
+        --bash <($out/bin/$bin --completions bash) \
+        --fish <($out/bin/$bin --completions fish) \
+        --zsh <($out/bin/$bin --completions zsh)
+    done
   '';
 
   meta = with lib; {
     description = "cat for markdown";
-    homepage = "https://codeberg.org/flausch/mdcat";
+    homepage = "https://github.com/swsnr/mdcat";
+    changelog = "https://github.com/swsnr/mdcat/releases/tag/mdcat-${version}";
     license = with licenses; [ mpl20 ];
     maintainers = with maintainers; [ SuperSandro2000 ];
   };

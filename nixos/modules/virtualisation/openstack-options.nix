@@ -29,13 +29,13 @@ in
             options = {
               mount = lib.mkOption {
                 description = "Where to mount this dataset.";
-                type = types.nullOr types.string;
+                type = types.nullOr types.str;
                 default = null;
               };
 
               properties = lib.mkOption {
                 description = "Properties to set on this dataset.";
-                type = types.attrsOf types.string;
+                type = types.attrsOf types.str;
                 default = { };
               };
             };

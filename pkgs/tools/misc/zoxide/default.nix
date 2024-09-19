@@ -10,13 +10,13 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "zoxide";
-  version = "0.8.1";
+  version = "0.9.5";
 
   src = fetchFromGitHub {
     owner = "ajeetdsouza";
     repo = "zoxide";
-    rev = "v${version}";
-    sha256 = "sha256-f6HzSnrOaAOnA9k6e3CnXioxCTOM0VSpTOpxnmz+Tyk=";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-4Vb0C6k36VQwiruGj7lu6MjDEeTh84JSHw47YMbFb30=";
   };
 
   nativeBuildInputs = [ installShellFiles ];
@@ -28,7 +28,7 @@ rustPlatform.buildRustPackage rec {
       --replace '"fzf"' '"${fzf}/bin/fzf"'
   '';
 
-  cargoSha256 = "sha256-OAvE/KFoS4+18J+kOZTYa9zgnkWh/0bgy9iglGyZ8PQ=";
+  cargoHash = "sha256-G6Aqn+q48s8Qsoa1EMowtw5bnUnnYWhyGr4hNhVYNMo=";
 
   postInstall = ''
     installManPage man/man*/*
@@ -39,10 +39,11 @@ rustPlatform.buildRustPackage rec {
   '';
 
   meta = with lib; {
-    description = "A fast cd command that learns your habits";
+    description = "Fast cd command that learns your habits";
     homepage = "https://github.com/ajeetdsouza/zoxide";
-    changelog = "https://github.com/ajeetdsouza/zoxide/raw/v${version}/CHANGELOG.md";
+    changelog = "https://github.com/ajeetdsouza/zoxide/blob/v${version}/CHANGELOG.md";
     license = with licenses; [ mit ];
     maintainers = with maintainers; [ ysndr cole-h SuperSandro2000 ];
+    mainProgram = "zoxide";
   };
 }

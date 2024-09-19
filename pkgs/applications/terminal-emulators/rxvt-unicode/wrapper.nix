@@ -1,5 +1,4 @@
-{ callPackage
-, symlinkJoin
+{ symlinkJoin
 , makeWrapper
 , lib
 , rxvt-unicode-unwrapped
@@ -51,6 +50,8 @@ let
             --prefix PERL5LIB : "${perlPackages.makePerlPath perlDeps}" \
             --suffix-each URXVT_PERL_LIB ':' "$out/lib/urxvt/perl"
         '';
+
+        inherit (rxvt-unicode-unwrapped) meta;
 
         passthru = {
           plugins = plugins;

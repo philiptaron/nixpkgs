@@ -3,16 +3,17 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "elan";
-  version = "1.4.1";
+  version = "3.1.1-unstable-2024-08-02";
 
   src = fetchFromGitHub {
     owner = "leanprover";
     repo = "elan";
-    rev = "v${version}";
-    sha256 = "sha256-jHECNSXSATLuNHNSVwi7mBTI8l6+cLPDISc5T/4yHDg=";
+    # commit "chore: update to build with rust 1.80 (leanprover/elan#134)"
+    rev = "97ce78e0e6aecdf3e8d35dbf42b0614302efb250";
+    hash = "sha256-7cwpHMyhpTxYXjZM4xbDK+epvA2kBf7jelvMaPGP1kU=";
   };
 
-  cargoSha256 = "sha256-/XwlTmUboDbB6RTanhKyO6o2GBUhxpH/NQjeNsKpse0=";
+  cargoHash = "sha256-ON5d7ryMKEhkx6dV760msr+y/+4hIwssXUE5Ocaq2W0=";
 
   nativeBuildInputs = [ pkg-config makeWrapper ];
 
@@ -28,6 +29,7 @@ rustPlatform.buildRustPackage rec {
     (runCommand "0001-dynamically-patchelf-binaries.patch" {
         CC = stdenv.cc;
         cc = "${stdenv.cc}/bin/cc";
+        ar = "${stdenv.cc}/bin/ar";
         patchelf = patchelf;
         shell = runtimeShell;
       } ''
@@ -36,6 +38,7 @@ rustPlatform.buildRustPackage rec {
        --subst-var patchelf \
        --subst-var dynamicLinker \
        --subst-var cc \
+       --subst-var ar \
        --subst-var shell
     '')
   ];
@@ -59,7 +62,9 @@ rustPlatform.buildRustPackage rec {
   meta = with lib; {
     description = "Small tool to manage your installations of the Lean theorem prover";
     homepage = "https://github.com/leanprover/elan";
+    changelog = "https://github.com/leanprover/elan/blob/v${version}/CHANGELOG.md";
     license = with licenses; [ asl20 /* or */ mit ];
     maintainers = with maintainers; [ gebner ];
+    mainProgram = "elan";
   };
 }

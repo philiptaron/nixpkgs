@@ -1,31 +1,33 @@
-{ lib, stdenv, rustPlatform, fetchFromGitHub, pkg-config, udev }:
+{ lib, stdenv, rustPlatform, fetchCrate, pkg-config, udev, CoreFoundation, DiskArbitration, Foundation }:
 
 rustPlatform.buildRustPackage rec {
   pname = "elf2uf2-rs";
-  version = "unstable-2021-12-12";
+  version = "2.0.0";
 
-  src = fetchFromGitHub {
-    owner = "JoNil";
-    repo = pname;
-    rev = "91ae98873ed01971ab1543b98266a5ad2ec09210";
-    sha256 = "sha256-DGrT+YdDLdTYy5SWcQ+DNbpifGjrF8UTXyEeE/ug564=";
+  src = fetchCrate {
+    inherit pname version;
+    hash = "sha256-cmiCOykORue0Cg2uUUWa/nXviX1ddbGNC5gRKe+1kYs=";
   };
 
   nativeBuildInputs = [
     pkg-config
   ];
 
-  buildInputs = [
-    udev
-  ];
+  buildInputs = lib.optional stdenv.isLinux udev
+    ++ lib.optionals stdenv.isDarwin [
+      CoreFoundation
+      DiskArbitration
+      Foundation
+    ];
 
-  cargoSha256 = "sha256-5ui1+987xICP2wUSHy4YzKskn52W51Pi4DbEh+GbSPE=";
+  cargoHash = "sha256-TBH3pLB6vQVGnfShLtFPNKjciuUIuTkvp3Gayzo+X9E=";
 
   meta = with lib; {
     description = "Convert ELF files to UF2 for USB Flashing Bootloaders";
+    mainProgram = "elf2uf2-rs";
     homepage = "https://github.com/JoNil/elf2uf2-rs";
     license = with licenses; [ bsd0 ];
-    platforms = platforms.linux;
-    maintainers = with maintainers; [ polygon ];
+    platforms = platforms.linux ++ platforms.darwin;
+    maintainers = with maintainers; [ polygon moni ];
   };
 }

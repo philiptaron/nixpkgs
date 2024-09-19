@@ -1,16 +1,17 @@
 { lib, stdenv, fetchFromGitHub, which, curl, makeWrapper, jdk, writeScript
-, common-updater-scripts, cacert, git, nixfmt, nix, jq, coreutils, gnused }:
+, common-updater-scripts, cacert, git, nixfmt-classic, nix, jq, coreutils
+, gnused }:
 
 stdenv.mkDerivation rec {
   pname = "sbt-extras";
-  rev = "ef403f4ce126441f126dfc61ca6357a7b42539af";
-  version = "2022-02-01";
+  rev = "ed4bce34420650fbc06cc161f1960b539f19289d";
+  version = "2024-07-10";
 
   src = fetchFromGitHub {
     owner = "paulp";
     repo = "sbt-extras";
     inherit rev;
-    sha256 = "G7nR2wV0Wv019bCA+ecfYhmFh/DDHFjihKGFKNQ5dgM=";
+    sha256 = "lsYFupTSZQe2id0wuy+E7lszG4IT3R6fuo+Yql91MkM=";
   };
 
   dontBuild = true;
@@ -45,7 +46,7 @@ stdenv.mkDerivation rec {
          curl
          cacert
          git
-         nixfmt
+         nixfmt-classic
          nix
          jq
          coreutils
@@ -67,7 +68,8 @@ stdenv.mkDerivation rec {
   '';
 
   meta = {
-    description = "A more featureful runner for sbt, the simple/scala/standard build tool";
+    description =
+      "A more featureful runner for sbt, the simple/scala/standard build tool";
     homepage = "https://github.com/paulp/sbt-extras";
     license = lib.licenses.bsd3;
     maintainers = with lib.maintainers; [ nequissimus puffnfresh ];

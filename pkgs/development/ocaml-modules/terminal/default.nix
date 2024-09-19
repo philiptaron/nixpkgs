@@ -5,19 +5,18 @@
 
 buildDunePackage rec {
   pname = "terminal";
-  version = "0.2.1";
+  version = "0.4.0";
 
   minimalOCamlVersion = "4.03";
-  useDune2 = true;
 
   src = fetchurl {
-    url = "https://github.com/CraigFe/progress/releases/download/${version}/terminal-${version}.tbz";
-    sha256 = "sha256:0vjqkvmpyi8kvmb4vrx3f0994rph8i9pvlrz1dyi126vlb2zbrvs";
+    url = "https://github.com/CraigFe/progress/releases/download/${version}/progress-${version}.tbz";
+    hash = "sha256-i+RJVTN5uy3F6LeYBcgER2kKA9yj6a7pWf7PRtgnj7c=";
   };
 
   propagatedBuildInputs = [ stdlib-shims uutf uucp ];
 
-  doCheck = lib.versionAtLeast ocaml.version "4.05";
+  doCheck = lib.versionAtLeast ocaml.version "4.08";
   checkInputs = [ alcotest fmt ];
 
   meta = with lib; {

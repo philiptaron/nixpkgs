@@ -1,27 +1,47 @@
-{ lib
-, buildPythonPackage
-, fetchPypi
-, pysnmp
+{
+  lib,
+  buildPythonPackage,
+  fetchPypi,
+  async-timeout,
+  pysnmp,
+  pythonOlder,
+  poetry-core,
 }:
 
 buildPythonPackage rec {
   pname = "atenpdu";
-  version = "0.3.3";
+  version = "0.6.2";
+  pyproject = true;
+
+  disabled = pythonOlder "3.";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-/duY1hS+RU/UAdcQoHF1+c99XaN74jj/0Hj/86U0kmo=";
+    hash = "sha256-KzRoE4tE/tQkKYroq5PbWKREmEl8AwbIOg3IHRZZtsQ=";
   };
 
-  propagatedBuildInputs = [ pysnmp ];
+  postPatch = ''
+    substituteInPlace pyproject.toml \
+      --replace-fail pysnmp-lextudio pysnmp
+  '';
 
-  # Project has no test
+  nativeBuildInputs = [ poetry-core ];
+
+  propagatedBuildInputs = [
+    async-timeout
+    pysnmp
+  ];
+
+  # Module has no test
   doCheck = false;
+
   pythonImportsCheck = [ "atenpdu" ];
 
   meta = with lib; {
     description = "Python interface to control ATEN PE PDUs";
+    mainProgram = "pductl";
     homepage = "https://github.com/mtdcr/pductl";
+    changelog = "https://github.com/mtdcr/pductl/releases/tag/${version}";
     license = with licenses; [ mit ];
     maintainers = with maintainers; [ fab ];
   };

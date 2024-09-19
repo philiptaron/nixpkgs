@@ -1,34 +1,34 @@
-{ lib
-, attrs
-, buildPythonPackage
-, defusedxml
-, fetchFromGitHub
-, hypothesis
-, pythonOlder
-, jbig2dec
-, lxml
-, mupdf
-, packaging
-, pillow
-, psutil
-, pybind11
-, pytest-xdist
-, pytestCheckHook
-, python-dateutil
-, python-xmp-toolkit
-, qpdf
-, setuptools
-, setuptools-scm
-, setuptools-scm-git-archive
-, substituteAll
+{
+  lib,
+  attrs,
+  buildPythonPackage,
+  fetchFromGitHub,
+  hypothesis,
+  pythonOlder,
+  jbig2dec,
+  deprecated,
+  lxml,
+  mupdf-headless,
+  numpy,
+  packaging,
+  pillow,
+  psutil,
+  pybind11,
+  pytest-xdist,
+  pytestCheckHook,
+  python-dateutil,
+  python-xmp-toolkit,
+  qpdf,
+  setuptools,
+  substituteAll,
 }:
 
 buildPythonPackage rec {
   pname = "pikepdf";
-  version = "5.1.3";
-  format = "setuptools";
+  version = "9.1.1";
+  pyproject = true;
 
-  disabled = pythonOlder "3.7";
+  disabled = pythonOlder "3.8";
 
   src = fetchFromGitHub {
     owner = "pikepdf";
@@ -40,36 +40,33 @@ buildPythonPackage rec {
     postFetch = ''
       rm "$out/.git_archival.txt"
     '';
-    hash = "sha256-jkAwc1bQ1jRDf/qY+xAjiLXXO98qKjyX+J7Lu4tYWoI=";
+    hash = "sha256-++je4tKnXr504Yl9VBH9dc9fycDrMstRN5hu4s/oe9w=";
   };
 
   patches = [
     (substituteAll {
       src = ./paths.patch;
-      jbig2dec = "${lib.getBin jbig2dec}/bin/jbig2dec";
-      mudraw = "${lib.getBin mupdf}/bin/mudraw";
+      jbig2dec = lib.getExe' jbig2dec "jbig2dec";
+      mutool = lib.getExe' mupdf-headless "mutool";
     })
   ];
 
   postPatch = ''
-    sed -i 's|\S*/opt/homebrew.*|pass|' setup.py
+    substituteInPlace setup.py \
+      --replace-fail "shims_enabled = not cflags_defined" "shims_enabled = False"
   '';
 
-  SETUPTOOLS_SCM_PRETEND_VERSION = version;
+  buildInputs = [ qpdf ];
 
-  buildInputs = [
+  build-system = [
     pybind11
-    qpdf
+    setuptools
   ];
 
-  nativeBuildInputs = [
-    setuptools-scm-git-archive
-    setuptools-scm
-  ];
-
-  checkInputs = [
+  nativeCheckInputs = [
     attrs
     hypothesis
+    numpy
     pytest-xdist
     psutil
     pytestCheckHook
@@ -77,12 +74,11 @@ buildPythonPackage rec {
     python-xmp-toolkit
   ];
 
-  propagatedBuildInputs = [
-    defusedxml
+  dependencies = [
+    deprecated
     lxml
     packaging
     pillow
-    setuptools
   ];
 
   pythonImportsCheck = [ "pikepdf" ];
@@ -91,7 +87,7 @@ buildPythonPackage rec {
     homepage = "https://github.com/pikepdf/pikepdf";
     description = "Read and write PDFs with Python, powered by qpdf";
     license = licenses.mpl20;
-    maintainers = with maintainers; [ kiwi dotlambda ];
-    changelog = "https://github.com/pikepdf/pikepdf/blob/${version}/docs/release_notes.rst";
+    maintainers = with maintainers; [ dotlambda ];
+    changelog = "https://github.com/pikepdf/pikepdf/blob/${src.rev}/docs/releasenotes/version${lib.versions.major version}.rst";
   };
 }

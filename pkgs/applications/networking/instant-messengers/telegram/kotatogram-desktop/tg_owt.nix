@@ -8,10 +8,10 @@
 , libjpeg
 , openssl
 , libopus
-, ffmpeg_4
+, ffmpeg
 , protobuf
 , openh264
-, usrsctp
+, crc32c
 , libvpx
 , libX11
 , libXtst
@@ -27,42 +27,23 @@
 , mesa
 , libdrm
 , libGL
-, Cocoa
-, AppKit
-, IOKit
-, IOSurface
-, Foundation
-, AVFoundation
-, CoreMedia
-, VideoToolbox
-, CoreGraphics
-, CoreVideo
-, OpenGL
-, Metal
-, MetalKit
-, CoreFoundation
-, ApplicationServices
+, darwin
 }:
 
 stdenv.mkDerivation {
   pname = "tg_owt";
-  version = "unstable-2022-04-13";
+  version = "0-unstable-2024-06-15";
 
   src = fetchFromGitHub {
     owner = "desktop-app";
     repo = "tg_owt";
-    rev = "63a934db1ed212ebf8aaaa20f0010dd7b0d7b396";
-    sha256 = "sha256-WddSsQ9KW1zYyYckzdUOvfFZArYAbyvXmABQNMtK6cM=";
+    rev = "c9cc4390ab951f2cbc103ff783a11f398b27660b";
+    sha256 = "sha256-FfWmSYaeryTDbsGJT3R7YK1oiyJcrR7YKKBOF+9PmpY=";
     fetchSubmodules = true;
   };
 
-  patches = [
-    # let it build with nixpkgs 10.12 sdk
-    ./tg_owt-10.12-sdk.patch
-  ];
-
   postPatch = lib.optionalString stdenv.isLinux ''
-    substituteInPlace src/modules/desktop_capture/linux/egl_dmabuf.cc \
+    substituteInPlace src/modules/desktop_capture/linux/wayland/egl_dmabuf.cc \
       --replace '"libEGL.so.1"' '"${libGL}/lib/libEGL.so.1"' \
       --replace '"libGL.so.1"' '"${libGL}/lib/libGL.so.1"' \
       --replace '"libgbm.so.1"' '"${mesa}/lib/libgbm.so.1"' \
@@ -73,14 +54,14 @@ stdenv.mkDerivation {
 
   nativeBuildInputs = [ pkg-config cmake ninja yasm ];
 
-  buildInputs = [
+  propagatedBuildInputs = [
     libjpeg
     openssl
     libopus
-    ffmpeg_4
+    ffmpeg
     protobuf
     openh264
-    usrsctp
+    crc32c
     libvpx
     abseil-cpp
   ] ++ lib.optionals stdenv.isLinux [
@@ -97,7 +78,7 @@ stdenv.mkDerivation {
     mesa
     libdrm
     libGL
-  ] ++ lib.optionals stdenv.isDarwin [
+  ] ++ lib.optionals stdenv.isDarwin (with darwin.apple_sdk.frameworks; [
     Cocoa
     AppKit
     IOKit
@@ -113,20 +94,9 @@ stdenv.mkDerivation {
     MetalKit
     CoreFoundation
     ApplicationServices
-  ];
-
-  # https://github.com/NixOS/nixpkgs/issues/130963
-  NIX_LDFLAGS = lib.optionalString stdenv.isDarwin "-lc++abi";
+  ]);
 
   enableParallelBuilding = true;
-
-  propagatedBuildInputs = [
-    # Required for linking downstream binaries.
-    abseil-cpp
-    openh264
-    usrsctp
-    libvpx
-  ];
 
   meta.license = lib.licenses.bsd3;
 }

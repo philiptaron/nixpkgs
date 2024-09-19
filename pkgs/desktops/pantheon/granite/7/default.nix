@@ -5,6 +5,7 @@
 , python3
 , meson
 , ninja
+, sassc
 , vala
 , pkg-config
 , libgee
@@ -18,7 +19,7 @@
 
 stdenv.mkDerivation rec {
   pname = "granite";
-  version = "7.0.0";
+  version = "7.5.0";
 
   outputs = [ "out" "dev" ];
 
@@ -26,7 +27,7 @@ stdenv.mkDerivation rec {
     owner = "elementary";
     repo = pname;
     rev = version;
-    sha256 = "sha256-fuyjQDH3C8qRYuAfQDDeW3aSWVTLtGzMAjcuAHCB1Zw=";
+    sha256 = "sha256-mwivme79zsPcS+Ol8iApECjpQz+fYcBLZwkULagXVvI=";
   };
 
   nativeBuildInputs = [
@@ -36,6 +37,7 @@ stdenv.mkDerivation rec {
     ninja
     pkg-config
     python3
+    sassc
     vala
     wrapGAppsHook4
   ];
@@ -53,13 +55,11 @@ stdenv.mkDerivation rec {
   '';
 
   passthru = {
-    updateScript = nix-update-script {
-      attrPath = "pantheon.granite7";
-    };
+    updateScript = nix-update-script { };
   };
 
   meta = with lib; {
-    description = "An extension to GTK used by elementary OS";
+    description = "Extension to GTK used by elementary OS";
     longDescription = ''
       Granite is a companion library for GTK and GLib. Among other things, it provides complex widgets and convenience functions
       designed for use in apps built for elementary OS.

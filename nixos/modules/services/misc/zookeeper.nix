@@ -24,16 +24,12 @@ let
 in {
 
   options.services.zookeeper = {
-    enable = mkOption {
-      description = "Whether to enable Zookeeper.";
-      default = false;
-      type = types.bool;
-    };
+    enable = mkEnableOption "Zookeeper";
 
     port = mkOption {
       description = "Zookeeper Client port.";
       default = 2181;
-      type = types.int;
+      type = types.port;
     };
 
     id = mkOption {
@@ -107,12 +103,7 @@ in {
       '';
     };
 
-    package = mkOption {
-      description = "The zookeeper package to use";
-      default = pkgs.zookeeper;
-      defaultText = literalExpression "pkgs.zookeeper";
-      type = types.package;
-    };
+    package = mkPackageOption pkgs "zookeeper" { };
 
     jre = mkOption {
       description = "The JRE with which to run Zookeeper";

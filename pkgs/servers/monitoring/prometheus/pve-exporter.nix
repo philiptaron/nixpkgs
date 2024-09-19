@@ -1,15 +1,16 @@
 { lib
 , python3
+, fetchPypi
 , nixosTests
 }:
 
 python3.pkgs.buildPythonApplication rec {
-  pname = "prometheus-pve-exporter";
-  version = "2.2.2";
+  pname = "prometheus_pve_exporter";
+  version = "3.4.4";
 
-  src = python3.pkgs.fetchPypi {
+  src = fetchPypi {
     inherit pname version;
-    sha256 = "0vvsiw8nj8zkx6v42f260xbsdd92l0ac4vwpm7w38j3qwvanar7k";
+    hash = "sha256-kQo3NVrqsM78bFE9sZjubNdT6yj3Dza3BqF6DkYA6eI=";
   };
 
   propagatedBuildInputs = with python3.pkgs; [
@@ -18,6 +19,7 @@ python3.pkgs.buildPythonApplication rec {
     pyyaml
     requests
     werkzeug
+    gunicorn
   ];
 
   doCheck = false;
@@ -30,6 +32,7 @@ python3.pkgs.buildPythonApplication rec {
 
   meta = with lib; {
     description = "Exposes information gathered from Proxmox VE cluster for use by the Prometheus monitoring system";
+    mainProgram = "pve_exporter";
     homepage = "https://github.com/prometheus-pve/prometheus-pve-exporter";
     license = licenses.asl20;
     maintainers = with maintainers; [ nukaduka ];

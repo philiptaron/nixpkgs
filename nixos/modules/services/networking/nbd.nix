@@ -58,8 +58,7 @@ in
           };
           description = ''
             Extra options for the server. See
-            <citerefentry><refentrytitle>nbd-server</refentrytitle>
-            <manvolnum>5</manvolnum></citerefentry>.
+            {manpage}`nbd-server(5)`.
           '';
         };
 
@@ -90,8 +89,7 @@ in
                   };
                   description = ''
                     Extra options for this export. See
-                    <citerefentry><refentrytitle>nbd-server</refentrytitle>
-                    <manvolnum>5</manvolnum></citerefentry>.
+                    {manpage}`nbd-server(5)`.
                   '';
                 };
               };
@@ -119,6 +117,7 @@ in
     boot.kernelModules = [ "nbd" ];
 
     systemd.services.nbd-server = {
+      wants = [ "network-online.target" ];
       after = [ "network-online.target" ];
       before = [ "multi-user.target" ];
       wantedBy = [ "multi-user.target" ];

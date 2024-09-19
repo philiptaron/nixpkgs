@@ -1,31 +1,31 @@
-{ lib
-, buildPythonPackage
-, fetchFromGitHub
+{
+  lib,
+  buildPythonPackage,
+  fetchFromGitHub,
 
-# propagates
-, django
-, jwcrypto
-, requests
-, oauthlib
+  # propagates
+  django,
+  jwcrypto,
+  requests,
+  oauthlib,
 
-# tests
-, djangorestframework
-, pytest-django
-, pytest-xdist
-, pytest-mock
-, pytestCheckHook
+  # tests
+  djangorestframework,
+  pytest-django,
+  pytest-mock,
+  pytestCheckHook,
 }:
 
 buildPythonPackage rec {
   pname = "django-oauth-toolkit";
-  version = "1.7.0";
+  version = "2.4.0";
   format = "setuptools";
 
   src = fetchFromGitHub {
     owner = "jazzband";
     repo = pname;
-    rev = version;
-    sha256 = "0rp7pjif54yvdxfxn0pnf8ha3fjxspnx1ijyr1f8npwk2x5vnvhb";
+    rev = "refs/tags/${version}";
+    hash = "sha256-nfLjjVp+6OsjFdJHUZ2gzZic/E/sCklj+YeFyb/EZdw=";
   };
 
   postPatch = ''
@@ -39,12 +39,16 @@ buildPythonPackage rec {
     requests
   ];
 
+  pythonRelaxDeps = [ "django" ];
+
   DJANGO_SETTINGS_MODULE = "tests.settings";
 
-  checkInputs = [
+  # xdist is disabled right now because it can cause race conditions on high core machines
+  # https://github.com/jazzband/django-oauth-toolkit/issues/1300
+  nativeCheckInputs = [
     djangorestframework
     pytest-django
-    pytest-xdist
+    # pytest-xdist
     pytest-mock
     pytestCheckHook
   ];

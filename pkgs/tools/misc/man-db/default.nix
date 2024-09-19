@@ -2,6 +2,7 @@
 , db
 , fetchurl
 , groff
+, gzip
 , lib
 , libiconv
 , libpipeline
@@ -15,11 +16,11 @@
 
 stdenv.mkDerivation rec {
   pname = "man-db";
-  version = "2.10.2";
+  version = "2.12.1";
 
   src = fetchurl {
     url = "mirror://savannah/man-db/man-db-${version}.tar.xz";
-    sha256 = "sha256-7peVTUkqE3MZA8nQcnubAeUIntvWlfDNtY1AWlr1UU0=";
+    hash = "sha256-3e4kna63jPkrq3lMzQacyLV1mSJl6iDiOeiHFW6IAmU=";
   };
 
   outputs = [ "out" "doc" ];
@@ -28,9 +29,11 @@ stdenv.mkDerivation rec {
   strictDeps = true;
   nativeBuildInputs = [ autoreconfHook groff makeWrapper pkg-config zstd ];
   buildInputs = [ libpipeline db groff ]; # (Yes, 'groff' is both native and build input)
-  checkInputs = [ libiconv /* for 'iconv' binary */ ];
+  nativeCheckInputs = [ libiconv /* for 'iconv' binary */ ];
 
-  patches = [ ./systemwide-man-db-conf.patch ];
+  patches = [
+    ./systemwide-man-db-conf.patch
+  ];
 
   postPatch = ''
     # Remove all mandatory manpaths. Nixpkgs makes no requirements on
@@ -52,7 +55,7 @@ stdenv.mkDerivation rec {
     "--with-systemdtmpfilesdir=${placeholder "out"}/lib/tmpfiles.d"
     "--with-systemdsystemunitdir=${placeholder "out"}/lib/systemd/system"
     "--with-pager=less"
-  ] ++ lib.optional stdenv.hostPlatform.isDarwin [
+  ] ++ lib.optionals stdenv.hostPlatform.isDarwin [
     "ac_cv_func__set_invalid_parameter_handler=no"
     "ac_cv_func_posix_fadvise=no"
     "ac_cv_func_mempcpy=no"
@@ -68,8 +71,7 @@ stdenv.mkDerivation rec {
     # make sure that we don't wrap symlinks (since that changes argv[0] to the -wrapped name)
     find "$out/bin" -type f | while read file; do
       wrapProgram "$file" \
-        --prefix PATH : "${lib.getBin groff}/bin" \
-        --prefix PATH : "${lib.getBin zstd}/bin"
+        --prefix PATH : "${lib.makeBinPath [ groff gzip zstd ]}"
     done
   '';
 
@@ -79,7 +81,7 @@ stdenv.mkDerivation rec {
 
   enableParallelBuilding = true;
 
-  doCheck = !stdenv.hostPlatform.isMusl /* iconv binary */ && !stdenv.hostPlatform.isDarwin;
+  doCheck = !stdenv.hostPlatform.isMusl /* iconv binary */;
 
   passthru.tests = {
     nixos = nixosTests.man;
@@ -87,8 +89,8 @@ stdenv.mkDerivation rec {
 
   meta = with lib; {
     homepage = "http://man-db.nongnu.org";
-    description = "An implementation of the standard Unix documentation system accessed using the man command";
-    license = licenses.gpl2;
+    description = "Implementation of the standard Unix documentation system accessed using the man command";
+    license = licenses.gpl2Plus;
     platforms = lib.platforms.unix;
     mainProgram = "man";
   };

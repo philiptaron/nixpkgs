@@ -1,74 +1,138 @@
-{ lib
-, stdenv
-, fetchFromGitHub
-, fetchpatch
-, buildPythonPackage
-, mypy-extensions
-, python
-, pythonOlder
-, typed-ast
-, typing-extensions
-, tomli
-, types-typed-ast
+{
+  lib,
+  stdenv,
+  buildPythonPackage,
+  fetchFromGitHub,
+  gitUpdater,
+  pythonAtLeast,
+  pythonOlder,
+
+  # build-system
+  setuptools,
+  types-psutil,
+  types-setuptools,
+  wheel,
+
+  # propagates
+  mypy-extensions,
+  tomli,
+  typing-extensions,
+
+  # optionals
+  lxml,
+  psutil,
+
+  # tests
+  attrs,
+  filelock,
+  pytest-xdist,
+  pytestCheckHook,
+  nixosTests,
 }:
 
 buildPythonPackage rec {
   pname = "mypy";
-  version = "0.941";
-  disabled = pythonOlder "3.6";
+  version = "1.10.1";
+  pyproject = true;
+
+  disabled = pythonOlder "3.8";
 
   src = fetchFromGitHub {
     owner = "python";
     repo = "mypy";
-    rev = "v${version}";
-    hash = "sha256-H2SWJA0WWyKV7/5miFawv4JRXu/J7H6Wer1eBL+Tru0=";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-joV+elRaAICNQHkYuYtTDjvOUkHPsRkG1OLRvdxeIHc=";
+  };
+  passthru.updateScript = gitUpdater {
+    rev-prefix = "v";
   };
 
-  patches = [
-    # FIXME: Remove patch after upstream has decided the proper solution.
-    #        https://github.com/python/mypy/pull/11143
-    (fetchpatch {
-      url = "https://github.com/python/mypy/commit/e7869f05751561958b946b562093397027f6d5fa.patch";
-      hash = "sha256-waIZ+m3tfvYE4HJ8kL6rN/C4fMjvLEe9UoPbt9mHWIM=";
-    })
-  ];
-
-  buildInputs = [
-    types-typed-ast
-  ];
-
-  propagatedBuildInputs = [
+  build-system = [
     mypy-extensions
-    tomli
-    typed-ast
+    setuptools
+    types-psutil
+    types-setuptools
     typing-extensions
-  ];
+    wheel
+  ] ++ lib.optionals (pythonOlder "3.11") [ tomli ];
 
-  # Tests not included in pip package.
-  doCheck = false;
+  dependencies = [
+    mypy-extensions
+    typing-extensions
+  ] ++ lib.optionals (pythonOlder "3.11") [ tomli ];
 
-  pythonImportsCheck = [
-    "mypy"
-    "mypy.api"
-    "mypy.fastparse"
-    "mypy.report"
-    "mypy.types"
-    "mypyc"
-    "mypyc.analysis"
-  ];
+  optional-dependencies = {
+    dmypy = [ psutil ];
+    reports = [ lxml ];
+  };
 
   # Compile mypy with mypyc, which makes mypy about 4 times faster. The compiled
   # version is also the default in the wheels on Pypi that include binaries.
   # is64bit: unfortunately the build would exhaust all possible memory on i686-linux.
-  MYPY_USE_MYPYC = stdenv.buildPlatform.is64bit;
+  env.MYPY_USE_MYPYC = stdenv.buildPlatform.is64bit;
 
-  # when testing reduce optimisation level to drastically reduce build time
-  MYPYC_OPT_LEVEL = 1;
+  # when testing reduce optimisation level to reduce build time by 20%
+  env.MYPYC_OPT_LEVEL = 1;
+
+  pythonImportsCheck =
+    [
+      "mypy"
+      "mypy.api"
+      "mypy.fastparse"
+      "mypy.types"
+      "mypyc"
+      "mypyc.analysis"
+    ]
+    ++ lib.optionals (!stdenv.hostPlatform.isi686) [
+      # ImportError: cannot import name 'map_instance_to_supertype' from partially initialized module 'mypy.maptype' (most likely due to a circular import)
+      "mypy.report"
+    ];
+
+  nativeCheckInputs = [
+    attrs
+    filelock
+    pytest-xdist
+    pytestCheckHook
+    setuptools
+    tomli
+  ] ++ lib.flatten (lib.attrValues optional-dependencies);
+
+  disabledTests =
+    [
+      # fails with typing-extensions>=4.10
+      # https://github.com/python/mypy/issues/17005
+      "test_runtime_typing_objects"
+    ]
+    ++ lib.optionals (pythonAtLeast "3.12") [
+      # requires distutils
+      "test_c_unit_test"
+    ];
+
+  disabledTestPaths =
+    [
+      # fails to find tyoing_extensions
+      "mypy/test/testcmdline.py"
+      "mypy/test/testdaemon.py"
+      # fails to find setuptools
+      "mypyc/test/test_commandline.py"
+      # fails to find hatchling
+      "mypy/test/testpep561.py"
+    ]
+    ++ lib.optionals stdenv.hostPlatform.isi686 [
+      # https://github.com/python/mypy/issues/15221
+      "mypyc/test/test_run.py"
+    ];
+
+  passthru.tests = {
+    # Failing typing checks on the test-driver result in channel blockers.
+    inherit (nixosTests) nixos-test-driver;
+  };
 
   meta = with lib; {
     description = "Optional static typing for Python";
-    homepage = "http://www.mypy-lang.org";
+    homepage = "https://www.mypy-lang.org";
     license = licenses.mit;
-    maintainers = with maintainers; [ martingms lnl7 SuperSandro2000 ];
+    mainProgram = "mypy";
+    maintainers = with maintainers; [ lnl7 ];
   };
 }

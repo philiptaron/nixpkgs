@@ -17,18 +17,25 @@ in {
       defaultText = "config.networking.hostName";
     };
 
+    verbose = mkOption {
+      type = types.bool;
+      description = "Enable verbose output";
+      default = false;
+    };
+
     profile = mkOption {
       type = types.nullOr types.str;
       default = null;
       description = "Profile name, defaults to 'system' (NixOS).";
     };
 
-    package = mkOption {
-      type = types.package;
-      default = pkgs.cachix;
-      defaultText = literalExpression "pkgs.cachix";
-      description = "Cachix Client package to use.";
+    host = mkOption {
+      type = types.nullOr types.str;
+      default = null;
+      description = "Cachix uri to use.";
     };
+
+    package = mkPackageOption pkgs "cachix" { };
 
     credentialsFile = mkOption {
       type = types.path;
@@ -42,15 +49,27 @@ in {
   config = mkIf cfg.enable {
     systemd.services.cachix-agent = {
       description = "Cachix Deploy Agent";
+      wants = [ "network-online.target" ];
       after = ["network-online.target"];
       path = [ config.nix.package ];
       wantedBy = [ "multi-user.target" ];
-      # don't restart while changing
-      reloadIfChanged = true;
+
+      # Cachix requires $USER to be set
+      environment.USER = "root";
+
+      # don't stop the service if the unit disappears
+      unitConfig.X-StopOnRemoval = false;
+
       serviceConfig = {
-        Restart = "on-failure";
+        # we don't want to kill children processes as those are deployments
+        KillMode = "process";
+        Restart = "always";
+        RestartSec = 5;
         EnvironmentFile = cfg.credentialsFile;
-        ExecStart = "${cfg.package}/bin/cachix deploy agent ${cfg.name} ${if cfg.profile != null then profile else ""}";
+        ExecStart = ''
+          ${cfg.package}/bin/cachix ${lib.optionalString cfg.verbose "--verbose"} ${lib.optionalString (cfg.host != null) "--host ${cfg.host}"} \
+            deploy agent ${cfg.name} ${optionalString (cfg.profile != null) cfg.profile}
+        '';
       };
     };
   };

@@ -6,31 +6,28 @@
 , curl
 , pkg-config
 , openssl
-, llvmPackages
 }:
 rustPlatform.buildRustPackage rec {
   pname = "snarkos";
-  version = "2.0.2";
+  version = "2.2.7";
 
   src = fetchFromGitHub {
     owner = "AleoHQ";
     repo = "snarkOS";
     rev = "v${version}";
-    sha256 = "sha256-sS8emB+uhWuoq5ISuT8FgSSzX7/WDoOY8hHzPE/EX3o=";
+    sha256 = "sha256-+z9dgg5HdR+Gomug03gI1zdCU6t4SBHkl1Pxoq69wrc=";
   };
 
-  cargoSha256 = "sha256-XS6dw6BIoJdigEso/J1dUaAp7AIAda3HrKnCoBynRv8=";
+  cargoHash = "sha256-qW/ZV4JqpNqqh8BYc+/d5g8junwhdZ38NhHclx+k/0M=";
 
   # buildAndTestSubdir = "cli";
 
-  nativeBuildInputs = lib.optionals stdenv.isLinux [ pkg-config llvmPackages.clang ];
+  nativeBuildInputs = lib.optionals stdenv.isLinux [ pkg-config rustPlatform.bindgenHook ];
 
   # Needed to get openssl-sys to use pkg-config.
   OPENSSL_NO_VENDOR = 1;
   OPENSSL_LIB_DIR = "${lib.getLib openssl}/lib";
   OPENSSL_DIR="${lib.getDev openssl}";
-
-  LIBCLANG_PATH="${llvmPackages.libclang.lib}/lib";
 
   # TODO check why rust compilation fails by including the rocksdb from nixpkgs
   # Used by build.rs in the rocksdb-sys crate. If we don't set these, it would
@@ -52,10 +49,11 @@ rustPlatform.buildRustPackage rec {
 
 
   meta = with lib; {
-    description = "A Decentralized Operating System for Zero-Knowledge Applications";
+    description = "Decentralized Operating System for Zero-Knowledge Applications";
     homepage = "https://snarkos.org";
     license = licenses.asl20;
     maintainers = with maintainers; [ happysalada ];
     platforms = platforms.unix;
+    mainProgram = "snarkos";
   };
 }

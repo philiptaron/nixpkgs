@@ -1,32 +1,49 @@
-{ lib
-, buildPythonPackage
-, fetchPypi
-, numpy
-, pytestCheckHook
+{
+  lib,
+  buildPythonPackage,
+  fetchFromGitHub,
+  fetchpatch2,
+  numpy,
+  pytestCheckHook,
+  pythonOlder,
+  setuptools,
+  setuptools-scm,
 }:
 
 buildPythonPackage rec {
   pname = "quantities";
-  version = "0.13.0";
+  version = "0.15.0";
+  pyproject = true;
 
-  src = fetchPypi {
-    inherit pname version;
-    sha256 = "0fde20115410de21cefa786f3aeae69c1b51bb19ee492190324c1da705e61a81";
+  disabled = pythonOlder "3.8";
+
+  src = fetchFromGitHub {
+    owner = "python-quantities";
+    repo = "python-quantities";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-N20xfzGtM0VnfkJtzMytNLySTkgVz2xf1nEJxlwBSCI=";
   };
 
-  propagatedBuildInputs = [
-    numpy
+  patches = [
+    (fetchpatch2 {
+      name = "prevent-arbitrary-code-eval.patch";
+      url = "https://github.com/python-quantities/python-quantities/pull/236.patch";
+      hash = "sha256-H1tOfXqNMIKY01m6o2PsfZG0CvnWNxW2qIWA5ce1lRk=";
+    })
   ];
 
-  checkInputs = [
-    pytestCheckHook
+  build-system = [
+    setuptools
+    setuptools-scm
   ];
+
+  dependencies = [ numpy ];
+
+  nativeCheckInputs = [ pytestCheckHook ];
 
   disabledTests = [
-    # Tests don't work with current numpy
-    # https://github.com/python-quantities/python-quantities/pull/195
-    "test_arctan2"
-    "test_fix"
+    # test fails with numpy 1.24
+    "test_mul"
   ];
 
   pythonImportsCheck = [ "quantities" ];
@@ -34,7 +51,8 @@ buildPythonPackage rec {
   meta = with lib; {
     description = "Quantities is designed to handle arithmetic and conversions of physical quantities";
     homepage = "https://python-quantities.readthedocs.io/";
+    changelog = "https://github.com/python-quantities/python-quantities/blob/v${version}/CHANGES.txt";
     license = licenses.bsd2;
-    maintainers = with maintainers; [ ];
+    maintainers = [ ];
   };
 }

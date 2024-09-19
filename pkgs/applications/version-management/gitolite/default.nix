@@ -1,14 +1,14 @@
-{ stdenv, fetchFromGitHub, git, lib, makeWrapper, nettools, perl, perlPackages, nixosTests }:
+{ stdenv, coreutils, fetchFromGitHub, git, lib, makeWrapper, nettools, perl, nixosTests }:
 
 stdenv.mkDerivation rec {
   pname = "gitolite";
-  version = "3.6.12";
+  version = "3.6.13";
 
   src = fetchFromGitHub {
     owner = "sitaramc";
     repo = "gitolite";
     rev = "v${version}";
-    sha256 = "05xw1pmagvkrbzga5pgl3xk9qyc6b5x73f842454f3w9ijspa8zy";
+    hash = "sha256-/VBu+aepIrxWc2padPa/WoXbIdKfIwqmA/M8d1GE5FI=";
   };
 
   buildInputs = [ nettools perl ];
@@ -25,6 +25,8 @@ stdenv.mkDerivation rec {
       --replace /usr/bin/perl "${perl}/bin/perl"
     substituteInPlace src/lib/Gitolite/Setup.pm \
       --replace hostname "${nettools}/bin/hostname"
+    substituteInPlace src/commands/sskm \
+      --replace /bin/rm "${coreutils}/bin/rm"
   '';
 
   postFixup = ''

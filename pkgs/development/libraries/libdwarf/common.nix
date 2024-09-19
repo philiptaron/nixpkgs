@@ -1,11 +1,11 @@
-{ lib, stdenv, fetchurl, buildInputs, sha512, version, libelf, url }:
+{ lib, stdenv, fetchurl, buildInputs, hash, version, url, knownVulnerabilities }:
 
 stdenv.mkDerivation rec {
   pname = "libdwarf";
   inherit version;
 
   src = fetchurl {
-    inherit url sha512;
+    inherit url hash;
   };
 
   configureFlags = [ "--enable-shared" "--disable-nonshared" ];
@@ -19,5 +19,6 @@ stdenv.mkDerivation rec {
     platforms = lib.platforms.unix;
     license = lib.licenses.lgpl21Plus;
     maintainers = [ lib.maintainers.atry ];
+    inherit knownVulnerabilities;
   };
 }

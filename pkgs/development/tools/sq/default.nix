@@ -1,24 +1,29 @@
 { lib, buildGoModule, fetchFromGitHub, installShellFiles, testers, sq }:
+
 buildGoModule rec {
   pname = "sq";
-  version = "0.15.4";
+  version = "0.48.3";
 
   src = fetchFromGitHub {
     owner = "neilotoole";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-4CINLOHUVXQ+4e5I1fMqog6LubMm8RnbFmeuBOwALaw=";
+    hash = "sha256-22N8DEaLmGBA3Rx6VzxplUK9UAydo/gx4EsQzzaRHNE=";
   };
 
-  nativeBuildInputs = [ installShellFiles ];
+  vendorHash = "sha256-p0r7TuWFpV81Rnxqdj+UJec60EmvVQISURe43SpOpw0=";
 
-  vendorSha256 = "sha256-lNpWXKtnzwySzinNPxAKuaLqweWuS6zz8s2W4xXWlqM=";
+  proxyVendor = true;
+
+  nativeBuildInputs = [ installShellFiles ];
 
   # Some tests violates sandbox constraints.
   doCheck = false;
 
   ldflags = [
-    "-s" "-w" "-X github.com/neilotoole/sq/cli/buildinfo.Version=${version}"
+    "-s"
+    "-w"
+    "-X=github.com/neilotoole/sq/cli/buildinfo.Version=v${version}"
   ];
 
   postInstall = ''
@@ -29,11 +34,15 @@ buildGoModule rec {
   '';
 
   passthru.tests = {
-    version = testers.testVersion { package = sq; };
+    version = testers.testVersion {
+      package = sq;
+      version = "v${version}";
+    };
   };
 
   meta = with lib; {
     description = "Swiss army knife for data";
+    mainProgram = "sq";
     homepage = "https://sq.io/";
     license = licenses.mit;
     platforms = platforms.all;

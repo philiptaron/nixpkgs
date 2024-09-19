@@ -1,44 +1,43 @@
 { config, lib, options, pkgs, utils, ... }:
-
-with lib;
-
 let
   gcfg = config.services.tarsnap;
   opt = options.services.tarsnap;
 
   configFile = name: cfg: ''
     keyfile ${cfg.keyfile}
-    ${optionalString (cfg.cachedir != null) "cachedir ${cfg.cachedir}"}
-    ${optionalString cfg.nodump "nodump"}
-    ${optionalString cfg.printStats "print-stats"}
-    ${optionalString cfg.printStats "humanize-numbers"}
-    ${optionalString (cfg.checkpointBytes != null) ("checkpoint-bytes "+cfg.checkpointBytes)}
-    ${optionalString cfg.aggressiveNetworking "aggressive-networking"}
-    ${concatStringsSep "\n" (map (v: "exclude ${v}") cfg.excludes)}
-    ${concatStringsSep "\n" (map (v: "include ${v}") cfg.includes)}
-    ${optionalString cfg.lowmem "lowmem"}
-    ${optionalString cfg.verylowmem "verylowmem"}
-    ${optionalString (cfg.maxbw != null) "maxbw ${toString cfg.maxbw}"}
-    ${optionalString (cfg.maxbwRateUp != null) "maxbw-rate-up ${toString cfg.maxbwRateUp}"}
-    ${optionalString (cfg.maxbwRateDown != null) "maxbw-rate-down ${toString cfg.maxbwRateDown}"}
+    ${lib.optionalString (cfg.cachedir != null) "cachedir ${cfg.cachedir}"}
+    ${lib.optionalString cfg.nodump "nodump"}
+    ${lib.optionalString cfg.printStats "print-stats"}
+    ${lib.optionalString cfg.printStats "humanize-numbers"}
+    ${lib.optionalString (cfg.checkpointBytes != null) ("checkpoint-bytes "+cfg.checkpointBytes)}
+    ${lib.optionalString cfg.aggressiveNetworking "aggressive-networking"}
+    ${lib.concatStringsSep "\n" (map (v: "exclude ${v}") cfg.excludes)}
+    ${lib.concatStringsSep "\n" (map (v: "include ${v}") cfg.includes)}
+    ${lib.optionalString cfg.lowmem "lowmem"}
+    ${lib.optionalString cfg.verylowmem "verylowmem"}
+    ${lib.optionalString (cfg.maxbw != null) "maxbw ${toString cfg.maxbw}"}
+    ${lib.optionalString (cfg.maxbwRateUp != null) "maxbw-rate-up ${toString cfg.maxbwRateUp}"}
+    ${lib.optionalString (cfg.maxbwRateDown != null) "maxbw-rate-down ${toString cfg.maxbwRateDown}"}
   '';
 in
 {
   imports = [
-    (mkRemovedOptionModule [ "services" "tarsnap" "cachedir" ] "Use services.tarsnap.archives.<name>.cachedir")
+    (lib.mkRemovedOptionModule [ "services" "tarsnap" "cachedir" ] "Use services.tarsnap.archives.<name>.cachedir")
   ];
 
   options = {
     services.tarsnap = {
-      enable = mkEnableOption "periodic tarsnap backups";
+      enable = lib.mkEnableOption "periodic tarsnap backups";
 
-      keyfile = mkOption {
-        type = types.str;
+      package = lib.mkPackageOption pkgs "tarsnap" { };
+
+      keyfile = lib.mkOption {
+        type = lib.types.str;
         default = "/root/tarsnap.key";
         description = ''
           The keyfile which associates this machine with your tarsnap
           account.
-          Create the keyfile with <command>tarsnap-keygen</command>.
+          Create the keyfile with {command}`tarsnap-keygen`.
 
           Note that each individual archive (specified below) may also have its
           own individual keyfile specified. Tarsnap does not allow multiple
@@ -47,11 +46,11 @@ in
           archives specified, you should either spread out your backups to be
           far apart, or specify a separate key for each archive. By default
           every archive defaults to using
-          <literal>"/root/tarsnap.key"</literal>.
+          `"/root/tarsnap.key"`.
 
           It's recommended for backups that you generate a key for every archive
-          using <literal>tarsnap-keygen(1)</literal>, and then generate a
-          write-only tarsnap key using <literal>tarsnap-keymgmt(1)</literal>,
+          using `tarsnap-keygen(1)`, and then generate a
+          write-only tarsnap key using `tarsnap-keymgmt(1)`,
           and keep your master key(s) for a particular machine off-site.
 
           The keyfile name should be given as a string and not a path, to
@@ -59,26 +58,26 @@ in
         '';
       };
 
-      archives = mkOption {
-        type = types.attrsOf (types.submodule ({ config, options, ... }:
+      archives = lib.mkOption {
+        type = lib.types.attrsOf (lib.types.submodule ({ config, options, ... }:
           {
             options = {
-              keyfile = mkOption {
-                type = types.str;
+              keyfile = lib.mkOption {
+                type = lib.types.str;
                 default = gcfg.keyfile;
-                defaultText = literalExpression "config.${opt.keyfile}";
+                defaultText = lib.literalExpression "config.${opt.keyfile}";
                 description = ''
                   Set a specific keyfile for this archive. This defaults to
-                  <literal>"/root/tarsnap.key"</literal> if left unspecified.
+                  `"/root/tarsnap.key"` if left unspecified.
 
                   Use this option if you want to run multiple backups
                   concurrently - each archive must have a unique key. You can
                   generate a write-only key derived from your master key (which
-                  is recommended) using <literal>tarsnap-keymgmt(1)</literal>.
+                  is recommended) using `tarsnap-keymgmt(1)`.
 
                   Note: every archive must have an individual master key. You
                   must generate multiple keys with
-                  <literal>tarsnap-keygen(1)</literal>, and then generate write
+                  `tarsnap-keygen(1)`, and then generate write
                   only keys from those.
 
                   The keyfile name should be given as a string and not a path, to
@@ -86,10 +85,10 @@ in
                 '';
               };
 
-              cachedir = mkOption {
-                type = types.nullOr types.path;
+              cachedir = lib.mkOption {
+                type = lib.types.nullOr lib.types.path;
                 default = "/var/cache/tarsnap/${utils.escapeSystemdPath config.keyfile}";
-                defaultText = literalExpression ''
+                defaultText = lib.literalExpression ''
                   "/var/cache/tarsnap/''${utils.escapeSystemdPath config.${options.keyfile}}"
                 '';
                 description = ''
@@ -98,59 +97,58 @@ in
 
                   Should the cache become desynchronized or corrupted, tarsnap
                   will refuse to run until you manually rebuild the cache with
-                  <command>tarsnap --fsck</command>.
+                  {command}`tarsnap --fsck`.
 
-                  Set to <literal>null</literal> to disable caching.
+                  Set to `null` to disable caching.
                 '';
               };
 
-              nodump = mkOption {
-                type = types.bool;
+              nodump = lib.mkOption {
+                type = lib.types.bool;
                 default = true;
                 description = ''
-                  Exclude files with the <literal>nodump</literal> flag.
+                  Exclude files with the `nodump` flag.
                 '';
               };
 
-              printStats = mkOption {
-                type = types.bool;
+              printStats = lib.mkOption {
+                type = lib.types.bool;
                 default = true;
                 description = ''
                   Print global archive statistics upon completion.
                   The output is available via
-                  <command>systemctl status tarsnap-archive-name</command>.
+                  {command}`systemctl status tarsnap-archive-name`.
                 '';
               };
 
-              checkpointBytes = mkOption {
-                type = types.nullOr types.str;
+              checkpointBytes = lib.mkOption {
+                type = lib.types.nullOr lib.types.str;
                 default = "1GB";
                 description = ''
-                  Create a checkpoint every <literal>checkpointBytes</literal>
+                  Create a checkpoint every `checkpointBytes`
                   of uploaded data (optionally specified using an SI prefix).
 
                   1GB is the minimum value. A higher value is recommended,
                   as checkpointing is expensive.
 
-                  Set to <literal>null</literal> to disable checkpointing.
+                  Set to `null` to disable checkpointing.
                 '';
               };
 
-              period = mkOption {
-                type = types.str;
+              period = lib.mkOption {
+                type = lib.types.str;
                 default = "01:15";
                 example = "hourly";
                 description = ''
                   Create archive at this interval.
 
                   The format is described in
-                  <citerefentry><refentrytitle>systemd.time</refentrytitle>
-                  <manvolnum>7</manvolnum></citerefentry>.
+                  {manpage}`systemd.time(7)`.
                 '';
               };
 
-              aggressiveNetworking = mkOption {
-                type = types.bool;
+              aggressiveNetworking = lib.mkOption {
+                type = lib.types.bool;
                 default = false;
                 description = ''
                   Upload data over multiple TCP connections, potentially
@@ -161,22 +159,22 @@ in
                 '';
               };
 
-              directories = mkOption {
-                type = types.listOf types.path;
+              directories = lib.mkOption {
+                type = lib.types.listOf lib.types.path;
                 default = [];
                 description = "List of filesystem paths to archive.";
               };
 
-              excludes = mkOption {
-                type = types.listOf types.str;
+              excludes = lib.mkOption {
+                type = lib.types.listOf lib.types.str;
                 default = [];
                 description = ''
                   Exclude files and directories matching these patterns.
                 '';
               };
 
-              includes = mkOption {
-                type = types.listOf types.str;
+              includes = lib.mkOption {
+                type = lib.types.listOf lib.types.str;
                 default = [];
                 description = ''
                   Include only files and directories matching these
@@ -186,8 +184,8 @@ in
                 '';
               };
 
-              lowmem = mkOption {
-                type = types.bool;
+              lowmem = lib.mkOption {
+                type = lib.types.bool;
                 default = false;
                 description = ''
                   Reduce memory consumption by not caching small files.
@@ -197,18 +195,18 @@ in
                 '';
               };
 
-              verylowmem = mkOption {
-                type = types.bool;
+              verylowmem = lib.mkOption {
+                type = lib.types.bool;
                 default = false;
                 description = ''
                   Reduce memory consumption by a factor of 2 beyond what
-                  <literal>lowmem</literal> does, at the cost of significantly
+                  `lowmem` does, at the cost of significantly
                   slowing down the archiving process.
                 '';
               };
 
-              maxbw = mkOption {
-                type = types.nullOr types.int;
+              maxbw = lib.mkOption {
+                type = lib.types.nullOr lib.types.int;
                 default = null;
                 description = ''
                   Abort archival if upstream bandwidth usage in bytes
@@ -216,40 +214,40 @@ in
                 '';
               };
 
-              maxbwRateUp = mkOption {
-                type = types.nullOr types.int;
+              maxbwRateUp = lib.mkOption {
+                type = lib.types.nullOr lib.types.int;
                 default = null;
-                example = literalExpression "25 * 1000";
+                example = lib.literalExpression "25 * 1000";
                 description = ''
                   Upload bandwidth rate limit in bytes.
                 '';
               };
 
-              maxbwRateDown = mkOption {
-                type = types.nullOr types.int;
+              maxbwRateDown = lib.mkOption {
+                type = lib.types.nullOr lib.types.int;
                 default = null;
-                example = literalExpression "50 * 1000";
+                example = lib.literalExpression "50 * 1000";
                 description = ''
                   Download bandwidth rate limit in bytes.
                 '';
               };
 
-              verbose = mkOption {
-                type = types.bool;
+              verbose = lib.mkOption {
+                type = lib.types.bool;
                 default = false;
                 description = ''
                   Whether to produce verbose logging output.
                 '';
               };
-              explicitSymlinks = mkOption {
-                type = types.bool;
+              explicitSymlinks = lib.mkOption {
+                type = lib.types.bool;
                 default = false;
                 description = ''
                   Whether to follow symlinks specified as archives.
                 '';
               };
-              followSymlinks = mkOption {
-                type = types.bool;
+              followSymlinks = lib.mkOption {
+                type = lib.types.bool;
                 default = false;
                 description = ''
                   Whether to follow all symlinks in archive trees.
@@ -261,7 +259,7 @@ in
 
         default = {};
 
-        example = literalExpression ''
+        example = lib.literalExpression ''
           {
             nixos =
               { directories = [ "/home" "/root/ssl" ];
@@ -279,36 +277,36 @@ in
           to be created at a given time interval, according to the options
           associated with it. When uploading to the tarsnap server,
           archive names are suffixed by a 1 second resolution timestamp,
-          with the format <literal>%Y%m%d%H%M%S</literal>.
+          with the format `%Y%m%d%H%M%S`.
 
           For each member of the set is created a timer which triggers the
-          instanced <literal>tarsnap-archive-name</literal> service unit. You may use
-          <command>systemctl start tarsnap-archive-name</command> to
-          manually trigger creation of <literal>archive-name</literal> at
+          instanced `tarsnap-archive-name` service unit. You may use
+          {command}`systemctl start tarsnap-archive-name` to
+          manually trigger creation of `archive-name` at
           any time.
         '';
       };
     };
   };
 
-  config = mkIf gcfg.enable {
+  config = lib.mkIf gcfg.enable {
     assertions =
-      (mapAttrsToList (name: cfg:
+      (lib.mapAttrsToList (name: cfg:
         { assertion = cfg.directories != [];
           message = "Must specify paths for tarsnap to back up";
         }) gcfg.archives) ++
-      (mapAttrsToList (name: cfg:
+      (lib.mapAttrsToList (name: cfg:
         { assertion = !(cfg.lowmem && cfg.verylowmem);
           message = "You cannot set both lowmem and verylowmem";
         }) gcfg.archives);
 
     systemd.services =
-      (mapAttrs' (name: cfg: nameValuePair "tarsnap-${name}" {
+      (lib.mapAttrs' (name: cfg: lib.nameValuePair "tarsnap-${name}" {
         description = "Tarsnap archive '${name}'";
         requires    = [ "network-online.target" ];
         after       = [ "network-online.target" ];
 
-        path = with pkgs; [ iputils tarsnap util-linux ];
+        path = with pkgs; [ iputils gcfg.package util-linux ];
 
         # In order for the persistent tarsnap timer to work reliably, we have to
         # make sure that the tarsnap server is reachable after systemd starts up
@@ -319,13 +317,13 @@ in
         '';
 
         script = let
-          tarsnap = ''tarsnap --configfile "/etc/tarsnap/${name}.conf"'';
+          tarsnap = ''${lib.getExe gcfg.package} --configfile "/etc/tarsnap/${name}.conf"'';
           run = ''${tarsnap} -c -f "${name}-$(date +"%Y%m%d%H%M%S")" \
-                        ${optionalString cfg.verbose "-v"} \
-                        ${optionalString cfg.explicitSymlinks "-H"} \
-                        ${optionalString cfg.followSymlinks "-L"} \
-                        ${concatStringsSep " " cfg.directories}'';
-          cachedir = escapeShellArg cfg.cachedir;
+                        ${lib.optionalString cfg.verbose "-v"} \
+                        ${lib.optionalString cfg.explicitSymlinks "-H"} \
+                        ${lib.optionalString cfg.followSymlinks "-L"} \
+                        ${lib.concatStringsSep " " cfg.directories}'';
+          cachedir = lib.escapeShellArg cfg.cachedir;
           in if (cfg.cachedir != null) then ''
             mkdir -p ${cachedir}
             chmod 0700 ${cachedir}
@@ -352,17 +350,17 @@ in
         };
       }) gcfg.archives) //
 
-      (mapAttrs' (name: cfg: nameValuePair "tarsnap-restore-${name}"{
+      (lib.mapAttrs' (name: cfg: lib.nameValuePair "tarsnap-restore-${name}"{
         description = "Tarsnap restore '${name}'";
         requires    = [ "network-online.target" ];
 
-        path = with pkgs; [ iputils tarsnap util-linux ];
+        path = with pkgs; [ iputils gcfg.package util-linux ];
 
         script = let
-          tarsnap = ''tarsnap --configfile "/etc/tarsnap/${name}.conf"'';
+          tarsnap = ''${lib.getExe gcfg.package} --configfile "/etc/tarsnap/${name}.conf"'';
           lastArchive = "$(${tarsnap} --list-archives | sort | tail -1)";
-          run = ''${tarsnap} -x -f "${lastArchive}" ${optionalString cfg.verbose "-v"}'';
-          cachedir = escapeShellArg cfg.cachedir;
+          run = ''${tarsnap} -x -f "${lastArchive}" ${lib.optionalString cfg.verbose "-v"}'';
+          cachedir = lib.escapeShellArg cfg.cachedir;
 
         in if (cfg.cachedir != null) then ''
           mkdir -p ${cachedir}
@@ -392,17 +390,17 @@ in
 
     # Note: the timer must be Persistent=true, so that systemd will start it even
     # if e.g. your laptop was asleep while the latest interval occurred.
-    systemd.timers = mapAttrs' (name: cfg: nameValuePair "tarsnap-${name}"
+    systemd.timers = lib.mapAttrs' (name: cfg: lib.nameValuePair "tarsnap-${name}"
       { timerConfig.OnCalendar = cfg.period;
         timerConfig.Persistent = "true";
         wantedBy = [ "timers.target" ];
       }) gcfg.archives;
 
     environment.etc =
-      mapAttrs' (name: cfg: nameValuePair "tarsnap/${name}.conf"
+      lib.mapAttrs' (name: cfg: lib.nameValuePair "tarsnap/${name}.conf"
         { text = configFile name cfg;
         }) gcfg.archives;
 
-    environment.systemPackages = [ pkgs.tarsnap ];
+    environment.systemPackages = [ gcfg.package ];
   };
 }

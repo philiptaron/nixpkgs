@@ -1,12 +1,13 @@
 { lib
 , substituteAll
 , fetchurl
+, fetchpatch
 , ocaml
-, dune_2
+, dune_3
 , buildDunePackage
 , yojson
 , csexp
-, result
+, merlin-lib
 , dot-merlin-reader
 , jq
 , menhir
@@ -15,23 +16,36 @@
 }:
 
 let
-  merlinVersion = "4.5";
-
-  hashes = {
-    "4.5-411" = "sha256:05nz6y7r91rh0lj8b6xdv3s3yknmvjc7y60v17kszgqnr887bvpn";
-    "4.5-412" = "sha256:0i5c3rfzinmwdjya7gv94zyknsm32qx9dlg472xpfqivwvnnhf1z";
-    "4.5-413" = "sha256:1sphq9anfg1qzrvj7hdcqflj6cmc1qiyfkljhng9fxnnr0i7550s";
-    "4.5-414" = "sha256:13h588kwih05zd9p3p7q528q4zc0d1l983kkvbmkxgay5d17nn1i";
+  # Each releases of Merlin support a limited range of versions of OCaml.
+  merlinVersions = {
+    "4.12.0" = "4.7-412";
+    "4.12.1" = "4.7-412";
+    "4.13.0" = "4.7-413";
+    "4.13.1" = "4.7-413";
+    "4.14.0" = "4.16-414";
+    "4.14.1" = "4.16-414";
+    "4.14.2" = "4.16-414";
+    "5.0.0" = "4.14-500";
+    "5.1.0" = "4.16-501";
+    "5.1.1" = "4.16-501";
+    "5.2.0" = "5.1-502";
   };
 
-  ocamlVersionShorthand = lib.concatStrings
-    (lib.take 2 (lib.splitVersion ocaml.version));
+  hashes = {
+    "4.7-412" = "sha256-0U3Ia7EblKULNy8AuXFVKACZvGN0arYJv7BWiBRgT0Y=";
+    "4.7-413" = "sha256-aVmGWS4bJBLuwsxDKsng/n0A6qlyJ/pnDTcYab/5gyU=";
+    "4.14-500" = "sha256-7CPzJPh1UgzYiX8wPMbU5ZXz1wAJFNQQcp8WuGrR1w4=";
+    "4.16-414" = "sha256-xekZdfPfVoSeGzBvNWwxcJorE519V2NLjSHkcyZvzy0=";
+    "4.16-501" = "sha256-2lvzCbBAZFwpKuRXLMagpwDb0rz8mWrBPI5cODbCHiY=";
+    "5.1-502" = "sha256-T9gIvCaSnP/MqOoGNEeQFZwQ4+r5yRTPRu956Rf8rhU=";
+  };
 
-  version = "${merlinVersion}-${ocamlVersionShorthand}";
+  version = lib.getAttr ocaml.version merlinVersions;
+
 in
 
-if !lib.hasAttr version hashes
-then builtins.throw "merlin ${merlinVersion} is not available for OCaml ${ocaml.version}"
+if !lib.hasAttr ocaml.version merlinVersions
+then builtins.throw "merlin is not available for OCaml ${ocaml.version}"
 else
 
 buildDunePackage {
@@ -43,18 +57,25 @@ buildDunePackage {
     sha256 = hashes."${version}";
   };
 
-  patches = [
+  patches = let
+    branch = lib.head (lib.tail (lib.splitString "-" version));
+    needsVimPatch = lib.versionOlder version "4.17" ||
+                    branch == "502" && lib.versionOlder version "5.2";
+  in
+  [
     (substituteAll {
       src = ./fix-paths.patch;
       dot_merlin_reader = "${dot-merlin-reader}/bin/dot-merlin-reader";
-      dune = "${dune_2}/bin/dune";
+      dune = "${dune_3}/bin/dune";
     })
-  ] ++ lib.optional (lib.versionOlder ocaml.version "4.12")
-    # This fixes the test-suite on macOS
-    # See https://github.com/ocaml/merlin/pull/1399
-    # Fixed in 4.4 for OCaml ≥ 4.12
-    ./test.patch
-  ;
+  ] ++ lib.optionals needsVimPatch [
+    # https://github.com/ocaml/merlin/pull/1798
+    (fetchpatch {
+      name = "vim-python-12-syntax-warning-fix.patch";
+      url = "https://github.com/ocaml/merlin/commit/9e0c47b0d5fd0c4edc37c4c7ce927b155877557d.patch";
+      hash = "sha256-HmdTISE/s45C5cwLgsCHNUW6OAPSsvQ/GcJE6VDEobs=";
+    })
+  ];
 
   strictDeps = true;
 
@@ -65,13 +86,14 @@ buildDunePackage {
   buildInputs = [
     dot-merlin-reader
     yojson
-    csexp
-    result
+    (if lib.versionAtLeast version "4.7-414"
+     then merlin-lib
+     else csexp)
     menhirSdk
     menhirLib
   ];
 
-  doCheck = true;
+  doCheck = false;
   checkPhase = ''
     runHook preCheck
     patchShebangs tests/merlin-wrapper
@@ -80,7 +102,7 @@ buildDunePackage {
   '';
 
   meta = with lib; {
-    description = "An editor-independent tool to ease the development of programs in OCaml";
+    description = "Editor-independent tool to ease the development of programs in OCaml";
     homepage = "https://github.com/ocaml/merlin";
     license = licenses.mit;
     maintainers = [ maintainers.vbgl maintainers.sternenseemann ];

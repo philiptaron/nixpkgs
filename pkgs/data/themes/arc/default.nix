@@ -4,23 +4,24 @@
 , meson
 , ninja
 , glib
-, gnome
+, gnome-shell
+, gnome-themes-extra
 , gtk-engine-murrine
 , inkscape
-, cinnamon
+, cinnamon-common
 , makeFontsConf
 , python3
 }:
 
 stdenv.mkDerivation rec {
   pname = "arc-theme";
-  version = "20220405";
+  version = "20221218";
 
   src = fetchFromGitHub {
     owner = "jnsh";
     repo = pname;
     rev = version;
-    sha256 = "sha256-CBj/SpBWH5xdNCQSJquqIntcmfARI7Cud76Tp8txXL4=";
+    sha256 = "sha256-7VmqsUCeG5GwmrVdt9BJj0eZ/1v+no/05KwGFb7E9ns=";
   };
 
   nativeBuildInputs = [
@@ -33,7 +34,7 @@ stdenv.mkDerivation rec {
   ];
 
   propagatedUserEnvPkgs = [
-    gnome.gnome-themes-extra
+    gnome-themes-extra
     gtk-engine-murrine
   ];
 
@@ -52,8 +53,8 @@ stdenv.mkDerivation rec {
   mesonFlags = [
     # "-Dthemes=cinnamon,gnome-shell,gtk2,gtk3,plank,xfwm,metacity"
     # "-Dvariants=light,darker,dark,lighter"
-    "-Dcinnamon_version=${cinnamon.cinnamon-common.version}"
-    "-Dgnome_shell_version=${gnome.gnome-shell.version}"
+    "-Dcinnamon_version=${cinnamon-common.version}"
+    "-Dgnome_shell_version=${gnome-shell.version}"
     # You will need to patch gdm to make use of this.
     "-Dgnome_shell_gresource=true"
   ];

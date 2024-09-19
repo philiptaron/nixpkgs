@@ -1,6 +1,6 @@
-{ lib, stdenv, libgcrypt, curl, gnutls, pkg-config, libiconv, libintl, version, src }:
+{ lib, stdenv, libgcrypt, curl, gnutls, pkg-config, libiconv, libintl, version, src, meta ? {} }:
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation (finalAttrs: {
   pname = "libmicrohttpd";
   inherit version src;
 
@@ -28,7 +28,7 @@ stdenv.mkDerivation rec {
 
     homepage = "https://www.gnu.org/software/libmicrohttpd/";
 
-    maintainers = with maintainers; [ eelco vrthra fpletz ];
+    maintainers = with maintainers; [ fpletz ];
     platforms = platforms.unix;
-  };
-}
+  } // meta;
+})

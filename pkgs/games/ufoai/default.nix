@@ -19,7 +19,7 @@ stdenv.mkDerivation rec {
   #     r_gl.h:52: first defined here
   # TODO: drop once release contains upstream fix:
   #   https://github.com/ufoai/ufoai/commit/8a3075fffdad294e
-  NIX_CFLAGS_COMPILE = "-fcommon";
+  env.NIX_CFLAGS_COMPILE = "-fcommon";
 
   preConfigure = ''tar xvf "${srcData}"'';
 
@@ -41,9 +41,9 @@ stdenv.mkDerivation rec {
 
   meta = {
     homepage = "http://ufoai.org";
-    description = "A squad-based tactical strategy game in the tradition of X-Com";
+    description = "Squad-based tactical strategy game in the tradition of X-Com";
     license = lib.licenses.gpl2Plus;
-    maintainers = with lib.maintainers; [viric];
+    maintainers = [ ];
     platforms = lib.platforms.linux;
     hydraPlatforms = [];
   };

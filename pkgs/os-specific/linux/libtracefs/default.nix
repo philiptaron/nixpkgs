@@ -1,48 +1,75 @@
 { lib
 , stdenv
-, fetchgit
+, fetchzip
 , pkg-config
 , libtraceevent
 , asciidoc
 , xmlto
 , docbook_xml_dtd_45
 , docbook_xsl
-, coreutils
-, which
 , valgrind
 , sourceHighlight
+, meson
+, flex
+, bison
+, ninja
+, cunit
+, gitUpdater
+, fetchpatch
 }:
 
 stdenv.mkDerivation rec {
   pname = "libtracefs";
-  version = "1.3.0";
+  version = "1.8.1";
 
-  src = fetchgit {
-    url = "git://git.kernel.org/pub/scm/libs/libtrace/libtracefs.git";
-    rev = "libtracefs-${version}";
-    sha256 = "sha256-Kg1mPjTZ2UCeco18Fa8GqmLo2R35XvUE/q2J1HAmtEc=";
+  src = fetchzip {
+    url = "https://git.kernel.org/pub/scm/libs/libtrace/libtracefs.git/snapshot/libtracefs-libtracefs-${version}.tar.gz";
+    hash = "sha256-2UiEgY4mQRLpWah+2rVfPiiUYBSSzRAy5gOv4YELQFQ=";
   };
 
+  patches = [
+    (fetchpatch {
+      name = "add-missing-documentation-to-meson-build.patch";
+      url = "https://git.kernel.org/pub/scm/libs/libtrace/libtracefs.git/patch/?id=4cbebed79b1fe933367e298ea7ddef694b9f98d0";
+      hash = "sha256-tSaR0wpxrm50IyMgMoUCcHBB9r8lQQZZYGru6Znre50=";
+    })
+  ];
+
   postPatch = ''
-    substituteInPlace scripts/utils.mk --replace /bin/pwd ${coreutils}/bin/pwd
-    patchShebangs check-manpages.sh
+    chmod +x samples/extract-example.sh
+    patchShebangs --build check-manpages.sh samples/extract-example.sh Documentation/install-docs.sh.in
   '';
 
   outputs = [ "out" "dev" "devman" "doc" ];
-  enableParallelBuilding = true;
-  nativeBuildInputs = [ pkg-config asciidoc xmlto docbook_xml_dtd_45 docbook_xsl which valgrind sourceHighlight ];
+  nativeBuildInputs = [
+    meson
+    ninja
+    pkg-config
+    asciidoc
+    xmlto
+    docbook_xml_dtd_45
+    docbook_xsl
+    valgrind
+    sourceHighlight
+    flex
+    bison
+  ];
   buildInputs = [ libtraceevent ];
-  makeFlags = [
-    "prefix=${placeholder "out"}"
-    "doc"                       # build docs
-  ];
-  installFlags = [
-    "pkgconfig_dir=${placeholder "out"}/lib/pkgconfig"
-    "install_doc"
-  ];
+
+  ninjaFlags = [ "all" "docs" ];
+
+  doCheck = true;
+  checkInputs = [ cunit ];
+
+  passthru.updateScript = gitUpdater {
+    # No nicer place to find latest release.
+    url = "https://git.kernel.org/pub/scm/libs/libtrace/libtracefs.git";
+    rev-prefix = "libtracefs-";
+  };
 
   meta = with lib; {
     description = "Linux kernel trace file system library";
+    mainProgram = "sqlhist";
     homepage    = "https://git.kernel.org/pub/scm/libs/libtrace/libtracefs.git/";
     license     = licenses.lgpl21Only;
     platforms   = platforms.linux;

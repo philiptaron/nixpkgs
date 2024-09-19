@@ -23,12 +23,12 @@ let
 
 in stdenv.mkDerivation rec {
   pname = "k40-whisperer";
-  version = "0.59";
+  version = "0.68";
 
   src = fetchzip {
     url = "https://www.scorchworks.com/K40whisperer/K40_Whisperer-${version}_src.zip";
     stripRoot = true;
-    sha256 = "0r8rhaksk87l44pwwpvrfnck2lyic3lgcbh3pi7ib6mrwbsyhlni";
+    sha256 = "sha256-Pc6iqBQUoI0dsrf+2dA1ZbxX+4Eks/lVgMGC4SR+oFI=";
   };
 
   nativeBuildInputs = [ makeWrapper ];

@@ -1,32 +1,33 @@
-{ stdenv, lib, fetchFromGitHub, meson, ninja, pkg-config, gtk3, vte, libgudev, wrapGAppsHook }:
+{ stdenv, lib, fetchFromGitHub, meson, ninja, pkg-config, gtk3, vte, libgudev, wrapGAppsHook3, pcre2 }:
 
 stdenv.mkDerivation rec {
   pname = "gtkterm";
-  version = "1.1.1";
+  version = "1.3.1";
 
   src = fetchFromGitHub {
-    owner = "Jeija";
+    owner = "wvdakker";
     repo = "gtkterm";
-    rev = "${version}";
-    sha256 = "0s2cx8w1n8d37pl80gll5h6dyvbqrfcam8l4wmvnqqww9jml6577";
+    rev = version;
+    sha256 = "sha256-oGqOXIu5P3KfdV6Unm7Nz+BRhb5Z6rne0+e0wZ2EcAI=";
   };
 
   nativeBuildInputs = [
     meson
     ninja
     pkg-config
-    wrapGAppsHook
+    wrapGAppsHook3
   ];
 
   buildInputs = [
     gtk3
     vte
     libgudev
+    pcre2
   ];
 
   meta = with lib; {
-    description = "A simple, graphical serial port terminal emulator";
-    homepage = "https://github.com/Jeija/gtkterm";
+    description = "Simple, graphical serial port terminal emulator";
+    homepage = "https://github.com/wvdakker/gtkterm";
     license = licenses.gpl3Plus;
     longDescription = ''
       GTKTerm is a simple, graphical serial port terminal emulator for

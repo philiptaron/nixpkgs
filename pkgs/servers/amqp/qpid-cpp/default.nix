@@ -36,7 +36,7 @@ stdenv.mkDerivation rec {
     sed -i '/management/d' CMakeLists.txt
   '';
 
-  NIX_CFLAGS_COMPILE = toString ([
+  env.NIX_CFLAGS_COMPILE = toString ([
     "-Wno-error=maybe-uninitialized"
   ] ++ lib.optionals stdenv.cc.isGNU [
     "-Wno-error=deprecated-copy"
@@ -44,9 +44,9 @@ stdenv.mkDerivation rec {
 
   meta = with lib; {
     homepage = "https://qpid.apache.org";
-    description = "An AMQP message broker and a C++ messaging API";
+    description = "AMQP message broker and a C++ messaging API";
     license = licenses.asl20;
     platforms = platforms.linux;
-    maintainers = with maintainers; [ cpages ];
+    maintainers = [ ];
   };
 }

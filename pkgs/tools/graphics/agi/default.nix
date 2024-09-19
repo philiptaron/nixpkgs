@@ -1,68 +1,77 @@
 { lib
-, stdenv
+, stdenvNoCC
 , fetchzip
 , autoPatchelfHook
 , makeWrapper
 , makeDesktopItem
 , copyDesktopItems
-, wrapGAppsHook
+, wrapGAppsHook3
 , gobject-introspection
 , gdk-pixbuf
 , jre
-, androidenv
+, android-tools
 }:
 
-stdenv.mkDerivation rec {
+stdenvNoCC.mkDerivation rec {
   pname = "agi";
-  version = "3.1.0-dev-20220314";
+  version = "3.3.1";
 
   src = fetchzip {
-    url = "https://github.com/google/agi-dev-releases/releases/download/v${version}/agi-${version}-linux.zip";
-    sha256 = "sha256-j/ozkIoRM+G7fi0qBG8UGKPtrn6DR6KNK0Hc53dxsMw=";
+    url = "https://github.com/google/agi/releases/download/${version}/agi-${version}-linux.zip";
+    sha256 = "sha256-Yawl6InBYSWNw3clHyGAeC2PVfXEzWmbd6vcYrqAPO0=";
   };
 
   nativeBuildInputs = [
-    autoPatchelfHook
-    makeWrapper
-    wrapGAppsHook
+    wrapGAppsHook3
     gdk-pixbuf
     gobject-introspection
+    autoPatchelfHook
     copyDesktopItems
-  ];
-
-  buildInputs = [
-    stdenv.cc.cc.lib
+    makeWrapper
   ];
 
   installPhase = ''
     runHook preInstall
-    mkdir -p $out/{bin,lib}
+
+    mkdir -p $out/bin
     cp ./{agi,gapis,gapir,gapit,device-info} $out/bin
-    cp lib/gapic.jar $out/lib
-    wrapProgram $out/bin/agi \
-      --add-flags "--vm ${jre}/bin/java" \
-      --add-flags "--jar $out/lib/gapic.jar" \
-      --add-flags "--adb ${androidenv.androidPkgs_9_0.platform-tools}/bin/adb"
+    cp -r lib $out
+
     for i in 16 32 48 64 96 128 256 512 1024; do
       install -D ${src}/icon.png $out/share/icons/hicolor/''${i}x$i/apps/agi.png
     done
+
     runHook postInstall
   '';
 
-  desktopItems = [(makeDesktopItem {
+  dontWrapGApps = true;
+
+  preFixup = ''
+    wrapProgram $out/bin/agi \
+      --add-flags "--vm ${jre}/bin/java" \
+      --add-flags "--adb ${android-tools}/bin/adb" \
+      --add-flags "--jar $out/lib/gapic.jar" \
+      "''${gappsWrapperArgs[@]-}"
+  '';
+
+  desktopItems = lib.toList (makeDesktopItem {
     name = "agi";
     desktopName = "Android GPU Inspector";
     exec = "agi";
     icon = "agi";
     categories = [ "Development" "Debugger" "Graphics" "3DGraphics" ];
-  })];
+  });
 
   meta = with lib; {
-    homepage = "https://github.com/google/agi/";
     description = "Android GPU Inspector";
-    sourceProvenance = with sourceTypes; [ binaryBytecode ];
-    license = licenses.asl20;
+    homepage = "https://gpuinspector.dev";
+    changelog = "https://github.com/google/agi/releases/tag/v${version}";
     platforms = [ "x86_64-linux" ];
-    maintainers = [ maintainers.ivar ];
+    license = licenses.asl20;
+    maintainers = with maintainers; [ kashw2 ];
+    sourceProvenance = with sourceTypes; [
+      binaryBytecode
+      binaryNativeCode
+    ];
   };
 }

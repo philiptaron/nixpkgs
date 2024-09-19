@@ -2,9 +2,8 @@
 , gnutls, nettle
 }:
 
-if lib.versionOlder ocaml.version "4.02"
-then throw "ocamlnet is not available for OCaml ${ocaml.version}"
-else
+lib.throwIf (lib.versionOlder ocaml.version "4.02" || lib.versionAtLeast ocaml.version "5.0")
+  "ocamlnet is not available for OCaml ${ocaml.version}"
 
 stdenv.mkDerivation rec {
   pname = "ocaml${ocaml.version}-ocamlnet";
@@ -45,7 +44,7 @@ stdenv.mkDerivation rec {
 
   meta = {
     homepage = "http://projects.camlcity.org/projects/ocamlnet.html";
-    description = "A library implementing Internet protocols (http, cgi, email, etc.) for OCaml";
+    description = "Library implementing Internet protocols (http, cgi, email, etc.) for OCaml";
     license = "Most Ocamlnet modules are released under the zlib/png license. The HTTP server module Nethttpd is, however, under the GPL.";
     inherit (ocaml.meta) platforms;
     maintainers = [

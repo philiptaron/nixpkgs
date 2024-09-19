@@ -1,57 +1,75 @@
-{ lib
-, blis
-, buildPythonPackage
-, callPackage
-, catalogue
-, cymem
-, fetchPypi
-, jinja2
-, jsonschema
-, langcodes
-, murmurhash
-, numpy
-, packaging
-, pathy
-, preshed
-, pydantic
-, pytest
-, python
-, pythonOlder
-, requests
-, setuptools
-, spacy-legacy
-, spacy-loggers
-, srsly
-, thinc
-, tqdm
-, typer
-, typing-extensions
-, wasabi
+{
+  lib,
+  stdenv,
+  blis,
+  buildPythonPackage,
+  callPackage,
+  catalogue,
+  cymem,
+  cython_0,
+  fetchPypi,
+  hypothesis,
+  jinja2,
+  langcodes,
+  mock,
+  murmurhash,
+  numpy,
+  packaging,
+  preshed,
+  pydantic,
+  pytestCheckHook,
+  pythonOlder,
+  requests,
+  setuptools,
+  spacy-legacy,
+  spacy-loggers,
+  srsly,
+  thinc,
+  tqdm,
+  typer,
+  wasabi,
+  weasel,
+  writeScript,
+  nix,
+  git,
+  nix-update,
 }:
 
 buildPythonPackage rec {
   pname = "spacy";
-  version = "3.3.1";
-  format = "setuptools";
+  version = "3.7.6";
+  pyproject = true;
 
-  disabled = pythonOlder "3.6";
+  disabled = pythonOlder "3.7";
 
   src = fetchPypi {
     inherit pname version;
-    hash = "sha256-f4fb2xBNhRrmul/Tp2ouFOIuBIE1kD6YuvCFcaOqgcA=";
+    hash = "sha256-9AZcCqxcSLv7L/4ZHVXMszv7AFN2r71MzW1ek0FRTjQ=";
   };
 
-  propagatedBuildInputs = [
-    blis
+  postPatch = ''
+    # thinc version 8.3.0 had no functional changes
+    # also see https://github.com/explosion/spaCy/issues/13607
+    substituteInPlace pyproject.toml setup.cfg \
+      --replace-fail "thinc>=8.2.2,<8.3.0" "thinc>=8.2.2,<8.4.0"
+  '';
+
+  build-system = [
+    cymem
+    cython_0
+    murmurhash
+    numpy
+    thinc
+  ];
+
+  dependencies = [
     catalogue
     cymem
     jinja2
-    jsonschema
     langcodes
     murmurhash
     numpy
     packaging
-    pathy
     preshed
     pydantic
     requests
@@ -63,34 +81,57 @@ buildPythonPackage rec {
     tqdm
     typer
     wasabi
-  ] ++ lib.optional (pythonOlder "3.8") [
-    typing-extensions
+    weasel
   ];
 
-  postPatch = ''
-    substituteInPlace setup.cfg \
-      --replace "pydantic>=1.7.4,!=1.8,!=1.8.1,<1.9.0" "pydantic~=1.2"
+  nativeCheckInputs = [
+    pytestCheckHook
+    hypothesis
+    mock
+  ];
+
+  # Fixes ModuleNotFoundError when running tests on Cythonized code. See #255262
+  preCheck = ''
+    cd $out
   '';
 
-  checkInputs = [
-    pytest
+  pytestFlagsArray = [ "-m 'slow'" ];
+
+  disabledTests = [
+    # touches network
+    "test_download_compatibility"
+    "test_validate_compatibility_table"
+    "test_project_assets"
   ];
 
-  doCheck = false;
-  checkPhase = ''
-    ${python.interpreter} -m pytest spacy/tests --vectors --models --slow
-  '';
+  pythonImportsCheck = [ "spacy" ];
 
-  pythonImportsCheck = [
-    "spacy"
-  ];
+  passthru = {
+    updateScript = writeScript "update-spacy" ''
+      #!${stdenv.shell}
+      set -eou pipefail
+      PATH=${
+        lib.makeBinPath [
+          nix
+          git
+          nix-update
+        ]
+      }
 
-  passthru.tests.annotation = callPackage ./annotation-test { };
+      nix-update python3Packages.spacy
+
+      # update spacy models as well
+      echo | nix-shell maintainers/scripts/update.nix --argstr package python3Packages.spacy-models.en_core_web_sm
+    '';
+    tests.annotation = callPackage ./annotation-test { };
+  };
 
   meta = with lib; {
     description = "Industrial-strength Natural Language Processing (NLP)";
+    mainProgram = "spacy";
     homepage = "https://github.com/explosion/spaCy";
+    changelog = "https://github.com/explosion/spaCy/releases/tag/release-v${version}";
     license = licenses.mit;
-    maintainers = with maintainers; [ ];
+    maintainers = [ ];
   };
 }

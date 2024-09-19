@@ -1,29 +1,55 @@
 { lib
+, stdenv
+, fetchpatch
 , buildGoModule
 , fetchFromGitHub
 , nixosTests
 , libcap
+, go
 }:
 
 let
 
-  # ncdns source
-  ncdns = fetchFromGitHub {
-    owner = "namecoin";
-    repo = "ncdns";
-    rev = "2a486311b0fe1a921af34aa3b31e6e4e0569accc";
-    sha256 = "01arwlycp1iia4bd3dgyn8dam1av2a7d9hv7f085n14l2i2aza7v";
-  };
+  # Note: this module is actually the source code of crypto/x509
+  # taken from the Go stdlib and patcheed. So, it can't simply
+  # be pinned and added to the vendor dir as everything else.
+  x509 = stdenv.mkDerivation rec {
+    pname = "x509-compressed";
+    version = "0.0.3";
 
-  # script to patch the crypto/x509 package
-  x509 = fetchFromGitHub {
-    owner = "namecoin";
-    repo = "x509-compressed";
-    rev = "fb9f2b7bc9fcba954d70f63857cc0c3841b1cf47";
-    sha256 = "1arkbpbzvhcmz5fhjqg34x2jbjnwmlisapk22rjki17qpamh7zks";
-    # ncdns must be put in a subdirectory for this to work.
-    postFetch = ''
-      cp -r --no-preserve=mode "${ncdns}" "$out/ncdns"
+    src = fetchFromGitHub {
+      owner = "namecoin";
+      repo = "x509-compressed";
+      rev = "v${version}";
+      hash = "sha256-BmVtClZ3TsUbQrhwREXa42pUOlkBA4a2HVBzl1sdBIo=";
+    };
+
+    patches = [
+      # https://github.com/namecoin/x509-compressed/pull/4
+      (fetchpatch {
+        url = "https://github.com/namecoin/x509-compressed/commit/b4fb598b.patch";
+        hash = "sha256-S4Y4B4FH15IyaTJtSb03C8QffnsMXSYc6q1Gka/PVV4=";
+      })
+    ];
+
+    nativeBuildInputs = [ go ];
+
+    buildPhase = ''
+      # Put in our own lockfiles
+      cp ${./x509-go.mod} go.mod
+      cp ${./x509-go.sum} go.sum
+
+      # Generate Go code
+      env HOME=/tmp go generate ./...
+
+      # Clean up more references to internal modules
+      # (see https://github.com/namecoin/x509-compressed/pull/4)
+      sed -e '/import "internal/d' \
+          -e 's/goos.IsAndroid/0/g' -i x509/*.go
+    '';
+
+    installPhase = ''
+      cp -r . "$out"
     '';
   };
 
@@ -31,67 +57,43 @@ in
 
 buildGoModule {
   pname = "ncdns";
-  version = "unstable-2020-07-18";
+  version = "unstable-2024-05-18";
 
-  src = x509;
+  src = fetchFromGitHub {
+    owner = "namecoin";
+    repo = "ncdns";
+    rev = "8a9f7c3037384f12fae400268d0a7f79d26b5532";
+    hash = "sha256-lFpjfpOAgvYoV3ci2oSdy8ZOlQ2rWlApiFWcvOMdkyk=";
+  };
 
-  vendorSha256 = "02bqf6vkj5msk35sr5sklnqqd16n7gns7knzqslw077xrxiz7bsg";
-
-  # Override the go-modules fetcher derivation to apply
-  # upstream's patch of the crypto/x509 library.
-  modBuildPhase = ''
-    go mod init github.com/namecoin/x509-compressed
-    go generate ./...
-    go mod tidy
-
-    cd ncdns
-    go mod init github.com/namecoin/ncdns
-    go mod edit \
-      -replace github.com/coreos/go-systemd=github.com/coreos/go-systemd/v22@latest \
-      -replace github.com/namecoin/x509-compressed=$NIX_BUILD_TOP/source
-    go mod tidy
+  # Note: to update ncdns add the following lines
+  #
+  #   chmod -R +w .
+  #   go mod tidy
+  #   cat go.mod go.sum
+  #   exit 1
+  #
+  # to the `preBuild` here and update the lock files
+  preBuild = ''
+    # Sideload the generated x509 module
+    ln -s '${x509}' x509
   '';
 
-  # Copy over the lockfiles as well, because the source
-  # doesn't contain it. The fixed-output derivation is
-  # probably not reproducible anyway.
-  modInstallPhase = ''
-    mv -t vendor go.mod go.sum
-    cp -r --reflink=auto vendor "$out"
-  '';
+  vendorHash = "sha256-FoCK2qkhbc+6D4V77pNLiC9d68nkeYJxb7uiNYEP2Xw=";
 
   buildInputs = [ libcap ];
 
-  # The fetcher derivation must run with a different
-  # $sourceRoot, but buildGoModule doesn't allow that,
-  # so we use this ugly hack.
-  unpackPhase = ''
-    runHook preUnpack
+  patches = [./fix-tpl-path.patch ];
 
-    unpackFile "$src"
-    sourceRoot=$PWD/source/ncdns
-    chmod -R u+w -- "$sourceRoot"
-    cd $sourceRoot
-
-    runHook postUpack
-  '';
-
-  # Same as above: can't use `patches` because that would
-  # be also applied to the fetcher derivation, thus failing.
-  patchPhase = ''
-    runHook prePatch
-    patch -p1 < ${./fix-tpl-path.patch}
-    runHook postPatch
-  '';
-
-  preBuild = ''
-    chmod -R u+w vendor
-    mv -t . vendor/go.{mod,sum}
+  # Put in our own lockfiles
+  postPatch = ''
+    cp ${./ncdns-go.mod} go.mod
+    cp ${./ncdns-go.sum} go.sum
   '';
 
   preCheck = ''
     # needed to run the ncdns test suite
-    ln -s $PWD/vendor ../../go/src
+    ln -s $PWD/vendor ../go/src
   '';
 
   postInstall = ''
@@ -100,13 +102,12 @@ buildGoModule {
     cp -r _tpl "$out/share/tpl"
   '';
 
+  passthru.tests.ncdns = nixosTests.ncdns;
+
   meta = with lib; {
     description = "Namecoin to DNS bridge daemon";
     homepage = "https://github.com/namecoin/ncdns";
     license = licenses.gpl3Plus;
     maintainers = with maintainers; [ rnhmjoj ];
   };
-
-  passthru.tests.ncdns = nixosTests.ncdns;
-
 }

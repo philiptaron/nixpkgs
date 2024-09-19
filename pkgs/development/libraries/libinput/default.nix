@@ -32,7 +32,7 @@ let
       env = python3.withPackages (pp: with pp; [
         sphinx
         recommonmark
-        sphinx_rtd_theme
+        sphinx-rtd-theme
       ]);
     in
     # Expose only the sphinx-build binary to avoid contaminating
@@ -45,7 +45,7 @@ in
 
 stdenv.mkDerivation rec {
   pname = "libinput";
-  version = "1.20.1";
+  version = "1.26.2";
 
   outputs = [ "bin" "out" "dev" ];
 
@@ -54,7 +54,7 @@ stdenv.mkDerivation rec {
     owner = "libinput";
     repo = "libinput";
     rev = version;
-    sha256 = "eujnabUaeNEJC/tPPhwcNS9sqDIorF52RjfqKBotbmc=";
+    hash = "sha256-Ly832W2U38JuXiqvt6e7u3APynrmwi4Ns98bBdTBnP8=";
   };
 
   patches = [
@@ -92,7 +92,7 @@ stdenv.mkDerivation rec {
     udev
   ];
 
-  checkInputs = [
+  nativeCheckInputs = [
     check
     valgrind
   ];
@@ -113,8 +113,8 @@ stdenv.mkDerivation rec {
       test/check-leftover-udev-rules.sh \
       test/helper-copy-and-exec-from-tmp.sh
 
-    # Don't create an empty /etc directory.
-    sed -i "/install_subdir('libinput', install_dir : dir_etc)/d" meson.build
+    # Don't create an empty directory under /etc.
+    sed -i "/install_emptydir(dir_etc \/ 'libinput')/d" meson.build
   '';
 
   passthru = {
@@ -122,16 +122,17 @@ stdenv.mkDerivation rec {
       libinput-module = nixosTests.libinput;
     };
     updateScript = gitUpdater {
-      inherit pname version;
       patchlevel-unstable = true;
     };
   };
 
   meta = with lib; {
     description = "Handles input devices in Wayland compositors and provides a generic X.Org input driver";
+    mainProgram = "libinput";
     homepage = "https://www.freedesktop.org/wiki/Software/libinput/";
     license = licenses.mit;
-    platforms = platforms.unix;
+    platforms = platforms.linux;
     maintainers = with maintainers; [ codyopel ] ++ teams.freedesktop.members;
+    changelog = "https://gitlab.freedesktop.org/libinput/libinput/-/releases/${version}";
   };
 }

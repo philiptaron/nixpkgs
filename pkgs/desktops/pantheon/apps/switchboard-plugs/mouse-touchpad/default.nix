@@ -9,8 +9,8 @@
 , vala
 , libgee
 , libxml2
-, granite
-, gtk3
+, granite7
+, gtk4
 , switchboard
 , gnome-settings-daemon
 , glib
@@ -20,13 +20,13 @@
 
 stdenv.mkDerivation rec {
   pname = "switchboard-plug-mouse-touchpad";
-  version = "6.1.0";
+  version = "8.0.1";
 
   src = fetchFromGitHub {
     owner = "elementary";
     repo = pname;
     rev = version;
-    sha256 = "0nqgbpk1knvbj5xa078i0ka6lzqmaaa873gwj3mhjr5q2gzkw7y5";
+    sha256 = "sha256-aOJnjHCyc1tSyF7AuW5nXUXcvzBnZ+pwU91Mk+veusg=";
   };
 
   patches = [
@@ -46,8 +46,8 @@ stdenv.mkDerivation rec {
   buildInputs = [
     gala
     glib
-    granite
-    gtk3
+    granite7
+    gtk4
     libgee
     libxml2
     gnome-settings-daemon
@@ -56,9 +56,7 @@ stdenv.mkDerivation rec {
   ];
 
   passthru = {
-    updateScript = nix-update-script {
-      attrPath = "pantheon.${pname}";
-    };
+    updateScript = nix-update-script { };
   };
 
   meta = with lib; {

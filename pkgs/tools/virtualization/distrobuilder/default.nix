@@ -1,39 +1,51 @@
 { lib
-, pkg-config
 , buildGoModule
-, fetchFromGitHub
-, makeWrapper
+, callPackage
+, cdrkit
 , coreutils
+, debootstrap
+, fetchFromGitHub
 , gnupg
 , gnutar
+, hivex
+, makeWrapper
+, nixosTests
+, pkg-config
 , squashfsTools
-, debootstrap
+, stdenv
+, wimlib
 }:
 
 let
   bins = [
     coreutils
+    debootstrap
     gnupg
     gnutar
     squashfsTools
-    debootstrap
+  ] ++ lib.optionals stdenv.isx86_64 [
+    # repack-windows deps
+    cdrkit
+    hivex
+    wimlib
   ];
 in
 buildGoModule rec {
   pname = "distrobuilder";
-  version = "2.0";
+  version = "3.0";
 
-  vendorSha256 = "sha256-hcp+ufJFgFLBE4i2quIwhvrwDTes3saXNHHr9XXBc8E=";
+  vendorHash = "sha256-pFrEkZnrcx0d3oM1klQrNHH+MiLvO4V1uFQdE0kXUqM=";
 
   src = fetchFromGitHub {
     owner = "lxc";
     repo = "distrobuilder";
-    rev = "distrobuilder-${version}";
-    sha256 = "sha256-Px8mo2dwHNVjMWtzsa/4fLxlcbYkhIc7W8aR9DR85vc=";
+    rev = "refs/tags/distrobuilder-${version}";
+    sha256 = "sha256-JfME9VaqaQnrhnzhSLGUy9uU+tki1hXdnwqBUD/5XH0=";
     fetchSubmodules = false;
   };
 
   buildInputs = bins;
+
 
   # tests require a local keyserver (mkg20001/nixpkgs branch distrobuilder-with-tests) but gpg is currently broken in tests
   doCheck = false;
@@ -47,11 +59,21 @@ buildGoModule rec {
     wrapProgram $out/bin/distrobuilder --prefix PATH ":" ${lib.makeBinPath bins}
   '';
 
-  meta = with lib; {
+  passthru = {
+    tests = {
+      incus-legacy-init = nixosTests.incus.container-legacy-init;
+      incus-systemd-init = nixosTests.incus.container-systemd-init;
+    };
+
+    generator = callPackage ./generator.nix { inherit src version; };
+  };
+
+  meta = {
     description = "System container image builder for LXC and LXD";
     homepage = "https://github.com/lxc/distrobuilder";
-    license = licenses.asl20;
-    maintainers = with maintainers; [ megheaiulian ];
-    platforms = platforms.linux;
+    license = lib.licenses.asl20;
+    maintainers = lib.teams.lxc.members;
+    platforms = lib.platforms.linux;
+    mainProgram = "distrobuilder";
   };
 }

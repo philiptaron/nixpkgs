@@ -1,6 +1,6 @@
 { rustPlatform
 , lib
-, fetchurl
+, fetchzip
 , openssl
 , pkg-config
 , systemd
@@ -8,14 +8,14 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "pr-tracker";
-  version = "1.2.0";
+  version = "1.6.0";
 
-  src = fetchurl {
+  src = fetchzip {
     url = "https://git.qyliss.net/pr-tracker/snapshot/pr-tracker-${version}.tar.xz";
-    sha256 = "sha256-Tru9DsitRQLiO4Ln70J9LvkEqcj2i4A+eArBvIhd/ls=";
+    hash = "sha256-O+dtGxVhn3hW+vFQzEt7kQRTnZgc1R938BJ6pAkIW4E=";
   };
 
-  cargoSha256 = "0q3ibxnzw8gngvrgfkv4m64dr411c511xkvb6j9k63vhy9vwarz7";
+  cargoHash = "sha256-t+jiOr5pjJNMpaOLYKlk194b2njT1XWKKlPQtKsUu3E=";
 
   nativeBuildInputs = [ pkg-config ];
   buildInputs = [ openssl systemd ];
@@ -31,5 +31,6 @@ rustPlatform.buildRustPackage rec {
     homepage = "https://git.qyliss.net/pr-tracker";
     license = licenses.agpl3Plus;
     maintainers = with maintainers; [ qyliss sumnerevans ];
+    mainProgram = "pr-tracker";
   };
 }

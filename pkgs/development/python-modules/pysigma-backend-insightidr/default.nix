@@ -1,15 +1,16 @@
-{ lib
-, buildPythonPackage
-, fetchFromGitHub
-, poetry-core
-, pysigma
-, pytestCheckHook
-, pythonOlder
+{
+  lib,
+  buildPythonPackage,
+  fetchFromGitHub,
+  poetry-core,
+  pysigma,
+  pytestCheckHook,
+  pythonOlder,
 }:
 
 buildPythonPackage rec {
   pname = "pysigma-backend-insightidr";
-  version = "0.1.6";
+  version = "0.2.3";
   format = "pyproject";
 
   disabled = pythonOlder "3.8";
@@ -18,20 +19,18 @@ buildPythonPackage rec {
     owner = "SigmaHQ";
     repo = "pySigma-backend-insightidr";
     rev = "refs/tags/v${version}";
-    hash = "sha256-Sg+AYoEbCmcqxw5dl8wmQcI+lFrAfFgDnQjiQh6r9Yc=";
+    hash = "sha256-wQMnnJ0KU+53MS3PIBkwIhUiyUdCrDbdUT6upk2Pp/8=";
   };
 
   nativeBuildInputs = [
     poetry-core
   ];
 
-  propagatedBuildInputs = [
-    pysigma
-  ];
+  propagatedBuildInputs = [ pysigma ];
 
-  checkInputs = [
-    pytestCheckHook
-  ];
+  pythonRelaxDeps = [ "pysigma" ];
+
+  nativeCheckInputs = [ pytestCheckHook ];
 
   pythonImportsCheck = [
     "sigma.backends.insight_idr"

@@ -1,4 +1,4 @@
-{ lib, buildDunePackage
+{ buildDunePackage
 , mirage-crypto, mirage-crypto-rng
 , dune-configurator, async, logs
 }:
@@ -6,7 +6,9 @@
 buildDunePackage {
   pname = "mirage-crypto-rng-async";
 
-  inherit (mirage-crypto) useDune2 version minimumOCamlVersion src;
+  inherit (mirage-crypto) version src;
+
+  duneVersion = "3";
 
   buildInputs = [
     dune-configurator

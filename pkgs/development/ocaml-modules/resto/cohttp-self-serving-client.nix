@@ -1,5 +1,4 @@
-{ lib
-, buildDunePackage
+{ buildDunePackage
 , resto
 , resto-directory
 , resto-acl
@@ -13,6 +12,7 @@
 buildDunePackage {
   pname = "resto-cohttp-self-serving-client";
   inherit (resto) src version meta doCheck;
+  duneVersion = "3";
 
   propagatedBuildInputs = [
     resto

@@ -1,28 +1,26 @@
-{ lib, buildFHSUserEnv, version, src }:
+{ lib, buildFHSEnv, platformio-core }:
 
 let
   pio-pkgs = pkgs:
     let
-      python = pkgs.python3.override {
-        packageOverrides = self: super: {
-          platformio = self.callPackage ./core.nix { inherit version src; };
-        };
-      };
+      inherit (platformio-core) python;
     in
     (with pkgs; [
+      platformio-core
       zlib
       git
       xdg-user-dirs
+      ncurses
+      udev
     ]) ++ (with python.pkgs; [
       python
       setuptools
       pip
       bottle
-      platformio
     ]);
 
 in
-buildFHSUserEnv {
+buildFHSEnv {
   name = "platformio";
 
   targetPkgs = pio-pkgs;
@@ -30,7 +28,7 @@ buildFHSUserEnv {
   # multiPkgs = pio-pkgs;
 
   meta = with lib; {
-    description = "An open source ecosystem for IoT development";
+    description = "Open source ecosystem for IoT development";
     homepage = "https://platformio.org";
     maintainers = with maintainers; [ mog ];
     license = licenses.asl20;
@@ -38,10 +36,8 @@ buildFHSUserEnv {
   };
 
   extraInstallCommands = ''
-    mkdir -p $out/lib/udev/rules.d
-
     ln -s $out/bin/platformio $out/bin/pio
-    ln -s ${src}/scripts/99-platformio-udev.rules $out/lib/udev/rules.d/99-platformio-udev.rules
+    ln -s ${platformio-core.udev}/lib $out/lib
   '';
 
   runScript = "platformio";

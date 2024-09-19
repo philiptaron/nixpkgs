@@ -1,24 +1,38 @@
-{ buildPythonPackage, fetchPypi, lib, isPy27, marshmallow, pytestCheckHook
-, pytest-aiohttp, webtest, webtest-aiohttp, flask, django, bottle, tornado
-, pyramid, falcon, aiohttp }:
+{
+  buildPythonPackage,
+  fetchPypi,
+  lib,
+  isPy27,
+  marshmallow,
+  pytestCheckHook,
+  pytest-aiohttp,
+  webtest,
+  webtest-aiohttp,
+  flask,
+  django,
+  bottle,
+  tornado,
+  pyramid,
+  falcon,
+  aiohttp,
+}:
 
 buildPythonPackage rec {
   pname = "webargs";
-  version = "8.1.0";
+  version = "8.4.0";
+  format = "setuptools";
   disabled = isPy27;
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "f1f0b7f054a22263cf750529fc0926709ca47da9a2c417d423ad88d9fa6a5d33";
+    hash = "sha256-6pk2ghSkzmE5JL6Z1x21jCaWMele/0+gm3NU5S3ABqU=";
   };
 
-  pythonImportsCheck = [
-    "webargs"
-  ];
+  pythonImportsCheck = [ "webargs" ];
 
   propagatedBuildInputs = [ marshmallow ];
 
-  checkInputs = [
+  nativeCheckInputs = [
     pytestCheckHook
     pytest-aiohttp
     webtest

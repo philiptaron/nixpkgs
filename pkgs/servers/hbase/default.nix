@@ -21,13 +21,15 @@ let common = { version, hash, jdk ? jdk11_headless, tests }:
     installPhase = ''
       mkdir -p $out
       cp -R * $out
-      wrapProgram $out/bin/hbase --set-default JAVA_HOME ${jdk.home}
+      wrapProgram $out/bin/hbase --set-default JAVA_HOME ${jdk.home} \
+        --run "test -d /etc/hadoop-conf && export HBASE_CONF_DIR=\''${HBASE_CONF_DIR-'/etc/hadoop-conf/'}" \
+        --set-default HBASE_CONF_DIR "$out/conf/"
     '';
 
     passthru = { inherit tests; };
 
     meta = with lib; {
-      description = "A distributed, scalable, big data store";
+      description = "Distributed, scalable, big data store";
       homepage = "https://hbase.apache.org";
       license = licenses.asl20;
       maintainers = with lib.maintainers; [ illustris ];
@@ -36,20 +38,24 @@ let common = { version, hash, jdk ? jdk11_headless, tests }:
   };
 in
 {
-  hbase_1_7 = common {
-    version = "1.7.1";
-    hash = "sha256-DrH2G79QLT8L0YTTmAGC9pUWU8semSaTOsrsQRCI2rY=";
-    jdk = jdk8_headless;
-    tests.standalone = nixosTests.hbase1;
-  };
   hbase_2_4 = common {
-    version = "2.4.11";
-    hash = "sha256-m0vjUtPaj8czHHh+rQNJJgrFAM744cHd06KE0ut7QeU=";
+    version = "2.4.18";
+    hash = "sha256-zYrHAxzlPRrRchHGVp3fhQT0BD0+wavZ4cAWncrv+MQ=";
+    tests.standalone = nixosTests.hbase_2_4;
+  };
+  hbase_2_5 = common {
+    version = "2.5.9";
+    hash = "sha256-rJGeJ9zmUn28q1Sfk5cdEdEZxbAnvFjRjdcTCx9x1Qc=";
+    tests.standalone = nixosTests.hbase_2_5;
+  };
+  hbase_2_6 = common {
+    version = "2.6.0";
+    hash = "sha256-zjQ5HgUCiHmrMQuyMN4IAuLR0fVrJ+YKDUfPQb05Dp4=";
     tests.standalone = nixosTests.hbase2;
   };
   hbase_3_0 = common {
-    version = "3.0.0-alpha-2";
-    hash = "sha256-QPvgO1BeFWvMT5PdUm/SL92ZgvSvYIuJbzolbBTenz4=";
+    version = "3.0.0-beta-1";
+    hash = "sha256-lmeaH2gDP6sBwZpzROKhR2Je7dcrwnq7qlMUh0B5fZs=";
     tests.standalone = nixosTests.hbase3;
   };
 }

@@ -1,56 +1,60 @@
-{ lib
-, buildPythonPackage
-, click
-, colorama
-, configparser
-, distro
-, fetchFromGitHub
-, gevent
-, jinja2
-, paramiko
-, pytestCheckHook
-, python-dateutil
-, pythonOlder
-, pywinrm
-, pyyaml
-, setuptools
+{
+  lib,
+  buildPythonPackage,
+  click,
+  colorama,
+  configparser,
+  distro,
+  fetchFromGitHub,
+  gevent,
+  jinja2,
+  packaging,
+  paramiko,
+  pytestCheckHook,
+  python-dateutil,
+  pythonOlder,
+  pywinrm,
+  pyyaml,
+  setuptools,
+  typeguard,
+  typing-extensions,
 }:
 
 buildPythonPackage rec {
   pname = "pyinfra";
-  version = "2.1";
-  format = "setuptools";
+  version = "3.1";
+  pyproject = true;
 
-  disabled = pythonOlder "3.7";
+  disabled = pythonOlder "3.10";
 
   src = fetchFromGitHub {
     owner = "Fizzadar";
-    repo = pname;
-    rev = "v${version}";
-    hash = "sha256-frjPxSATvXgeACT4kThoiPu04Ez8bs8FIPdf5PVuiSg=";
+    repo = "pyinfra";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-uTGJX92AIaMLLLq0XPpfIhL9kFPR+aJgMxxoKYJf0PM=";
   };
 
-  propagatedBuildInputs = [
+  build-system = [ setuptools ];
+
+  dependencies = [
     click
     colorama
     configparser
     distro
     gevent
     jinja2
+    packaging
     paramiko
     python-dateutil
     pywinrm
     pyyaml
     setuptools
-  ];
+    typeguard
+  ] ++ lib.optionals (pythonOlder "3.10") [ typing-extensions ];
 
-  checkInputs = [
-    pytestCheckHook
-  ];
+  nativeCheckInputs = [ pytestCheckHook ];
 
-  pythonImportsCheck = [
-    "pyinfra"
-  ];
+  pythonImportsCheck = [ "pyinfra" ];
 
   disabledTests = [
     # Test requires SSH binary
@@ -63,8 +67,11 @@ buildPythonPackage rec {
       pyinfra automates/provisions/manages/deploys infrastructure. It can be used for
       ad-hoc command execution, service deployment, configuration management and more.
     '';
-    homepage = "https://github.com/Fizzadar/pyinfra";
-    maintainers = with maintainers; [ totoroot ];
+    homepage = "https://pyinfra.com";
+    downloadPage = "https://pyinfra.com/Fizzadar/pyinfra/releases";
+    changelog = "https://github.com/Fizzadar/pyinfra/blob/v${version}/CHANGELOG.md";
     license = licenses.mit;
+    maintainers = with maintainers; [ totoroot ];
+    mainProgram = "pyinfra";
   };
 }

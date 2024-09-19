@@ -2,26 +2,26 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "seehecht";
-  version = "3.0.2";
+  version = "3.0.3";
 
   src = fetchFromGitea {
     domain = "codeberg.org";
-    owner = "papojari";
+    owner = "annaaurora";
     repo = "seehecht";
     rev = "v${version}";
-    sha256 = "sha256-x5zZEDaBmWpyvY+sKuiK4L+hc85prxCueWYUNMi9ty0=";
+    hash = "sha256-KIxK0JYfq/1Bn4LOn+LzWPBUvGYMvOEuqS7GMpDRvW0=";
   };
 
-  cargoSha256 = "sha256-mWGmMtUYeM97SM+/jtOzkAe1usuZT4yOI6PAbiGKe7M=";
+  cargoHash = "sha256-AeVUVF4SBS9FG0iezLBKUm4Uk1PPRXPTON93evgL9IA=";
 
   postInstall = ''
     ln -s $out/bin/seh $out/bin/seehecht
   '';
 
   meta = with lib; {
-    description = "A tool to quickly open a markdown document with already filled out frontmatter";
+    description = "Tool to quickly open a markdown document with already filled out frontmatter";
     license = licenses.lgpl3Only;
     platforms = platforms.all;
-    maintainers = with maintainers; [ papojari ];
+    maintainers = with maintainers; [ annaaurora ];
   };
 }

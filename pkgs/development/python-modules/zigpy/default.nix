@@ -1,55 +1,85 @@
-{ lib
-, aiohttp
-, aiosqlite
-, asynctest
-, buildPythonPackage
-, crccheck
-, cryptography
-, fetchFromGitHub
-, pycryptodome
-, pytest-aiohttp
-, pytest-timeout
-, pytestCheckHook
-, pythonOlder
-, voluptuous
+{
+  lib,
+  stdenv,
+  aiohttp,
+  aioresponses,
+  aiosqlite,
+  async-timeout,
+  attrs,
+  buildPythonPackage,
+  crccheck,
+  cryptography,
+  fetchFromGitHub,
+  freezegun,
+  frozendict,
+  importlib-resources,
+  jsonschema,
+  pycryptodome,
+  pyserial-asyncio,
+  pytest-asyncio,
+  pytest-timeout,
+  pytestCheckHook,
+  pythonOlder,
+  setuptools,
+  typing-extensions,
+  voluptuous,
 }:
 
 buildPythonPackage rec {
   pname = "zigpy";
-  version = "0.46.0";
-  format = "setuptools";
+  version = "0.66.0";
+  pyproject = true;
 
-  disabled = pythonOlder "3.7";
+  disabled = pythonOlder "3.9";
 
   src = fetchFromGitHub {
     owner = "zigpy";
     repo = "zigpy";
     rev = "refs/tags/${version}";
-    sha256 = "sha256-YCkNjygNSvGNuhP7N1apCWYevl18GASgUFSSTLHj2YU=";
+    hash = "sha256-Rv45WP6KxsFY/eGgNja5JSgmVKQWrRbP6K4tz6CFpMs=";
   };
 
-  propagatedBuildInputs = [
-    aiohttp
-    aiosqlite
-    crccheck
-    cryptography
-    pycryptodome
-    voluptuous
-  ];
+  postPatch = ''
+    substituteInPlace pyproject.toml \
+      --replace-fail '"setuptools-git-versioning<2"' "" \
+      --replace-fail 'dynamic = ["version"]' 'version = "${version}"'
+  '';
 
-  checkInputs = [
-    pytest-aiohttp
+  build-system = [ setuptools ];
+
+  dependencies =
+    [
+      attrs
+      aiohttp
+      aiosqlite
+      crccheck
+      cryptography
+      frozendict
+      jsonschema
+      pyserial-asyncio
+      typing-extensions
+      pycryptodome
+      voluptuous
+    ]
+    ++ lib.optionals (pythonOlder "3.9") [ importlib-resources ]
+    ++ lib.optionals (pythonOlder "3.11") [ async-timeout ];
+
+  nativeCheckInputs = [
+    aioresponses
+    freezegun
+    pytest-asyncio
     pytest-timeout
     pytestCheckHook
-  ]  ++ lib.optionals (pythonOlder "3.8") [
-    asynctest
   ];
 
   disabledTests = [
-    # RuntimeError: coroutine 'test_remigrate_forcibly_downgraded_v4' was never awaited
-    #"test_remigrate_forcibly_downgraded_v4"
-    # RuntimeError: Event loop is closed
-    #"test_startup"
+    # assert quirked.quirk_metadata.quirk_location.endswith("zigpy/tests/test_quirks_v2.py]-line:104") is False
+    "test_quirks_v2"
+  ] ++ lib.optionals (stdenv.isLinux && stdenv.isx86_64) [ "test_periodic_scan_priority" ];
+
+  disabledTestPaths = [
+    # Tests require network access
+    "tests/ota/test_ota_providers.py"
   ];
 
   pythonImportsCheck = [
@@ -63,8 +93,9 @@ buildPythonPackage rec {
   meta = with lib; {
     description = "Library implementing a ZigBee stack";
     homepage = "https://github.com/zigpy/zigpy";
+    changelog = "https://github.com/zigpy/zigpy/releases/tag/${version}";
     license = licenses.gpl3Plus;
-    maintainers = with maintainers; [ etu mvnetbiz ];
+    maintainers = with maintainers; [ mvnetbiz ];
     platforms = platforms.linux;
   };
 }

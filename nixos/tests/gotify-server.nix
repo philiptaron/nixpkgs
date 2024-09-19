@@ -1,7 +1,7 @@
 import ./make-test-python.nix ({ pkgs, lib, ...} : {
   name = "gotify-server";
   meta = with pkgs.lib.maintainers; {
-    maintainers = [ ma27 ];
+    maintainers = [ ];
   };
 
   nodes.machine = { pkgs, ... }: {
@@ -9,7 +9,9 @@ import ./make-test-python.nix ({ pkgs, lib, ...} : {
 
     services.gotify = {
       enable = true;
-      port = 3000;
+      environment = {
+        GOTIFY_SERVER_PORT = 3000;
+      };
     };
   };
 
@@ -42,7 +44,7 @@ import ./make-test-python.nix ({ pkgs, lib, ...} : {
 
     assert title == "Gotify"
 
-    # Ensure that the UI responds with a successfuly code and that the
+    # Ensure that the UI responds with a successful code and that the
     # response is not empty
     result = machine.succeed("curl -fsS localhost:3000")
     assert result, "HTTP response from localhost:3000 must not be empty!"

@@ -1,7 +1,4 @@
 { config, lib, pkgs, ... }:
-
-with lib;
-
 let
   cfg = config.services.ferm;
 
@@ -17,9 +14,9 @@ let
 in {
   options = {
     services.ferm = {
-      enable = mkOption {
+      enable = lib.mkOption {
         default = false;
-        type = types.bool;
+        type = lib.types.bool;
         description = ''
           Whether to enable Ferm Firewall.
           *Warning*: Enabling this service WILL disable the existing NixOS
@@ -27,22 +24,17 @@ in {
           considered at the moment.
         '';
       };
-      config = mkOption {
+      config = lib.mkOption {
         description = "Verbatim ferm.conf configuration.";
         default = "";
-        defaultText = literalDocBook "empty firewall, allows any traffic";
-        type = types.lines;
+        defaultText = lib.literalMD "empty firewall, allows any traffic";
+        type = lib.types.lines;
       };
-      package = mkOption {
-        description = "The ferm package.";
-        type = types.package;
-        default = pkgs.ferm;
-        defaultText = literalExpression "pkgs.ferm";
-      };
+      package = lib.mkPackageOption pkgs "ferm" { };
     };
   };
 
-  config = mkIf cfg.enable {
+  config = lib.mkIf cfg.enable {
     systemd.services.firewall.enable = false;
     systemd.services.ferm = {
       description = "Ferm Firewall";

@@ -3,9 +3,8 @@
 , fetchFromGitHub
 , rustPlatform
 , installShellFiles
-, libiconv
-, libgit2
-, pkg-config
+, cmake
+, git
 , nixosTests
 , Security
 , Foundation
@@ -14,31 +13,40 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "starship";
-  version = "1.7.1";
+  version = "1.20.1";
 
   src = fetchFromGitHub {
     owner = "starship";
-    repo = pname;
+    repo = "starship";
     rev = "v${version}";
-    sha256 = "sha256-/vP8q2tWDR8EXDekpcONXIgdzRHh3mZzZGY04wb4aA0=";
+    hash = "sha256-Y7jX0XXrSMEex1HG0o69Q1rTtnFL0UuIEgfa1e7D1Nc=";
   };
 
-  nativeBuildInputs = [ installShellFiles pkg-config ];
+  nativeBuildInputs = [ installShellFiles cmake ];
 
-  buildInputs = [ libgit2 ] ++ lib.optionals stdenv.isDarwin [ libiconv Security Foundation Cocoa ];
+  buildInputs = lib.optionals stdenv.isDarwin [ Security Foundation Cocoa ];
 
-  buildNoDefaultFeatures = true;
-  # the "notify" feature is currently broken on darwin
-  buildFeatures = if stdenv.isDarwin then [ "battery" ] else [ "default" ];
+  NIX_LDFLAGS = lib.optionals (stdenv.isDarwin && stdenv.isx86_64) [ "-framework" "AppKit" ];
 
-  postInstall = ''
-    for shell in bash fish zsh; do
-      STARSHIP_CACHE=$TMPDIR $out/bin/starship completions $shell > starship.$shell
-      installShellCompletion starship.$shell
-    done
+  # tries to access HOME only in aarch64-darwin environment when building mac-notification-sys
+  preBuild = lib.optionalString (stdenv.isDarwin && stdenv.isAarch64) ''
+    export HOME=$TMPDIR
   '';
 
-  cargoSha256 = "sha256-6y0Du3YGfH+SDbG3NdokJyG+Y1q5cI4UZp6XwFdvYxk=";
+  postInstall = ''
+    presetdir=$out/share/starship/presets/
+    mkdir -p $presetdir
+    cp docs/public/presets/toml/*.toml $presetdir
+  '' + lib.optionalString (stdenv.buildPlatform.canExecute stdenv.hostPlatform) ''
+    installShellCompletion --cmd starship \
+      --bash <($out/bin/starship completions bash) \
+      --fish <($out/bin/starship completions fish) \
+      --zsh <($out/bin/starship completions zsh)
+  '';
+
+  cargoHash = "sha256-yJ32HFaRpujJ9mQa+07b5cQcl1ATO/56dpm1IeKcbzs=";
+
+  nativeCheckInputs = [ git ];
 
   preCheck = ''
     HOME=$TMPDIR
@@ -49,9 +57,10 @@ rustPlatform.buildRustPackage rec {
   };
 
   meta = with lib; {
-    description = "A minimal, blazing fast, and extremely customizable prompt for any shell";
+    description = "Minimal, blazing fast, and extremely customizable prompt for any shell";
     homepage = "https://starship.rs";
     license = licenses.isc;
-    maintainers = with maintainers; [ bbigras danth davidtwco Br1ght0ne Frostman marsam ];
+    maintainers = with maintainers; [ danth davidtwco Br1ght0ne Frostman ];
+    mainProgram = "starship";
   };
 }

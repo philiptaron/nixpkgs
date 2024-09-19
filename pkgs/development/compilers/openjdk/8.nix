@@ -5,7 +5,7 @@
 , openjdk8-bootstrap
 , setJavaClassPath
 , headless ? false
-, enableGnome2 ? true, gtk2, gnome_vfs, glib, GConf
+, enableGtk ? true, gtk2, glib
 }:
 
 let
@@ -20,8 +20,11 @@ let
     powerpc64le-linux = "ppc64le";
   }.${stdenv.system} or (throw "Unsupported platform ${stdenv.system}");
 
-  update = "322";
+  update = "412";
   build = "ga";
+
+  # when building a headless jdk, also bootstrap it with a headless jdk
+  openjdk-bootstrap = openjdk8-bootstrap.override { gtkSupport = !headless; };
 
   openjdk8 = stdenv.mkDerivation rec {
     pname = "openjdk" + lib.optionalString headless "-headless";
@@ -31,17 +34,17 @@ let
       owner = "openjdk";
       repo = "jdk8u";
       rev = "jdk${version}";
-      sha256 = "sha256-e39Yv+NDQG7z6fGmpKEnkKd5MoHZ50SXlq/Q7lzWcDA=";
+      sha256 = "sha256-o+H5n5p6JG1giJj9OADgMbQPaoKMzLMFquKH536SHhM=";
     };
     outputs = [ "out" "jre" ];
 
     nativeBuildInputs = [ pkg-config lndir unzip ];
     buildInputs = [
-      cpio file which zip perl openjdk8-bootstrap zlib cups freetype alsa-lib
+      cpio file which zip perl zlib cups freetype alsa-lib
       libjpeg giflib libX11 libICE libXext libXrender libXtst libXt libXtst
-      libXi libXinerama libXcursor libXrandr fontconfig
-    ] ++ lib.optionals (!headless && enableGnome2) [
-      gtk2 gnome_vfs GConf glib
+      libXi libXinerama libXcursor libXrandr fontconfig openjdk-bootstrap
+    ] ++ lib.optionals (!headless && enableGtk) [
+      gtk2 glib
     ];
 
     patches = [
@@ -49,7 +52,7 @@ let
       ./read-truststore-from-env-jdk8.patch
       ./currency-date-range-jdk8.patch
       ./fix-library-path-jdk8.patch
-    ] ++ lib.optionals (!headless && enableGnome2) [
+    ] ++ lib.optionals (!headless && enableGtk) [
       ./swing-use-gtk-jdk8.patch
     ];
 
@@ -64,7 +67,7 @@ let
     '';
 
     configureFlags = [
-      "--with-boot-jdk=${openjdk8-bootstrap.home}"
+      "--with-boot-jdk=${openjdk-bootstrap.home}"
       "--with-update-version=${update}"
       "--with-build-number=${build}"
       "--with-milestone=fcs"
@@ -78,7 +81,7 @@ let
 
     separateDebugInfo = true;
 
-    NIX_CFLAGS_COMPILE = toString ([
+    env.NIX_CFLAGS_COMPILE = toString ([
       # glibc 2.24 deprecated readdir_r so we need this
       # See https://www.mail-archive.com/openembedded-devel@lists.openembedded.org/msg49006.html
       "-Wno-error=deprecated-declarations"
@@ -93,8 +96,8 @@ let
 
     NIX_LDFLAGS= toString (lib.optionals (!headless) [
       "-lfontconfig" "-lcups" "-lXinerama" "-lXrandr" "-lmagic"
-    ] ++ lib.optionals (!headless && enableGnome2) [
-      "-lgtk-x11-2.0" "-lgio-2.0" "-lgnomevfs-2" "-lgconf-2"
+    ] ++ lib.optionals (!headless && enableGtk) [
+      "-lgtk-x11-2.0" "-lgio-2.0"
     ]);
 
     # -j flag is explicitly rejected by the build system:
@@ -187,12 +190,12 @@ let
     postFixup = ''
       # Build the set of output library directories to rpath against
       LIBDIRS=""
-      for output in $outputs; do
+      for output in $(getAllOutputNames); do
         if [ "$output" = debug ]; then continue; fi
         LIBDIRS="$(find $(eval echo \$$output) -name \*.so\* -exec dirname {} \+ | sort | uniq | tr '\n' ':'):$LIBDIRS"
       done
       # Add the local library paths to remove dependencies on the bootstrap
-      for output in $outputs; do
+      for output in $(getAllOutputNames); do
         if [ "$output" = debug ]; then continue; fi
         OUTPUTDIR=$(eval echo \$$output)
         BINLIBS=$(find $OUTPUTDIR/bin/ -type f; find $OUTPUTDIR -name \*.so\*)
@@ -208,10 +211,14 @@ let
     meta = with lib; {
       homepage = "http://openjdk.java.net/";
       license = licenses.gpl2;
-      description = "The open-source Java Development Kit";
+      description = "Open-source Java Development Kit";
       maintainers = with maintainers; [ edwtjo ];
       platforms = [ "i686-linux" "x86_64-linux" "aarch64-linux" ];
       mainProgram = "java";
+      # Broken for musl at 2024-01-17. Tracking issue:
+      # https://github.com/NixOS/nixpkgs/issues/281618
+      # error: ‘isnanf’ was not declared in this scope
+      broken = stdenv.hostPlatform.isMusl;
     };
 
     passthru = {

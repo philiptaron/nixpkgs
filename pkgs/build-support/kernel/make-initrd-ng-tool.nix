@@ -7,10 +7,12 @@ rustPlatform.buildRustPackage {
   src = ./make-initrd-ng;
   cargoLock.lockFile = ./make-initrd-ng/Cargo.lock;
 
-  nativeBuildInputs = [ makeWrapper ];
+  passthru.updateScript = ./make-initrd-ng/update.sh;
 
-  postInstall = ''
-    wrapProgram $out/bin/make-initrd-ng \
-      --prefix PATH : ${lib.makeBinPath [ patchelf glibc binutils ]}
-  '';
+  meta = {
+    description = "Tool for copying binaries and their dependencies";
+    mainProgram = "make-initrd-ng";
+    maintainers = with lib.maintainers; [ das_j elvishjerricco k900 ];
+    license = lib.licenses.mit;
+  };
 }

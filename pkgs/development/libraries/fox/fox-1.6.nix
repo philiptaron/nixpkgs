@@ -1,6 +1,22 @@
-{ lib, stdenv, fetchurl, xlibsWrapper, libpng, libjpeg, libtiff, zlib, bzip2, libXcursor
-, libXrandr, libGLU, libGL, libXft, libXfixes, xinput
-, CoreServices }:
+{ lib
+, stdenv
+, fetchurl
+, libpng
+, libjpeg
+, libtiff
+, zlib
+, bzip2
+, libXcursor
+, libXrandr
+, libGLU
+, libGL
+, libXext
+, libXft
+, libXfixes
+, mesa
+, xinput
+, CoreServices
+}:
 
 stdenv.mkDerivation rec {
   pname = "fox";
@@ -12,8 +28,8 @@ stdenv.mkDerivation rec {
   };
 
   buildInputs = [
-    xlibsWrapper libpng libjpeg libtiff zlib bzip2 libXcursor libXrandr
-    libXft libGLU libGL libXfixes xinput
+    libpng libjpeg libtiff zlib bzip2 libXcursor libXrandr
+    libXext libXft libGLU libGL libXfixes xinput
   ] ++ lib.optional stdenv.isDarwin CoreServices;
 
   doCheck = true;
@@ -25,7 +41,7 @@ stdenv.mkDerivation rec {
   meta = {
     broken = stdenv.isDarwin;
     branch = "1.6";
-    description = "A C++ based class library for building Graphical User Interfaces";
+    description = "C++ based class library for building Graphical User Interfaces";
     longDescription = ''
         FOX stands for Free Objects for X.
         It is a C++ based class library for building Graphical User Interfaces.
@@ -34,7 +50,7 @@ stdenv.mkDerivation rec {
       '';
     homepage = "http://fox-toolkit.org";
     license = lib.licenses.lgpl3;
-    maintainers = [];
-    platforms = lib.platforms.mesaPlatforms;
+    maintainers = [ ];
+    inherit (mesa.meta) platforms;
   };
 }

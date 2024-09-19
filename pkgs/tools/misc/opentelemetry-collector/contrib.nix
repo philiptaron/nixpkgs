@@ -2,27 +2,44 @@
 , fetchFromGitHub
 , lib
 , stdenv
+, systemdMinimal
+, withSystemd ? false
 }:
 
 buildGoModule rec {
   pname = "opentelemetry-collector-contrib";
-  version = "0.51.0";
+  version = "0.109.0";
 
   src = fetchFromGitHub {
     owner = "open-telemetry";
     repo = "opentelemetry-collector-contrib";
     rev = "v${version}";
-    sha256 = "sha256-lMTOJFGuJhdXOvCk70Bee97Vb0HBCDnOLeK2q7S4hW8=";
+    hash = "sha256-ROAapCGIRD5kdA3k1LjSxdfICLRgBcQORe6wW1bszNI=";
   };
-  # proxy vendor to avoid hash missmatches between linux and macOS
+
+  # proxy vendor to avoid hash mismatches between linux and macOS
   proxyVendor = true;
-  vendorSha256 = "sha256-CzFcSvJCMfS83Semk92XUd9iSX6OjOrDzRUNNLVtpi4=";
+  vendorHash = "sha256-4MRXwp428d9oJPHrgOaGCaIFpRAIOpL/AYc/fLPAVBk=";
 
-  subPackages = [ "cmd/otelcontribcol" ];
+  # there is a nested go.mod
+  sourceRoot = "${src.name}/cmd/otelcontribcol";
 
-  # CGO_ENABLED=0 required for mac - "error: 'TARGET_OS_MAC' is not defined, evaluates to 0"
-  # https://github.com/shirou/gopsutil/issues/976
-  CGO_ENABLED = if stdenv.isLinux then 1 else 0;
+  # upstream strongly recommends disabling CGO
+  # additionally dependencies have had issues when GCO was enabled that weren't caught upstream
+  # https://github.com/open-telemetry/opentelemetry-collector/blob/main/CONTRIBUTING.md#using-cgo
+  CGO_ENABLED = 0;
+
+  # journalctl is required in-$PATH for the journald receiver tests.
+  nativeCheckInputs = lib.optionals stdenv.isLinux [ systemdMinimal ];
+
+  # We don't inject the package into propagatedBuildInputs unless
+  # asked to avoid hard-requiring a large package. For the journald
+  # receiver to work, journalctl will need to be available in-$PATH,
+  # so expose this as an option for those who want more control over
+  # it instead of trusting the global $PATH.
+  propagatedBuildInputs = lib.optionals withSystemd [ systemdMinimal ];
+
+  doCheck = false;
 
   ldflags = [
     "-s"

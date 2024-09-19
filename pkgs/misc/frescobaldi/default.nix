@@ -1,23 +1,28 @@
-{ lib, stdenv, buildPythonApplication, fetchFromGitHub, python3Packages, pyqtwebengine, lilypond }:
+{ lib, stdenv, fetchFromGitHub, python311Packages, lilypond }:
 
-buildPythonApplication rec {
+python311Packages.buildPythonApplication rec {
   pname = "frescobaldi";
-  version = "3.1.3";
+  version = "3.3.0";
 
   src = fetchFromGitHub {
     owner = "wbsoft";
     repo = "frescobaldi";
-    rev = "v${version}";
-    sha256 = "1p8f4vn2dpqndw1dylmg7wms6vi69zcfj544c908s4r8rrmbycyf";
+    rev = "refs/tags/v${version}";
+    sha256 = "sha256-Q6ruthNcpjLlYydUetkuTECiCIzu055bw40O8BPGq/A=";
   };
 
-  propagatedBuildInputs = with python3Packages; [
-    lilypond pygame python-ly sip_4
-    pyqt5 poppler-qt5
+  propagatedBuildInputs = with python311Packages; [
+    qpageview
+    lilypond
+    pygame
+    python-ly
+    sip4
+    pyqt5
+    poppler-qt5
     pyqtwebengine
   ];
 
-  nativeBuildInputs = [ pyqtwebengine.wrapQtAppsHook ];
+  nativeBuildInputs = [ python311Packages.pyqtwebengine.wrapQtAppsHook ];
 
   # Needed because source is fetched from git
   preBuild = ''
@@ -30,12 +35,12 @@ buildPythonApplication rec {
 
   dontWrapQtApps = true;
   makeWrapperArgs = [
-      "\${qtWrapperArgs[@]}"
+    "\${qtWrapperArgs[@]}"
   ];
 
   meta = with lib; {
     homepage = "https://frescobaldi.org/";
-    description = "A LilyPond sheet music text editor";
+    description = "LilyPond sheet music text editor";
     longDescription = ''
       Powerful text editor with syntax highlighting and automatic completion,
       Music view with advanced Point & Click, Midi player to proof-listen
@@ -52,5 +57,6 @@ buildPythonApplication rec {
     maintainers = with maintainers; [ sepi ];
     platforms = platforms.all;
     broken = stdenv.isDarwin; # never built on Hydra https://hydra.nixos.org/job/nixpkgs/trunk/frescobaldi.x86_64-darwin
+    mainProgram = "frescobaldi";
   };
 }

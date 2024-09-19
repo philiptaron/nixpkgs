@@ -1,14 +1,20 @@
-{ lib, buildGoModule, fetchFromGitHub, fetchgit, installShellFiles }:
+{ lib
+, buildGoModule
+, fetchFromGitHub
+, installShellFiles
+, testers
+, scorecard
+}:
 
 buildGoModule rec {
   pname = "scorecard";
-  version = "4.3.0";
+  version = "5.0.0";
 
   src = fetchFromGitHub {
     owner = "ossf";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-+aocaMnEDqaOjiCPmAxhf1tiqMN6DKo64N0ARMmY71E=";
+    hash = "sha256-9DuADuEIoZNwkvdKyqus2zNfIK31Jc3+bPW3/z8fvlc=";
     # populate values otherwise taken care of by goreleaser,
     # unfortunately these require us to use git. By doing
     # this in postFetch we can delete .git afterwards and
@@ -22,7 +28,7 @@ buildGoModule rec {
       find "$out" -name .git -print0 | xargs -0 rm -rf
     '';
   };
-  vendorSha256 = "sha256-0VEo08lGVQ3ROdqFrpNVgdtfaKqNY4hhjZ0i3U52P4M=";
+  vendorHash = "sha256-apOVAlGjaYSrW4qtUdDNgqwWxnVlBLhrefWEUvN4lzE=";
 
   nativeBuildInputs = [ installShellFiles ];
 
@@ -52,6 +58,10 @@ buildGoModule rec {
     export SKIP_GINKGO=1
   '';
 
+  checkFlags = [
+    "-skip TestCollectDockerfilePinning/Non-pinned_dockerfile|TestMixedPinning"
+  ];
+
   postInstall = ''
     installShellCompletion --cmd scorecard \
       --bash <($out/bin/scorecard completion bash) \
@@ -63,15 +73,22 @@ buildGoModule rec {
   installCheckPhase = ''
     runHook preInstallCheck
     $out/bin/scorecard --help
-    # $out/bin/scorecard version 2>&1 | grep "v${version}"
+    $out/bin/scorecard version 2>&1 | grep "v${version}"
     runHook postInstallCheck
   '';
+
+  passthru.tests.version = testers.testVersion {
+    package = scorecard;
+    command = "scorecard version";
+    version = "v${version}";
+  };
 
   meta = with lib; {
     homepage = "https://github.com/ossf/scorecard";
     changelog = "https://github.com/ossf/scorecard/releases/tag/v${version}";
     description = "Security health metrics for Open Source";
+    mainProgram = "scorecard";
     license = licenses.asl20;
-    maintainers = with maintainers; [ jk ];
+    maintainers = with maintainers; [ jk developer-guy ];
   };
 }

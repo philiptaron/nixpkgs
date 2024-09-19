@@ -10,6 +10,7 @@
 , libffi
 , libtool
 , libunistring
+, libxcrypt
 , makeWrapper
 , pkg-config
 , pkgsBuildBuild
@@ -25,11 +26,11 @@ let
 in
 builder rec {
   pname = "guile";
-  version = "3.0.8";
+  version = "3.0.10";
 
   src = fetchurl {
     url = "mirror://gnu/${pname}/${pname}-${version}.tar.xz";
-    sha256 = "sha256-2qcGClbygE6bdMjX5/6L7tErQ6qyeJo4WFGD/MF7ihM=";
+    sha256 = "sha256-vXFoUX/VJjM0RtT3q4FlJ5JWNAlPvTcyLhfiuNjnY4g=";
   };
 
   outputs = [ "out" "dev" "info" ];
@@ -38,7 +39,7 @@ builder rec {
   depsBuildBuild = [
     buildPackages.stdenv.cc
   ] ++ lib.optional (stdenv.hostPlatform != stdenv.buildPlatform)
-    pkgsBuildBuild.guile;
+    pkgsBuildBuild.guile_3_0;
   nativeBuildInputs = [
     makeWrapper
     pkg-config
@@ -48,6 +49,8 @@ builder rec {
     libtool
     libunistring
     readline
+  ] ++ lib.optionals stdenv.isLinux [
+    libxcrypt
   ];
   propagatedBuildInputs = [
     boehmgc
@@ -59,15 +62,15 @@ builder rec {
     # flags, see below.
     libtool
     libunistring
+  ] ++ lib.optionals stdenv.isLinux [
+    libxcrypt
   ];
 
-  # According to Bernhard M. Wiedemann <bwiedemann suse de> on
-  # #reproducible-builds on irc.oftc.net, (2020-01-29): they had to build
-  # Guile without parallel builds to make it reproducible.
-  #
-  # re: https://issues.guix.gnu.org/issue/20272
-  # re: https://build.opensuse.org/request/show/732638
-  enableParallelBuilding = false;
+  # According to
+  # https://git.savannah.gnu.org/cgit/guix.git/tree/gnu/packages/guile.scm?h=a39207f7afd977e4e4299c6f0bb34bcb6d153818#n405
+  # starting with Guile 3.0.8, parallel builds can be done
+  # bit-reproducibly as long as we're not cross-compiling
+  enableParallelBuilding = stdenv.buildPlatform == stdenv.hostPlatform;
 
   patches = [
     ./eai_system.patch
@@ -100,9 +103,6 @@ builder rec {
     # See below.
     "--without-threads"
   ]
-  # Disable JIT on Apple Silicon, as it is not yet supported
-  # https://debbugs.gnu.org/cgi/bugreport.cgi?bug=44505";
-  ++ lib.optional (stdenv.isDarwin && stdenv.isAarch64) "--enable-jit=no"
   # At least on x86_64-darwin '-flto' autodetection is not correct:
   #  https://github.com/NixOS/nixpkgs/pull/160051#issuecomment-1046193028
   ++ lib.optional (stdenv.isDarwin) "--disable-lto";
@@ -116,8 +116,9 @@ builder rec {
   + ''
     sed -i "$out/lib/pkgconfig/guile"-*.pc    \
         -e "s|-lunistring|-L${libunistring}/lib -lunistring|g ;
-            s|^Cflags:\(.*\)$|Cflags: -I${libunistring}/include \1|g ;
             s|-lltdl|-L${libtool.lib}/lib -lltdl|g ;
+            s|-lcrypt|-L${libxcrypt}/lib -lcrypt|g ;
+            s|^Cflags:\(.*\)$|Cflags: -I${libunistring.dev}/include \1|g ;
             s|includedir=$out|includedir=$dev|g
             "
     '';
@@ -127,9 +128,16 @@ builder rec {
   doCheck = false;
   doInstallCheck = doCheck;
 
+  # In procedure bytevector-u8-ref: Argument 2 out of range
+  dontStrip = stdenv.isDarwin;
+
   setupHook = ./setup-hook-3.0.sh;
 
-  passthru = {
+  passthru = rec {
+    effectiveVersion = lib.versions.majorMinor version;
+    siteCcacheDir = "lib/guile/${effectiveVersion}/site-ccache";
+    siteDir = "share/guile/site/${effectiveVersion}";
+
     updateScript = writeScript "update-guile-3" ''
       #!/usr/bin/env nix-shell
       #!nix-shell -i bash -p curl pcre common-updater-scripts
@@ -155,7 +163,7 @@ builder rec {
       foreign function call interface, and powerful string processing.
     '';
     license = licenses.lgpl3Plus;
-    maintainers = with maintainers; [ ludo lovek323 vrthra ];
+    maintainers = [ ];
     platforms = platforms.all;
   };
 }

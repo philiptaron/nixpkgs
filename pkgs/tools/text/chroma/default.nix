@@ -6,7 +6,7 @@ in
 
 buildGoModule rec {
   pname = "chroma";
-  version = "0.10.0";
+  version = "2.8.0";
 
   # To update:
   # nix-prefetch-git --rev v${version} https://github.com/alecthomas/chroma.git > src.json
@@ -17,7 +17,7 @@ buildGoModule rec {
     inherit (srcInfo) sha256;
   };
 
-  vendorSha256 = "09b718vjd6npg850fr7z6srs2sc5vsr7byzlz5yb5qx0vm3ajxpf";
+  vendorHash = "sha256-Bol5yMvNYuoVnSjEgf3h6X4CeUooy2Hpdy3SCaNXXOE=";
 
   modRoot = "./cmd/chroma";
 
@@ -30,8 +30,9 @@ buildGoModule rec {
 
   meta = with lib; {
     homepage = "https://github.com/alecthomas/chroma";
-    description = "A general purpose syntax highlighter in pure Go";
+    description = "General purpose syntax highlighter in pure Go";
     license = licenses.mit;
     maintainers = [ maintainers.sternenseemann ];
+    mainProgram = "chroma";
   };
 }

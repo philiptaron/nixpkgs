@@ -2,7 +2,7 @@
 , lib
 , fetchurl
 , autoPatchelfHook
-, wrapGAppsHook
+, wrapGAppsHook3
 , flac
 , gnome2
 , harfbuzzFull
@@ -46,20 +46,44 @@
 , systemd
 , at-spi2-atk
 , at-spi2-core
+, libqt5pas
+, qt6
+, vivaldi-ffmpeg-codecs
+, edition ? "stable"
 }:
 
-stdenv.mkDerivation rec {
-  pname = "yandex-browser";
-  version = "22.1.3.907-1";
+let
+  version = {
+    corporate = "24.7.1.1195-1";
+    beta = "24.7.1.1124-1";
+    stable = "24.7.1.1120-1";
+  }.${edition};
+
+  hash = {
+    corporate = "sha256-HPEUeIZl9nRhMzrMv4MzIOnbF8mJ789vCtTWf9TcCH4=";
+    beta = "sha256-vcX/9MWqeUd/YlczHivcL6+TignE8Nk6rO5DaCjf2SQ=";
+    stable = "sha256-wrYPQ8WrttF/tlafA0+e3eDZMq9SFmLk5NOIeHQr14U=";
+  }.${edition};
+
+  app = {
+    corporate = "";
+    beta = "-beta";
+    stable = "";
+  }.${edition};
+
+in stdenv.mkDerivation rec {
+  pname = "yandex-browser-${edition}";
+  inherit version;
 
   src = fetchurl {
-    url = "http://repo.yandex.ru/yandex-browser/deb/pool/main/y/${pname}-beta/${pname}-beta_${version}_amd64.deb";
-    sha256 = "sha256-7dbFqNzZP2CyseK0xD9zcvecIuueZfMy5KgN8gRRLEk=";
+    url = "http://repo.yandex.ru/yandex-browser/deb/pool/main/y/${pname}/${pname}_${version}_amd64.deb";
+    inherit hash;
   };
 
   nativeBuildInputs = [
     autoPatchelfHook
-    wrapGAppsHook
+    qt6.wrapQtAppsHook
+    wrapGAppsHook3
   ];
 
   buildInputs = [
@@ -106,6 +130,8 @@ stdenv.mkDerivation rec {
     nss
     pango
     stdenv.cc.cc.lib
+    libqt5pas
+    qt6.qtbase
   ];
 
   unpackPhase = ''
@@ -116,21 +142,28 @@ stdenv.mkDerivation rec {
 
   installPhase = ''
     cp $TMP/ya/{usr/share,opt} $out/ -R
-    substituteInPlace $out/share/applications/yandex-browser-beta.desktop --replace /usr/ $out/
-    ln -sf $out/opt/yandex/browser-beta/yandex_browser $out/bin/yandex-browser
+    cp $out/share/applications/yandex-browser${app}.desktop $out/share/applications/${pname}.desktop || true
+    rm -f $out/share/applications/yandex-browser.desktop
+    substituteInPlace $out/share/applications/${pname}.desktop --replace /usr/ $out/
+    substituteInPlace $out/share/menu/yandex-browser${app}.menu --replace /opt/ $out/opt/
+    substituteInPlace $out/share/gnome-control-center/default-apps/yandex-browser${app}.xml --replace /opt/ $out/opt/
+    ln -sf ${vivaldi-ffmpeg-codecs}/lib/libffmpeg.so $out/opt/yandex/browser${app}/libffmpeg.so
+    ln -sf $out/opt/yandex/browser${app}/yandex-browser${app} $out/bin/${pname}
   '';
 
   runtimeDependencies = map lib.getLib [
     libpulseaudio
     curl
     systemd
+    vivaldi-ffmpeg-codecs
   ] ++ buildInputs;
 
   meta = with lib; {
     description = "Yandex Web Browser";
     homepage = "https://browser.yandex.ru/";
     license = licenses.unfree;
-    maintainers = with maintainers; [ dan4ik605743 ];
+    sourceProvenance = with sourceTypes; [ binaryNativeCode ];
+    maintainers = with maintainers; [ dan4ik605743 ionutnechita ];
     platforms = [ "x86_64-linux" ];
 
     knownVulnerabilities = [

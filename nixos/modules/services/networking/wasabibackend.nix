@@ -85,7 +85,7 @@ in {
         password = mkOption {
           type = types.str;
           default = "password";
-          description = "RPC password for the bitcoin endpoint. Warning: this is stored in cleartext in the Nix store! Use <literal>configFile</literal> or <literal>passwordFile</literal> if needed.";
+          description = "RPC password for the bitcoin endpoint. Warning: this is stored in cleartext in the Nix store! Use `configFile` or `passwordFile` if needed.";
         };
 
         passwordFile = mkOption {
@@ -119,6 +119,7 @@ in {
     systemd.services.wasabibackend = {
       description = "wasabibackend server";
       wantedBy = [ "multi-user.target" ];
+      wants = [ "network-online.target" ];
       after = [ "network-online.target" ];
       environment = {
         DOTNET_PRINT_TELEMETRY_MESSAGE = "false";

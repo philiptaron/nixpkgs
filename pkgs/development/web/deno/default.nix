@@ -3,42 +3,58 @@
 , callPackage
 , fetchFromGitHub
 , rustPlatform
+, cmake
+, protobuf
 , installShellFiles
 , libiconv
-, libobjc
-, Security
-, CoreServices
-, Metal
-, Foundation
-, QuartzCore
+, darwin
 , librusty_v8 ? callPackage ./librusty_v8.nix { }
+,
 }:
-
 rustPlatform.buildRustPackage rec {
   pname = "deno";
-  version = "1.22.2";
+  version = "1.46.2";
 
   src = fetchFromGitHub {
     owner = "denoland";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-HKuP3P7gBimzbhdEr2NwZNkp8hhkN7sJA9qRa0CDVew=";
+    hash = "sha256-6rmAgGX7BnhbyDk0Pmp1uLBDywlK4cptTOfuvNhm0KE=";
   };
-  cargoSha256 = "sha256-hxaqMcvwVeOSybqp10BzJOetVTwCx1mrUIP2H8WjCGw=";
+
+  cargoHash = "sha256-B+O2QYQDH+mqbnJhLumFWnv1b7dvnbpR7JG/3IS5tnI=";
 
   postPatch = ''
     # upstream uses lld on aarch64-darwin for faster builds
     # within nix lld looks for CoreFoundation rather than CoreFoundation.tbd and fails
-    substituteInPlace .cargo/config --replace '"-C", "link-arg=-fuse-ld=lld"' ""
+    substituteInPlace .cargo/config.toml --replace "-fuse-ld=lld " ""
   '';
 
-  # Install completions post-install
-  nativeBuildInputs = [ installShellFiles ];
+  # uses zlib-ng but can't dynamically link yet
+  # https://github.com/rust-lang/libz-sys/issues/158
+  nativeBuildInputs = [
+    # required by libz-ng-sys crate
+    cmake
+    # required by deno_kv crate
+    protobuf
+    installShellFiles
+  ];
+  buildInputs = lib.optionals stdenv.isDarwin (
+    [ libiconv darwin.libobjc ]
+    ++ (with darwin.apple_sdk_11_0.frameworks; [
+      Security
+      CoreServices
+      Metal
+      MetalPerformanceShaders
+      Foundation
+      QuartzCore
+    ])
+  );
+
+  # work around "error: unknown warning group '-Wunused-but-set-parameter'"
+  env.NIX_CFLAGS_COMPILE = lib.optionalString stdenv.cc.isClang "-Wno-unknown-warning-option";
 
   buildAndTestSubdir = "cli";
-
-  buildInputs = lib.optionals stdenv.isDarwin
-    [ libiconv libobjc Security CoreServices Metal Foundation QuartzCore ];
 
   # The v8 package will try to download a `librusty_v8.a` release at build time to our read-only filesystem
   # To avoid this we pre-download the file and export it via RUSTY_V8_ARCHIVE
@@ -52,7 +68,7 @@ rustPlatform.buildRustPackage rec {
     find ./target -name libswc_common${stdenv.hostPlatform.extensions.sharedLibrary} -delete
   '';
 
-  postInstall = ''
+  postInstall = lib.optionalString (stdenv.buildPlatform.canExecute stdenv.hostPlatform) ''
     installShellCompletion --cmd deno \
       --bash <($out/bin/deno completions bash) \
       --fish <($out/bin/deno completions fish) \
@@ -68,11 +84,12 @@ rustPlatform.buildRustPackage rec {
   '';
 
   passthru.updateScript = ./update/update.ts;
+  passthru.tests = callPackage ./tests { };
 
   meta = with lib; {
     homepage = "https://deno.land/";
     changelog = "https://github.com/denoland/deno/releases/tag/v${version}";
-    description = "A secure runtime for JavaScript and TypeScript";
+    description = "Secure runtime for JavaScript and TypeScript";
     longDescription = ''
       Deno aims to be a productive and secure scripting environment for the modern programmer.
       Deno will always be distributed as a single executable.
@@ -83,6 +100,7 @@ rustPlatform.buildRustPackage rec {
       bash or python.
     '';
     license = licenses.mit;
+    mainProgram = "deno";
     maintainers = with maintainers; [ jk ];
     platforms = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
   };

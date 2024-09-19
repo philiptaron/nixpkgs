@@ -8,16 +8,16 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "rtrtr";
-  version = "0.1.2";
+  version = "0.3.0";
 
   src = fetchFromGitHub {
     owner = "NLnetLabs";
     repo = pname;
     rev = "v${version}";
-    hash = "sha256-8wcmciQ2OcvMNl6gADte40jrP+VfhoKn95ofjyjtRIo=";
+    hash = "sha256-P9bofTmDpnNCVQAGeq9J2XqfNeula8nL1KoBIHMZNWg=";
   };
 
-  cargoSha256 = "sha256-Jdu5U56Duqzakvj3rldzch17y1nhJmuxwJtq4Ydx3IY=";
+  cargoHash = "sha256-ToJLE4nqgTqg5D4Qh2zi+wjmcdwDo0aupoDwKJCTwnM=";
 
   buildInputs = lib.optional stdenv.isDarwin Security;
   nativeBuildInputs = [ pkg-config ];
@@ -38,5 +38,6 @@ rustPlatform.buildRustPackage rec {
     changelog = "https://github.com/NLnetLabs/rtrtr/blob/v${version}/Changelog.md";
     license = licenses.bsd3;
     maintainers = with maintainers; [ steamwalker ];
+    mainProgram = "rtrtr";
   };
 }

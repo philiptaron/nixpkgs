@@ -2,25 +2,25 @@
 
 buildGoModule rec {
   pname = "istioctl";
-  version = "1.13.3";
+  version = "1.22.4";
 
   src = fetchFromGitHub {
     owner = "istio";
     repo = "istio";
     rev = version;
-    sha256 = "sha256-XvV6OlGHW/eB0EUrmyTlFVbDjbxUpVo6WvrEnh6Q68I=";
+    hash = "sha256-yot7HSKM5unfKsBdFAgm1nx/pr3jYnVEJ6Phq4MicZw=";
   };
-  vendorSha256 = "sha256-Ex86yLMTqqiSkJns/eeodmGswAzPVQAQOf8Wqi7DRaE=";
+  vendorHash = "sha256-PrbYJ+Pz6Z1PO+dOuIV/9Y/1ipr0mFrfcFFmnMaHcTM=";
 
   nativeBuildInputs = [ installShellFiles ];
 
   # Bundle release metadata
   ldflags = let
     attrs = [
-      "istio.io/pkg/version.buildVersion=${version}"
-      "istio.io/pkg/version.buildStatus=Nix"
-      "istio.io/pkg/version.buildTag=${version}"
-      "istio.io/pkg/version.buildHub=docker.io/istio"
+      "istio.io/istio/pkg/version.buildVersion=${version}"
+      "istio.io/istio/pkg/version.buildStatus=Nix"
+      "istio.io/istio/pkg/version.buildTag=${version}"
+      "istio.io/istio/pkg/version.buildHub=docker.io/istio"
     ];
   in ["-s" "-w" "${lib.concatMapStringsSep " " (attr: "-X ${attr}") attrs}"];
 
@@ -40,9 +40,9 @@ buildGoModule rec {
 
   meta = with lib; {
     description = "Istio configuration command line utility for service operators to debug and diagnose their Istio mesh";
+    mainProgram = "istioctl";
     homepage = "https://istio.io/latest/docs/reference/commands/istioctl";
     license = licenses.asl20;
-    maintainers = with maintainers; [ superherointj bryanasdev000 veehaitch ];
-    platforms = platforms.unix;
+    maintainers = with maintainers; [ bryanasdev000 veehaitch ];
   };
 }

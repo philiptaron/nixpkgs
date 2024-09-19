@@ -12,7 +12,7 @@ stdenv.mkDerivation {
     sha256 = "0dm39g3k77sa70zrjsqadidg27a6iqq61jzfdxazpllnrw4mjy4w";
   };
 
-  NIX_CFLAGS_COMPILE = "-Wno-error";
+  env.NIX_CFLAGS_COMPILE = "-Wno-error";
 
   preConfigure = ''
     sed -i 's,/etc,'$out'/etc,' src/haka/haka.c
@@ -27,7 +27,7 @@ stdenv.mkDerivation {
   passthru.tests = { inherit (nixosTests) haka; };
 
   meta = {
-    description = "A collection of tools that allows capturing TCP/IP packets and filtering them based on Lua policy files";
+    description = "Collection of tools that allows capturing TCP/IP packets and filtering them based on Lua policy files";
     homepage = "http://www.haka-security.org/";
     license = lib.licenses.mpl20;
     maintainers = [ lib.maintainers.tvestelind ];

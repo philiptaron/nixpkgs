@@ -2,20 +2,21 @@
 
 buildGoModule rec {
   pname = "go-migrate";
-  version = "4.15.2";
+  version = "4.18.1";
 
   src = fetchFromGitHub {
     owner = "golang-migrate";
     repo = "migrate";
     rev = "v${version}";
-    sha256 = "sha256-nVR6zMG/a4VbGgR9a/6NqMNYwFTifAZW3F6rckvOEJM=";
+    sha256 = "sha256-ZZeurnoFcObrK75zkIZvz9ycdDP9AM3uX6h/4bMWpGc=";
   };
 
-  vendorSha256 = "sha256-lPNPl6fqBT3XLQie9z93j91FLtrMjKbHnXUQ6b4lDb4=";
+  proxyVendor = true; # darwin/linux hash mismatch
+  vendorHash = "sha256-Zaq88oF5rSCSv736afyKDvTNCSIyrIGTN0kuJWqS7tg=";
 
   subPackages = [ "cmd/migrate" ];
 
-  tags = [ "postgres" "mysql" "redshift" "cassandra" "spanner" "cockroachdb" "clickhouse" "mongodb" "sqlserver" "firebird" "neo4j" "pgx" ];
+  tags = [ "cassandra" "clickhouse" "cockroachdb" "crate" "firebird" "mongodb" "multistmt" "mysql" "neo4j" "pgx" "pgx5" "postgres" "ql" "redshift" "rqlite" "shell" "snowflake" "spanner" "sqlite3" "sqlserver" "stub" "testing" "yugabytedb" ];
 
   meta = with lib; {
     homepage = "https://github.com/golang-migrate/migrate";

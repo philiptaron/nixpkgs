@@ -1,7 +1,4 @@
 { config, lib, pkgs, ... }:
-
-with lib;
-
 let
 
   cfg = config.services.thinkfan;
@@ -10,13 +7,13 @@ let
   thinkfan = pkgs.thinkfan.override { inherit (cfg) smartSupport; };
 
   # fan-speed and temperature levels
-  levelType = with types;
+  levelType = with lib.types;
     let
-      tuple = ts: mkOptionType {
+      tuple = ts: lib.mkOptionType {
         name = "tuple";
-        merge = mergeOneOption;
-        check = xs: all id (zipListsWith (t: x: t.check x) ts xs);
-        description = "tuple of" + concatMapStrings (t: " (${t.description})") ts;
+        merge = lib.mergeOneOption;
+        check = xs: lib.all lib.id (lib.zipListsWith (t: x: t.check x) ts xs);
+        description = "tuple of" + lib.concatMapStrings (t: " (${t.description})") ts;
       };
       level = ints.unsigned;
       special = enum [ "level auto" "level full-speed" "level disengaged" ];
@@ -24,48 +21,50 @@ let
       tuple [ (either level special) level level ];
 
   # sensor or fan config
-  sensorType = name: types.submodule {
-    freeformType = types.attrsOf settingsFormat.type;
+  sensorType = name: lib.types.submodule {
+    freeformType = lib.types.attrsOf settingsFormat.type;
     options = {
-      type = mkOption {
-        type = types.enum [ "hwmon" "atasmart" "tpacpi" "nvml" ];
+      type = lib.mkOption {
+        type = lib.types.enum [ "hwmon" "atasmart" "tpacpi" "nvml" ];
         description = ''
           The ${name} type, can be
-          <literal>hwmon</literal> for standard ${name}s,
+          `hwmon` for standard ${name}s,
 
-          <literal>atasmart</literal> to read the temperature via
+          `atasmart` to read the temperature via
           S.M.A.R.T (requires smartSupport to be enabled),
 
-          <literal>tpacpi</literal> for the legacy thinkpac_acpi driver, or
+          `tpacpi` for the legacy thinkpac_acpi driver, or
 
-          <literal>nvml</literal> for the (proprietary) nVidia driver.
+          `nvml` for the (proprietary) nVidia driver.
         '';
       };
-      query = mkOption {
-        type = types.str;
+      query = lib.mkOption {
+        type = lib.types.str;
         description = ''
           The query string used to match one or more ${name}s: can be
           a fullpath to the temperature file (single ${name}) or a fullpath
           to a driver directory (multiple ${name}s).
 
-          <note><para>
-            When multiple ${name}s match, the query can be restricted using the
-            <option>name</option> or <option>indices</option> options.
-          </para></note>
+          ::: {.note}
+          When multiple ${name}s match, the query can be restricted using the
+          {option}`name` or {option}`indices` options.
+          :::
         '';
       };
-      indices = mkOption {
-        type = with types; nullOr (listOf ints.unsigned);
+      indices = lib.mkOption {
+        type = with lib.types; nullOr (listOf ints.unsigned);
         default = null;
         description = ''
           A list of ${name}s to pick in case multiple ${name}s match the query.
 
-          <note><para>Indices start from 0.</para></note>
+          ::: {.note}
+          Indices start from 0.
+          :::
         '';
       };
-    } // optionalAttrs (name == "sensor") {
-      correction = mkOption {
-        type = with types; nullOr (listOf int);
+    } // lib.optionalAttrs (name == "sensor") {
+      correction = lib.mkOption {
+        type = with lib.types; nullOr (listOf int);
         default = null;
         description = ''
           A list of values to be added to the temperature of each sensor,
@@ -77,22 +76,22 @@ let
 
   # removes NixOS special and unused attributes
   sensorToConf = { type, query, ... }@args:
-    (filterAttrs (k: v: v != null && !(elem k ["type" "query"])) args)
+    (lib.filterAttrs (k: v: v != null && !(lib.elem k ["type" "query"])) args)
     // { "${type}" = query; };
 
   syntaxNote = name: ''
-    <note><para>
-      This section slightly departs from the thinkfan.conf syntax.
-      The type and path must be specified like this:
-      <literal>
-        type = "tpacpi";
-        query = "/proc/acpi/ibm/${name}";
-      </literal>
-      instead of a single declaration like:
-      <literal>
-        - tpacpi: /proc/acpi/ibm/${name}
-      </literal>
-    </para></note>
+    ::: {.note}
+    This section slightly departs from the thinkfan.conf syntax.
+    The type and path must be specified like this:
+    ```
+      type = "tpacpi";
+      query = "/proc/acpi/ibm/${name}";
+    ```
+    instead of a single declaration like:
+    ```
+      - tpacpi: /proc/acpi/ibm/${name}
+    ```
+    :::
   '';
 
 in {
@@ -101,22 +100,22 @@ in {
 
     services.thinkfan = {
 
-      enable = mkOption {
-        type = types.bool;
+      enable = lib.mkOption {
+        type = lib.types.bool;
         default = false;
         description = ''
           Whether to enable thinkfan, a fan control program.
 
-          <note><para>
-            This module targets IBM/Lenovo thinkpads by default, for
-            other hardware you will have configure it more carefully.
-          </para></note>
+          ::: {.note}
+          This module targets IBM/Lenovo thinkpads by default, for
+          other hardware you will have configure it more carefully.
+          :::
         '';
         relatedPackages = [ "thinkfan" ];
       };
 
-      smartSupport = mkOption {
-        type = types.bool;
+      smartSupport = lib.mkOption {
+        type = lib.types.bool;
         default = false;
         description = ''
           Whether to build thinkfan with S.M.A.R.T. support to read temperatures
@@ -124,8 +123,8 @@ in {
         '';
       };
 
-      sensors = mkOption {
-        type = types.listOf (sensorType "sensor");
+      sensors = lib.mkOption {
+        type = lib.types.listOf (sensorType "sensor");
         default = [
           { type = "tpacpi";
             query = "/proc/acpi/ibm/thermal";
@@ -133,11 +132,13 @@ in {
         ];
         description = ''
           List of temperature sensors thinkfan will monitor.
-        '' + syntaxNote "thermal";
+
+          ${syntaxNote "thermal"}
+        '';
       };
 
-      fans = mkOption {
-        type = types.listOf (sensorType "fan");
+      fans = lib.mkOption {
+        type = lib.types.listOf (sensorType "fan");
         default = [
           { type = "tpacpi";
             query = "/proc/acpi/ibm/fan";
@@ -145,11 +146,13 @@ in {
         ];
         description = ''
           List of fans thinkfan will control.
-        '' + syntaxNote "fan";
+
+          ${syntaxNote "fan"}
+        '';
       };
 
-      levels = mkOption {
-        type = types.listOf levelType;
+      levels = lib.mkOption {
+        type = lib.types.listOf levelType;
         default = [
           [0  0   55]
           [1  48  60]
@@ -171,8 +174,8 @@ in {
         '';
       };
 
-      extraArgs = mkOption {
-        type = types.listOf types.str;
+      extraArgs = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
         default = [ ];
         example = [ "-b" "0" ];
         description = ''
@@ -181,15 +184,15 @@ in {
         '';
       };
 
-      settings = mkOption {
-        type = types.attrsOf settingsFormat.type;
+      settings = lib.mkOption {
+        type = lib.types.attrsOf settingsFormat.type;
         default = { };
         description = ''
           Thinkfan settings. Use this option to configure thinkfan
           settings not exposed in a NixOS option or to bypass one.
-          Before changing this, read the <literal>thinkfan.conf(5)</literal>
+          Before changing this, read the `thinkfan.conf(5)`
           manpage and take a look at the example config file at
-          <link xlink:href="https://github.com/vmatare/thinkfan/blob/master/examples/thinkfan.yaml"/>
+          <https://github.com/vmatare/thinkfan/blob/master/examples/thinkfan.yaml>
         '';
       };
 
@@ -197,11 +200,11 @@ in {
 
   };
 
-  config = mkIf cfg.enable {
+  config = lib.mkIf cfg.enable {
 
     environment.systemPackages = [ thinkfan ];
 
-    services.thinkfan.settings = mapAttrs (k: v: mkDefault v) {
+    services.thinkfan.settings = lib.mapAttrs (k: v: lib.mkDefault v) {
       sensors = map sensorToConf cfg.sensors;
       fans    = map sensorToConf cfg.fans;
       levels  = cfg.levels;
@@ -210,7 +213,14 @@ in {
     systemd.packages = [ thinkfan ];
 
     systemd.services = {
-      thinkfan.environment.THINKFAN_ARGS = escapeShellArgs ([ "-c" configFile ] ++ cfg.extraArgs);
+      thinkfan.environment.THINKFAN_ARGS = lib.escapeShellArgs ([ "-c" configFile ] ++ cfg.extraArgs);
+      thinkfan.serviceConfig = {
+        Restart = "on-failure";
+        RestartSec = "30s";
+
+        # Hardening
+        PrivateNetwork = true;
+      };
 
       # must be added manually, see issue #81138
       thinkfan.wantedBy = [ "multi-user.target" ];

@@ -23,7 +23,7 @@ stdenv.mkDerivation rec {
   cmakeFlags = ["-DCMAKE_CXX_FLAGS=-DWIZARD"];
 
   # Help CMake find SDL_mixer.h
-  NIX_CFLAGS_COMPILE = "-I${SDL2_mixer}/include/SDL2";
+  env.NIX_CFLAGS_COMPILE = "-I${lib.getDev SDL2_mixer}/include/SDL2";
 
   # Create "ivan.desktop" file
   ivanDesktop = makeDesktopItem {
@@ -64,6 +64,7 @@ stdenv.mkDerivation rec {
     homepage = "https://attnam.com/";
     license = licenses.gpl2Plus;
     platforms = platforms.linux;
-    maintainers = with maintainers; [];
+    maintainers = [ ];
+    mainProgram = "ivan";
   };
 }

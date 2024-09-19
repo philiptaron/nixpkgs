@@ -5,7 +5,7 @@ let
 in
 with lib;
 {
-  imports = [ ./yarn.nix ./hdfs.nix ];
+  imports = [ ./yarn.nix ./hdfs.nix ./hbase.nix ];
 
   options.services.hadoop = {
     coreSite = mkOption {
@@ -18,7 +18,7 @@ with lib;
       '';
       description = ''
         Hadoop core-site.xml definition
-        <link xlink:href="https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/core-default.xml"/>
+        <https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/core-default.xml>
       '';
     };
     coreSiteInternal = mkOption {
@@ -52,7 +52,7 @@ with lib;
       '';
       description = ''
         Additional options and overrides for hdfs-site.xml
-        <link xlink:href="https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-hdfs/hdfs-default.xml"/>
+        <https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-hdfs/hdfs-default.xml>
       '';
     };
     hdfsSiteInternal = mkOption {
@@ -67,16 +67,16 @@ with lib;
     mapredSiteDefault = mkOption {
       default = {
         "mapreduce.framework.name" = "yarn";
-        "yarn.app.mapreduce.am.env" = "HADOOP_MAPRED_HOME=${cfg.package}/lib/${cfg.package.untarDir}";
-        "mapreduce.map.env" = "HADOOP_MAPRED_HOME=${cfg.package}/lib/${cfg.package.untarDir}";
-        "mapreduce.reduce.env" = "HADOOP_MAPRED_HOME=${cfg.package}/lib/${cfg.package.untarDir}";
+        "yarn.app.mapreduce.am.env" = "HADOOP_MAPRED_HOME=${cfg.package}";
+        "mapreduce.map.env" = "HADOOP_MAPRED_HOME=${cfg.package}";
+        "mapreduce.reduce.env" = "HADOOP_MAPRED_HOME=${cfg.package}";
       };
       defaultText = literalExpression ''
         {
           "mapreduce.framework.name" = "yarn";
-          "yarn.app.mapreduce.am.env" = "HADOOP_MAPRED_HOME=''${config.${opt.package}}/lib/''${config.${opt.package}.untarDir}";
-          "mapreduce.map.env" = "HADOOP_MAPRED_HOME=''${config.${opt.package}}/lib/''${config.${opt.package}.untarDir}";
-          "mapreduce.reduce.env" = "HADOOP_MAPRED_HOME=''${config.${opt.package}}/lib/''${config.${opt.package}.untarDir}";
+          "yarn.app.mapreduce.am.env" = "HADOOP_MAPRED_HOME=''${config.${opt.package}}";
+          "mapreduce.map.env" = "HADOOP_MAPRED_HOME=''${config.${opt.package}}";
+          "mapreduce.reduce.env" = "HADOOP_MAPRED_HOME=''${config.${opt.package}}";
         }
       '';
       type = types.attrsOf types.anything;
@@ -94,7 +94,7 @@ with lib;
       '';
       description = ''
         Additional options and overrides for mapred-site.xml
-        <link xlink:href="https://hadoop.apache.org/docs/current/hadoop-mapreduce-client/hadoop-mapreduce-client-core/mapred-default.xml"/>
+        <https://hadoop.apache.org/docs/current/hadoop-mapreduce-client/hadoop-mapreduce-client-core/mapred-default.xml>
       '';
     };
 
@@ -127,7 +127,7 @@ with lib;
       '';
       description = ''
         Additional options and overrides for yarn-site.xml
-        <link xlink:href="https://hadoop.apache.org/docs/current/hadoop-yarn/hadoop-yarn-common/yarn-default.xml"/>
+        <https://hadoop.apache.org/docs/current/hadoop-yarn/hadoop-yarn-common/yarn-default.xml>
       '';
     };
     yarnSiteInternal = mkOption {
@@ -149,18 +149,18 @@ with lib;
       '';
       description = ''
         Hadoop httpfs-site.xml definition
-        <link xlink:href="https://hadoop.apache.org/docs/current/hadoop-hdfs-httpfs/httpfs-default.html"/>
+        <https://hadoop.apache.org/docs/current/hadoop-hdfs-httpfs/httpfs-default.html>
       '';
     };
 
     log4jProperties = mkOption {
-      default = "${cfg.package}/lib/${cfg.package.untarDir}/etc/hadoop/log4j.properties";
+      default = "${cfg.package}/etc/hadoop/log4j.properties";
       defaultText = literalExpression ''
-        "''${config.${opt.package}}/lib/''${config.${opt.package}.untarDir}/etc/hadoop/log4j.properties"
+        "''${config.${opt.package}}/etc/hadoop/log4j.properties"
       '';
       type = types.path;
       example = literalExpression ''
-        "''${pkgs.hadoop}/lib/''${pkgs.hadoop.untarDir}/etc/hadoop/log4j.properties";
+        "''${pkgs.hadoop}/etc/hadoop/log4j.properties";
       '';
       description = "log4j.properties file added to HADOOP_CONF_DIR";
     };
@@ -181,7 +181,7 @@ with lib;
       '';
       description = ''
         Yarn container-executor.cfg definition
-        <link xlink:href="https://hadoop.apache.org/docs/r2.7.2/hadoop-yarn/hadoop-yarn-site/SecureContainer.html"/>
+        <https://hadoop.apache.org/docs/r2.7.2/hadoop-yarn/hadoop-yarn-site/SecureContainer.html>
       '';
     };
 
@@ -199,12 +199,7 @@ with lib;
 
     gatewayRole.enable = mkEnableOption "gateway role for deploying hadoop configs";
 
-    package = mkOption {
-      type = types.package;
-      default = pkgs.hadoop;
-      defaultText = literalExpression "pkgs.hadoop";
-      description = "";
-    };
+    package = mkPackageOption pkgs "hadoop" { };
   };
 
 

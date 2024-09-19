@@ -5,7 +5,10 @@ let
 
   inherit (lib)
     concatStringsSep escapeShellArgs optionalString
-    literalExpression mkEnableOption mkIf mkOption mkOptionDefault types;
+    literalExpression mkEnableOption mkPackageOption mkIf mkOption
+    mkOptionDefault types;
+
+  requiresSetcapWrapper = config.boot.kernelPackages.kernelOlder "5.7" && cfg.bindInterface;
 
   browserDefault = chromium: concatStringsSep " " [
     ''env XDG_CONFIG_HOME="$PREV_CONFIG_HOME"''
@@ -23,25 +26,32 @@ let
   desktopItem = pkgs.makeDesktopItem {
     name = "captive-browser";
     desktopName = "Captive Portal Browser";
-    exec = "/run/wrappers/bin/captive-browser";
+    exec = "captive-browser";
     icon = "nix-snowflake";
     categories = [ "Network" ];
   };
 
+  captive-browser-configured = pkgs.writeShellScriptBin "captive-browser" ''
+    export PREV_CONFIG_HOME="$XDG_CONFIG_HOME"
+    export XDG_CONFIG_HOME=${pkgs.writeTextDir "captive-browser.toml" ''
+      browser = """${cfg.browser}"""
+      dhcp-dns = """${cfg.dhcp-dns}"""
+      socks5-addr = """${cfg.socks5-addr}"""
+      ${optionalString cfg.bindInterface ''
+        bind-device = """${cfg.interface}"""
+      ''}
+    ''}
+    exec ${cfg.package}/bin/captive-browser
+  '';
 in
 {
   ###### interface
 
   options = {
     programs.captive-browser = {
-      enable = mkEnableOption "captive browser";
+      enable = mkEnableOption "captive browser, a dedicated Chrome instance to log into captive portals without messing with DNS settings";
 
-      package = mkOption {
-        type = types.package;
-        default = pkgs.captive-browser;
-        defaultText = literalExpression "pkgs.captive-browser";
-        description = "Which package to use for captive-browser";
-      };
+      package = mkPackageOption pkgs "captive-browser" { };
 
       interface = mkOption {
         type = types.str;
@@ -86,8 +96,8 @@ in
         default = true;
         type = types.bool;
         description = ''
-          Binds <package>captive-browser</package> to the network interface declared in
-          <literal>cfg.interface</literal>. This can be used to avoid collisions
+          Binds `captive-browser` to the network interface declared in
+          `cfg.interface`. This can be used to avoid collisions
           with private subnets.
         '';
       };
@@ -101,6 +111,7 @@ in
       (pkgs.runCommand "captive-browser-desktop-item" { } ''
         install -Dm444 -t $out/share/applications ${desktopItem}/share/applications/*.desktop
       '')
+      captive-browser-configured
     ];
 
     programs.captive-browser.dhcp-dns =
@@ -131,22 +142,11 @@ in
       source = "${pkgs.busybox}/bin/udhcpc";
     };
 
-    security.wrappers.captive-browser = {
+    security.wrappers.captive-browser = mkIf requiresSetcapWrapper {
       owner = "root";
       group = "root";
       capabilities = "cap_net_raw+p";
-      source = pkgs.writeShellScript "captive-browser" ''
-        export PREV_CONFIG_HOME="$XDG_CONFIG_HOME"
-        export XDG_CONFIG_HOME=${pkgs.writeTextDir "captive-browser.toml" ''
-                                  browser = """${cfg.browser}"""
-                                  dhcp-dns = """${cfg.dhcp-dns}"""
-                                  socks5-addr = """${cfg.socks5-addr}"""
-                                  ${optionalString cfg.bindInterface ''
-                                    bind-device = """${cfg.interface}"""
-                                  ''}
-                                ''}
-        exec ${cfg.package}/bin/captive-browser
-      '';
+      source = "${captive-browser-configured}/bin/captive-browser";
     };
   };
 }

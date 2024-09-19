@@ -1,40 +1,40 @@
 { lib
-, mkDerivation
+, stdenv
 , fetchFromGitHub
 , cmake
 , extra-cmake-modules
 , inotify-tools
-, installShellFiles
+, kdePackages
 , libcloudproviders
 , librsvg
 , libsecret
 , openssl
 , pcre
 , pkg-config
+, qt5compat
 , qtbase
 , qtkeychain
+, qtsvg
 , qttools
 , qtwebengine
 , qtwebsockets
-, qtquickcontrols2
-, qtgraphicaleffects
-, plasma5Packages
 , sphinx
 , sqlite
 , xdg-utils
+, wrapQtAppsHook
 }:
 
-mkDerivation rec {
+stdenv.mkDerivation rec {
   pname = "nextcloud-client";
-  version = "3.5.1";
+  version = "3.14.0";
 
   outputs = [ "out" "dev" ];
 
   src = fetchFromGitHub {
-    owner = "nextcloud";
+    owner = "nextcloud-releases";
     repo = "desktop";
-    rev = "v${version}";
-    sha256 = "sha256-/Bz3vkV4+ZFlGBNtkLIGsBk51a3wxy32U1KYcA3awcw=";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-/jRD0swNs59xugsXLbesGcTtyGdc/y/iwiDVoErW+d4=";
   };
 
   patches = [
@@ -46,7 +46,7 @@ mkDerivation rec {
   postPatch = ''
     for file in src/libsync/vfs/*/CMakeLists.txt; do
       substituteInPlace $file \
-        --replace "PLUGINDIR" "KDE_INSTALL_PLUGINDIR"
+        --replace-fail "PLUGINDIR" "KDE_INSTALL_PLUGINDIR"
     done
   '';
 
@@ -56,35 +56,36 @@ mkDerivation rec {
     extra-cmake-modules
     librsvg
     sphinx
+    wrapQtAppsHook
   ];
 
   buildInputs = [
     inotify-tools
+    kdePackages.kio
     libcloudproviders
     libsecret
     openssl
     pcre
-    plasma5Packages.kio
+    qt5compat
     qtbase
     qtkeychain
+    qtsvg
     qttools
     qtwebengine
-    qtquickcontrols2
-    qtgraphicaleffects
     qtwebsockets
     sqlite
   ];
 
   qtWrapperArgs = [
     "--prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath [ libsecret ]}"
-    # See also: https://bugreports.qt.io/browse/QTBUG-85967
-    "--set QML_DISABLE_DISK_CACHE 1"
-    "--prefix PATH : ${lib.makeBinPath [ xdg-utils ]}"
+    # make xdg-open overrideable at runtime
+    "--suffix PATH : ${lib.makeBinPath [ xdg-utils ]}"
   ];
 
   cmakeFlags = [
+    "-DBUILD_UPDATER=off"
     "-DCMAKE_INSTALL_LIBDIR=lib" # expected to be prefix-relative by build code setting RPATH
-    "-DNO_SHIBBOLETH=1" # allows to compile without qtwebkit
+    "-DMIRALL_VERSION_SUFFIX=" # remove git suffix from version
   ];
 
   postBuild = ''
@@ -92,6 +93,7 @@ mkDerivation rec {
   '';
 
   meta = with lib; {
+    changelog = "https://github.com/nextcloud/desktop/releases/tag/v${version}";
     description = "Nextcloud themed desktop client";
     homepage = "https://nextcloud.com";
     license = licenses.gpl2Plus;

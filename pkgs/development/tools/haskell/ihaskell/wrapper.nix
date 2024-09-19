@@ -1,9 +1,11 @@
-{ lib, stdenv, writeScriptBin, makeWrapper, buildEnv, haskell, ghcWithPackages, jupyter, packages }:
+{ lib, stdenv, writeScriptBin, makeWrapper, buildEnv, ghcWithPackages, jupyter, packages }:
 let
   ihaskellEnv = ghcWithPackages (self: [
     self.ihaskell
     self.ihaskell-blaze
-    self.ihaskell-diagrams
+    # Doesn't work with latest ihaskell versions missing an unrelated change
+    # https://github.com/IHaskell/IHaskell/issues/1378
+    # self.ihaskell-diagrams
   ] ++ packages self);
   ihaskellSh = writeScriptBin "ihaskell-notebook" ''
     #! ${stdenv.shell}
@@ -14,7 +16,7 @@ let
 in
 buildEnv {
   name = "ihaskell-with-packages";
-  buildInputs = [ makeWrapper ];
+  nativeBuildInputs = [ makeWrapper ];
   paths = [ ihaskellEnv jupyter ];
   postBuild = ''
     ln -s ${ihaskellSh}/bin/ihaskell-notebook $out/bin/

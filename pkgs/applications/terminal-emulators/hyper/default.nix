@@ -15,11 +15,11 @@ let
 in
 stdenv.mkDerivation rec {
   pname = "hyper";
-  version = "3.2.1";
+  version = "3.4.1";
 
   src = fetchurl {
     url = "https://github.com/vercel/hyper/releases/download/v${version}/hyper_${version}_amd64.deb";
-    sha256 = "sha256-nwaJ+lnuHv+Qb/QkKF/9jG8cvq1Z+urz8CPwxSsMmuA=";
+    sha256 = "sha256-jEzZ6MWFaNXBS8CAzfn/ufMPpWcua9HhBFzetWMlH1Y=";
   };
 
   nativeBuildInputs = [ dpkg ];
@@ -47,10 +47,13 @@ stdenv.mkDerivation rec {
 
   dontPatchELF = true;
   meta = with lib; {
-    description = "A terminal built on web technologies";
+    description = "Terminal built on web technologies";
     homepage    = "https://hyper.is/";
     maintainers = with maintainers; [ puffnfresh fabiangd ];
+    sourceProvenance = with sourceTypes; [ binaryNativeCode ];
     license     = licenses.mit;
     platforms   = [ "x86_64-linux" ];
+    mainProgram = "hyper";
+    broken = true; # Error: 'node-pty' failed to load
   };
 }

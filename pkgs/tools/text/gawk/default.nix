@@ -1,7 +1,10 @@
 { lib, stdenv, fetchurl
+, removeReferencesTo
+, runtimeShellPackage
 # TODO: links -lsigsegv but loses the reference for some reason
 , withSigsegv ? (false && stdenv.hostPlatform.system != "x86_64-cygwin"), libsigsegv
 , interactive ? false, readline
+, autoreconfHook # no-pma fix
 
 /* Test suite broke on:
        stdenv.isCygwin # XXX: `test-dup2' segfaults on Cygwin 6.1
@@ -17,22 +20,42 @@ assert (doCheck && stdenv.isLinux) -> glibcLocales != null;
 
 stdenv.mkDerivation rec {
   pname = "gawk" + lib.optionalString interactive "-interactive";
-  version = "5.1.1";
+  version = "5.2.2";
 
   src = fetchurl {
     url = "mirror://gnu/gawk/gawk-${version}.tar.xz";
-    sha256 = "18kybw47fb1sdagav7aj95r9pp09r5gm202y3ahvwjw9dqw2jxnq";
+    hash = "sha256-PB/OFEa0y+4c0nO9fsZLyH2J9hU3RxzT4F4zqWWiUOk=";
   };
+
+  # PIE is incompatible with the "persistent malloc" ("pma") feature.
+  # While build system attempts to pass -no-pie to gcc. nixpkgs' `ld`
+  # wrapped still passes `-pie` flag to linker and breaks linkage.
+  # Let's disable "pie" until `ld` is fixed to do the right thing.
+  hardeningDisable = [ "pie" ];
 
   # When we do build separate interactive version, it makes sense to always include man.
   outputs = [ "out" "info" ]
     ++ lib.optional (!interactive) "man";
 
-  nativeBuildInputs = lib.optional (doCheck && stdenv.isLinux) glibcLocales;
+  strictDeps = true;
 
-  buildInputs = lib.optional withSigsegv libsigsegv
-    ++ lib.optional interactive readline
-    ++ lib.optional stdenv.isDarwin locale;
+  # no-pma fix
+  nativeBuildInputs = [
+    autoreconfHook
+  ] ++ lib.optionals interactive [
+    removeReferencesTo
+  ] ++ lib.optionals (doCheck && stdenv.isLinux) [
+    glibcLocales
+  ];
+
+  buildInputs = lib.optionals interactive [
+    runtimeShellPackage
+    readline
+  ] ++ lib.optionals withSigsegv [
+    libsigsegv
+  ] ++ lib.optionals stdenv.isDarwin [
+    locale
+  ];
 
   configureFlags = [
     (if withSigsegv then "--with-libsigsegv-prefix=${libsigsegv}" else "--without-libsigsegv")
@@ -45,7 +68,12 @@ stdenv.mkDerivation rec {
 
   inherit doCheck;
 
-  postInstall = ''
+  postInstall = (if interactive then ''
+    remove-references-to -t "$NIX_CC" "$out"/bin/gawkbug
+    patchShebangs --host "$out"/bin/gawkbug
+  '' else ''
+    rm "$out"/bin/gawkbug
+  '') + ''
     rm "$out"/bin/gawk-*
     ln -s gawk.1 "''${!outputMan}"/share/man/man1/awk.1
   '';
@@ -73,5 +101,6 @@ stdenv.mkDerivation rec {
     license = licenses.gpl3Plus;
     platforms = platforms.unix ++ platforms.windows;
     maintainers = [ ];
+    mainProgram = "gawk";
   };
 }

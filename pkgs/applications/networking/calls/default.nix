@@ -5,6 +5,7 @@
 , ninja
 , pkg-config
 , libhandy
+, libsecret
 , modemmanager
 , gtk3
 , gom
@@ -17,29 +18,29 @@
 , desktop-file-utils
 , appstream-glib
 , libpeas
-, libgdata
 , dbus
 , vala
-, wrapGAppsHook
+, wrapGAppsHook3
 , xvfb-run
 , gtk-doc
 , docbook-xsl-nons
 , docbook_xml_dtd_43
-, gobject-introspection
+, docutils
 , gst_all_1
 , sofia_sip
 }:
 
 stdenv.mkDerivation rec {
   pname = "calls";
-  version = "41.1";
+  version = "46.3";
 
   src = fetchFromGitLab {
     domain = "gitlab.gnome.org";
     owner = "GNOME";
     repo = pname;
-    rev = version;
-    sha256 = "1vbw9x5s3ww11f3lnqivc74rjlmi9fk1hzaq1idrdcck3gvif0h8";
+    rev = "v${version}";
+    fetchSubmodules = true;
+    hash = "sha256-J1wuhAXPCvLWzPqMU4alVFFpHoCAzX3wVOP3Bw0wW/o=";
   };
 
   outputs = [ "out" "devdoc" ];
@@ -51,15 +52,17 @@ stdenv.mkDerivation rec {
     desktop-file-utils
     appstream-glib
     vala
-    wrapGAppsHook
+    wrapGAppsHook3
     gtk-doc
     docbook-xsl-nons
     docbook_xml_dtd_43
+    docutils
   ];
 
   buildInputs = [
     modemmanager
     libhandy
+    libsecret
     evolution-data-server
     folks
     gom
@@ -76,12 +79,12 @@ stdenv.mkDerivation rec {
     sofia_sip
   ];
 
-  checkInputs = [
+  nativeCheckInputs = [
     dbus
     xvfb-run
   ];
 
-  NIX_CFLAGS_COMPILE = "-I${glib.dev}/include/gio-unix-2.0";
+  env.NIX_CFLAGS_COMPILE = "-I${glib.dev}/include/gio-unix-2.0";
 
   mesonFlags = [
     "-Dgtk_doc=true"
@@ -95,17 +98,18 @@ stdenv.mkDerivation rec {
     NO_AT_BRIDGE=1 \
     XDG_DATA_DIRS=${folks}/share/gsettings-schemas/${folks.name} \
     xvfb-run -s '-screen 0 800x600x24' dbus-run-session \
-      --config-file=${dbus.daemon}/share/dbus-1/session.conf \
+      --config-file=${dbus}/share/dbus-1/session.conf \
       meson test --print-errorlogs
     runHook postCheck
   '';
 
   meta = with lib; {
-    description = "A phone dialer and call handler";
+    description = "Phone dialer and call handler";
     longDescription = "GNOME Calls is a phone dialer and call handler. Setting NixOS option `programs.calls.enable = true` is recommended.";
-    homepage = "https://source.puri.sm/Librem5/calls";
+    homepage = "https://gitlab.gnome.org/GNOME/calls";
     license = licenses.gpl3Plus;
-    maintainers = with maintainers; [ craigem lheckemann tomfitzhenry ];
+    maintainers = with maintainers; [ craigem ];
     platforms = platforms.linux;
+    mainProgram = "gnome-calls";
   };
 }

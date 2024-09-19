@@ -3,10 +3,6 @@
 with lib;
 
 let
-  package = if cfg.allowAuxiliaryImperativeNetworks
-    then pkgs.wpa_supplicant_ro_ssids
-    else pkgs.wpa_supplicant;
-
   cfg = config.networking.wireless;
   opt = options.networking.wireless;
 
@@ -49,19 +45,10 @@ let
         "update_config=1"
       ])
     ++ [ "pmf=1" ]
+    ++ optional (cfg.secretsFile != null)
+      "ext_password_backend=file:${cfg.secretsFile}"
     ++ optional cfg.scanOnLowSignal ''bgscan="simple:30:-70:3600"''
     ++ optional (cfg.extraConfig != "") cfg.extraConfig);
-
-  configIsGenerated = with cfg;
-    networks != {} || extraConfig != "" || userControlled.enable;
-
-  # the original configuration file
-  configFile =
-    if configIsGenerated
-      then pkgs.writeText "wpa_supplicant.conf" generatedConfig
-      else "/etc/wpa_supplicant.conf";
-  # the config file with environment variables replaced
-  finalConfig = ''"$RUNTIME_DIRECTORY"/wpa_supplicant.conf'';
 
   # Creates a network block for wpa_supplicant.conf
   mkNetwork = opts:
@@ -94,8 +81,8 @@ let
     let
       deviceUnit = optional (iface != null) "sys-subsystem-net-devices-${utils.escapeSystemdPath iface}.device";
       configStr = if cfg.allowAuxiliaryImperativeNetworks
-        then "-c /etc/wpa_supplicant.conf -I ${finalConfig}"
-        else "-c ${finalConfig}";
+        then "-c /etc/wpa_supplicant.conf -I ${pkgs.writeText "wpa_supplicant.conf" generatedConfig}"
+        else "-c /etc/wpa_supplicant.conf";
     in {
       description = "WPA Supplicant instance" + optionalString (iface != null) " for interface ${iface}";
 
@@ -106,26 +93,20 @@ let
       wantedBy = [ "multi-user.target" ];
       stopIfChanged = false;
 
-      path = [ package ];
+      path = [ pkgs.wpa_supplicant ];
+      # if `userControl.enable`, the supplicant automatically changes the permissions
+      #  and owning group of the runtime dir; setting `umask` ensures the generated
+      #  config file isn't readable (except to root);  see nixpkgs#267693
+      serviceConfig.UMask = "066";
       serviceConfig.RuntimeDirectory = "wpa_supplicant";
       serviceConfig.RuntimeDirectoryMode = "700";
-      serviceConfig.EnvironmentFile = mkIf (cfg.environmentFile != null)
-        (builtins.toString cfg.environmentFile);
 
       script =
       ''
-        ${optionalString configIsGenerated ''
-          if [ -f /etc/wpa_supplicant.conf ]; then
-            echo >&2 "<3>/etc/wpa_supplicant.conf present but ignored. Generated ${configFile} is used instead."
-          fi
+        # ensure wpa_supplicant.conf exists, or the daemon will fail to start
+        ${optionalString cfg.allowAuxiliaryImperativeNetworks ''
+          touch /etc/wpa_supplicant.conf
         ''}
-
-        # substitute environment variables
-        ${pkgs.gawk}/bin/awk '{
-          for(varname in ENVIRON)
-            gsub("@"varname"@", ENVIRON[varname])
-          print
-        }' "${configFile}" > "${finalConfig}"
 
         iface_args="-s ${optionalString cfg.dbusControlled "-u"} -D${cfg.driver} ${configStr}"
 
@@ -171,12 +152,12 @@ in {
         default = [];
         example = [ "wlan0" "wlan1" ];
         description = ''
-          The interfaces <command>wpa_supplicant</command> will use. If empty, it will
+          The interfaces {command}`wpa_supplicant` will use. If empty, it will
           automatically use all wireless interfaces.
 
-          <note><para>
-            A separate wpa_supplicant instance will be started for each interface.
-          </para></note>
+          ::: {.note}
+          A separate wpa_supplicant instance will be started for each interface.
+          :::
         '';
       };
 
@@ -189,10 +170,10 @@ in {
       allowAuxiliaryImperativeNetworks = mkEnableOption "support for imperative & declarative networks" // {
         description = ''
           Whether to allow configuring networks "imperatively" (e.g. via
-          <package>wpa_supplicant_gui</package>) and declaratively via
-          <xref linkend="opt-networking.wireless.networks" />.
+          `wpa_supplicant_gui`) and declaratively via
+          [](#opt-networking.wireless.networks).
 
-          Please note that this adds a custom patch to <package>wpa_supplicant</package>.
+          Please note that this adds a custom patch to `wpa_supplicant`.
         '';
       };
 
@@ -218,41 +199,37 @@ in {
         '';
       };
 
-      environmentFile = mkOption {
+      secretsFile = mkOption {
         type = types.nullOr types.path;
         default = null;
-        example = "/run/secrets/wireless.env";
+        example = "/run/secrets/wireless.conf";
         description = ''
-          File consisting of lines of the form <literal>varname=value</literal>
+          File consisting of lines of the form `varname=value`
           to define variables for the wireless configuration.
 
-          See section "EnvironmentFile=" in <citerefentry>
-          <refentrytitle>systemd.exec</refentrytitle><manvolnum>5</manvolnum>
-          </citerefentry> for a syntax reference.
-
           Secrets (PSKs, passwords, etc.) can be provided without adding them to
-          the world-readable Nix store by defining them in the environment file and
-          referring to them in option <option>networking.wireless.networks</option>
-          with the syntax <literal>@varname@</literal>. Example:
+          the world-readable Nix store by defining them in the secrets file and
+          referring to them in option [](#opt-networking.wireless.networks)
+          with the syntax `ext:secretname`. Example:
 
-          <programlisting>
-          # content of /run/secrets/wireless.env
-          PSK_HOME=mypassword
-          PASS_WORK=myworkpassword
-          </programlisting>
+          ```
+          # content of /run/secrets/wireless.conf
+          psk_home=mypassword
+          psk_other=6a381cea59c7a2d6b30736ba0e6f397f7564a044bcdb7a327a1d16a1ed91b327
+          pass_work=myworkpassword
 
-          <programlisting>
           # wireless-related configuration
-          networking.wireless.environmentFile = "/run/secrets/wireless.env";
+          networking.wireless.secretsFile = "/run/secrets/wireless.conf";
           networking.wireless.networks = {
-            home.psk = "@PSK_HOME@";
+            home.pskRaw = "ext:psk_home";
+            other.pskRaw = "ext:psk_other";
             work.auth = '''
               eap=PEAP
               identity="my-user@example.com"
-              password="@PASS_WORK@"
+              password=ext:pass_work
             ''';
           };
-          </programlisting>
+          ```
         '';
       };
 
@@ -260,38 +237,48 @@ in {
         type = types.attrsOf (types.submodule {
           options = {
             psk = mkOption {
-              type = types.nullOr types.str;
+              type = types.nullOr (types.strMatching "[[:print:]]{8,63}");
               default = null;
               description = ''
                 The network's pre-shared key in plaintext defaulting
                 to being a network without any authentication.
 
-                <warning><para>
-                  Be aware that this will be written to the nix store
-                  in plaintext! Use an environment variable instead.
-                </para></warning>
+                ::: {.warning}
+                Be aware that this will be written to the Nix store
+                in plaintext! Use {var}`pskRaw` with an external
+                reference to keep it safe.
+                :::
 
-                <note><para>
-                  Mutually exclusive with <varname>pskRaw</varname>.
-                </para></note>
+                ::: {.note}
+                Mutually exclusive with {var}`pskRaw`.
+                :::
               '';
             };
 
             pskRaw = mkOption {
-              type = types.nullOr types.str;
+              type = types.nullOr
+                (types.strMatching "([[:xdigit:]]{64})|(ext:[^=]+)");
               default = null;
+              example = "ext:name_of_the_secret_here";
               description = ''
-                The network's pre-shared key in hex defaulting
-                to being a network without any authentication.
+                Either the raw pre-shared key in hexadecimal format
+                or the name of the secret (as defined inside
+                [](#opt-networking.wireless.secretsFile) and prefixed
+                with `ext:`) containing the network pre-shared key.
 
-                <warning><para>
-                  Be aware that this will be written to the nix store
-                  in plaintext! Use an environment variable instead.
-                </para></warning>
+                ::: {.warning}
+                Be aware that this will be written to the Nix store
+                in plaintext! Always use an external reference.
+                :::
 
-                <note><para>
-                  Mutually exclusive with <varname>psk</varname>.
-                </para></note>
+                ::: {.note}
+                The external secret can be either the plaintext
+                passphrase or the raw pre-shared key.
+                :::
+
+                ::: {.note}
+                Mutually exclusive with {var}`psk` and {var}`auth`.
+                :::
               '';
             };
 
@@ -333,7 +320,7 @@ in {
               ]);
               description = ''
                 The list of authentication protocols accepted by this network.
-                This corresponds to the <literal>key_mgmt</literal> option in wpa_supplicant.
+                This corresponds to the `key_mgmt` option in wpa_supplicant.
               '';
             };
 
@@ -343,26 +330,22 @@ in {
               example = ''
                 eap=PEAP
                 identity="user@example.com"
-                password="@EXAMPLE_PASSWORD@"
+                password=ext:example_password
               '';
               description = ''
-                Use this option to configure advanced authentication methods like EAP.
-                See
-                <citerefentry>
-                  <refentrytitle>wpa_supplicant.conf</refentrytitle>
-                  <manvolnum>5</manvolnum>
-                </citerefentry>
-                for example configurations.
+                Use this option to configure advanced authentication methods
+                like EAP. See {manpage}`wpa_supplicant.conf(5)` for example
+                configurations.
 
-                <warning><para>
-                  Be aware that this will be written to the nix store
-                  in plaintext! Use an environment variable for secrets.
-                </para></warning>
+                ::: {.warning}
+                Be aware that this will be written to the Nix store
+                in plaintext! Use an external reference like
+                `ext:secretname` for secrets.
+                :::
 
-                <note><para>
-                  Mutually exclusive with <varname>psk</varname> and
-                  <varname>pskRaw</varname>.
-                </para></note>
+                ::: {.note}
+                Mutually exclusive with {var}`psk` and {var}`pskRaw`.
+                :::
               '';
             };
 
@@ -370,7 +353,7 @@ in {
               type = types.bool;
               default = false;
               description = ''
-                Set this to <literal>true</literal> if the SSID of the network is hidden.
+                Set this to `true` if the SSID of the network is hidden.
               '';
               example = literalExpression ''
                 { echelon = {
@@ -385,13 +368,14 @@ in {
               type = types.nullOr types.int;
               default = null;
               description = ''
-                By default, all networks will get same priority group (0). If some of the
-                networks are more desirable, this field can be used to change the order in
-                which wpa_supplicant goes through the networks when selecting a BSS. The
-                priority groups will be iterated in decreasing priority (i.e., the larger the
-                priority value, the sooner the network is matched against the scan results).
-                Within each priority group, networks will be selected based on security
-                policy, signal strength, etc.
+                By default, all networks will get same priority group (0). If
+                some of the networks are more desirable, this field can be used
+                to change the order in which wpa_supplicant goes through the
+                networks when selecting a BSS. The priority groups will be
+                iterated in decreasing priority (i.e., the larger the priority
+                value, the sooner the network is matched against the scan
+                results). Within each priority group, networks will be selected
+                based on security policy, signal strength, etc.
               '';
             };
 
@@ -403,12 +387,7 @@ in {
               '';
               description = ''
                 Extra configuration lines appended to the network block.
-                See
-                <citerefentry>
-                  <refentrytitle>wpa_supplicant.conf</refentrytitle>
-                  <manvolnum>5</manvolnum>
-                </citerefentry>
-                for available options.
+                See {manpage}`wpa_supplicant.conf(5)` for available options.
               '';
             };
 
@@ -416,7 +395,7 @@ in {
         });
         description = ''
           The network definitions to automatically connect to when
-           <command>wpa_supplicant</command> is running. If this
+           {command}`wpa_supplicant` is running. If this
            parameter is left empty wpa_supplicant will use
           /etc/wpa_supplicant.conf as the configuration file.
         '';
@@ -427,7 +406,7 @@ in {
             };
 
             echelon = {                   # safe version of the above: read PSK from the
-              psk = "@PSK_ECHELON@";      # variable PSK_ECHELON, defined in environmentFile,
+              pskRaw = "ext:psk_echelon"; # variable psk_echelon, defined in secretsFile,
             };                            # this won't leak into /nix/store
 
             "echelon's AP" = {            # SSID with spaces and/or special characters
@@ -481,15 +460,37 @@ in {
         description = ''
           Extra lines appended to the configuration file.
           See
-          <citerefentry>
-            <refentrytitle>wpa_supplicant.conf</refentrytitle>
-            <manvolnum>5</manvolnum>
-          </citerefentry>
+          {manpage}`wpa_supplicant.conf(5)`
           for available options.
         '';
       };
     };
   };
+
+  imports = [
+    (mkRemovedOptionModule [ "networking" "wireless" "environmentFile" ]
+    ''
+      Secrets are now handled by the `networking.wireless.secretsFile` and
+      `networking.wireless.networks.<name>.pskRaw` options.
+      The change is motivated by a mechanism recently added by wpa_supplicant
+      itself to separate secrets from configuration, making the previous
+      method obsolete.
+
+      The syntax of the `secretsFile` is the same as before, except the
+      values are interpreted literally, unlike environment variables.
+      To update, remove quotes or character escapes, if necessary, and
+      apply the following changes to your configuration:
+        {
+          home.psk = "@psk_home@";          →  home.pskRaw = "ext:psk_home";
+          other.pskRaw = "@psk_other@";     →  other.pskRaw = "ext:psk_other";
+          work.auth = '''
+            eap=PEAP
+            identity="my-user@example.com"
+            password=@pass_work@            →  password=ext:pass_work
+          ''';
+        }
+    '')
+  ];
 
   config = mkIf cfg.enable {
     assertions = flip mapAttrsToList cfg.networks (name: cfg: {
@@ -515,8 +516,11 @@ in {
 
     hardware.wirelessRegulatoryDatabase = true;
 
-    environment.systemPackages = [ package ];
-    services.dbus.packages = optional cfg.dbusControlled package;
+    environment.etc."wpa_supplicant.conf" =
+      lib.mkIf (!cfg.allowAuxiliaryImperativeNetworks) { text = generatedConfig; };
+
+    environment.systemPackages = [ pkgs.wpa_supplicant ];
+    services.dbus.packages = optional cfg.dbusControlled pkgs.wpa_supplicant;
 
     systemd.services =
       if cfg.interfaces == []
@@ -537,5 +541,5 @@ in {
     '';
   };
 
-  meta.maintainers = with lib.maintainers; [ globin rnhmjoj ];
+  meta.maintainers = with lib.maintainers; [ rnhmjoj ];
 }

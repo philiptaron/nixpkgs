@@ -53,9 +53,10 @@ stdenv.mkDerivation rec {
 
   meta = {
     homepage = "https://help.yandex.com/disk/cli-clients.xml";
-    description = "A free cloud file storage service";
+    description = "Free cloud file storage service";
     maintainers = with lib.maintainers; [ smironov jagajaga ];
     platforms = ["i686-linux" "x86_64-linux"];
+    sourceProvenance = with lib.sourceTypes; [ binaryNativeCode ];
     license = lib.licenses.unfree;
     longDescription = ''
       Yandex.Disk console client for Linux lets you manage files on Disk without
@@ -66,5 +67,6 @@ stdenv.mkDerivation rec {
        * faster syncing with Disk's server;
        * no need to be constantly connected to work with files.
     '';
+    mainProgram = "yandex-disk";
   };
 }

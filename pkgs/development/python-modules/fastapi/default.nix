@@ -1,100 +1,125 @@
-{ lib
-, buildPythonPackage
-, fetchFromGitHub
-, pydantic
-, starlette
-, pytestCheckHook
-, pytest-asyncio
-, aiosqlite
-, databases
-, fetchpatch
-, flask
-, httpx
-, passlib
-, peewee
-, python-jose
-, sqlalchemy
-, trio
-, pythonOlder
+{
+  lib,
+  buildPythonPackage,
+  fetchFromGitHub,
+  pythonOlder,
+
+  # build-system
+  pdm-backend,
+
+  # dependencies
+  fastapi-cli,
+  starlette,
+  pydantic,
+  typing-extensions,
+
+  # tests
+  dirty-equals,
+  flask,
+  passlib,
+  pyjwt,
+  pytest-asyncio,
+  pytestCheckHook,
+  sqlalchemy,
+  trio,
+
+  # optional-dependencies
+  httpx,
+  jinja2,
+  python-multipart,
+  itsdangerous,
+  pyyaml,
+  ujson,
+  orjson,
+  email-validator,
+  uvicorn,
+  pydantic-settings,
+  pydantic-extra-types,
 }:
 
 buildPythonPackage rec {
   pname = "fastapi";
-  version = "0.75.2";
-  format = "flit";
+  version = "0.112.0";
+  pyproject = true;
 
-  disabled = pythonOlder "3.6";
+  disabled = pythonOlder "3.7";
 
   src = fetchFromGitHub {
     owner = "tiangolo";
-    repo = pname;
-    rev = version;
-    hash = "sha256-B4q3Q256Sj4jTQt1TDm3fiEaQKdVxddCF9+KsxkkTWo=";
+    repo = "fastapi";
+    rev = "refs/tags/${version}";
+    hash = "sha256-M09yte0BGC5w3AZSwDUr9qKUrotqVklO8mwyms9B95Y=";
   };
 
-  propagatedBuildInputs = [
+  build-system = [ pdm-backend ];
+
+  pythonRelaxDeps = [
+    "anyio"
+    "starlette"
+  ];
+
+  dependencies = [
+    fastapi-cli
     starlette
     pydantic
+    typing-extensions
   ];
 
-  checkInputs = [
-    aiosqlite
-    databases
+  optional-dependencies.all =
+    [
+      httpx
+      jinja2
+      python-multipart
+      itsdangerous
+      pyyaml
+      ujson
+      orjson
+      email-validator
+      uvicorn
+    ]
+    ++ lib.optionals (lib.versionAtLeast pydantic.version "2") [
+      pydantic-settings
+      pydantic-extra-types
+    ]
+    ++ uvicorn.optional-dependencies.standard;
+
+  nativeCheckInputs = [
+    dirty-equals
     flask
-    httpx
     passlib
-    peewee
-    python-jose
+    pyjwt
     pytestCheckHook
     pytest-asyncio
-    sqlalchemy
     trio
-  ] ++ passlib.optional-dependencies.bcrypt;
-
-  patches = [
-    # Bump starlette, https://github.com/tiangolo/fastapi/pull/4483
-    (fetchpatch {
-      name = "support-later-starlette.patch";
-      # PR contains multiple commits
-      url = "https://patch-diff.githubusercontent.com/raw/tiangolo/fastapi/pull/4483.patch";
-      sha256 = "sha256-ZWaqAd/QYEYRL1hSQdXdFPgWgdmOill2GtmEn33vz2U=";
-    })
-  ];
-
-  postPatch = ''
-    substituteInPlace pyproject.toml \
-      --replace "starlette ==" "starlette >="
-  '';
+    sqlalchemy
+  ] ++ optional-dependencies.all;
 
   pytestFlagsArray = [
     # ignoring deprecation warnings to avoid test failure from
     # tests/test_tutorial/test_testing/test_tutorial001.py
     "-W ignore::DeprecationWarning"
-  ];
-
-  disabledTestPaths = [
-    # Disabled tests require orjson which requires rust nightly
-    "tests/test_default_response_class.py"
-    # Don't test docs and examples
-    "docs_src"
+    "-W ignore::pytest.PytestUnraisableExceptionWarning"
   ];
 
   disabledTests = [
-    "test_get_custom_response"
-    # Failed: DID NOT RAISE <class 'starlette.websockets.WebSocketDisconnect'>
-    "test_websocket_invalid_data"
-    "test_websocket_no_credentials"
-    # TypeError: __init__() missing 1...starlette-releated
-    "test_head"
-    "test_options"
-    "test_trace"
+    # Coverage test
+    "test_fastapi_cli"
+    # ResourceWarning: Unclosed <MemoryObjectSendStream>
+    "test_openapi_schema"
   ];
 
-  pythonImportsCheck = [
-    "fastapi"
+  disabledTestPaths = [
+    # Don't test docs and examples
+    "docs_src"
+    # databases is incompatible with SQLAlchemy 2.0
+    "tests/test_tutorial/test_async_sql_databases"
+    "tests/test_tutorial/test_sql_databases"
   ];
+
+  pythonImportsCheck = [ "fastapi" ];
 
   meta = with lib; {
+    changelog = "https://github.com/tiangolo/fastapi/releases/tag/${version}";
     description = "Web framework for building APIs";
     homepage = "https://github.com/tiangolo/fastapi";
     license = licenses.mit;

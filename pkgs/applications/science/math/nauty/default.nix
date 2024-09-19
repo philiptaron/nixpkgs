@@ -4,11 +4,11 @@
 }:
 stdenv.mkDerivation rec {
   pname = "nauty";
-  version = "2.7r3";
+  version = "2.8.8";
 
   src = fetchurl {
-    url = "https://pallini.di.uniroma1.it/nauty${builtins.replaceStrings ["."] [""] version}.tar.gz";
-    sha256 = "sha256-TwZltxalP3oU6irjAFnyPQZM4/5MEsATQE724e4LiMI=";
+    url = "https://pallini.di.uniroma1.it/nauty${builtins.replaceStrings ["."] ["_"] version}.tar.gz";
+    sha256 = "sha256-FZ0hVoEKa7JAQQzWHrZBrdhQiNnxXIiM2qN7hoH5Kc4=";
   };
 
   outputs = [ "out" "dev" ];
@@ -44,7 +44,7 @@ stdenv.mkDerivation rec {
     # I'm not sure if the filename will remain the same for future changelog or
     # if it will track changes to minor releases. Lets see. Better than nothing
     # in any case.
-    changelog = "https://pallini.di.uniroma1.it/changes24-27.txt";
+    changelog = "https://pallini.di.uniroma1.it/changes24-28.txt";
     homepage = "https://pallini.di.uniroma1.it/";
   };
 }

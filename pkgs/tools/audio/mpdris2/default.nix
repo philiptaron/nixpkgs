@@ -6,14 +6,13 @@
 , intltool
 , libnotify
 , python3
-, wrapGAppsHook
+, wrapGAppsHook3
 }:
 
 python3.pkgs.buildPythonApplication rec {
   pname = "mpDris2";
   version = "0.9.1";
   format = "other";
-  strictDeps = false; # https://github.com/NixOS/nixpkgs/issues/56943
 
   src = fetchFromGitHub {
     owner = "eonpatapon";
@@ -30,7 +29,7 @@ python3.pkgs.buildPythonApplication rec {
     autoreconfHook
     gobject-introspection
     intltool
-    wrapGAppsHook
+    wrapGAppsHook3
   ];
 
   buildInputs = [
@@ -49,7 +48,8 @@ python3.pkgs.buildPythonApplication rec {
     description = "MPRIS 2 support for mpd";
     homepage = "https://github.com/eonpatapon/mpDris2/";
     license = licenses.gpl3;
-    maintainers = with maintainers; [ ];
+    maintainers = [ ];
     platforms = platforms.unix;
+    mainProgram = "mpDris2";
   };
 }

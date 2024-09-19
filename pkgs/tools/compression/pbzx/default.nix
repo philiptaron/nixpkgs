@@ -9,6 +9,7 @@ stdenv.mkDerivation rec {
     rev = "v${version}";
     sha256 = "0bwd7wmnhpz1n5p39mh6asfyccj4cm06hwigslcwbb3pdwmvxc90";
   };
+  patches = [ ./stdin.patch ];
   buildInputs = [ xz xar ];
   buildPhase = ''
     ${stdenv.cc.targetPrefix}cc pbzx.c -llzma -lxar -o pbzx
@@ -22,5 +23,6 @@ stdenv.mkDerivation rec {
     platforms = platforms.unix;
     license = licenses.gpl3;
     maintainers = [ maintainers.matthewbauer ];
+    mainProgram = "pbzx";
   };
 }

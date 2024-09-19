@@ -1,136 +1,126 @@
-{ buildGoModule
-, fetchFromGitHub
-, fetchpatch
-, go
-, lib
-, pkg-config
-, polkit
-, python3
-, qmake
-, qtbase
-, qtcharts
-, qtgraphicaleffects
-, qtnetworkauth
-, qtquickcontrols2
-, qttools
-, qtwebsockets
-, rustPlatform
-, stdenv
-, which
-, wireguard-tools
-, wrapQtAppsHook
+{
+  buildGoModule,
+  cargo,
+  cmake,
+  fetchFromGitHub,
+  fetchpatch,
+  go,
+  lib,
+  libcap,
+  libgcrypt,
+  libgpg-error,
+  libsecret,
+  pkg-config,
+  polkit,
+  python3,
+  qt5compat,
+  qtbase,
+  qtnetworkauth,
+  qtsvg,
+  qttools,
+  qtwayland,
+  qtwebsockets,
+  rustPlatform,
+  rustc,
+  stdenv,
+  wireguard-tools,
+  wrapQtAppsHook,
 }:
 
-let
-  glean_parser_4_1_1 = python3.pkgs.buildPythonPackage rec {
-    pname = "glean_parser";
-    version = "4.1.1";
-    src = python3.pkgs.fetchPypi {
-      inherit pname version;
-      hash = "sha256-4noazRqjjJNI2kTO714kSp70jZpWmqHWR2vnkgAftLE=";
-    };
-    nativeBuildInputs = with python3.pkgs; [ setuptools-scm ];
-    propagatedBuildInputs = with python3.pkgs; [
-      appdirs
-      click
-      diskcache
-      jinja2
-      jsonschema
-      pyyaml
-      setuptools
-      yamllint
-    ];
-    postPatch = ''
-      substituteInPlace setup.py --replace '"pytest-runner", ' ""
-    '';
-    doCheck = false;
-  };
-
+stdenv.mkDerivation (finalAttrs: {
   pname = "mozillavpn";
-  version = "2.8.3";
+  version = "2.23.1";
   src = fetchFromGitHub {
     owner = "mozilla-mobile";
     repo = "mozilla-vpn-client";
-    rev = "v${version}";
+    rev = "v${finalAttrs.version}";
     fetchSubmodules = true;
-    hash = "sha256-eKgoRE/JDEQEFp7xYY60ARDgw/n5VoZpD/Gb/CWzHuo=";
+    hash = "sha256-NQM1ZII9owD9ek/Leo6WRfvNybZ5pUjDgvQGXQBrD+0=";
   };
-
   patches = [
-    # Rust bridge: Add Cargo.lock file
+    # Update cargo deps for "time"
     (fetchpatch {
-      url = "https://github.com/mozilla-mobile/mozilla-vpn-client/commit/05c9a366cf9dc4e378485c8e9d494f77c35dbb8c.patch";
-      hash = "sha256-fG+SATbJpGqpCFXSWEiBo4dYx6RLtJYR0yTdBqN6Fww=";
+      url = "https://github.com/mozilla-mobile/mozilla-vpn-client/commit/31d5799a30fc02067ad31d86b6ef63294bb3c3b8.patch";
+      hash = "sha256-ECrIcfhhSuvbqQ/ExPdFkQ6b9Q767lhUKmwPdDz7yxI=";
     })
   ];
 
-  netfilter-go-modules = (buildGoModule {
-    inherit pname version src patches;
-    vendorSha256 = "KFYMim5U8WlJHValvIBQgEN+17SDv0JVbH03IiyfDc0=";
-    modRoot = "linux/netfilter";
-  }).go-modules;
+  netfilterGoModules =
+    (buildGoModule {
+      inherit (finalAttrs)
+        pname
+        version
+        src
+        patches
+        ;
+      modRoot = "linux/netfilter";
+      vendorHash = "sha256-Cmo0wnl0z5r1paaEf1MhCPbInWeoMhGjnxCxGh0cyO8=";
+    }).goModules;
 
-  cargoRoot = "extension/bridge";
-
-in
-stdenv.mkDerivation {
-  inherit pname version src patches cargoRoot;
+  cargoDeps = rustPlatform.fetchCargoTarball {
+    inherit (finalAttrs) src patches;
+    hash = "sha256-JIe6FQL0xm6FYYGoIwwnOxq21sC1y8xPsr8tYPF0Mzo=";
+  };
 
   buildInputs = [
-    polkit
+    libcap
+    libgcrypt
+    libgpg-error
+    libsecret
+    qt5compat
     qtbase
-    qtcharts
-    qtgraphicaleffects
     qtnetworkauth
-    qtquickcontrols2
+    qtsvg
+    qtwayland
     qtwebsockets
   ];
   nativeBuildInputs = [
-    glean_parser_4_1_1
+    cargo
+    cmake
     go
     pkg-config
     python3
+    python3.pkgs.glean-parser
     python3.pkgs.pyyaml
-    qmake
+    python3.pkgs.setuptools
     qttools
     rustPlatform.cargoSetupHook
-    rustPlatform.rust.cargo
-    which
+    rustc
     wrapQtAppsHook
   ];
 
-  cargoDeps = rustPlatform.fetchCargoTarball {
-    inherit src patches;
-    name = "${pname}-${version}";
-    preBuild = "cd ${cargoRoot}";
-    hash = "sha256-C0wPmGVXbhUs0IzeIMZD6724P0XTOzeK1bzrnUMPlWo=";
-  };
-
   postPatch = ''
-    for file in linux/*.service linux/extra/*.desktop src/platforms/linux/daemon/*.service; do
-      substituteInPlace "$file" --replace /usr/bin/mozillavpn "$out/bin/mozillavpn"
-    done
+    substituteInPlace src/cmake/linux.cmake \
+      --replace '/etc/xdg/autostart' "$out/etc/xdg/autostart" \
+      --replace '/usr/share/dbus-1' "$out/share/dbus-1" \
+      --replace '${"$"}{SYSTEMD_UNIT_DIR}' "$out/lib/systemd/system"
+
+    substituteInPlace extension/CMakeLists.txt \
+      --replace '/etc' "$out/etc"
+
+    ln -s '${finalAttrs.netfilterGoModules}' linux/netfilter/vendor
   '';
 
-  preBuild = ''
-    ln -s '${netfilter-go-modules}' linux/netfilter/vendor
-    python3 scripts/utils/generate_glean.py
-    python3 scripts/utils/import_languages.py --qt_path '${lib.getDev qttools}/bin'
-  '';
-
-  qmakeFlags = [
-    "USRPATH=$(out)"
-    "ETCPATH=$(out)/etc"
-    "CONFIG-=debug" # https://github.com/mozilla-mobile/mozilla-vpn-client/pull/3539
+  cmakeFlags = [
+    "-DQT_LCONVERT_EXECUTABLE=${qttools.dev}/bin/lconvert"
+    "-DQT_LUPDATE_EXECUTABLE=${qttools.dev}/bin/lupdate"
+    "-DQT_LRELEASE_EXECUTABLE=${qttools.dev}/bin/lrelease"
   ];
-  qtWrapperArgs =
-    [ "--prefix" "PATH" ":" (lib.makeBinPath [ wireguard-tools ]) ];
+  dontFixCmake = true;
+
+  qtWrapperArgs = [
+    "--prefix"
+    "PATH"
+    ":"
+    (lib.makeBinPath [ wireguard-tools ])
+  ];
 
   meta = {
     description = "Client for the Mozilla VPN service";
+    mainProgram = "mozillavpn";
     homepage = "https://vpn.mozilla.org/";
     license = lib.licenses.mpl20;
     maintainers = with lib.maintainers; [ andersk ];
     platforms = lib.platforms.linux;
   };
-}
+})

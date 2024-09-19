@@ -1,14 +1,14 @@
-{ lib, stdenv, fetchFromGitHub, pkg-config, gdk-pixbuf, optipng, librsvg, gtk3, pantheon, gnome, gnome-icon-theme, hicolor-icon-theme }:
+{ lib, stdenv, fetchFromGitHub, pkg-config, gdk-pixbuf, optipng, librsvg, gtk3, pantheon, adwaita-icon-theme, gnome-icon-theme, hicolor-icon-theme }:
 
 stdenv.mkDerivation rec {
   pname = "elementary-xfce-icon-theme";
-  version = "0.16";
+  version = "0.19";
 
   src = fetchFromGitHub {
     owner = "shimmerproject";
     repo = "elementary-xfce";
     rev = "v${version}";
-    sha256 = "sha256-p6HQhYf+rw3obrc6e5lYqC02i4dK+5eXGwnTJj0+D+k=";
+    sha256 = "sha256-exrPxJ6S3xV1EJ61KW1MqCcOSzPY9zOycuSh8I9Gdns=";
   };
 
   nativeBuildInputs = [
@@ -21,7 +21,7 @@ stdenv.mkDerivation rec {
 
   propagatedBuildInputs = [
     pantheon.elementary-icon-theme
-    gnome.adwaita-icon-theme
+    adwaita-icon-theme
     gnome-icon-theme
     hicolor-icon-theme
   ];

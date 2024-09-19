@@ -14,7 +14,7 @@ in {
           ethercalc, an online collaborative spreadsheet server.
 
           Persistent state will be maintained under
-          <filename>/var/lib/ethercalc</filename>. Upstream supports using a
+          {file}`/var/lib/ethercalc`. Upstream supports using a
           redis server for storage and recommends the redis backend for
           intensive use; however, the Nix module doesn't currently support
           redis.
@@ -24,12 +24,7 @@ in {
         '';
       };
 
-      package = mkOption {
-        default = pkgs.ethercalc;
-        defaultText = literalExpression "pkgs.ethercalc";
-        type = types.package;
-        description = "Ethercalc package to use.";
-      };
+      package = mkPackageOption pkgs "ethercalc" { };
 
       host = mkOption {
         type = types.str;

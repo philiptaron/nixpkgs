@@ -1,9 +1,9 @@
 { stdenv
 , lib
 , desktop-file-utils
-, fetchpatch
 , fetchurl
 , glib
+, gettext
 , gtk4
 , libadwaita
 , meson
@@ -15,23 +15,14 @@
 
 stdenv.mkDerivation rec {
   pname = "d-spy";
-  version = "1.2.0";
+  version = "1.10.0";
 
   outputs = [ "out" "lib" "dev" ];
 
   src = fetchurl {
-    url = "mirror://gnome/sources/dspy/${lib.versions.majorMinor version}/dspy-${version}.tar.xz";
-    sha256 = "XKL0z00w0va9m1OfuVq5YJyE1jzeynBxb50jc+O99tQ=";
+    url = "mirror://gnome/sources/d-spy/${lib.versions.majorMinor version}/d-spy-${version}.tar.xz";
+    hash = "sha256-VVgSucZUBVHaWZ7oFHiArTkVuTyH4XV7bRz9kKDgXlM=";
   };
-
-  patches = [
-    # Remove pointless dependencies
-    # https://gitlab.gnome.org/GNOME/d-spy/-/merge_requests/6
-    (fetchpatch {
-      url = "https://gitlab.gnome.org/GNOME/d-spy/-/commit/5a0ec8d53d006e95e93c6d6e32a381eb248b12a1.patch";
-      sha256 = "jalfdAXcH8GZ50qb2peG+2841cGan4EhwN88z5Ewf+k=";
-    })
-  ];
 
   nativeBuildInputs = [
     meson
@@ -39,6 +30,8 @@ stdenv.mkDerivation rec {
     pkg-config
     desktop-file-utils
     wrapGAppsHook4
+    gettext
+    glib
   ];
 
   buildInputs = [
@@ -49,13 +42,14 @@ stdenv.mkDerivation rec {
 
   passthru = {
     updateScript = gnome.updateScript {
-      packageName = "dspy";
-      attrPath = "d-spy";
+      packageName = "d-spy";
+      versionPolicy = "odd-unstable";
     };
   };
 
   meta = with lib; {
     description = "D-Bus exploration tool";
+    mainProgram = "d-spy";
     homepage = "https://gitlab.gnome.org/GNOME/d-spy";
     license = with licenses; [
       lgpl3Plus # library

@@ -1,7 +1,4 @@
 { config, lib, pkgs, ... }:
-
-with lib;
-
 let
 
   concatMapLines = f: l: lib.concatStringsSep "\n" (map f l);
@@ -53,43 +50,42 @@ in
 
     services.mlmmj = {
 
-      enable = mkOption {
-        type = types.bool;
+      enable = lib.mkOption {
+        type = lib.types.bool;
         default = false;
         description = "Enable mlmmj";
       };
 
-      user = mkOption {
-        type = types.str;
+      user = lib.mkOption {
+        type = lib.types.str;
         default = "mlmmj";
         description = "mailinglist local user";
       };
 
-      group = mkOption {
-        type = types.str;
+      group = lib.mkOption {
+        type = lib.types.str;
         default = "mlmmj";
         description = "mailinglist local group";
       };
 
-      listDomain = mkOption {
-        type = types.str;
+      listDomain = lib.mkOption {
+        type = lib.types.str;
         default = "localhost";
         description = "Set the mailing list domain";
       };
 
-      mailLists = mkOption {
-        type = types.listOf types.str;
+      mailLists = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
         default = [];
         description = "The collection of hosted maillists";
       };
 
-      maintInterval = mkOption {
-        type = types.str;
+      maintInterval = lib.mkOption {
+        type = lib.types.str;
         default = "20min";
         description = ''
           Time interval between mlmmj-maintd runs, see
-          <citerefentry><refentrytitle>systemd.time</refentrytitle>
-          <manvolnum>7</manvolnum></citerefentry> for format information.
+          {manpage}`systemd.time(7)` for format information.
         '';
       };
 
@@ -99,7 +95,7 @@ in
 
   ###### implementation
 
-  config = mkIf cfg.enable {
+  config = lib.mkIf cfg.enable {
 
     users.users.${cfg.user} = {
       description = "mlmmj user";
@@ -144,13 +140,13 @@ in
 
     environment.systemPackages = [ pkgs.mlmmj ];
 
-    system.activationScripts.mlmmj = ''
-          ${pkgs.coreutils}/bin/mkdir -p ${stateDir} ${spoolDir}/${cfg.listDomain}
-          ${pkgs.coreutils}/bin/chown -R ${cfg.user}:${cfg.group} ${spoolDir}
-          ${concatMapLines (createList cfg.listDomain) cfg.mailLists}
-          ${pkgs.postfix}/bin/postmap /etc/postfix/virtual
-          ${pkgs.postfix}/bin/postmap /etc/postfix/transport
-      '';
+    systemd.tmpfiles.settings."10-mlmmj" = {
+      ${stateDir}.d = { };
+      "${spoolDir}/${cfg.listDomain}".d = { };
+      ${spoolDir}.Z = {
+        inherit (cfg) user group;
+      };
+    };
 
     systemd.services.mlmmj-maintd = {
       description = "mlmmj maintenance daemon";
@@ -159,6 +155,11 @@ in
         Group = cfg.group;
         ExecStart = "${pkgs.mlmmj}/bin/mlmmj-maintd -F -d ${spoolDir}/${cfg.listDomain}";
       };
+      preStart = ''
+        ${concatMapLines (createList cfg.listDomain) cfg.mailLists}
+        ${pkgs.postfix}/bin/postmap /etc/postfix/virtual
+        ${pkgs.postfix}/bin/postmap /etc/postfix/transport
+      '';
     };
 
     systemd.timers.mlmmj-maintd = {

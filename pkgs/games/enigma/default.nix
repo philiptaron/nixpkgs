@@ -31,14 +31,16 @@ stdenv.mkDerivation rec {
 
   postInstall = ''
     rm -r $out/include
-    wrapProgram $out/bin/enigma --prefix PATH : "${lib.makeBinPath [ xdg-utils ]}"
+    # make xdg-open overrideable at runtime
+    wrapProgram $out/bin/enigma --suffix PATH : "${lib.makeBinPath [ xdg-utils ]}"
   '';
 
   meta = with lib; {
     description = "Puzzle game inspired by Oxyd on the Atari ST and Rock'n'Roll on the Amiga";
-    license = with licenses; [ gpl2 free ]; # source + bundles libs + art
+    mainProgram = "enigma";
+    license = with licenses; [ gpl2Plus free ]; # source + bundles libs + art
     platforms = platforms.unix;
-    broken = stdenv.targetPlatform.isDarwin;
+    broken = stdenv.hostPlatform.isDarwin;
     maintainers = with maintainers; [ iblech ];
     homepage = "https://www.nongnu.org/enigma/";
   };

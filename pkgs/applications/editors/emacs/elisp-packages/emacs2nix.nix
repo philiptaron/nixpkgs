@@ -4,8 +4,8 @@ let
   src = pkgs.fetchFromGitHub {
     owner = "nix-community";
     repo = "emacs2nix";
-    rev = "2e8d2c644397be57455ad32c2849f692eeac7797";
-    sha256 = "sha256-qnOYDYHAQ+r5eegKP9GqHz5R2ig96B2W7M+uYa1ti9M=";
+    rev = "8454f2857252f32621b8022f797fef9b96862204";
+    hash = "sha256-UHHEkY+t/IzWe8jC8bm+p275sKfnL5/v5wbwRDw6FZw=";
     fetchSubmodules = true;
   };
 in
@@ -13,6 +13,7 @@ pkgs.mkShell {
 
   packages = [
     pkgs.bash
+    pkgs.nixfmt-rfc-style
   ];
 
   EMACS2NIX = src;

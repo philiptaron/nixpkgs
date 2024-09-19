@@ -3,13 +3,13 @@
 
 stdenv.mkDerivation rec {
   pname = "embree";
-  version = "3.13.3";
+  version = "4.3.3";
 
   src = fetchFromGitHub {
     owner = "embree";
     repo = "embree";
     rev = "v${version}";
-    sha256 = "sha256-g6BsXMNUvx17hgAq0PewtBLgtWqpp03M0k6vWNapDKs=";
+    sha256 = "sha256-bHVokEfnTW2cJqx3Zz2x1hIH07WamPAVFY9tiv6nHd0=";
   };
 
   postPatch = ''
@@ -17,15 +17,16 @@ stdenv.mkDerivation rec {
     sed -i "s|SET(EMBREE_ROOT_DIR .*)|set(EMBREE_ROOT_DIR $out)|" \
       common/cmake/embree-config.cmake
     sed -i "s|$""{EMBREE_ROOT_DIR}/||" common/cmake/embree-config.cmake
-    substituteInPlace common/math/math.h --replace 'defined(__MACOSX__) && !defined(__INTEL_COMPILER)' 0
-    substituteInPlace common/math/math.h --replace 'defined(__WIN32__) || defined(__FreeBSD__)' 'defined(__WIN32__) || defined(__FreeBSD__) || defined(__MACOSX__)'
+    substituteInPlace common/math/emath.h --replace 'defined(__MACOSX__) && !defined(__INTEL_COMPILER)' 0
+    substituteInPlace common/math/emath.h --replace 'defined(__WIN32__) || defined(__FreeBSD__)' 'defined(__WIN32__) || defined(__FreeBSD__) || defined(__MACOSX__)'
   '';
 
   cmakeFlags = [
     "-DEMBREE_TUTORIALS=OFF"
     "-DEMBREE_RAY_MASK=ON"
+    "-DTBB_ROOT=${tbb}"
+    "-DTBB_INCLUDE_DIR=${tbb.dev}/include"
   ];
-
 
   nativeBuildInputs = [ ispc pkg-config cmake ];
   buildInputs = [ tbb glfw openimageio libjpeg libpng libX11 libpthreadstubs ]

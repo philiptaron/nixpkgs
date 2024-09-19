@@ -1,25 +1,27 @@
-{ lib, fetchFromGitHub, rustPlatform, stdenv, libbfd, libopcodes, libunwind }:
+{ lib, rustPlatform, fetchCrate, libbfd, libopcodes, libunwind, nix-update-script }:
 
 rustPlatform.buildRustPackage rec {
   pname = "cargo-bolero";
-  version = "0.6.2";
+  version = "0.11.2";
 
-  src = fetchFromGitHub {
-    owner = "camshaft";
-    repo = "bolero";
-    rev = "${pname}-v${version}";
-    sha256 = "1p8g8av0l1qsmq09m0nwyyryk1v5bbah5izl4hf80ivi41mywkyi";
+  src = fetchCrate {
+    inherit pname version;
+    hash = "sha256-Xcu91CbIDBLSojWQJjvdFWJiqjMteAxF105lemCAipk=";
   };
 
-  cargoLock.lockFile = ./Cargo.lock;
-  postPatch = "cp ${./Cargo.lock} Cargo.lock";
+  cargoHash = "sha256-QLtf42Il+XHWeaUdh8jNNWU1sXaVe82sYOKiHLoXw2M=";
 
   buildInputs = [ libbfd libopcodes libunwind ];
 
+  passthru = {
+    updateScript = nix-update-script { };
+  };
+
   meta = with lib; {
     description = "Fuzzing and property testing front-end framework for Rust";
-    homepage = "https://github.com/camshaft/cargo-bolero";
+    mainProgram = "cargo-bolero";
+    homepage = "https://github.com/camshaft/bolero";
     license = with licenses; [ mit ];
-    maintainers = [ maintainers.ekleog ];
+    maintainers = with maintainers; [ ekleog ];
   };
 }

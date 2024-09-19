@@ -6,30 +6,28 @@
 , keybinder3
 , libwnck
 , python3Packages
-, wrapGAppsHook
+, wrapGAppsHook3
 }:
 
 python3Packages.buildPythonApplication rec {
   pname = "dockbarx";
-  version = "${ver}-${rev}";
-  ver = "1.0-beta";
-  rev = "d98020ec49f3e3a5692ab2adbb145bbe5a1e80fe";
+  version = "1.0-beta4";
 
   src = fetchFromGitHub {
     owner = "xuzhen";
     repo = "dockbarx";
-    rev = rev;
-    sha256 = "0xwqxh5mr2bi0sk54b848705awp0lfpd91am551811j2bdkbs04m";
+    rev = version;
+    sha256 = "sha256-J/5KpHptGzgRF1qIGrgjkRR3in5pE0ffkiYVTR3iZKY=";
   };
 
   nativeBuildInputs = [
     glib.dev
+    gobject-introspection
     python3Packages.polib
-    wrapGAppsHook
+    wrapGAppsHook3
   ];
 
   buildInputs = [
-    gobject-introspection
     gtk3
     libwnck
     keybinder3
@@ -47,23 +45,6 @@ python3Packages.buildPythonApplication rec {
   doCheck = false;
 
   dontWrapGApps = true;
-
-  postPatch = ''
-    substituteInPlace setup.py \
-      --replace /usr/ "" \
-      --replace '"/", "usr", "share",' '"share",'
-
-    for f in \
-      dbx_preference \
-      dockbarx/applets.py \
-      dockbarx/dockbar.py \
-      dockbarx/iconfactory.py \
-      dockbarx/theme.py \
-      mate_panel_applet/dockbarx_mate_applet
-    do
-      substituteInPlace $f --replace /usr/share/ $out/share/
-    done
-  '';
 
   postInstall = ''
     glib-compile-schemas $out/share/glib-2.0/schemas

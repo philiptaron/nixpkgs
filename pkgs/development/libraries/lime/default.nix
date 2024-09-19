@@ -10,7 +10,7 @@
 
 stdenv.mkDerivation rec {
   pname = "lime";
-  version = "5.1.12";
+  version = "5.2.98";
 
   src = fetchFromGitLab {
     domain = "gitlab.linphone.org";
@@ -18,7 +18,7 @@ stdenv.mkDerivation rec {
     group = "BC";
     repo = pname;
     rev = version;
-    sha256 = "sha256-vgaxb8sfgtAhqG8kg3C4+UrTOHyTVR9QVO9iuKFgSBk=";
+    hash = "sha256-LdwXBJpwSA/PoCXL+c1pcX1V2Fq/eR6nNmwBKDM1Vr8=";
   };
 
   buildInputs = [
@@ -39,8 +39,8 @@ stdenv.mkDerivation rec {
   ];
 
   meta = with lib; {
-    description = "End-to-end encryption library for instant messaging. Part of the Linphone project.";
-    homepage = "http://www.linphone.org/technical-corner/lime";
+    description = "End-to-end encryption library for instant messaging. Part of the Linphone project";
+    homepage = "https://www.linphone.org/technical-corner/lime";
     license = licenses.gpl3Only;
     platforms = platforms.all;
     maintainers = with maintainers; [ jluttine ];

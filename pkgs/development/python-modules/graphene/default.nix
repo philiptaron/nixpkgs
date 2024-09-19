@@ -1,43 +1,47 @@
-{ lib
-, aniso8601
-, buildPythonPackage
-, fetchFromGitHub
-, graphql-core
-, graphql-relay
-, promise
-, pytest-asyncio
-, pytest-benchmark
-, pytest-mock
-, pytestCheckHook
-, pythonAtLeast
-, pythonOlder
-, pytz
-, snapshottest
+{
+  lib,
+  aniso8601,
+  buildPythonPackage,
+  fetchFromGitHub,
+  setuptools,
+  graphql-core,
+  graphql-relay,
+  pytest-asyncio,
+  pytest-benchmark,
+  pytest-mock,
+  pytest7CheckHook,
+  pythonOlder,
+  pytz,
+  snapshottest,
 }:
 
 buildPythonPackage rec {
   pname = "graphene";
-  version = "3.1.0";
-  format = "setuptools";
+  version = "3.3.0";
+  pyproject = true;
 
   disabled = pythonOlder "3.6";
 
   src = fetchFromGitHub {
     owner = "graphql-python";
     repo = "graphene";
-    rev = "v${version}";
-    sha256 = "sha256-fKvaor9tOsJWXFMAH0/iDQi5NYJPec2sJevbQsKhQQ4=";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-DGxicCXZp9kW/OFkr0lAWaQ+GaECx+HD8+X4aW63vgQ=";
   };
 
-  propagatedBuildInputs = [
+  build-system = [ setuptools ];
+
+  dependencies = [
     aniso8601
     graphql-core
     graphql-relay
   ];
 
-  checkInputs = [
-    promise
-    pytestCheckHook
+  # snaphottest->fastdiff->wasmer dependency chain does not support 3.12.
+  doCheck = pythonOlder "3.12";
+
+  nativeCheckInputs = [
+    pytest7CheckHook
     pytest-asyncio
     pytest-benchmark
     pytest-mock
@@ -45,18 +49,15 @@ buildPythonPackage rec {
     snapshottest
   ];
 
-  pytestFlagsArray = [
-    "--benchmark-disable"
-  ];
+  pytestFlagsArray = [ "--benchmark-disable" ];
 
-  pythonImportsCheck = [
-    "graphene"
-  ];
+  pythonImportsCheck = [ "graphene" ];
 
   meta = with lib; {
     description = "GraphQL Framework for Python";
     homepage = "https://github.com/graphql-python/graphene";
+    changelog = "https://github.com/graphql-python/graphene/releases/tag/v${version}";
     license = licenses.mit;
-    maintainers = with maintainers; [ SuperSandro2000 ];
+    maintainers = [ ];
   };
 }

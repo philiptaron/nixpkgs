@@ -1,29 +1,29 @@
-{ lib, stdenv, fetchurl, fetchpatch, makeWrapper, glibcLocales, mono, dotnetPackages, unzip, dotnetCorePackages, writeText, roslyn }:
+{ lib, stdenv, fetchurl, makeWrapper, glibcLocales, mono, unzip, dotnetCorePackages, roslyn }:
 
 let
 
-  dotnet-sdk = dotnetCorePackages.sdk_5_0;
+  dotnet-sdk = dotnetCorePackages.sdk_6_0;
 
   xplat = fetchurl {
     url = "https://github.com/mono/msbuild/releases/download/v16.9.0/mono_msbuild_6.12.0.137.zip";
     sha256 = "1wnzbdpk4s9bmawlh359ak2b8zi0sgx1qvcjnvfncr1wsck53v7q";
   };
 
-  deps = map (package: package.src)
-    (import ./deps.nix { inherit fetchurl; });
+  inherit (stdenv.hostPlatform.extensions) sharedLibrary;
 
-  nuget-config = writeText "NuGet.config" ''
-    <?xml version="1.0" encoding="utf-8"?>
-    <configuration>
-      <packageSources>
-        <clear />
-      </packageSources>
-    </configuration>
-  '';
+  mkPackage = attrs: stdenv.mkDerivation (finalAttrs:
+    dotnetCorePackages.addNuGetDeps
+      {
+        nugetDeps = ./deps.nix;
+        overrideFetchAttrs = a: {
+          dontBuild = false;
+        };
+      }
+      attrs finalAttrs);
 
 in
 
-stdenv.mkDerivation rec {
+mkPackage rec {
   pname = "msbuild";
   version = "16.10.1+xamarinxplat.2021.05.26.14.00";
 
@@ -36,12 +36,11 @@ stdenv.mkDerivation rec {
     dotnet-sdk
     mono
     unzip
+    makeWrapper
   ];
 
   buildInputs = [
-    dotnetPackages.Nuget
     glibcLocales
-    makeWrapper
   ];
 
   # https://github.com/NixOS/nixpkgs/issues/38991
@@ -62,34 +61,32 @@ stdenv.mkDerivation rec {
     mv LICENSE license.bak && mv license.bak license
   '';
 
+  linkNugetPackages = true;
+
   buildPhase = ''
-    # nuget would otherwise try to base itself in /homeless-shelter
-    export HOME=$(pwd)/fake-home
-
-    cp ${nuget-config} NuGet.config
-    nuget sources Add -Name nixos -Source $(pwd)/nixos
-
-    for package in ${toString deps}; do
-      nuget add $package -Source nixos
-    done
-
     mkdir -p artifacts
     unzip ${xplat} -d artifacts
     mv artifacts/msbuild artifacts/mono-msbuild
     chmod +x artifacts/mono-msbuild/MSBuild.dll
 
-    ln -s $(find ${dotnet-sdk} -name libhostfxr.so) artifacts/mono-msbuild/SdkResolvers/Microsoft.DotNet.MSBuildSdkResolver/
+    # The provided libhostfxr.dylib is for x86_64-darwin, so we remove it
+    rm artifacts/mono-msbuild/SdkResolvers/Microsoft.DotNet.MSBuildSdkResolver/libhostfxr.dylib
+
+    ln -s $(find ${dotnet-sdk} -name libhostfxr${sharedLibrary}) artifacts/mono-msbuild/SdkResolvers/Microsoft.DotNet.MSBuildSdkResolver/
 
     # overwrite the file
     echo "#!${stdenv.shell}" > eng/common/dotnet-install.sh
     echo "#!${stdenv.shell}" > mono/build/get_sdk_files.sh
+
+    # Prevent msbuild from downloading a new libhostfxr
+    echo "#!${stdenv.shell}" > mono/build/extract_and_copy_hostfxr.sh
 
     mkdir -p mono/dotnet-overlay/msbuild-bin
     cp ${dotnet-sdk}/sdk/*/{Microsoft.NETCoreSdk.BundledVersions.props,RuntimeIdentifierGraph.json} mono/dotnet-overlay/msbuild-bin
 
     # DisableNerdbankVersioning https://gitter.im/Microsoft/msbuild/archives/2018/06/27?at=5b33dbc4ce3b0f268d489bfa
     # TODO there are some (many?) failing tests
-    ./eng/cibuild_bootstrapped_msbuild.sh --host_type mono --configuration Release --skip_tests /p:DisableNerdbankVersioning=true
+    NuGetPackageRoot="$NUGET_PACKAGES" ./eng/cibuild_bootstrapped_msbuild.sh --host_type mono --configuration Release --skip_tests /p:DisableNerdbankVersioning=true
     patchShebangs stage1/mono-msbuild/msbuild
   '';
 
@@ -102,7 +99,7 @@ stdenv.mkDerivation rec {
       --set-default MONO_GC_PARAMS "nursery-size=64m" \
       --add-flags "$out/lib/mono/msbuild/15.0/bin/MSBuild.dll"
 
-    ln -s $(find ${dotnet-sdk} -name libhostfxr.so) $out/lib/mono/msbuild/Current/bin/SdkResolvers/Microsoft.DotNet.MSBuildSdkResolver/
+    ln -s $(find ${dotnet-sdk} -name libhostfxr${sharedLibrary}) $out/lib/mono/msbuild/Current/bin/SdkResolvers/Microsoft.DotNet.MSBuildSdkResolver/
   '';
 
   doInstallCheck = true;
@@ -142,7 +139,12 @@ EOF
 
   meta = with lib; {
     description = "Mono version of Microsoft Build Engine, the build platform for .NET, and Visual Studio";
+    mainProgram = "msbuild";
     homepage = "https://github.com/mono/msbuild";
+    sourceProvenance = with sourceTypes; [
+      fromSource
+      binaryNativeCode  # dependencies
+    ];
     license = licenses.mit;
     maintainers = with maintainers; [ jdanek ];
     platforms = platforms.unix;

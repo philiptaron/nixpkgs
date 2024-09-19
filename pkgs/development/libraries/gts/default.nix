@@ -33,7 +33,7 @@ stdenv.mkDerivation rec {
   '';
 
   meta = {
-    homepage = "http://gts.sourceforge.net/";
+    homepage = "https://gts.sourceforge.net/";
     license = lib.licenses.lgpl2Plus;
     description = "GNU Triangulated Surface Library";
 
@@ -42,7 +42,7 @@ stdenv.mkDerivation rec {
       3D surfaces meshed with interconnected triangles.
     '';
 
-    maintainers = [ lib.maintainers.viric ];
+    maintainers = [ ];
     platforms = lib.platforms.linux ++ lib.platforms.darwin;
   };
 }

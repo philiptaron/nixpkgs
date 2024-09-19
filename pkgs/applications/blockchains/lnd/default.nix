@@ -6,30 +6,20 @@
 
 buildGoModule rec {
   pname = "lnd";
-  version = "0.14.3-beta";
+  version = "0.18.3-beta";
 
   src = fetchFromGitHub {
     owner = "lightningnetwork";
     repo = "lnd";
     rev = "v${version}";
-    sha256 = "sha256-ZTvGFmjhQBIWqMGatMAlX59uVyl1oUKo7L5jiz571Gc";
+    hash = "sha256-CNCMVYuLUVmNgW5YTTn3TR1+2UCLbF3/gXXZWiREj/E=";
   };
 
-  vendorSha256 = "sha256-shDmJcEyobY7Ih1MHMEY2GQnzAffsH/y4J1bme/bT7I=";
+  vendorHash = "sha256-dr8Ra8ywy+Zow8JF3K21XZ7lDIIdxvjRz+OD3E+348o=";
 
   subPackages = [ "cmd/lncli" "cmd/lnd" ];
 
-  preBuild = let
-    buildVars = {
-      RawTags = lib.concatStringsSep "," tags;
-      GoVersion = "$(go version | egrep -o 'go[0-9]+[.][^ ]*')";
-    };
-    buildVarsFlags = lib.concatStringsSep " " (lib.mapAttrsToList (k: v: "-X github.com/lightningnetwork/lnd/build.${k}=${v}") buildVars);
-  in
-  lib.optionalString (tags != []) ''
-    buildFlagsArray+=("-tags=${lib.concatStringsSep " " tags}")
-    buildFlagsArray+=("-ldflags=${buildVarsFlags}")
-  '';
+  inherit tags;
 
   meta = with lib; {
     description = "Lightning Network Daemon";

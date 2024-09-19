@@ -4,13 +4,13 @@
 
 stdenv.mkDerivation rec {
   pname = "convimg";
-  version = "8.9";
+  version = "9.4";
 
   src = fetchFromGitHub {
     owner = "mateoconlechuga";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-JTKyOjeiu6FAUrDPDAwLBVgZwmNY11wHonqEV1ukRpw=";
+    hash = "sha256-5insJ391Usef8GF3Yh74PEqE534zitQg9udFRPcz69g=";
     fetchSubmodules = true;
   };
 
@@ -39,5 +39,6 @@ stdenv.mkDerivation rec {
     license = licenses.bsd3;
     maintainers = with maintainers; [ luc65r ];
     platforms = platforms.linux;
+    mainProgram = "convimg";
   };
 }

@@ -1,4 +1,4 @@
-{ lib, stdenv, fetchFromGitLab, bc, librsvg, xcursorgen }:
+{ lib, stdenvNoCC, fetchFromGitLab, bc, librsvg, xcursorgen }:
 
 let
   dimensions = {
@@ -7,16 +7,15 @@ let
     thickness = [ "" "Slim_" ];  # Thick or slim edges.
     handedness = [ "" "LH_" ];   # Right- or left-handed.
   };
-  product = lib.cartesianProductOfSets dimensions;
   variantName =
     { color, opacity, thickness, handedness }:
     "${handedness}${opacity}${thickness}${color}";
   variants =
     # (The order of this list is already good looking enough to show in the
     # meta.longDescription.)
-    map variantName product;
+    lib.mapCartesianProduct variantName dimensions;
 in
-stdenv.mkDerivation rec {
+stdenvNoCC.mkDerivation rec {
   pname = "comixcursors";
   version = "0.9.2";
 
@@ -52,7 +51,7 @@ stdenv.mkDerivation rec {
   '';
 
   installPhase = ''
-    for outputName in $outputs ; do
+    for outputName in $(getAllOutputNames) ; do
       if [ $outputName != out ]; then
         local outputDir=''${!outputName};
         local iconsDir=$outputDir/share/icons
@@ -84,7 +83,7 @@ stdenv.mkDerivation rec {
   outputsToInstall = [];
 
   meta = with lib; {
-    description = "The Comix Cursors mouse themes";
+    description = "Comix Cursors mouse themes";
     longDescription = ''
       There are many (${toString ((length outputs) - 1)}) variants of color,
       opacity, edge thickness, and right- or left-handedness, for this cursor

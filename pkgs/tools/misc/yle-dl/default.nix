@@ -1,14 +1,16 @@
-{ lib, fetchFromGitHub, rtmpdump, php, wget, python3Packages, ffmpeg }:
+{ lib, fetchFromGitHub, rtmpdump, php, wget, python3Packages, ffmpeg
+, testers, yle-dl
+}:
 
 python3Packages.buildPythonApplication rec {
   pname = "yle-dl";
-  version = "20220425";
+  version = "20240706";
 
   src = fetchFromGitHub {
     owner = "aajanki";
     repo = "yle-dl";
     rev = version;
-    sha256 = "sha256-PIoJ+enbRwXiszh7BTkfeoA6IfDXoFOi9WitzQp3EQE=";
+    hash = "sha256-X5fkcJgTVGASoVvvshGWUFNzB1V4KMSKgwoxzP62mxc=";
   };
 
   propagatedBuildInputs = with python3Packages; [
@@ -17,7 +19,12 @@ python3Packages.buildPythonApplication rec {
   pythonPath = [ rtmpdump php wget ];
 
   doCheck = false; # tests require network access
-  checkInputs = with python3Packages; [ pytestCheckHook ];
+  nativeCheckInputs = with python3Packages; [ pytestCheckHook ];
+
+  passthru.tests.version = testers.testVersion {
+    package = yle-dl;
+    command = "yle-dl -h";
+  };
 
   meta = with lib; {
     description = "Downloads videos from Yle (Finnish Broadcasting Company) servers";
@@ -26,5 +33,6 @@ python3Packages.buildPythonApplication rec {
     license = licenses.gpl3Plus;
     maintainers = with maintainers; [ dezgeg ];
     platforms = platforms.unix;
+    mainProgram = "yle-dl";
   };
 }

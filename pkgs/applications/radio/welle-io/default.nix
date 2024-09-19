@@ -37,10 +37,10 @@ mkDerivation rec {
   ];
 
   meta = with lib; {
-    description = "A DAB/DAB+ Software Radio";
+    description = "DAB/DAB+ Software Radio";
     homepage = "https://www.welle.io/";
     maintainers = with maintainers; [ ck3d markuskowa ];
     license = licenses.gpl2Only;
-    platforms = with platforms; [ "x86_64-linux" "i686-linux" ] ++ darwin;
+    platforms = [ "x86_64-linux" "i686-linux" ] ++ platforms.darwin;
   };
 }

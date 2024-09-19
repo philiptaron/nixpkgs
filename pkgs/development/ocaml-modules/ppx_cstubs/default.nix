@@ -1,4 +1,5 @@
 { lib
+, ocaml
 , fetchFromGitHub
 , buildDunePackage
 , bigarray-compat
@@ -12,26 +13,30 @@
 , findlib
 }:
 
+lib.throwIf (lib.versionAtLeast ocaml.version "5.2")
+  "ppx_cstubs is not available for OCaml ${ocaml.version}"
+
 buildDunePackage rec {
   pname = "ppx_cstubs";
   version = "0.7.0";
 
   minimalOCamlVersion = "4.08";
 
-  useDune2 = true;
-
   src = fetchFromGitHub {
     owner = "fdopen";
     repo = "ppx_cstubs";
     rev = version;
-    sha256 = "sha256-qMmwRWCIfNyhCQYPKLiufnb57sTR3P+WInOqtPDywFs=";
+    hash = "sha256-qMmwRWCIfNyhCQYPKLiufnb57sTR3P+WInOqtPDywFs=";
   };
 
-  nativeBuildInputs = [ cppo findlib ];
+  patches = [ ./ppxlib.patch ];
+
+  nativeBuildInputs = [ cppo ];
 
   buildInputs = [
     bigarray-compat
     containers
+    findlib
     integers
     num
     ppxlib
@@ -41,8 +46,6 @@ buildDunePackage rec {
   propagatedBuildInputs = [
     ctypes
   ];
-
-  strictDeps = true;
 
   meta = with lib; {
     homepage = "https://github.com/fdopen/ppx_cstubs";

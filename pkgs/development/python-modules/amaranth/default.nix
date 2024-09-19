@@ -1,74 +1,67 @@
-{ lib
-, buildPythonPackage
-, pythonOlder
-, fetchFromGitHub
-, setuptools
-, setuptools-scm
-, pyvcd
-, jinja2
-, importlib-resources
-, importlib-metadata
-, git
+{
+  lib,
+  buildPythonPackage,
+  pythonOlder,
+  fetchFromGitHub,
+  pdm-backend,
+  jschon,
+  pyvcd,
+  jinja2,
+  importlib-resources,
+  importlib-metadata,
+  git,
 
-# for tests
-, pytestCheckHook
-, symbiyosys
-, yices
-, yosys
+  # for tests
+  pytestCheckHook,
+  sby,
+  yices,
+  yosys,
 }:
 
 buildPythonPackage rec {
   pname = "amaranth";
-  version = "0.3";
-  # python setup.py --version
-  realVersion = "0.3";
-  disabled = pythonOlder "3.6";
+  format = "pyproject";
+  version = "0.5.2";
+  disabled = pythonOlder "3.8";
 
   src = fetchFromGitHub {
     owner = "amaranth-lang";
     repo = "amaranth";
-    rev = "39a83f4d995d16364cc9b99da646ff8db6394166";
-    sha256 = "P9AG3t30eGeeCN5+t7mjhRoOWIGZVzWQji9eYXphjA0=";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-pf9X1B60FgqTbSw7D80ERHp4GCvCe5lqrlS96xPXLNo=";
   };
-
-  SETUPTOOLS_SCM_PRETEND_VERSION="${realVersion}";
 
   nativeBuildInputs = [
     git
-    setuptools-scm
+    pdm-backend
   ];
 
-  propagatedBuildInputs = [
-    jinja2
-    pyvcd
-    setuptools
-  ] ++
-    lib.optional (pythonOlder "3.9") importlib-resources ++
-    lib.optional (pythonOlder "3.8") importlib-metadata;
+  dependencies =
+    [
+      jschon
+      jinja2
+      pyvcd
+    ]
+    ++ lib.optional (pythonOlder "3.9") importlib-resources
+    ++ lib.optional (pythonOlder "3.8") importlib-metadata;
 
-  checkInputs = [
+  nativeCheckInputs = [
     pytestCheckHook
-    symbiyosys
+    sby
     yices
     yosys
   ];
 
-  postPatch = ''
-    substituteInPlace setup.py \
-      --replace "Jinja2~=2.11" "Jinja2>=2.11" \
-      --replace "pyvcd~=0.2.2" "pyvcd"
-
-    # jinja2.contextfunction was removed in jinja2 v3.1
-    substituteInPlace amaranth/build/plat.py \
-      --replace "@jinja2.contextfunction" "@jinja2.pass_context"
-  '';
-
   pythonImportsCheck = [ "amaranth" ];
 
   meta = with lib; {
-    description = "A modern hardware definition language and toolchain based on Python";
+    description = "Modern hardware definition language and toolchain based on Python";
+    mainProgram = "amaranth-rpc";
     homepage = "https://amaranth-lang.org/docs/amaranth";
     license = licenses.bsd2;
-    maintainers = with maintainers; [ emily thoughtpolice ];
+    maintainers = with maintainers; [
+      thoughtpolice
+      pbsds
+    ];
   };
 }

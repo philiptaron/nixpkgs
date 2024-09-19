@@ -8,25 +8,25 @@
 , m17n_db
 , gettext
 , python3
-, wrapGAppsHook
+, wrapGAppsHook3
 }:
 
 stdenv.mkDerivation rec {
   pname = "ibus-m17n";
-  version = "1.4.9";
+  version = "1.4.32";
 
   src = fetchFromGitHub {
     owner = "ibus";
     repo = "ibus-m17n";
     rev = version;
-    sha256 = "sha256-N9hzyu2etbxlJPD2yUc2T0jxAfhEhshQ8X5R27JBg1E=";
+    sha256 = "sha256-wNpbjnP44eDjKygG+0VhUj8fhiRXGwfdV33H39o7asc=";
   };
 
   nativeBuildInputs = [
     autoreconfHook
     gettext
     pkg-config
-    wrapGAppsHook
+    wrapGAppsHook3
   ];
 
   buildInputs = [

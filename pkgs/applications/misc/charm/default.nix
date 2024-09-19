@@ -2,16 +2,16 @@
 
 buildGoModule rec {
   pname = "charm";
-  version = "0.12.1";
+  version = "0.12.6";
 
   src = fetchFromGitHub {
     owner = "charmbracelet";
     repo = "charm";
     rev = "v${version}";
-    sha256 = "sha256-vNy2ai1s7TKCymYznvT0Wo6lg9qEyDzz8l3SYzScz8g=";
+    sha256 = "sha256-RtUHJIMbodICEDIhjH/QZlAS7dxBsL/uNYA2IoObAg0=";
   };
 
-  vendorSha256 = "sha256-6PGdM7aa1BGNZc3M35PJpmrlPUqkykxfTELdgeKcJD4=";
+  vendorHash = "sha256-V5azvQ8vMkgF2Myt6h5Gw09b+Xwg1XLyTImG52qQ+20=";
 
   ldflags = [ "-s" "-w" "-X=main.Version=${version}" ];
 
@@ -21,5 +21,6 @@ buildGoModule rec {
     changelog = "https://github.com/charmbracelet/charm/releases/tag/v${version}";
     license = licenses.mit;
     maintainers = with maintainers; [ penguwin ];
+    mainProgram = "charm";
   };
 }

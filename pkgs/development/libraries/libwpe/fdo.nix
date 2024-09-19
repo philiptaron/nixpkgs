@@ -4,6 +4,7 @@
 , meson
 , pkg-config
 , ninja
+, wayland-scanner
 , wayland
 , libepoxy
 , glib
@@ -11,16 +12,15 @@
 , libxkbcommon
 , libGL
 , libX11
-, webkitgtk
  }:
 
 stdenv.mkDerivation rec {
   pname = "wpebackend-fdo";
-  version = "1.12.0";
+  version = "1.14.2";
 
   src = fetchurl {
-    url = "https://wpewebkit.org/releases/${pname}-${version}.tar.xz";
-    sha256 = "sha256-YjnJwVUjQQeY1mMV3mtJFxKrMACboYDz4N0HbZsAdKw=";
+    url = "https://wpewebkit.org/releases/wpebackend-fdo-${version}.tar.xz";
+    sha256 = "k8l2aumGTurq7isKdPIsvKCN9CwaG9tVsIbyUo44DTg=";
   };
 
   depsBuildBuild = [
@@ -31,7 +31,7 @@ stdenv.mkDerivation rec {
     pkg-config
     meson
     ninja
-    wayland
+    wayland-scanner
   ];
 
   buildInputs = [
@@ -48,7 +48,7 @@ stdenv.mkDerivation rec {
     description = "Freedesktop.org backend for WPE WebKit";
     license = licenses.bsd2;
     homepage = "https://wpewebkit.org";
-    maintainers = webkitgtk.meta.maintainers ++ (with maintainers; [ matthewbauer ]);
+    maintainers = with maintainers; [ matthewbauer ];
     platforms = platforms.linux;
   };
 }

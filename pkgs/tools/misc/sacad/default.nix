@@ -1,12 +1,12 @@
-{ lib, python3Packages, jpegoptim, optipng }:
+{ lib, python3Packages, fetchPypi, jpegoptim, optipng }:
 
 python3Packages.buildPythonApplication rec {
   pname = "sacad";
-  version = "2.4.0";
+  version = "2.8.0";
 
-  src = python3Packages.fetchPypi {
+  src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-KLVkyiXjpqskM67W9uPl9aPKc3pYMu0nAfwI0OpOniE=";
+    hash = "sha256-/NyRnQSqDZv+LJ1bPO35T9icQ2PN9Oa+nSmrLkQimnQ=";
   };
 
   propagatedBuildInputs = with python3Packages; [
@@ -34,6 +34,6 @@ python3Packages.buildPythonApplication rec {
     description = "Smart Automatic Cover Art Downloader";
     homepage = "https://github.com/desbma/sacad";
     license = licenses.mpl20;
-    maintainers = with maintainers; [ fortuneteller2k ];
+    maintainers = with maintainers; [ moni ];
   };
 }

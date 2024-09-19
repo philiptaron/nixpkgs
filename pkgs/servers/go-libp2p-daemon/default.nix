@@ -1,21 +1,22 @@
 { lib, buildGoModule, fetchFromGitHub }:
 
-buildGoModule {
+buildGoModule rec {
   pname = "go-libp2p-daemon";
-  version = "0.3.0";
+  version = "0.9.1";
 
   src = fetchFromGitHub {
     owner = "libp2p";
     repo = "go-libp2p-daemon";
-    rev = "bfa207ed34c27947f0828a4ae8d10bda62aa49a9";
-    sha256 = "1f3gjkmpqngajjpijpjdmkmsjfm9bdgakb5r28fnc6w9dmfyj51x";
+    rev = "v${version}";
+    hash = "sha256-N/5V03HQTr7dIvMpIVRlIhEaV2f+aDF36esWMjT96HA=";
   };
 
-  vendorSha256 = "0g25r7wd1hvnwxxq18mpx1r1wig6dnlnvzkpvgw79q6nymxlppmv";
+  vendorHash = "sha256-WOk06En90ys0pe5OZwhXCJJwry77t13eWg131fnQvpw=";
 
   doCheck = false;
 
   meta = with lib; {
+    description = "Libp2p-backed daemon wrapping the functionalities of go-libp2p for use in other languages";
     homepage = "https://github.com/libp2p/go-libp2p-daemon";
     license = licenses.mit;
     maintainers = with maintainers; [ fare ];

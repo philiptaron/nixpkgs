@@ -8,80 +8,78 @@
 , pkg-config
 , python3
 , xorg
-, libiconv
+, Libsystem
 , AppKit
 , Security
 , nghttp2
 , libgit2
-, cargo-edit
-, withExtraFeatures ? true
+, withDefaultFeatures ? true
+, additionalFeatures ? (p: p)
 , testers
 , nushell
+, nix-update-script
 }:
 
-rustPlatform.buildRustPackage rec {
+let
+  version = "0.97.1";
+in
+
+rustPlatform.buildRustPackage {
   pname = "nushell";
-  version = "0.63.0";
+  inherit version;
 
   src = fetchFromGitHub {
-    owner = pname;
-    repo = pname;
+    owner = "nushell";
+    repo = "nushell";
     rev = version;
-    sha256 = "sha256-4thvUSOSvH/bv0aW7hGGQMvtXdS+yDfZzPRLZmPZQMQ=";
+    hash = "sha256-hrcPWJ5OXFozfNux6iR/nEw/1z64N5BV4DD/JWhlH2U=";
   };
 
-  cargoSha256 = "sha256-Vd8R9EsO52q840HqRzc37PirZZyTZr+Bnow5qHEacJ0=";
-  # Since 0.34, nu has an indirect dependency on `zstd-sys` (via `polars` and
-  # `parquet`, for dataframe support), which by default has an impure build
-  # (git submodule for the `zstd` C library). The `pkg-config` feature flag
-  # fixes this, but it's hard to invoke this in the right place, because of
-  # the indirect dependencies. So add a direct dependency on `zstd-sys` here
-  # at the top level, along with this feature flag, to ensure that when
-  # `zstd-sys` is transitively invoked, it triggers a pure build using the
-  # system `zstd` library provided above.
-  depsExtraArgs = { nativeBuildInputs = [ cargo-edit ]; };
-  # cargo add has been merged in to cargo so the above can be removed once 1.62.0 is available in nixpkgs
-  # https://github.com/rust-lang/cargo/pull/10472
-  cargoUpdateHook = ''
-    cargo add zstd-sys --features pkg-config --offline
-    # write the change to the lockfile
-    cargo update --package zstd-sys --offline
-  '';
+  cargoHash = "sha256-iGmAgrj1oy0t8SsSuCNiUoqWXDFA2CdsPnYYYOpXofs=";
 
   nativeBuildInputs = [ pkg-config ]
-    ++ lib.optionals (withExtraFeatures && stdenv.isLinux) [ python3 ];
+    ++ lib.optionals (withDefaultFeatures && stdenv.isLinux) [ python3 ]
+    ++ lib.optionals stdenv.isDarwin [ rustPlatform.bindgenHook ];
 
   buildInputs = [ openssl zstd ]
-    ++ lib.optionals stdenv.isDarwin [ zlib libiconv Security ]
-    ++ lib.optionals (withExtraFeatures && stdenv.isLinux) [ xorg.libX11 ]
-    ++ lib.optionals (withExtraFeatures && stdenv.isDarwin) [ AppKit nghttp2 libgit2 ];
+    ++ lib.optionals stdenv.isDarwin [ zlib Libsystem Security ]
+    ++ lib.optionals (withDefaultFeatures && stdenv.isLinux) [ xorg.libX11 ]
+    ++ lib.optionals (withDefaultFeatures && stdenv.isDarwin) [ AppKit nghttp2 libgit2 ];
 
-  buildFeatures = lib.optional withExtraFeatures "extra";
+  buildNoDefaultFeatures = !withDefaultFeatures;
+  buildFeatures = additionalFeatures [ ];
 
-  # TODO investigate why tests are broken on darwin
-  # failures show that tests try to write to paths
-  # outside of TMPDIR
-  doCheck = ! stdenv.isDarwin;
+  doCheck = ! stdenv.isDarwin; # Skip checks on darwin. Failing tests since 0.96.0
 
   checkPhase = ''
     runHook preCheck
-    echo "Running cargo test"
-    HOME=$TMPDIR cargo test
+    (
+      # The skipped tests all fail in the sandbox because in the nushell test playground,
+      # the tmp $HOME is not set, so nu falls back to looking up the passwd dir of the build
+      # user (/var/empty). The assertions however do respect the set $HOME.
+      set -x
+      HOME=$(mktemp -d) cargo test -j $NIX_BUILD_CORES --offline -- \
+        --test-threads=$NIX_BUILD_CORES \
+        --skip=repl::test_config_path::test_default_config_path \
+        --skip=repl::test_config_path::test_xdg_config_bad \
+        --skip=repl::test_config_path::test_xdg_config_empty
+    )
     runHook postCheck
   '';
-
-  meta = with lib; {
-    description = "A modern shell written in Rust";
-    homepage = "https://www.nushell.sh/";
-    license = licenses.mit;
-    maintainers = with maintainers; [ Br1ght0ne johntitor marsam ];
-    mainProgram = "nu";
-  };
 
   passthru = {
     shellPath = "/bin/nu";
     tests.version = testers.testVersion {
       package = nushell;
     };
+    updateScript = nix-update-script { };
+  };
+
+  meta = with lib; {
+    description = "Modern shell written in Rust";
+    homepage = "https://www.nushell.sh/";
+    license = licenses.mit;
+    maintainers = with maintainers; [ Br1ght0ne johntitor joaquintrinanes ];
+    mainProgram = "nu";
   };
 }

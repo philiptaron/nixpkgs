@@ -3,13 +3,13 @@
 stdenv.mkDerivation rec {
 
   pname = "mod_auth_mellon";
-  version = "0.18.0";
+  version = "0.19.1";
 
   src = fetchFromGitHub {
     owner = "latchset";
     repo = "mod_auth_mellon";
     rev = "v${version}";
-    sha256 = "0alfa8hz09jdg29bi1mvhwyr2nl0nvss2a2kybrcjvdw1fx6vijn";
+    sha256 = "sha256-VcR+HZ5S7fLrGqT1SHCQLQw6v516G0x+wf8Wb5Sy4Gk=";
   };
 
   nativeBuildInputs = [ autoreconfHook pkg-config autoconf automake ];
@@ -26,7 +26,8 @@ stdenv.mkDerivation rec {
 
   meta = with lib; {
     homepage = "https://github.com/latchset/mod_auth_mellon";
-    description = "An Apache module with a simple SAML 2.0 service provider";
+    description = "Apache module with a simple SAML 2.0 service provider";
+    mainProgram = "mellon_create_metadata.sh";
     license = licenses.gpl2Plus;
     platforms = platforms.linux;
     maintainers = with maintainers; [ womfoo ];

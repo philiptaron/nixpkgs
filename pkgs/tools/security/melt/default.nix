@@ -2,21 +2,22 @@
 
 buildGoModule rec {
   pname = "melt";
-  version = "0.4.1";
+  version = "0.6.2";
 
   src = fetchFromGitHub {
     owner = "charmbracelet";
     repo = "melt";
     rev = "v${version}";
-    sha256 = "sha256-C5bvlgyHU4lfmaAjNddnVyB2B41Wq7yO/RmARAeaORw=";
+    sha256 = "sha256-rZJSjWmcVPri/BmGrm+fDi2WgtPReQ9lesmBhMsdddo=";
   };
 
-  vendorSha256 = "sha256-9LTR7CrTBGAh7TPMQenY4vZQ7KMYv02fDsY51pkJZSo=";
+  vendorHash = "sha256-ZCHPbLjf2rTlg+Nj3v+XRW2xDN0qqhnlrF4sXNrGH/E=";
 
   ldflags = [ "-s" "-w" "-X=main.Version=${version}" ];
 
   meta = with lib; {
     description = "Backup and restore Ed25519 SSH keys with seed words";
+    mainProgram = "melt";
     homepage = "https://github.com/charmbracelet/melt";
     changelog = "https://github.com/charmbracelet/melt/releases/tag/v${version}";
     license = licenses.mit;

@@ -9,19 +9,19 @@
 
 stdenv.mkDerivation rec {
   pname = "fast-downward";
-  version = "21.12.0";
+  version = "23.06.0";
 
   src = fetchFromGitHub {
     owner = "aibasel";
     repo = "downward";
     rev = "release-${version}";
-    sha256 = "sha256-qc+SaUpIYm7bnOZlHH2mdvUaMBB+VRyOCQM/BOoOaPE=";
+    sha256 = "sha256-yNaMyS47yxc/p5Rs/kHwD/pgjGXnHBdybYdo1GIEmA4=";
   };
 
   nativeBuildInputs = [ cmake python3.pkgs.wrapPython ];
   buildInputs = [ python3 osi ];
 
-  cmakeFlags = lib.optional osi.withCplex [ "-DDOWNWARD_CPLEX_ROOT=${cplex}/cplex" ];
+  cmakeFlags = lib.optionals osi.withCplex [ "-DDOWNWARD_CPLEX_ROOT=${cplex}/cplex" ];
 
   configurePhase = ''
     python build.py release
@@ -58,7 +58,8 @@ stdenv.mkDerivation rec {
   '';
 
   meta = with lib; {
-    description = "A domain-independent planning system";
+    description = "Domain-independent planning system";
+    mainProgram = "fast-downward";
     homepage = "https://www.fast-downward.org/";
     license = licenses.gpl3Plus;
     platforms = platforms.unix;

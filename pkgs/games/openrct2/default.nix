@@ -1,36 +1,76 @@
-{ lib, stdenv, fetchFromGitHub
-, SDL2, cmake, curl, duktape, fontconfig, freetype, icu, jansson, libGLU
-, libiconv, libpng, libpthreadstubs, libzip, nlohmann_json, openssl, pkg-config
-, speexdsp, zlib
+{ lib
+, stdenv
+, fetchFromGitHub
+
+, SDL2
+, cmake
+, curl
+, discord-rpc
+, duktape
+, expat
+, flac
+, fontconfig
+, freetype
+, gbenchmark
+, icu
+, jansson
+, libGLU
+, libiconv
+, libogg
+, libpng
+, libpthreadstubs
+, libvorbis
+, libzip
+, nlohmann_json
+, openssl
+, pkg-config
+, speexdsp
+, zlib
 }:
 
 let
-  openrct2-version = "0.4.0";
+  openrct2-version = "0.4.14";
 
   # Those versions MUST match the pinned versions within the CMakeLists.txt
   # file. The REPLAYS repository from the CMakeLists.txt is not necessary.
-  objects-version = "1.2.7";
-  title-sequences-version = "0.4.0";
+  objects-version = "1.4.7";
+  openmsx-version = "1.6";
+  opensfx-version = "1.0.5";
+  title-sequences-version = "0.4.14";
 
   openrct2-src = fetchFromGitHub {
     owner = "OpenRCT2";
     repo = "OpenRCT2";
     rev = "v${openrct2-version}";
-    sha256 = "sha256-4MDOLOPsKzk1vb1o/G90/NTyYJWBSrGRX6ZJETbBIaI=";
+    hash = "sha256-d02LXcqoB6lDGdd82IrHi0Br8rjAFpRgQ86344XUeCA=";
   };
 
   objects-src = fetchFromGitHub {
     owner = "OpenRCT2";
     repo = "objects";
     rev = "v${objects-version}";
-    sha256 = "sha256-R4+rEdGdvYwFrkm/S3+zXmU+UDam51dI/pWKmFXNrbE=";
+    hash = "sha256-XtKhgCahGzhuIdwvoz47rlRthZEhb0w+OuGhZnplHSc=";
+  };
+
+  openmsx-src = fetchFromGitHub {
+    owner = "OpenRCT2";
+    repo = "OpenMusic";
+    rev = "v${openmsx-version}";
+    hash = "sha256-KjWJSB2tdE0ExswVlz0dLXNPhLJ1kI6VZb3vqXQfx8w=";
+  };
+
+  opensfx-src = fetchFromGitHub {
+    owner = "OpenRCT2";
+    repo = "OpenSoundEffects";
+    rev = "v${opensfx-version}";
+    hash = "sha256-ucADnMLGm36eAo+NiioxEzeMqtu7YbGF9wsydK1mmoE=";
   };
 
   title-sequences-src = fetchFromGitHub {
     owner = "OpenRCT2";
     repo = "title-sequences";
     rev = "v${title-sequences-version}";
-    sha256 = "sha256-anqCZkhYoaxPu3MYCYSsFFngOmPp2wnx2MGb0hj6W5U=";
+    hash = "sha256-ier7sBYJjBIvKVxfaCelJPZ+oF9NEshvR2k/X9JpP+0=";
   };
 in
 stdenv.mkDerivation {
@@ -47,15 +87,21 @@ stdenv.mkDerivation {
   buildInputs = [
     SDL2
     curl
+    discord-rpc
     duktape
+    expat
+    flac
     fontconfig
     freetype
+    gbenchmark
     icu
     jansson
     libGLU
     libiconv
+    libogg
     libpng
     libpthreadstubs
+    libvorbis
     libzip
     nlohmann_json
     openssl
@@ -65,22 +111,37 @@ stdenv.mkDerivation {
 
   cmakeFlags = [
     "-DDOWNLOAD_OBJECTS=OFF"
+    "-DDOWNLOAD_OPENMSX=OFF"
+    "-DDOWNLOAD_OPENSFX=OFF"
     "-DDOWNLOAD_TITLE_SEQUENCES=OFF"
   ];
 
+  env.NIX_CFLAGS_COMPILE = toString [
+    # Needed with GCC 12
+    "-Wno-error=maybe-uninitialized"
+  ];
+
   postUnpack = ''
+    mkdir -p $sourceRoot/data/assetpack
+
     cp -r ${objects-src}         $sourceRoot/data/object
+    cp -r ${openmsx-src}         $sourceRoot/data/assetpack/openrct2.music.alternative.parkap
+    cp -r ${opensfx-src}         $sourceRoot/data/assetpack/openrct2.sound.parkap
     cp -r ${title-sequences-src} $sourceRoot/data/sequence
   '';
 
-  preConfigure = ''
+  preConfigure =
     # Verify that the correct version of each third party repository is used.
-
-    grep -q '^set(OBJECTS_VERSION "${objects-version}")$' CMakeLists.txt \
-      || (echo "OBJECTS_VERSION differs!"; exit 1)
-    grep -q '^set(TITLE_SEQUENCE_VERSION "${title-sequences-version}")$' CMakeLists.txt \
-      || (echo "TITLE_SEQUENCE_VERSION differs!"; exit 1)
-  '';
+    (let
+      versionCheck = cmakeKey: version: ''
+        grep -q '^set(${cmakeKey}_VERSION "${version}")$' CMakeLists.txt \
+          || (echo "${cmakeKey} differs from expected version!"; exit 1)
+      '';
+    in
+    (versionCheck "OBJECTS" objects-version) +
+    (versionCheck "OPENMSX" openmsx-version) +
+    (versionCheck "OPENSFX" opensfx-version) +
+    (versionCheck "TITLE_SEQUENCE" title-sequences-version));
 
   preFixup = "ln -s $out/share/openrct2 $out/bin/data";
 

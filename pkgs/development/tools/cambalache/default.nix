@@ -1,5 +1,4 @@
-{ stdenv
-, lib
+{ lib
 , fetchFromGitLab
 , python3
 , meson
@@ -8,26 +7,31 @@
 , gobject-introspection
 , desktop-file-utils
 , shared-mime-info
-, wrapGAppsHook
+, wrapGAppsHook4
 , glib
 , gtk3
 , gtk4
-, webkitgtk
+, gtksourceview5
+, libadwaita
+, libhandy
+, webkitgtk_4_1
+, webkitgtk_6_0
 , nix-update-script
 }:
 
 python3.pkgs.buildPythonApplication rec {
   pname = "cambalache";
-  version = "0.8.2";
+  version = "0.90.4";
 
   format = "other";
 
+  # Did not fetch submodule since it is only for tests we don't run.
   src = fetchFromGitLab {
     domain = "gitlab.gnome.org";
     owner = "jpu";
-    repo = pname;
+    repo = "cambalache";
     rev = version;
-    sha256 = "sha256-1+IoBoaNHwvN8W+KRyV5cTFkFG+pTHJBehQ2VosCEfs=";
+    hash = "sha256-XS6JBJuifmN2ElCGk5hITbotZ+fqEdjopL6VqmMP2y4=";
   };
 
   nativeBuildInputs = [
@@ -37,7 +41,7 @@ python3.pkgs.buildPythonApplication rec {
     gobject-introspection # for setup hook
     desktop-file-utils # for update-desktop-database
     shared-mime-info # for update-mime-database
-    wrapGAppsHook
+    wrapGAppsHook4
   ];
 
   pythonPath = with python3.pkgs; [
@@ -49,18 +53,24 @@ python3.pkgs.buildPythonApplication rec {
     glib
     gtk3
     gtk4
-    webkitgtk
+    gtksourceview5
+    webkitgtk_4_1
+    webkitgtk_6_0
+    # For extra widgets support.
+    libadwaita
+    libhandy
   ];
-
-  # Not compatible with gobject-introspection setup hooks.
-  # https://github.com/NixOS/nixpkgs/issues/56943
-  strictDeps = false;
 
   # Prevent double wrapping.
   dontWrapGApps = true;
 
   postPatch = ''
     patchShebangs postinstall.py
+    # those programs are used at runtime not build time
+    # https://gitlab.gnome.org/jpu/cambalache/-/blob/0.12.1/meson.build#L79-80
+    substituteInPlace ./meson.build \
+      --replace-fail "find_program('broadwayd', required: true)" "" \
+      --replace-fail "find_program('gtk4-broadwayd', required: true)" ""
   '';
 
   preFixup = ''
@@ -78,14 +88,13 @@ python3.pkgs.buildPythonApplication rec {
   '';
 
   passthru = {
-    updateScript = nix-update-script {
-      attrPath = pname;
-    };
+    updateScript = nix-update-script { };
   };
 
   meta = with lib; {
     homepage = "https://gitlab.gnome.org/jpu/cambalache";
     description = "RAD tool for GTK 4 and 3 with data model first philosophy";
+    mainProgram = "cambalache";
     maintainers = teams.gnome.members;
     license = with licenses; [
       lgpl21Only # Cambalache

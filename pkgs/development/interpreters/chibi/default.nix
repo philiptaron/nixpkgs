@@ -1,14 +1,14 @@
 { lib, stdenv, fetchFromGitHub, makeWrapper }:
 
 stdenv.mkDerivation rec {
-  version = "0.10";
+  version = "0.11";
   pname = "chibi-scheme";
 
   src = fetchFromGitHub {
     owner = "ashinn";
     repo = "chibi-scheme";
     rev = version;
-    sha256 = "sha256-7vDxcnXhq1wJSLFHGxtwh+H+KWxh6B0JXSMPzSmQFXo=";
+    sha256 = "sha256-i+xiaYwM7a+0T824VSuh7UUNI6HV9KpqzQPE1WAZ+As=";
   };
 
   nativeBuildInputs = [ makeWrapper ];
@@ -19,7 +19,8 @@ stdenv.mkDerivation rec {
 
   fixupPhase = ''
     wrapProgram "$out/bin/chibi-scheme" \
-      --prefix CHIBI_MODULE_PATH : "$out/share/chibi:$out/lib/chibi"
+      --prefix CHIBI_MODULE_PATH : "$out/share/chibi:$out/lib/chibi" \
+      ${lib.optionalString stdenv.isDarwin "--prefix DYLD_LIBRARY_PATH : $out/lib"}
 
     for f in chibi-doc chibi-ffi snow-chibi; do
       substituteInPlace "$out/bin/$f" \

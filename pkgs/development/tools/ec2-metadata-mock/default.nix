@@ -2,16 +2,16 @@
 
 buildGoModule rec {
   pname = "ec2-metadata-mock";
-  version = "1.10.1";
+  version = "1.12.0";
 
   src = fetchFromGitHub {
     owner = "aws";
     repo = "amazon-ec2-metadata-mock";
     rev = "v${version}";
-    sha256 = "sha256-sWs3chJqXL1YTHgSY0kD+PINrF4eOThOdcgSis3Mecs=";
+    sha256 = "sha256-8X6LBGo496fG0Chhvg3jAaUF6mp8psCzHd+Es75z27Y=";
   };
 
-  vendorSha256 = "sha256-HbU6Y5SART+FjFyEpzv243yfo/A4yprPen5Mlhq0hbg=";
+  vendorHash = "sha256-jRJX4hvfRuhR5TlZe7LsXaOlUCwmQGem2QKlX3vuk8c=";
 
   postInstall = ''
     mv $out/bin/{cmd,ec2-metadata-mock}
@@ -19,6 +19,7 @@ buildGoModule rec {
 
   meta = with lib; {
     description = "Amazon EC2 Metadata Mock";
+    mainProgram = "ec2-metadata-mock";
     homepage = "https://github.com/aws/amazon-ec2-metadata-mock";
     license = licenses.asl20;
     maintainers = with maintainers; [ ymatsiuk ];

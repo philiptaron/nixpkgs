@@ -9,7 +9,8 @@ let
     crossSystem = localSystem;
     crossOverlays = [];
 
-    # Ignore custom stdenvs when cross compiling for compatability
+    # Ignore custom stdenvs when cross compiling for compatibility
+    # Use replaceCrossStdenv instead.
     config = builtins.removeAttrs config [ "replaceStdenv" ];
   };
 
@@ -40,11 +41,7 @@ in lib.init bootStages ++ [
       if crossSystem.isStatic
       then buildPackages.stdenvAdapters.makeStatic
       else lib.id;
-  in {
-    inherit config;
-    overlays = overlays ++ crossOverlays;
-    selfBuild = false;
-    stdenv = adaptStdenv (buildPackages.stdenv.override (old: rec {
+    stdenvNoCC = adaptStdenv (buildPackages.stdenv.override (old: rec {
       buildPlatform = localSystem;
       hostPlatform = crossSystem;
       targetPlatform = crossSystem;
@@ -52,30 +49,11 @@ in lib.init bootStages ++ [
       # Prior overrides are surely not valid as packages built with this run on
       # a different platform, and so are disabled.
       overrides = _: _: {};
-      extraBuildInputs = [ ] # Old ones run on wrong platform
-         ++ lib.optionals hostPlatform.isDarwin [ buildPackages.targetPackages.darwin.apple_sdk.frameworks.CoreFoundation ]
-         ;
+      extraBuildInputs = [ ]; # Old ones run on wrong platform
       allowedRequisites = null;
 
-      hasCC = !targetPlatform.isGhcjs;
-
-      cc = if crossSystem.useiOSPrebuilt or false
-             then buildPackages.darwin.iosSdkPkgs.clang
-           else if crossSystem.useAndroidPrebuilt or false
-             then buildPackages."androidndkPkgs_${crossSystem.ndkVer}".clang
-           else if targetPlatform.isGhcjs
-             # Need to use `throw` so tryEval for splicing works, ugh.  Using
-             # `null` or skipping the attribute would cause an eval failure
-             # `tryEval` wouldn't catch, wrecking accessing previous stages
-             # when there is a C compiler and everything should be fine.
-             then throw "no C compiler provided for this platform"
-           else if crossSystem.isDarwin
-             then buildPackages.llvmPackages.libcxxClang
-           else if crossSystem.useLLVM or false
-             then buildPackages.llvmPackages.clangUseLLVM
-           else if crossSystem.useGccNg or false
-             then buildPackages.gccNgPackages.gcc
-           else buildPackages.gcc;
+      cc = null;
+      hasCC = false;
 
       extraNativeBuildInputs = old.extraNativeBuildInputs
         ++ lib.optionals
@@ -85,11 +63,47 @@ in lib.init bootStages ++ [
              (let f = p: !p.isx86 || builtins.elem p.libc [ "musl" "wasilibc" "relibc" ] || p.isiOS || p.isGenode;
                in f hostPlatform && !(f buildPlatform) )
              buildPackages.updateAutotoolsGnuConfigScriptsHook
-           # without proper `file` command, libtool sometimes fails
-           # to recognize 64-bit DLLs
-        ++ lib.optional (hostPlatform.config == "x86_64-w64-mingw32") buildPackages.file
         ;
     }));
+  in {
+    inherit config;
+    overlays = overlays ++ crossOverlays;
+    selfBuild = false;
+    inherit stdenvNoCC;
+    stdenv = let
+      inherit (stdenvNoCC) hostPlatform targetPlatform;
+      baseStdenv = stdenvNoCC.override {
+        # Old ones run on wrong platform
+        extraBuildInputs = lib.optionals hostPlatform.isDarwin [
+          buildPackages.targetPackages.darwin.apple_sdk.frameworks.CoreFoundation
+        ];
+
+        hasCC = !stdenvNoCC.targetPlatform.isGhcjs;
+
+        cc = if crossSystem.useiOSPrebuilt or false
+               then buildPackages.darwin.iosSdkPkgs.clang
+             else if crossSystem.useAndroidPrebuilt or false
+               then buildPackages."androidndkPkgs_${crossSystem.androidNdkVersion}".clang
+             else if targetPlatform.isGhcjs
+               # Need to use `throw` so tryEval for splicing works, ugh.  Using
+               # `null` or skipping the attribute would cause an eval failure
+               # `tryEval` wouldn't catch, wrecking accessing previous stages
+               # when there is a C compiler and everything should be fine.
+               then throw "no C compiler provided for this platform"
+             else if crossSystem.isDarwin
+               then buildPackages.llvmPackages.libcxxClang
+             else if crossSystem.useLLVM or false
+               then buildPackages.llvmPackages.clang
+             else if crossSystem.useZig or false
+               then buildPackages.zig.cc
+             else if crossSystem.useArocc or false
+               then buildPackages.arocc
+             else if crossSystem.useGccNg or false
+               then buildPackages.gccNgPackages.gcc
+             else buildPackages.gcc;
+
+      };
+    in if config ? replaceCrossStdenv then config.replaceCrossStdenv { inherit buildPackages baseStdenv; } else baseStdenv;
   })
 
 ]

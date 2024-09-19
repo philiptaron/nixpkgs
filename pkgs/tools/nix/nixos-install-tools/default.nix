@@ -8,6 +8,7 @@
   nixos-install-tools,
   runCommand,
   nixosTests,
+  binlore,
 }:
 let
   inherit (nixos {}) config;
@@ -20,8 +21,7 @@ in
     inherit (config.system.build)
       nixos-install nixos-generate-config nixos-enter;
 
-    # Required for --help.
-    inherit (config.system.build.manual) manpages;
+    inherit (config.system.build.manual) nixos-configuration-reference-manpage;
   };
 
   extraOutputsToInstall = ["man"];
@@ -63,7 +63,13 @@ in
       touch $out
     '';
   };
-}).overrideAttrs (o: {
+
+  # no documented flags show signs of exec; skim of source suggests
+  # it's just --help execing man
+  passthru.binlore.out = binlore.synthesize nixos-install-tools ''
+    execer cannot bin/nixos-generate-config
+  '';
+}).overrideAttrs {
   inherit version;
   pname = "nixos-install-tools";
-})
+}

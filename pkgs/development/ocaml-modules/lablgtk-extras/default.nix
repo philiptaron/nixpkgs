@@ -16,6 +16,8 @@ stdenv.mkDerivation rec {
     sha256 = "1bbdp5j18s582mmyd7qiaq1p08g2ag4gl7x65pmzahbhg719hjda";
   };
 
+  strictDeps = true;
+
   nativeBuildInputs = [ ocaml findlib camlp4 ];
   propagatedBuildInputs = [ config-file lablgtk xmlm ];
 
@@ -25,7 +27,7 @@ stdenv.mkDerivation rec {
     inherit (ocaml.meta) platforms;
     maintainers = with lib.maintainers; [ vbgl ];
     homepage = "https://framagit.org/zoggy/lablgtk-extras/";
-    description = "A collection of libraries and modules useful when developing OCaml/LablGtk2 applications";
+    description = "Collection of libraries and modules useful when developing OCaml/LablGtk2 applications";
     license = lib.licenses.lgpl2Plus;
   };
 }

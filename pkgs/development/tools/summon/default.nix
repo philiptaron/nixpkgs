@@ -1,25 +1,19 @@
-{ buildGoModule, fetchFromGitHub, lib, patchResolver ? true }:
-
-with lib;
+{ buildGoModule, fetchFromGitHub, lib }:
 
 buildGoModule rec {
   pname = "summon";
-  version = "0.8.2";
+  version = "0.10.1";
 
   src = fetchFromGitHub {
     owner = "cyberark";
     repo = "summon";
     rev = "v${version}";
-    sha256 = "1z4xnrncwvp3rfm97zvc0ivvw2fh1hrjhj3rplvidzxjfyasbvwv";
+    hash = "sha256-Y61lVqsKZiHLJF0X4DIq6U7eRXJ0+6I/dBPwXYb2GmQ=";
   };
 
-  vendorSha256 = "1597vrs4b7k6gkmkvf7xnd38rvjixmlcz0j7npmik9nbkm57l74m";
+  vendorHash = "sha256-StcJvUtMfBh7p1sD8ucvHNJ572whRfqz3id6XsFoXtk=";
 
   subPackages = [ "cmd" ];
-
-  # Patches provider resolver to support resolving unqualified names
-  # from $PATH, e.g. `summon -p gopass` instead of `summon -p $(which gopass)`
-  patches = optional patchResolver [ ./resolve-paths.patch ];
 
   postInstall = ''
     mv $out/bin/cmd $out/bin/summon
@@ -28,6 +22,7 @@ buildGoModule rec {
   meta = with lib; {
     description =
       "CLI that provides on-demand secrets access for common DevOps tools";
+    mainProgram = "summon";
     homepage = "https://cyberark.github.io/summon";
     license = lib.licenses.mit;
     maintainers = with maintainers; [ quentini ];

@@ -1,4 +1,4 @@
-{ lib, stdenv, fetchFromGitHub, gzip }:
+{ lib, stdenv, fetchFromGitHub, gzip, nixosTests }:
 
 stdenv.mkDerivation rec {
   pname = "ndppd";
@@ -11,12 +11,14 @@ stdenv.mkDerivation rec {
     sha256 = "0niri5q9qyyyw5lmjpxk19pv3v4srjvmvyd5k6ks99mvqczjx9c0";
   };
 
+  nativeBuildInputs = [ gzip ];
+
   makeFlags = [
     "PREFIX=$(out)"
   ];
 
   preConfigure = ''
-    substituteInPlace Makefile --replace /bin/gzip ${gzip}/bin/gzip
+    substituteInPlace Makefile --replace /bin/gzip gzip
   '';
 
   postInstall = ''
@@ -24,11 +26,14 @@ stdenv.mkDerivation rec {
     cp ndppd.conf-dist $out/etc/ndppd.conf
   '';
 
+  passthru.tests = { inherit (nixosTests) ndppd; };
+
   meta = with lib; {
-    description = "A daemon that proxies NDP (Neighbor Discovery Protocol) messages between interfaces";
+    description = "Daemon that proxies NDP (Neighbor Discovery Protocol) messages between interfaces";
     homepage = "https://github.com/DanielAdolfsson/ndppd";
     license = licenses.gpl3;
     platforms = platforms.linux;
-    maintainers = with maintainers; [ fadenb globin ];
+    maintainers = with maintainers; [ fadenb ];
+    mainProgram = "ndppd";
   };
 }

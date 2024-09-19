@@ -1,23 +1,29 @@
-{ lib, stdenv, fetchurl, autoPatchelfHook
-, ncurses5, zlib, gmp
-, makeWrapper
+{ lib
+, autoPatchelfHook
+, fetchurl
+, gmp
 , less
+, makeWrapper
+, libb2
+, ncurses6
+, openssl
+, stdenv
+, zlib
 }:
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation (finalAttrs: {
   pname = "unison-code-manager";
-  milestone_id = "M2l";
-  version = "1.0.${milestone_id}-alpha";
+  version = "0.5.26";
 
-  src = if (stdenv.isDarwin) then
+  src = if stdenv.isDarwin then
     fetchurl {
-      url = "https://github.com/unisonweb/unison/releases/download/release/${milestone_id}/ucm-macos.tar.gz";
-      sha256 = "sha256-1jwDICm1tt//92S+ybHhRcNQjeCc5DaM6+RMInLWzFE=";
+      url = "https://github.com/unisonweb/unison/releases/download/release/${finalAttrs.version}/ucm-macos.tar.gz";
+      hash = "sha256-RF2Q5sCxT9F3IGM/8UP6bEe9sOjtpMVYHREuAPOzh8g=";
     }
   else
     fetchurl {
-      url = "https://github.com/unisonweb/unison/releases/download/release/${milestone_id}/ucm-linux.tar.gz";
-      sha256 = "sha256-ECpg6iNxSVkt/VuspFYTdVyUO/+XxGwB1NmgfMOhb5A=";
+      url = "https://github.com/unisonweb/unison/releases/download/release/${finalAttrs.version}/ucm-linux.tar.gz";
+      hash = "sha256-t0rc1f4PfjHRu/tzoW8sJ/6R0KBbYQPiWHqsIaqc+SY=";
     };
 
   # The tarball is just the prebuilt binary, in the archive root.
@@ -25,15 +31,19 @@ stdenv.mkDerivation rec {
   dontBuild = true;
   dontConfigure = true;
 
-  nativeBuildInputs = [ makeWrapper ] ++ (lib.optional (!stdenv.isDarwin) autoPatchelfHook);
-  buildInputs = lib.optionals (!stdenv.isDarwin) [ ncurses5 zlib gmp ];
+  nativeBuildInputs = [ makeWrapper ]
+    ++ lib.optional (!stdenv.isDarwin) autoPatchelfHook;
+  buildInputs = lib.optionals (!stdenv.isDarwin) [ gmp ncurses6 zlib ];
 
   installPhase = ''
-    mkdir -p $out/bin
-    mv ucm $out/bin
+    mkdir -p $out/{bin,lib}
+    mv runtime $out/lib/runtime
     mv ui $out/ui
-    wrapProgram $out/bin/ucm \
+    mv unison $out/unison
+    makeWrapper $out/unison/unison $out/bin/ucm \
+      --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath [ libb2 openssl ]} \
       --prefix PATH ":" "${lib.makeBinPath [ less ]}" \
+      --add-flags "--runtime-path $out/lib/runtime/bin/unison-runtime" \
       --set UCM_WEB_UI "$out/ui"
   '';
 
@@ -41,7 +51,9 @@ stdenv.mkDerivation rec {
     description = "Modern, statically-typed purely functional language";
     homepage = "https://unisonweb.org/";
     license = with licenses; [ mit bsd3 ];
-    maintainers = [ maintainers.virusdave ];
+    mainProgram = "ucm";
+    maintainers = with maintainers; [ ceedubs sellout virusdave ];
     platforms = [ "x86_64-darwin" "x86_64-linux" "aarch64-darwin" ];
+    sourceProvenance = with sourceTypes; [ binaryNativeCode ];
   };
-}
+})

@@ -1,7 +1,6 @@
 { lib
 , stdenv
 , fetchFromGitHub
-, fetchpatch
 , xorg
 , xkeyboard_config
 , zlib
@@ -23,35 +22,22 @@
 , nixosTests
 }:
 
-with lib;
-
 stdenv.mkDerivation rec {
-  version = "1.12.0";
+  version = "1.14.0";
   pname = "tigervnc";
 
   src = fetchFromGitHub {
     owner = "TigerVNC";
     repo = "tigervnc";
     rev = "v${version}";
-    sha256 = "sha256-77X+AvHFWfYYIio3c+EYf11jg/1IbYhNUweRIDHMOZw=";
+    sha256 = "sha256-TgVV/4MRsQHYKpDf9L5eHMLVpdwvNy1KPDIe7xMlQ9o=";
   };
-
-
-  patches = [
-    (fetchpatch {
-      url = "https://patch-diff.githubusercontent.com/raw/TigerVNC/tigervnc/pull/1383.patch";
-      sha256 = "sha256-r3QLtxVD0wIv2NWVN9r0LVxSlLurDHgkAZfkpIjmZyU=";
-      name = "Xvnc-support-Xorg-1.21-PR1383.patch";
-    })
-  ];
 
   postPatch = lib.optionalString stdenv.isLinux ''
     sed -i -e '/^\$cmd \.= " -pn";/a$cmd .= " -xkbdir ${xkeyboard_config}/etc/X11/xkb";' unix/vncserver/vncserver.in
     fontPath=
     substituteInPlace vncviewer/vncviewer.cxx \
        --replace '"/usr/bin/ssh' '"${openssh}/bin/ssh'
-
-    cp unix/xserver21.1.1.patch unix/xserver211.patch
     source_top="$(pwd)"
   '' + ''
     # On Mac, do not build a .dmg, instead copy the .app to the source dir
@@ -67,6 +53,10 @@ stdenv.mkDerivation rec {
     "-DCMAKE_INSTALL_LIBEXECDIR=${placeholder "out"}/bin"
   ];
 
+  env.NIX_CFLAGS_COMPILE = toString [
+    "-Wno-error=array-bounds"
+  ];
+
   postBuild = lib.optionalString stdenv.isLinux ''
     export NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -Wno-error=int-to-pointer-cast -Wno-error=pointer-to-int-cast"
     export CXXFLAGS="$CXXFLAGS -fpermissive"
@@ -74,7 +64,7 @@ stdenv.mkDerivation rec {
     tar xf ${xorg.xorgserver.src}
     cp -R xorg*/* unix/xserver
     pushd unix/xserver
-    version=$(echo ${xorg.xorgserver.name} | sed 's/.*-\([0-9]\+\).\([0-9]\+\).*/\1\2/g')
+    version=$(echo ${xorg.xorgserver.name} | sed 's/.*-\([0-9]\+\).[0-9]\+.*/\1/g')
     patch -p1 < "$source_top/unix/xserver$version.patch"
     autoreconf -vfi
     ./configure $configureFlags  --disable-devel-docs --disable-docs \
@@ -92,7 +82,7 @@ stdenv.mkDerivation rec {
         --with-xkb-path=${xkeyboard_config}/share/X11/xkb \
         --with-xkb-bin-directory=${xorg.xkbcomp}/bin \
         --with-xkb-output=$out/share/X11/xkb/compiled
-    make TIGERVNC_SRC=$src TIGERVNC_BUILDDIR=`pwd`/../.. -j$NIX_BUILD_CORES -l$NIX_BUILD_CORES
+    make TIGERVNC_SRC=$src TIGERVNC_BUILDDIR=`pwd`/../.. -j$NIX_BUILD_CORES
     popd
   '' + lib.optionalString stdenv.isDarwin ''
     make dmg
@@ -139,6 +129,8 @@ stdenv.mkDerivation rec {
     libXfont2
     libpciaccess
     libGLU
+    libXrandr
+    libXdamage
   ] ++ xorg.xorgserver.buildInputs
   );
 
@@ -155,13 +147,13 @@ stdenv.mkDerivation rec {
 
   propagatedBuildInputs = lib.optional stdenv.isLinux xorg.xorgserver.propagatedBuildInputs;
 
-  passthru.tests.tigervnc = nixosTests.vnc.testTigerVNC;
+  passthru.tests.tigervnc = nixosTests.tigervnc;
 
   meta = {
     homepage = "https://tigervnc.org/";
     license = lib.licenses.gpl2Plus;
     description = "Fork of tightVNC, made in cooperation with VirtualGL";
-    maintainers = with lib.maintainers; [viric];
+    maintainers = [ ];
     platforms = lib.platforms.unix;
     # Prevent a store collision.
     priority = 4;

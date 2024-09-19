@@ -3,7 +3,7 @@
 , pkg-config
 , intltool
 , python3Packages
-, wrapGAppsHook
+, wrapGAppsHook3
 , glib
 , libxml2
 , libxslt
@@ -19,22 +19,24 @@
 , libsecret
 , gobject-introspection
 , glib-networking
+, gitUpdater
 }:
 
 stdenv.mkDerivation rec {
   pname = "liferea";
-  version = "1.13.8";
+  version = "1.15.7";
 
   src = fetchurl {
     url = "https://github.com/lwindolf/${pname}/releases/download/v${version}/${pname}-${version}.tar.bz2";
-    sha256 = "0x2857nhn98hlzqxmxb2h2wcasr5jkhciih71wcnp0cja60aw20h";
+    hash = "sha256-vv6hrvfD1T+eH/Bi1ID0yoxB4747Q+nMvklT49uaX38=";
   };
 
   nativeBuildInputs = [
-    wrapGAppsHook
+    wrapGAppsHook3
     python3Packages.wrapPython
     intltool
     pkg-config
+    gobject-introspection
   ];
 
   buildInputs = [
@@ -48,7 +50,6 @@ stdenv.mkDerivation rec {
     libpeas
     gsettings-desktop-schemas
     json-glib
-    gobject-introspection
     libsecret
     glib-networking
     libnotify
@@ -59,21 +60,23 @@ stdenv.mkDerivation rec {
     gst-plugins-bad
   ]);
 
-  pythonPath = with python3Packages; [
-    pygobject3
-    pycairo
-  ];
+  enableParallelBuilding = true;
 
-  preFixup = ''
-    buildPythonPath "$out $pythonPath"
-    gappsWrapperArgs+=(--prefix PYTHONPATH : "$program_PYTHONPATH")
+  postFixup = ''
+    buildPythonPath ${python3Packages.pycairo}
+    patchPythonScript $out/lib/liferea/plugins/trayicon.py
   '';
 
+  passthru.updateScript = gitUpdater {
+    url = "https://github.com/lwindolf/${pname}";
+    rev-prefix = "v";
+  };
+
   meta = with lib; {
-    description = "A GTK-based news feed aggregator";
+    description = "GTK-based news feed aggregator";
     homepage = "http://lzone.de/liferea/";
     license = licenses.gpl2Plus;
-    maintainers = with maintainers; [ romildo ];
+    maintainers = with maintainers; [ romildo yayayayaka ];
     platforms = platforms.linux;
 
     longDescription = ''

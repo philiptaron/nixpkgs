@@ -11,13 +11,14 @@ stdenv.mkDerivation {
     sha256 = "sha256-dzWUVY2srgk6BM6jZ7FF+snxnPopz3fx9nq+mVkmogc=";
   };
 
+  nativeBuildInputs = [ pkg-config ];
+
   buildInputs = [
     dbus
     glib
     libX11
     libXScrnSaver
     libXext
-    pkg-config
     systemd
   ];
 
@@ -33,8 +34,9 @@ stdenv.mkDerivation {
 
   meta = {
     description = "MacBook automatic light sensor daemon";
+    mainProgram = "lightum";
     homepage = "https://github.com/poliva/lightum";
-    license = lib.licenses.gpl2;
+    license = lib.licenses.gpl2Plus;
     maintainers = with lib.maintainers; [ puffnfresh ];
     platforms = lib.platforms.linux;
   };

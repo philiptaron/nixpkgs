@@ -1,11 +1,12 @@
 { lib, stdenv, fetchFromGitHub, fetchFromGitLab
 , autoconf, automake, gettext, intltool
-, libtool, pkg-config, wrapGAppsHook, wrapPython, gobject-introspection
+, libtool, pkg-config, wrapGAppsHook3, wrapPython, gobject-introspection, wayland-scanner
 , gtk3, python, pygobject3, pyxdg
 
 , withQuartz ? stdenv.isDarwin, ApplicationServices
 , withRandr ? stdenv.isLinux, libxcb
 , withDrm ? stdenv.isLinux, libdrm
+, withVidmode ? stdenv.isLinux, libXxf86vm
 
 , withGeolocation ? true
 , withCoreLocation ? withGeolocation && stdenv.isDarwin, CoreLocation, Foundation, Cocoa
@@ -24,6 +25,10 @@ let
         ./575.patch
       ];
 
+      strictDeps = true;
+
+      depsBuildBuild = [ pkg-config ];
+
       nativeBuildInputs = [
         autoconf
         automake
@@ -31,28 +36,30 @@ let
         intltool
         libtool
         pkg-config
-        wrapGAppsHook
+        wrapGAppsHook3
         wrapPython
-      ];
+        gobject-introspection
+        python
+      ] ++ lib.optionals (pname == "gammastep") [ wayland-scanner ];
 
       configureFlags = [
         "--enable-randr=${if withRandr then "yes" else "no"}"
         "--enable-geoclue2=${if withGeoclue then "yes" else "no"}"
         "--enable-drm=${if withDrm then "yes" else "no"}"
+        "--enable-vidmode=${if withVidmode then "yes" else "no"}"
         "--enable-quartz=${if withQuartz then "yes" else "no"}"
         "--enable-corelocation=${if withCoreLocation then "yes" else "no"}"
       ] ++ lib.optionals (pname == "gammastep") [
-        "--with-systemduserunitdir=${placeholder "out"}/share/systemd/user/"
+        "--with-systemduserunitdir=${placeholder "out"}/lib/systemd/user/"
         "--enable-apparmor"
       ];
 
       buildInputs = [
-        gobject-introspection
         gtk3
-        python
       ] ++ lib.optional  withRandr        libxcb
         ++ lib.optional  withGeoclue      geoclue
         ++ lib.optional  withDrm          libdrm
+        ++ lib.optional  withVidmode      libXxf86vm
         ++ lib.optional  withQuartz       ApplicationServices
         ++ lib.optionals withCoreLocation [ CoreLocation Foundation Cocoa ]
         ++ lib.optional  withAppIndicator (if (pname != "gammastep")
@@ -117,19 +124,20 @@ rec {
       license = licenses.gpl3Plus;
       homepage = "http://jonls.dk/redshift";
       platforms = platforms.unix;
-      maintainers = with maintainers; [ globin yana ];
+      mainProgram = "redshift";
+      maintainers = [ ];
     };
   };
 
   gammastep = mkRedshift rec {
     pname = "gammastep";
-    version = "2.0.8";
+    version = "2.0.9";
 
     src = fetchFromGitLab {
       owner = "chinstrap";
       repo = pname;
       rev = "v${version}";
-      sha256 = "071f3iqdbblb3awnx48j19kspk6l2g3658za80i2mf4gacgq9fm1";
+      hash = "sha256-EdVLBBIEjMu+yy9rmcxQf4zdW47spUz5SbBDbhmLjOU=";
     };
 
     meta = redshift.meta // {
@@ -137,7 +145,8 @@ rec {
       longDescription = "Gammastep"
         + lib.removePrefix "Redshift" redshift.meta.longDescription;
       homepage = "https://gitlab.com/chinstrap/gammastep";
-      maintainers = [ lib.maintainers.primeos ] ++ redshift.meta.maintainers;
+      mainProgram = "gammastep";
+      maintainers = (with lib.maintainers; [ primeos ]) ++ redshift.meta.maintainers;
     };
   };
 }

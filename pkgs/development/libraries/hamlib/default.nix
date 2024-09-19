@@ -5,20 +5,21 @@
 , swig
 , gd
 , ncurses
-, python3
+, python311
 , libxml2
 , tcl
 , libusb-compat-0_1
 , pkg-config
 , boost
 , libtool
-, perlPackages
 , pythonBindings ? true
 , tclBindings ? true
 , perlBindings ? stdenv.buildPlatform == stdenv.hostPlatform
 , buildPackages
 }:
-
+let
+  python3 = python311; # needs distutils and imp
+in
 stdenv.mkDerivation rec {
   pname = "hamlib";
   version = "3.3";
@@ -64,7 +65,7 @@ stdenv.mkDerivation rec {
     command line interface or in a text-oriented interactive interface.
     '';
     license = with licenses; [ gpl2Plus lgpl2Plus ];
-    homepage = "http://hamlib.sourceforge.net";
+    homepage = "https://hamlib.sourceforge.net";
     maintainers = with maintainers; [ relrod ];
     platforms = with platforms; unix;
   };

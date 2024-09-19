@@ -1,12 +1,12 @@
-{ lib, pkgs, stdenv, fetchzip, jdk17_headless }:
+{ lib, stdenv, fetchzip, jdk17_headless }:
 
 stdenv.mkDerivation rec {
   pname = "lfc";
-  version = "0.2.0";
+  version = "0.4.0";
 
   src = fetchzip {
-    url = "https://github.com/lf-lang/lingua-franca/releases/download/v${version}/lfc_${version}.zip";
-    sha256 = "rBx7UnPLufZBO7lG0In5upHqYCyRtI4kQv0V83CZHew=";
+    url = "https://github.com/lf-lang/lingua-franca/releases/download/v${version}/lf-cli-${version}.zip";
+    sha256 = "sha256-LrAm77iPUlqVfRdYy2bZ4mim7DHIr5JxPdbrgxokGvc=";
   };
 
   buildInputs = [ jdk17_headless ];
@@ -16,7 +16,7 @@ stdenv.mkDerivation rec {
   postPatch = ''
     substituteInPlace bin/lfc \
       --replace 'base=`dirname $(dirname ''${abs_path})`' "base='$out'" \
-      --replace "run_lfc_with_args" "${jdk17_headless}/bin/java -jar $out/lib/jars/org.lflang.lfc-${version}-SNAPSHOT-all.jar"
+      --replace "run_lfc_with_args" "${jdk17_headless}/bin/java -jar $out/lib/jars/org.lflang.lfc-${version}-all.jar"
   '';
 
   installPhase = ''

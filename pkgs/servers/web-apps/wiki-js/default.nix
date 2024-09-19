@@ -2,11 +2,11 @@
 
 stdenv.mkDerivation rec {
   pname = "wiki-js";
-  version = "2.5.283";
+  version = "2.5.303";
 
   src = fetchurl {
     url = "https://github.com/Requarks/wiki/releases/download/v${version}/${pname}.tar.gz";
-    sha256 = "sha256-dQ1FWZ+WysdsRkbNapKm1psZx35biKrRvTfNklC89e8=";
+    sha256 = "sha256-Jpv4D+ldGPvJz+8cwNhrmC+Ii5dG0UOTC5JIWPwUzvk=";
   };
 
   sourceRoot = ".";
@@ -28,7 +28,7 @@ stdenv.mkDerivation rec {
 
   meta = with lib; {
     homepage = "https://js.wiki/";
-    description = "A modern and powerful wiki app built on Node.js";
+    description = "Modern and powerful wiki app built on Node.js";
     license = licenses.agpl3Only;
     maintainers = with maintainers; [ ma27 ];
   };

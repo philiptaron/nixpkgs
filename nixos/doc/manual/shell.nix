@@ -1,8 +1,13 @@
 let
-  pkgs = import ../../.. { };
-in
-pkgs.mkShell {
-  name = "nixos-manual";
+  pkgs = import ../../.. {
+    config = { };
+    overlays = [ ];
+  };
 
-  packages = with pkgs; [ xmlformat jing xmloscopy ruby ];
+  common = import ./common.nix;
+  inherit (common) outputPath indexPath;
+in
+pkgs.callPackage ../../../pkgs/tools/nix/web-devmode.nix {
+  buildArgs = "../../release.nix -A manualHTML.${builtins.currentSystem}";
+  open = "/${outputPath}/${indexPath}";
 }

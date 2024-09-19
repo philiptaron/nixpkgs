@@ -1,7 +1,6 @@
 { stdenv
 , lib
 , fetchFromGitLab
-, fetchpatch
 , meson
 , ninja
 , pkg-config
@@ -13,17 +12,17 @@
 }:
 
 stdenv.mkDerivation rec {
-  pname = "shared-mime-info-unstable";
-  version = "2021-12-03";
+  pname = "shared-mime-info";
+  version = "2.4";
 
   outputs = [ "out" "dev" ];
 
   src = fetchFromGitLab {
     domain = "gitlab.freedesktop.org";
     owner = "xdg";
-    repo = "shared-mime-info";
-    rev = "5a406b06792e26a83c7346b3c2443c0bd8d4cdb2";
-    sha256 = "1v7dx7mr0m4lcff1aasg9gxn280zn0ffn6fjg9xc44pnllg01n6s";
+    repo = pname;
+    rev = version;
+    hash = "sha256-5eyMkfSBUOD7p8woIYTgz5C/L8uQMXyr0fhL0l23VMA=";
   };
 
   nativeBuildInputs = [
@@ -46,7 +45,7 @@ stdenv.mkDerivation rec {
   ];
 
   meta = with lib; {
-    description = "A database of common MIME types";
+    description = "Database of common MIME types";
     homepage = "http://freedesktop.org/wiki/Software/shared-mime-info";
     license = licenses.gpl2Plus;
     platforms = platforms.unix;

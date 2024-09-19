@@ -2,16 +2,16 @@
 
 buildGoModule rec {
   pname = "nginx_exporter";
-  version = "0.10.0";
+  version = "1.3.0";
 
   src = fetchFromGitHub {
     owner = "nginxinc";
     repo = "nginx-prometheus-exporter";
     rev = "v${version}";
-    sha256 = "sha256-k9sbMIn5N3EJ7ZlfmD9pRV6lfywnKyFvpxC/pGGgNTA=";
+    sha256 = "sha256-TcQXYZsr3hjE93GfeBt8AJLuQQA7UM+wv1SmCnqON+M=";
   };
 
-  vendorSha256 = "sha256-SaaHbn97cb/d8symyrBYLzK+5ukVLfGrFiRIz+tKPhw=";
+  vendorHash = "sha256-qmyqAbwQYgUFFQwCLakQGta2XMGCbCOvCB93S8/TWIs=";
 
   ldflags = [ "-s" "-w" "-X main.version=${version}" ];
 
@@ -19,9 +19,9 @@ buildGoModule rec {
 
   meta = with lib; {
     description = "NGINX Prometheus Exporter for NGINX and NGINX Plus";
+    mainProgram = "nginx-prometheus-exporter";
     homepage = "https://github.com/nginxinc/nginx-prometheus-exporter";
     license = licenses.asl20;
     maintainers = with maintainers; [ benley fpletz willibutz globin ];
-    platforms = platforms.unix;
   };
 }

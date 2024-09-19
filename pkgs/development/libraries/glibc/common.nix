@@ -36,40 +36,43 @@
 , withLinuxHeaders ? false
 , profilingLibraries ? false
 , withGd ? false
-, meta
+, enableCET ? false
+, enableCETRuntimeDefault ? false
 , extraBuildInputs ? []
 , extraNativeBuildInputs ? []
 , ...
 } @ args:
 
 let
-  version = "2.34";
-  patchSuffix = "-210";
-  sha256 = "sha256-RNJqH+ILiFOkj0cOrQHkJ56GmsFJsZXdpORKGV2YGrI=";
+  version = "2.39";
+  patchSuffix = "-52";
+  sha256 = "sha256-93vUfPgXDFc2Wue/hmlsEYrbOxINMlnGTFAtPcHi2SY=";
 in
 
 assert withLinuxHeaders -> linuxHeaders != null;
 assert withGd -> gd != null && libpng != null;
+assert enableCET == false -> !enableCETRuntimeDefault;
 
 stdenv.mkDerivation ({
   version = version + patchSuffix;
-  linuxHeaders = if withLinuxHeaders then linuxHeaders else null;
-
-  inherit (stdenv) is64bit;
 
   enableParallelBuilding = true;
 
   patches =
     [
       /* No tarballs for stable upstream branch, only https://sourceware.org/git/glibc.git and using git would complicate bootstrapping.
-          $ git fetch --all -p && git checkout origin/release/2.34/master && git describe
-          glibc-2.34-210-ge123f08ad5
-          $ git show --minimal --reverse glibc-2.34.. | gzip -9n --rsyncable - > 2.34-master.patch.gz
+          $ git fetch --all -p && git checkout origin/release/2.39/master && git describe
+          glibc-2.39-52-gf8e4623421
+          $ git show --minimal --reverse glibc-2.39.. ':!ADVISORIES' > 2.39-master.patch
 
          To compare the archive contents zdiff can be used.
-          $ zdiff -u 2.34-master.patch.gz ../nixpkgs/pkgs/development/libraries/glibc/2.34-master.patch.gz
+          $ diff -u 2.39-master.patch ../nixpkgs/pkgs/development/libraries/glibc/2.39-master.patch
+
+         Please note that each commit has changes to the file ADVISORIES excluded since
+         that conflicts with the directory advisories/ making cross-builds from
+         hosts with case-insensitive file-systems impossible.
        */
-      ./2.34-master.patch.gz
+      ./2.39-master.patch
 
       /* Allow NixOS and Nix to handle the locale-archive. */
       ./nix-locale-archive.patch
@@ -85,42 +88,6 @@ stdenv.mkDerivation ({
          patch extends the search path by "/run/current-system/sw/bin". */
       ./fix_path_attribute_in_getconf.patch
 
-      /* Allow running with RHEL 6 -like kernels.  The patch adds an exception
-        for glibc to accept 2.6.32 and to tag the ELFs as 2.6.32-compatible
-        (otherwise the loader would refuse libc).
-        Note that glibc will fully work only on their heavily patched kernels
-        and we lose early mismatch detection on 2.6.32.
-
-        On major glibc updates we should check that the patched kernel supports
-        all the required features.  ATM it's verified up to glibc-2.26-131.
-        # HOWTO: check glibc sources for changes in kernel requirements
-        git log -p glibc-2.25.. sysdeps/unix/sysv/linux/x86_64/kernel-features.h sysdeps/unix/sysv/linux/kernel-features.h
-        # get kernel sources (update the URL)
-        mkdir tmp && cd tmp
-        curl http://vault.centos.org/6.9/os/Source/SPackages/kernel-2.6.32-696.el6.src.rpm | rpm2cpio - | cpio -idmv
-        tar xf linux-*.bz2
-        # check syscall presence, for example
-        less linux-*?/arch/x86/kernel/syscall_table_32.S
-       */
-      ./allow-kernel-2.6.32.patch
-
-      /* Provide a fallback for missing prlimit64 syscall on RHEL 6 -like
-         kernels.
-
-         This patch is maintained by @veprbl. If it gives you trouble, feel
-         free to ping me, I'd be happy to help.
-       */
-      (fetchurl {
-        url = "https://git.savannah.gnu.org/cgit/guix.git/plain/gnu/packages/patches/glibc-reinstate-prlimit64-fallback.patch?id=eab07e78b691ae7866267fc04d31c7c3ad6b0eeb";
-        sha256 = "091bk3kyrx1gc380gryrxjzgcmh1ajcj8s2rjhp2d2yzd5mpd5ps";
-      })
-
-      /* Provide utf-8 locales by default, so we can use it in stdenv without depending on our large locale-archive. */
-      (fetchurl {
-        url = "https://salsa.debian.org/glibc-team/glibc/raw/49767c9f7de4828220b691b29de0baf60d8a54ec/debian/patches/localedata/locale-C.diff";
-        sha256 = "0irj60hs2i91ilwg5w7sqrxb695c93xg0ik7yhhq9irprd7fidn4";
-      })
-
       ./fix-x64-abi.patch
 
       /* https://github.com/NixOS/nixpkgs/pull/137601 */
@@ -128,23 +95,29 @@ stdenv.mkDerivation ({
 
       ./0001-Revert-Remove-all-usage-of-BASH-or-BASH-in-installed.patch
 
-      /* Fix segfault in getpwuid when stat fails
-         https://sourceware.org/bugzilla/show_bug.cgi?id=28752 */
-      (fetchurl {
-        url = "https://patchwork.sourceware.org/project/glibc/patch/20220314175316.3239120-2-sam@gentoo.org/raw/";
-        sha256 = "sq0BoPqXHQ69Vq4zJobCspe4XRfnAiuac/wqzVQJESc=";
-      })
+      /* Patch derived from archlinux,
+         https://gitlab.archlinux.org/archlinux/packaging/packages/glibc/-/blob/e54d98e2d1aae4930ecad9404ef12234922d9dfd/reenable_DT_HASH.patch
 
-      /* Patch pending upstream inclusion to fix string.h syntax for older gcc.
-         Needed to unbreak gnat bootstrap against old gcc in nixpkgs:
-           https://patchwork.sourceware.org/project/glibc/patch/20220520150609.346566-1-slyfox@gentoo.org/ */
-      (fetchurl {
-        url = "https://patchwork.sourceware.org/project/glibc/patch/20220520150609.346566-1-slyfox@gentoo.org/raw/";
-        sha256 = "x3/eO1EHJXBIrH2WXHRRD1swtWv+btFVjvMt5tj/wDA=";
-      })
+         See also https://github.com/ValveSoftware/Proton/issues/6051
+         & https://github.com/NixOS/nixpkgs/pull/188492#issuecomment-1233802991
+      */
+      ./reenable_DT_HASH.patch
     ]
+    /* NVCC does not support ARM intrinsics. Since <math.h> is pulled in by almost
+       every HPC piece of software, without this patch CUDA compilation on ARM
+       is effectively broken. See
+       https://forums.developer.nvidia.com/t/nvcc-fails-to-build-with-arm-neon-instructions-cpp-vs-cu/248355/2.
+    */
+    ++ (
+      let
+        isAarch64 = stdenv.buildPlatform.isAarch64 || stdenv.hostPlatform.isAarch64;
+        isLinux = stdenv.buildPlatform.isLinux || stdenv.hostPlatform.isLinux;
+      in
+      lib.optional (isAarch64 && isLinux) ./0001-aarch64-math-vector.h-add-NVCC-include-guard.patch
+    )
     ++ lib.optional stdenv.hostPlatform.isMusl ./fix-rpc-types-musl-conflicts.patch
-    ++ lib.optional stdenv.buildPlatform.isDarwin ./darwin-cross-build.patch;
+    ++ lib.optional stdenv.buildPlatform.isDarwin ./darwin-cross-build.patch
+    ++ lib.optional enableCETRuntimeDefault ./2.39-revert-cet-default-disable.patch;
 
   postPatch =
     ''
@@ -178,18 +151,22 @@ stdenv.mkDerivation ({
     [ "-C"
       "--enable-add-ons"
       "--sysconfdir=/etc"
-      "--enable-stackguard-randomization"
+      "--enable-stack-protector=strong"
       "--enable-bind-now"
       (lib.withFeatureAs withLinuxHeaders "headers" "${linuxHeaders}/include")
       (lib.enableFeature profilingLibraries "profile")
+      "--enable-fortify-source"
     ] ++ lib.optionals (stdenv.hostPlatform.isx86 || stdenv.hostPlatform.isAarch64) [
       # This feature is currently supported on
       # i386, x86_64 and x32 with binutils 2.29 or later,
       # and on aarch64 with binutils 2.30 or later.
       # https://sourceware.org/glibc/wiki/PortStatus
       "--enable-static-pie"
+    ] ++ lib.optionals (enableCET != false) [
+      # Enable Intel Control-flow Enforcement Technology (CET) support
+      "--enable-cet${if builtins.isString enableCET then "=${enableCET}"  else ""}"
     ] ++ lib.optionals withLinuxHeaders [
-      "--enable-kernel=3.2.0" # can't get below with glibc >= 2.26
+      "--enable-kernel=3.10.0" # RHEL 7 and derivatives, seems oldest still supported kernel
     ] ++ lib.optionals (stdenv.hostPlatform != stdenv.buildPlatform) [
       (lib.flip lib.withFeature "fp"
          (stdenv.hostPlatform.gcc.float or (stdenv.hostPlatform.parsed.abi.float or "hard") == "soft"))
@@ -201,32 +178,45 @@ stdenv.mkDerivation ({
       # To avoid linking with -lgcc_s (dynamic link)
       # so the glibc does not depend on its compiler store path
       "libc_cv_as_needed=no"
-    ] ++ lib.optional withGd "--with-gd";
+    ]
+    ++ lib.optional withGd "--with-gd";
 
-  makeFlags = [
+  makeFlags = (args.makeFlags or []) ++ [
     "OBJCOPY=${stdenv.cc.targetPrefix}objcopy"
   ];
+
+  postInstall = (args.postInstall or "") + ''
+    moveToOutput bin/getent $getent
+  '';
 
   installFlags = [ "sysconfdir=$(out)/etc" ];
 
   # out as the first output is an exception exclusive to glibc
-  outputs = [ "out" "bin" "dev" "static" ];
+
+  # getent is its own output, not kept in bin, since many things
+  # depend on getent but not on the locale generation tools in the bin
+  # output. This saves a couple of megabytes of closure size in many cases.
+  outputs = [ "out" "bin" "dev" "static" "getent" ];
 
   strictDeps = true;
   depsBuildBuild = [ buildPackages.stdenv.cc ];
   nativeBuildInputs = [ bison python3Minimal ] ++ extraNativeBuildInputs;
   buildInputs = [ linuxHeaders ] ++ lib.optionals withGd [ gd libpng ] ++ extraBuildInputs;
 
-  # Needed to install share/zoneinfo/zone.tab.  Set to impure /bin/sh to
-  # prevent a retained dependency on the bootstrap tools in the stdenv-linux
-  # bootstrap.
-  BASH_SHELL = "/bin/sh";
+  env = {
+    linuxHeaders = lib.optionalString withLinuxHeaders linuxHeaders;
+    inherit (stdenv) is64bit;
+    # Needed to install share/zoneinfo/zone.tab.  Set to impure /bin/sh to
+    # prevent a retained dependency on the bootstrap tools in the stdenv-linux
+    # bootstrap.
+    BASH_SHELL = "/bin/sh";
+  };
 
   # Used by libgcc, elf-header, and others to determine ABI
   passthru = { inherit version; minorRelease = version; };
 }
 
-// (removeAttrs args [ "withLinuxHeaders" "withGd" ]) //
+// (removeAttrs args [ "withLinuxHeaders" "withGd" "enableCET" "postInstall" "makeFlags" ]) //
 
 {
   src = fetchurl {
@@ -291,7 +281,7 @@ stdenv.mkDerivation ({
 
   meta = with lib; {
     homepage = "https://www.gnu.org/software/libc/";
-    description = "The GNU C Library";
+    description = "GNU C Library";
 
     longDescription =
       '' Any Unix-like operating system needs a C library: the library which
@@ -304,11 +294,7 @@ stdenv.mkDerivation ({
 
     license = licenses.lgpl2Plus;
 
-    maintainers = with maintainers; [ eelco ma27 ];
+    maintainers = with maintainers; [ ma27 connorbaker ];
     platforms = platforms.linux;
-  } // meta;
-}
-
-// lib.optionalAttrs (stdenv.hostPlatform != stdenv.buildPlatform) {
-  preInstall = null; # clobber the native hook
+  } // (args.meta or {});
 })

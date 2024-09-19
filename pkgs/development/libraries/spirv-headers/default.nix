@@ -2,20 +2,20 @@
 
 stdenv.mkDerivation rec {
   pname = "spirv-headers";
-  version = "1.3.211.0";
+  version = "1.3.290.0";
 
   src = fetchFromGitHub {
     owner = "KhronosGroup";
     repo = "SPIRV-Headers";
-    rev = "sdk-${version}";
-    sha256 = "sha256-LkIrTFWYvZffLVJJW3152um5LTEsMJEDEsIhBAdhBlk=";
+    rev = "vulkan-sdk-${version}";
+    hash = "sha256-c9ruBCnf9PNJz030bfRhHwyqju6T8YCRx+efKCEYgSo=";
   };
 
   nativeBuildInputs = [ cmake ];
 
   meta = with lib; {
-    inherit (src.meta) homepage;
     description = "Machine-readable components of the Khronos SPIR-V Registry";
+    homepage = "https://github.com/KhronosGroup/SPIRV-Headers";
     license = licenses.mit;
     maintainers = [ maintainers.ralith ];
   };

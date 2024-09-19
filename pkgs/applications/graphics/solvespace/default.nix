@@ -3,10 +3,11 @@
 , fetchFromGitHub
 , cmake
 , pkg-config
-, wrapGAppsHook
+, wrapGAppsHook3
 , at-spi2-core
 , cairo
 , dbus
+, eigen
 , freetype
 , fontconfig
 , glew
@@ -18,6 +19,7 @@
 , libpng
 , libselinux
 , libsepol
+, libspnav
 , libthai
 , libxkbcommon
 , pangomm
@@ -29,26 +31,27 @@
 
 stdenv.mkDerivation rec {
   pname = "solvespace";
-  version = "3.0";
+  version = "3.1";
 
   src = fetchFromGitHub {
     owner = pname;
     repo = pname;
     rev = "v${version}";
-    hash = "sha256-aaYqUZ0c1lCL91fmxtKFAAE2uUWrjnDB3WdcqdutXhE=";
+    hash = "sha256-sSDht8pBrOG1YpsWfC/CLTTWh2cI5pn2PXGH900Z0yA=";
     fetchSubmodules = true;
   };
 
   nativeBuildInputs = [
     cmake
     pkg-config
-    wrapGAppsHook
+    wrapGAppsHook3
   ];
 
   buildInputs = [
     at-spi2-core
     cairo
     dbus
+    eigen
     freetype
     fontconfig
     glew
@@ -60,6 +63,7 @@ stdenv.mkDerivation rec {
     libpng
     libselinux
     libsepol
+    libspnav
     libthai
     libxkbcommon
     pangomm
@@ -88,7 +92,7 @@ stdenv.mkDerivation rec {
   cmakeFlags = [ "-DENABLE_OPENMP=ON" ];
 
   meta = with lib; {
-    description = "A parametric 3d CAD program";
+    description = "Parametric 3d CAD program";
     license = licenses.gpl3Plus;
     maintainers = [ maintainers.edef ];
     platforms = platforms.linux;

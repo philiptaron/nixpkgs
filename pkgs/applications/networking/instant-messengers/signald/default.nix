@@ -1,21 +1,21 @@
-{ lib, stdenv, fetchurl, fetchFromGitLab, jdk17_headless, coreutils, gradle_6, git, perl
-, makeWrapper, fetchpatch, substituteAll, jre_minimal
+{ lib, stdenv, fetchFromGitLab, jdk17_headless, coreutils, findutils, gnused,
+gradle, git, makeWrapper, jre_minimal
 }:
 
 let
   pname = "signald";
-  version = "0.18.5";
+  version = "0.23.2";
 
   src = fetchFromGitLab {
     owner = pname;
     repo = pname;
     rev = version;
-    sha256 = "sha256-2cb1pyBOoOlFqJsNKXA0Q9x4wCE4yzzcfrDDtTp7HMk=";
+    hash = "sha256-EofgwZSDp2ZFhlKL2tHfzMr3EsidzuY4pkRZrV2+1bA=";
   };
 
   jre' = jre_minimal.override {
     jdk = jdk17_headless;
-    # from https://gitlab.com/signald/signald/-/blob/0.18.5/build.gradle#L173
+    # from https://gitlab.com/signald/signald/-/blob/0.23.0/build.gradle#L173
     modules = [
       "java.base"
       "java.management"
@@ -32,52 +32,19 @@ let
     ];
   };
 
-  # fake build to pre-download deps into fixed-output derivation
-  deps = stdenv.mkDerivation {
-    pname = "${pname}-deps";
-    inherit src version;
-    nativeBuildInputs = [ gradle_6 perl ];
-    patches = [ ./0001-Fetch-buildconfig-during-gradle-build-inside-Nix-FOD.patch ];
-    buildPhase = ''
-      export GRADLE_USER_HOME=$(mktemp -d)
-      gradle --no-daemon build
-    '';
-    # perl code mavenizes pathes (com.squareup.okio/okio/1.13.0/a9283170b7305c8d92d25aff02a6ab7e45d06cbe/okio-1.13.0.jar -> com/squareup/okio/okio/1.13.0/okio-1.13.0.jar)
-    installPhase = ''
-      find $GRADLE_USER_HOME/caches/modules-2 -type f -regex '.*\.\(jar\|pom\)' \
-        | perl -pe 's#(.*/([^/]+)/([^/]+)/([^/]+)/[0-9a-f]{30,40}/([^/\s]+))$# ($x = $2) =~ tr|\.|/|; "install -Dm444 $1 \$out/$x/$3/$4/''${\($5 =~ s/okio-jvm/okio/r)}" #e' \
-        | sh
-    '';
-    # Don't move info to share/
-    forceShare = [ "dummy" ];
-    outputHashAlgo = "sha256";
-    outputHashMode = "recursive";
-    # Downloaded jars differ by platform
-    outputHash = {
-      x86_64-linux = "sha256-q1gzauIL7aKalvPSfiK5IvkNkidCh+6jp5bpwxR+PZ0=";
-      aarch64-linux = "sha256-cM+7MaV0/4yAzobXX9FSdl/ZfLddwySayao96UdDgzk=";
-    }.${stdenv.system} or (throw "Unsupported platform");
-  };
-
-in stdenv.mkDerivation rec {
+in stdenv.mkDerivation {
   inherit pname src version;
 
-  patches = [
-    (substituteAll {
-      src = ./0002-buildconfig-local-deps-fixes.patch;
-      inherit deps;
-    })
-  ];
+  mitmCache = gradle.fetchDeps {
+    inherit pname;
+    data = ./deps.json;
+  };
 
-  buildPhase = ''
-    runHook preBuild
+  __darwinAllowLocalNetworking = true;
 
-    export GRADLE_USER_HOME=$(mktemp -d)
+  gradleFlags = [ "-Dorg.gradle.java.home=${jdk17_headless}" ];
 
-    gradle --offline --no-daemon distTar
-
-    runHook postBuild
-  '';
+  gradleBuildTask = "distTar";
 
   installPhase = ''
     runHook preInstall
@@ -85,15 +52,24 @@ in stdenv.mkDerivation rec {
     mkdir -p $out
     tar xvf ./build/distributions/signald.tar --strip-components=1 --directory $out/
     wrapProgram $out/bin/signald \
-      --prefix PATH : ${lib.makeBinPath [ coreutils ]} \
+      --prefix PATH : ${lib.makeBinPath [ coreutils findutils gnused ]} \
       --set JAVA_HOME "${jre'}"
 
     runHook postInstall
   '';
 
-  nativeBuildInputs = [ git gradle_6 makeWrapper ];
+  nativeBuildInputs = [ git gradle makeWrapper ];
 
   doCheck = true;
+
+  gradleUpdateScript = ''
+    runHook preBuild
+
+    SIGNALD_TARGET=x86_64-unknown-linux-gnu gradle nixDownloadDeps
+    SIGNALD_TARGET=aarch64-unknown-linux-gnu gradle nixDownloadDeps
+    SIGNALD_TARGET=x86_64-apple-darwin gradle nixDownloadDeps
+    SIGNALD_TARGET=aarch64-apple-darwin gradle nixDownloadDeps
+  '';
 
   meta = with lib; {
     description = "Unofficial daemon for interacting with Signal";
@@ -108,7 +84,7 @@ in stdenv.mkDerivation rec {
       binaryBytecode  # deps
     ];
     license = licenses.gpl3Plus;
-    maintainers = with maintainers; [ expipiplus1 ma27 ];
-    platforms = [ "x86_64-linux" "aarch64-linux" ];
+    maintainers = with maintainers; [ expipiplus1 ];
+    platforms = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
   };
 }

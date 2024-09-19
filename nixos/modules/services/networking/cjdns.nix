@@ -1,7 +1,4 @@
 { config, lib, pkgs, ... }:
-
-with lib;
-
 let
 
   pkg = pkgs.cjdns;
@@ -11,28 +8,28 @@ let
   connectToSubmodule =
   { ... }:
   { options =
-    { password = mkOption {
-        type = types.str;
+    { password = lib.mkOption {
+        type = lib.types.str;
         description = "Authorized password to the opposite end of the tunnel.";
       };
-      login = mkOption {
+      login = lib.mkOption {
         default = "";
-        type = types.str;
+        type = lib.types.str;
         description = "(optional) name your peer has for you";
       };
-      peerName = mkOption {
+      peerName = lib.mkOption {
         default = "";
-        type = types.str;
+        type = lib.types.str;
         description = "(optional) human-readable name for peer";
       };
-      publicKey = mkOption {
-        type = types.str;
+      publicKey = lib.mkOption {
+        type = lib.types.str;
         description = "Public key at the opposite end of the tunnel.";
       };
-      hostname = mkOption {
+      hostname = lib.mkOption {
         default = "";
         example = "foobar.hype";
-        type = types.str;
+        type = lib.types.str;
         description = "Optional hostname to add to /etc/hosts; prevents reverse lookup failures.";
       };
     };
@@ -41,16 +38,16 @@ let
   # Additional /etc/hosts entries for peers with an associated hostname
   cjdnsExtraHosts = pkgs.runCommand "cjdns-hosts" {} ''
     exec >$out
-    ${concatStringsSep "\n" (mapAttrsToList (k: v:
-        optionalString (v.hostname != "")
+    ${lib.concatStringsSep "\n" (lib.mapAttrsToList (k: v:
+        lib.optionalString (v.hostname != "")
           "echo $(${pkgs.cjdns}/bin/publictoip6 ${v.publicKey}) ${v.hostname}")
         (cfg.ETHInterface.connectTo // cfg.UDPInterface.connectTo))}
   '';
 
   parseModules = x:
-    x // { connectTo = mapAttrs (name: value: { inherit (value) password publicKey; }) x.connectTo; };
+    x // { connectTo = lib.mapAttrs (name: value: { inherit (value) password publicKey; }) x.connectTo; };
 
-  cjdrouteConf = builtins.toJSON ( recursiveUpdate {
+  cjdrouteConf = builtins.toJSON ( lib.recursiveUpdate {
     admin = {
       bind = cfg.admin.bind;
       password = "@CJDNS_ADMIN_PASSWORD@";
@@ -84,8 +81,8 @@ in
 
     services.cjdns = {
 
-      enable = mkOption {
-        type = types.bool;
+      enable = lib.mkOption {
+        type = lib.types.bool;
         default = false;
         description = ''
           Whether to enable the cjdns network encryption
@@ -95,8 +92,8 @@ in
         '';
       };
 
-      extraConfig = mkOption {
-        type = types.attrs;
+      extraConfig = lib.mkOption {
+        type = lib.types.attrs;
         default = {};
         example = { router.interface.tunDevice = "tun10"; };
         description = ''
@@ -105,8 +102,8 @@ in
         '';
       };
 
-      confFile = mkOption {
-        type = types.nullOr types.path;
+      confFile = lib.mkOption {
+        type = lib.types.nullOr lib.types.path;
         default = null;
         example = "/etc/cjdroute.conf";
         description = ''
@@ -114,8 +111,8 @@ in
         '';
       };
 
-      authorizedPasswords = mkOption {
-        type = types.listOf types.str;
+      authorizedPasswords = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
         default = [ ];
         example = [
           "snyrfgkqsc98qh1y4s5hbu0j57xw5s0"
@@ -129,8 +126,8 @@ in
       };
 
       admin = {
-        bind = mkOption {
-          type = types.str;
+        bind = lib.mkOption {
+          type = lib.types.str;
           default = "127.0.0.1:11234";
           description = ''
             Bind the administration port to this address and port.
@@ -139,18 +136,18 @@ in
       };
 
       UDPInterface = {
-        bind = mkOption {
-          type = types.str;
+        bind = lib.mkOption {
+          type = lib.types.str;
           default = "";
           example = "192.168.1.32:43211";
           description = ''
             Address and port to bind UDP tunnels to.
           '';
          };
-        connectTo = mkOption {
-          type = types.attrsOf ( types.submodule ( connectToSubmodule ) );
+        connectTo = lib.mkOption {
+          type = lib.types.attrsOf ( lib.types.submodule ( connectToSubmodule ) );
           default = { };
-          example = literalExpression ''
+          example = lib.literalExpression ''
             {
               "192.168.1.1:27313" = {
                 hostname = "homer.hype";
@@ -166,19 +163,18 @@ in
       };
 
       ETHInterface = {
-        bind = mkOption {
-          type = types.str;
+        bind = lib.mkOption {
+          type = lib.types.str;
           default = "";
           example = "eth0";
-          description =
-            ''
+          description = ''
               Bind to this device for native ethernet operation.
-              <literal>all</literal> is a pseudo-name which will try to connect to all devices.
+              `all` is a pseudo-name which will try to connect to all devices.
             '';
         };
 
-        beacon = mkOption {
-          type = types.int;
+        beacon = lib.mkOption {
+          type = lib.types.int;
           default = 2;
           description = ''
             Auto-connect to other cjdns nodes on the same network.
@@ -194,10 +190,10 @@ in
           '';
         };
 
-        connectTo = mkOption {
-          type = types.attrsOf ( types.submodule ( connectToSubmodule ) );
+        connectTo = lib.mkOption {
+          type = lib.types.attrsOf ( lib.types.submodule ( connectToSubmodule ) );
           default = { };
-          example = literalExpression ''
+          example = lib.literalExpression ''
             {
               "01:02:03:04:05:06" = {
                 hostname = "homer.hype";
@@ -213,12 +209,12 @@ in
         };
       };
 
-      addExtraHosts = mkOption {
-        type = types.bool;
+      addExtraHosts = lib.mkOption {
+        type = lib.types.bool;
         default = false;
         description = ''
           Whether to add cjdns peers with an associated hostname to
-          <filename>/etc/hosts</filename>.  Beware that enabling this
+          {file}`/etc/hosts`.  Beware that enabling this
           incurs heavy eval-time costs.
         '';
       };
@@ -227,7 +223,7 @@ in
 
   };
 
-  config = mkIf cfg.enable {
+  config = lib.mkIf cfg.enable {
 
     boot.kernelModules = [ "tun" ];
 
@@ -239,19 +235,15 @@ in
       after = [ "network-online.target" ];
       bindsTo = [ "network-online.target" ];
 
-      preStart = if cfg.confFile != null then "" else ''
+      preStart = lib.optionalString (cfg.confFile == null) ''
         [ -e /etc/cjdns.keys ] && source /etc/cjdns.keys
 
         if [ -z "$CJDNS_PRIVATE_KEY" ]; then
             shopt -s lastpipe
             ${pkg}/bin/makekeys | { read private ipv6 public; }
 
-            umask 0077
-            echo "CJDNS_PRIVATE_KEY=$private" >> /etc/cjdns.keys
-            echo -e "CJDNS_IPV6=$ipv6\nCJDNS_PUBLIC_KEY=$public" > /etc/cjdns.public
-
-            chmod 600 /etc/cjdns.keys
-            chmod 444 /etc/cjdns.public
+            install -m 600 <(echo "CJDNS_PRIVATE_KEY=$private") /etc/cjdns.keys
+            install -m 444 <(echo -e "CJDNS_IPV6=$ipv6\nCJDNS_PUBLIC_KEY=$public") /etc/cjdns.public
         fi
 
         if [ -z "$CJDNS_ADMIN_PASSWORD" ]; then
@@ -288,7 +280,7 @@ in
       };
     };
 
-    networking.hostFiles = mkIf cfg.addExtraHosts [ cjdnsExtraHosts ];
+    networking.hostFiles = lib.mkIf cfg.addExtraHosts [ cjdnsExtraHosts ];
 
     assertions = [
       { assertion = ( cfg.ETHInterface.bind != "" || cfg.UDPInterface.bind != "" || cfg.confFile != null );

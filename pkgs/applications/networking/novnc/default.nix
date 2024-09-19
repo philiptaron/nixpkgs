@@ -1,15 +1,26 @@
-{ lib, stdenv, fetchFromGitHub }:
+{ lib, python3, stdenv, substituteAll, fetchFromGitHub }:
 
 stdenv.mkDerivation rec {
   pname = "novnc";
-  version = "1.3.0";
+  version = "1.5.0";
 
   src = fetchFromGitHub {
     owner = "novnc";
     repo = "noVNC";
     rev = "v${version}";
-    sha256 = "sha256-Z+bks7kcwj+Z3uf/t0u25DnGOM60QhSH6uuoIi59jqU=";
+    sha256 = "sha256-3Q87bYsC824/8A85Kxdqlm+InuuR/D/HjVrYTJZfE9Y=";
   };
+
+  patches = with python3.pkgs; [
+    (substituteAll {
+      src = ./websockify.patch;
+      inherit websockify;
+    })
+  ] ++ [ ./fix-paths.patch ];
+
+  postPatch = ''
+    substituteAllInPlace utils/novnc_proxy
+  '';
 
   installPhase = ''
     runHook preInstall
@@ -26,5 +37,6 @@ stdenv.mkDerivation rec {
     homepage = "https://novnc.com";
     license = with licenses; [ mpl20 ofl bsd3 bsd2 mit ];
     maintainers = with maintainers; [ neverbehave ];
+    mainProgram = "novnc";
   };
 }

@@ -5,16 +5,16 @@
 
 buildGoModule rec {
   pname = "unparam";
-  version = "unstable-2021-12-14";
+  version = "0-unstable-2024-05-28";
 
   src = fetchFromGitHub {
     owner = "mvdan";
     repo = "unparam";
-    rev = "d0ef000c54e5fbf955d67422b0495b9f29b354da";
-    sha256 = "sha256-fH/LcshpOk+UFfQ5dE2eHi6Oi5cm8umeXoyHJvhpAbE=";
+    rev = "8a5130ca722ffad18c95cc467b561f1668b9b0d2";
+    hash = "sha256-CYCXTriGUd4bNY6ZPfkX4puE1imcqYHnX1SXVdnXPGM=";
   };
 
-  vendorSha256 = "sha256-pfIxWvJYAus4DShTcBI1bwn/Q2c5qWvCwPCwfUsv8c0=";
+  vendorHash = "sha256-2lNC4V1WQkJdkagIlBu6tj4SA4KJKstHXc+B4emKu6s=";
 
   subPackages = [ "." ];
 
@@ -23,5 +23,6 @@ buildGoModule rec {
     homepage = "https://github.com/mvdan/unparam";
     license = licenses.bsd3;
     maintainers = with maintainers; [ SuperSandro2000 ];
+    mainProgram = "unparam";
   };
 }

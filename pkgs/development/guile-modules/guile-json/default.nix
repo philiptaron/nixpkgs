@@ -8,26 +8,22 @@
 
 stdenv.mkDerivation rec {
   pname = "guile-json";
-  version = "4.7.1";
+  version = "4.7.3";
 
   src = fetchurl {
     url = "mirror://savannah/guile-json/${pname}-${version}.tar.gz";
-    sha256 = "sha256-xTSaI4D2fIphOps698mNITJdRDAjNp5vdhs2bpaUaEM=";
+    sha256 = "sha256-OLoEjtKdEvBbMsWy+3pReVxEi0HkA6Kxty/wA1gX84g=";
   };
 
-  postConfigure = ''
-    sed -i '/moddir\s*=/s%=.*%=''${out}/share/guile/site%' Makefile;
-    sed -i '/objdir\s*=/s%=.*%=''${out}/share/guile/ccache%' Makefile;
-    sed -i '/moddir\s*=/s%=.*%=''${out}/share/guile/site/json%' json/Makefile;
-    sed -i '/objdir\s*=/s%=.*%=''${out}/share/guile/ccache/json%' json/Makefile;
-  '';
-
+  strictDeps = true;
   nativeBuildInputs = [
-    pkg-config texinfo
+    guile pkg-config texinfo
   ];
   buildInputs = [
     guile
   ];
+  doCheck = true;
+  makeFlags = [ "GUILE_AUTO_COMPILE=0" ];
 
   meta = with lib; {
     description = "JSON Bindings for GNU Guile";

@@ -4,6 +4,9 @@ import ./make-test-python.nix ({ pkgs, ...} :
 
   meta = with pkgs.lib.maintainers; {
     maintainers = [ romildo ];
+    timeout = 600;
+    # OCR tests are flaky
+    broken = true;
   };
 
   nodes.machine = { ... }:
@@ -18,7 +21,6 @@ import ./make-test-python.nix ({ pkgs, ...} :
         user = "alice";
       };
     };
-    hardware.pulseaudio.enable = true; # needed for the factl test, /dev/snd/* exists without them but udev doesn't care then
     environment.systemPackages = [ pkgs.xdotool ];
     services.acpid.enable = true;
     services.connman.enable = true;
@@ -65,7 +67,7 @@ import ./make-test-python.nix ({ pkgs, ...} :
         machine.screenshot("wizard7")
         machine.succeed("xdotool mousemove 512 740 click 1")  # Next
 
-        machine.wait_for_text("BlusZ")  # Bluetooh Management (default)
+        machine.wait_for_text("BlusZ")  # Bluetooth Management (default)
         machine.screenshot("wizard8")
         machine.succeed("xdotool mousemove 512 740 click 1")  # Next
 

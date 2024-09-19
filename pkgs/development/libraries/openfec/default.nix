@@ -1,12 +1,17 @@
-{ stdenv, lib, fetchzip, cmake }:
+{ stdenv
+, lib
+, fetchzip
+, cmake
+, gitUpdater
+}:
 
 stdenv.mkDerivation rec {
   pname = "openfec";
-  version = "1.4.2";
+  version = "1.4.2.11";
 
   src = fetchzip {
-    url = "http://openfec.org/files/openfec_v1_4_2.tgz";
-    sha256 = "sha256:0c2lg8afr7lqpzrsi0g44a6h6s7nq4vz7yc9vm2k57ph2y6r86la";
+    url = "https://github.com/roc-streaming/openfec/archive/refs/tags/v${version}.tar.gz";
+    hash = "sha256-lBR8vz8whEdPVHAGVq9eRriKtmS5tUAvtoyXwO4AuEs=";
   };
 
   outputs = [ "out" "dev" ];
@@ -15,10 +20,13 @@ stdenv.mkDerivation rec {
     cmake
   ];
 
-  cmakeFlags = [ "-DDEBUG:STRING=OFF" ];
+  cmakeFlags = [
+    "-DDEBUG:STRING=OFF"
+    (lib.cmakeBool "BUILD_STATIC_LIBS" stdenv.hostPlatform.isStatic)
+  ];
 
   installPhase =
-    let so = stdenv.hostPlatform.extensions.sharedLibrary;
+    let so = stdenv.hostPlatform.extensions.library;
     in ''
       # This is pretty horrible but sadly there is not installation procedure
       # provided.
@@ -27,8 +35,16 @@ stdenv.mkDerivation rec {
       find $dev/include -type f -a ! -iname '*.h' -delete
 
       install -D -m755 -t $out/lib ../bin/Release/libopenfec${so}
+    '' + lib.optionalString stdenv.isDarwin ''
+      install_name_tool -id $out/lib/libopenfec${so} $out/lib/libopenfec${so}
+    '' + ''
       ln -s libopenfec${so} $out/lib/libopenfec${so}.1
     '';
+
+  passthru.updateScript = gitUpdater {
+    url = "https://github.com/roc-streaming/openfec.git";
+    rev-prefix = "v";
+  };
 
   meta = with lib; {
     description = "Application-level Forward Erasure Correction codes";

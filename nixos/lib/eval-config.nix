@@ -9,12 +9,16 @@
 # expressions are ever made modular at the top level) can just use
 # types.submodule instead of using eval-config.nix
 evalConfigArgs@
-{ # !!! system can be set modularly, would be nice to remove
+{ # !!! system can be set modularly, would be nice to remove,
+  #     however, removing or changing this default is too much
+  #     of a breaking change. To set it modularly, pass `null`.
   system ? builtins.currentSystem
 , # !!! is this argument needed any more? The pkgs argument can
   # be set modularly anyway.
   pkgs ? null
 , # !!! what do we gain by making this configurable?
+  #     we can add modules that are included in specialisations, regardless
+  #     of inheritParentConfig.
   baseModules ? import ../modules/module-list.nix
 , # !!! See comment about args in lib/modules.nix
   extraArgs ? {}
@@ -27,13 +31,12 @@ evalConfigArgs@
 , prefix ? []
 , lib ? import ../../lib
 , extraModules ? let e = builtins.getEnv "NIXOS_EXTRA_MODULE_PATH";
-                 in if e == "" then [] else [(import e)]
+                 in lib.optional (e != "") (import e)
 }:
 
-let pkgs_ = pkgs;
-in
-
 let
+  inherit (lib) optional;
+
   evalModulesMinimal = (import ./default.nix {
     inherit lib;
     # Implicit use of feature is noted in implementation.
@@ -43,15 +46,20 @@ let
   pkgsModule = rec {
     _file = ./eval-config.nix;
     key = _file;
-    config = {
-      # Explicit `nixpkgs.system` or `nixpkgs.localSystem` should override
-      # this.  Since the latter defaults to the former, the former should
-      # default to the argument. That way this new default could propagate all
-      # they way through, but has the last priority behind everything else.
-      nixpkgs.system = lib.mkDefault system;
-
-      _module.args.pkgs = lib.mkIf (pkgs_ != null) (lib.mkForce pkgs_);
-    };
+    config = lib.mkMerge (
+      (optional (system != null) {
+        # Explicit `nixpkgs.system` or `nixpkgs.localSystem` should override
+        # this.  Since the latter defaults to the former, the former should
+        # default to the argument. That way this new default could propagate all
+        # they way through, but has the last priority behind everything else.
+        nixpkgs.system = lib.mkDefault system;
+      })
+      ++
+      (optional (pkgs != null) {
+        # This should be default priority, so it conflicts with any user-defined pkgs.
+        nixpkgs.pkgs = pkgs;
+      })
+    );
   };
 
   withWarnings = x:
@@ -99,8 +107,11 @@ let
 
   nixosWithUserModules = noUserModules.extendModules { modules = allUserModules; };
 
+  withExtraAttrs = configuration: configuration // {
+    inherit extraArgs;
+    inherit (configuration._module.args) pkgs;
+    inherit lib;
+    extendModules = args: withExtraAttrs (configuration.extendModules args);
+  };
 in
-withWarnings nixosWithUserModules // {
-  inherit extraArgs;
-  inherit (nixosWithUserModules._module.args) pkgs;
-}
+withWarnings (withExtraAttrs nixosWithUserModules)

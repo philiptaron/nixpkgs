@@ -1,16 +1,16 @@
-{ lib
-, buildPythonPackage
-, click
-, fetchFromGitHub
-, fetchpatch
-, pytestCheckHook
-, pythonOlder
-, six
+{
+  lib,
+  buildPythonPackage,
+  click,
+  fetchFromGitHub,
+  pytestCheckHook,
+  pythonOlder,
+  six,
 }:
 
 buildPythonPackage rec {
   pname = "xdis";
-  version = "unstable-2022-04-13";
+  version = "6.1.0";
   format = "setuptools";
 
   disabled = pythonOlder "3.6";
@@ -18,9 +18,8 @@ buildPythonPackage rec {
   src = fetchFromGitHub {
     owner = "rocky";
     repo = "python-xdis";
-    # Support for later Python releases is missing in 6.0.3
-    rev = "f888df7df5cb8839927e9187c258769cc77fb7a3";
-    hash = "sha256-V1ws5GibRkutFRNcjlP7aW+AshSyWavXIxuwznVbRlU=";
+    rev = "refs/tags/${version}";
+    hash = "sha256-KgKTO99T2/be1sBs5rY3Oy7/Yl9WGgdG3hqqkZ7D7ZY=";
   };
 
   propagatedBuildInputs = [
@@ -28,28 +27,34 @@ buildPythonPackage rec {
     six
   ];
 
-  checkInputs = [
-    pytestCheckHook
-  ];
+  nativeCheckInputs = [ pytestCheckHook ];
 
-  pythonImportsCheck = [
-    "xdis"
-  ];
+  pythonImportsCheck = [ "xdis" ];
 
   disabledTestPaths = [
-    # Our Python release is not in the test matrix
+    # import file mismatch:
+    # imported module 'test_disasm' has this __file__ attribute:
+    #   /build/source/pytest/test_disasm.py
+    # which is not the same as the test file we want to collect:
+    #   /build/source/test_unit/test_disasm.py
     "test_unit/test_disasm.py"
+
+    # Doesn't run on non-2.7 but has global-level mis-import
+    "test_unit/test_dis27.py"
   ];
 
   disabledTests = [
+    # AssertionError: events did not match expectation
     "test_big_linenos"
+    # AssertionError: False is not true : PYTHON VERSION 4.0 is not in magic.magics.keys
     "test_basic"
   ];
 
   meta = with lib; {
     description = "Python cross-version byte-code disassembler and marshal routines";
-    homepage = "https://github.com/rocky/python-xdis/";
+    homepage = "https://github.com/rocky/python-xdis";
+    changelog = "https://github.com/rocky/python-xdis/releases/tag/${version}";
     license = licenses.gpl2Plus;
-    maintainers = with maintainers; [ ];
+    maintainers = with maintainers; [ onny ];
   };
 }

@@ -1,9 +1,9 @@
 # Test the firewall module.
 
-import ./make-test-python.nix ( { pkgs, ... } : {
-  name = "firewall";
+import ./make-test-python.nix ( { pkgs, nftables, ... } : {
+  name = "firewall" + pkgs.lib.optionalString nftables "-nftables";
   meta = with pkgs.lib.maintainers; {
-    maintainers = [ eelco ];
+    maintainers = [ ];
   };
 
   nodes =
@@ -11,18 +11,13 @@ import ./make-test-python.nix ( { pkgs, ... } : {
         { ... }:
         { networking.firewall.enable = true;
           networking.firewall.logRefusedPackets = true;
+          networking.nftables.enable = nftables;
           services.httpd.enable = true;
           services.httpd.adminAddr = "foo@example.org";
-        };
 
-      # Dummy configuration to check whether firewall.service will be honored
-      # during system activation. This only needs to be different to the
-      # original walled configuration so that there is a change in the service
-      # file.
-      walled2 =
-        { ... }:
-        { networking.firewall.enable = true;
-          networking.firewall.rejectPackets = true;
+          specialisation.different-config.configuration = {
+            networking.firewall.rejectPackets = true;
+          };
         };
 
       attacker =
@@ -34,11 +29,11 @@ import ./make-test-python.nix ( { pkgs, ... } : {
     };
 
   testScript = { nodes, ... }: let
-    newSystem = nodes.walled2.config.system.build.toplevel;
+    unit = if nftables then "nftables" else "firewall";
   in ''
     start_all()
 
-    walled.wait_for_unit("firewall")
+    walled.wait_for_unit("${unit}")
     walled.wait_for_unit("httpd")
     attacker.wait_for_unit("network.target")
 
@@ -54,12 +49,12 @@ import ./make-test-python.nix ( { pkgs, ... } : {
     walled.succeed("ping -c 1 attacker >&2")
 
     # If we stop the firewall, then connections should succeed.
-    walled.stop_job("firewall")
+    walled.stop_job("${unit}")
     attacker.succeed("curl -v http://walled/ >&2")
 
     # Check whether activation of a new configuration reloads the firewall.
     walled.succeed(
-        "${newSystem}/bin/switch-to-configuration test 2>&1 | grep -qF firewall.service"
+        "/run/booted-system/specialisation/different-config/bin/switch-to-configuration test 2>&1 | grep -qF ${unit}.service"
     )
   '';
 })

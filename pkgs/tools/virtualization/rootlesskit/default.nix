@@ -2,19 +2,19 @@
 
 buildGoModule rec {
   pname = "rootlesskit";
-  version = "1.0.0";
+  version = "2.3.1";
 
   src = fetchFromGitHub {
     owner = "rootless-containers";
     repo = "rootlesskit";
     rev = "v${version}";
-    hash = "sha256-Tml6zTc9l3O8qB+NSKlClWl5lj1rkiDHwI5exxBL83A=";
+    hash = "sha256-5aQwXNtGAZuVwOpX700VVFTxM/kxOT6c1NtpJR4s1xQ=";
   };
 
-  vendorSha256 = "sha256-CpDPa1LAinvXCnVYbn9ZXuEjyHHlDU4bzZ2R+ctoCzQ=";
+  vendorHash = "sha256-Wj3wthDMNkuWVWFIqRsVUeJfoUvjyyu2gCvFBjh8mGw=";
 
   passthru = {
-    updateScript = nix-update-script { attrPath = pname; };
+    updateScript = nix-update-script { };
     tests = nixosTests.docker-rootless;
   };
 

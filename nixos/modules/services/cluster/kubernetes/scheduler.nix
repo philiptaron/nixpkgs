@@ -26,10 +26,10 @@ in
     };
 
     featureGates = mkOption {
-      description = "List set of feature gates";
+      description = "Attribute set of feature gates.";
       default = top.featureGates;
       defaultText = literalExpression "config.${otop.featureGates}";
-      type = listOf str;
+      type = attrsOf bool;
     };
 
     kubeconfig = top.lib.mkKubeConfigOptions "Kubernetes scheduler";
@@ -43,13 +43,13 @@ in
     port = mkOption {
       description = "Kubernetes scheduler listening port.";
       default = 10251;
-      type = int;
+      type = port;
     };
 
     verbosity = mkOption {
       description = ''
         Optional glog verbosity level for logging statements. See
-        <link xlink:href="https://github.com/kubernetes/community/blob/master/contributors/devel/logging.md"/>
+        <https://github.com/kubernetes/community/blob/master/contributors/devel/logging.md>
       '';
       default = null;
       type = nullOr int;
@@ -67,8 +67,8 @@ in
         Slice = "kubernetes.slice";
         ExecStart = ''${top.package}/bin/kube-scheduler \
           --bind-address=${cfg.address} \
-          ${optionalString (cfg.featureGates != [])
-            "--feature-gates=${concatMapStringsSep "," (feature: "${feature}=true") cfg.featureGates}"} \
+          ${optionalString (cfg.featureGates != {})
+            "--feature-gates=${concatStringsSep "," (builtins.attrValues (mapAttrs (n: v: "${n}=${trivial.boolToString v}") cfg.featureGates))}"} \
           --kubeconfig=${top.lib.mkKubeConfig "kube-scheduler" cfg.kubeconfig} \
           --leader-elect=${boolToString cfg.leaderElect} \
           --secure-port=${toString cfg.port} \

@@ -6,11 +6,13 @@ let
 in
 {
   meta = {
-    maintainers = [ maintainers.rizary ];
+    maintainers = [ maintainers.rizary maintainers.zimbatm ];
   };
   options = {
     services.nar-serve = {
-      enable = mkEnableOption "Serve NAR file contents via HTTP";
+      enable = mkEnableOption "serving NAR file contents via HTTP";
+
+      package = mkPackageOption pkgs "nar-serve" { };
 
       port = mkOption {
         type = types.port;
@@ -32,6 +34,17 @@ in
           - gs:// for binary caches stored in Google Cloud Storage
         '';
       };
+
+      domain = mkOption {
+        type = types.str;
+        default = "";
+        description = ''
+          When set, enables the feature of serving <nar-hash>.<domain>
+          on top of <domain>/nix/store/<nar-hash>-<pname>.
+
+          Useful to preview static websites where paths are absolute.
+        '';
+      };
     };
   };
 
@@ -47,7 +60,7 @@ in
       serviceConfig = {
         Restart = "always";
         RestartSec = "5s";
-        ExecStart = "${pkgs.nar-serve}/bin/nar-serve";
+        ExecStart = lib.getExe cfg.package;
         DynamicUser = true;
       };
     };

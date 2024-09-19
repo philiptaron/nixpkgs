@@ -1,7 +1,4 @@
 { config, options, lib, pkgs, ... }:
-
-with lib;
-
 let
   cfg = config.services.couchdb;
   opt = options.services.couchdb;
@@ -11,7 +8,7 @@ let
       database_dir = ${cfg.databaseDir}
       uri_file = ${cfg.uriFile}
       view_index_dir = ${cfg.viewIndexDir}
-    '' + (optionalString (cfg.adminPass != null) ''
+    '' + (lib.optionalString (cfg.adminPass != null) ''
       [admins]
       ${cfg.adminUser} = ${cfg.adminPass}
     '' + ''
@@ -34,25 +31,12 @@ in {
 
     services.couchdb = {
 
-      enable = mkOption {
-        type = types.bool;
-        default = false;
-        description = ''
-          Whether to run CouchDB Server.
-        '';
-      };
+      enable = lib.mkEnableOption "CouchDB Server";
 
-      package = mkOption {
-        type = types.package;
-        default = pkgs.couchdb3;
-        defaultText = literalExpression "pkgs.couchdb3";
-        description = ''
-          CouchDB package to use.
-        '';
-      };
+      package = lib.mkPackageOption pkgs "couchdb3" { };
 
-      adminUser = mkOption {
-        type = types.str;
+      adminUser = lib.mkOption {
+        type = lib.types.str;
         default = "admin";
         description = ''
           Couchdb (i.e. fauxton) account with permission for all dbs and
@@ -60,8 +44,8 @@ in {
         '';
       };
 
-      adminPass = mkOption {
-        type = types.nullOr types.str;
+      adminPass = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
         default = null;
         description = ''
           Couchdb (i.e. fauxton) account with permission for all dbs and
@@ -69,26 +53,26 @@ in {
         '';
       };
 
-      user = mkOption {
-        type = types.str;
+      user = lib.mkOption {
+        type = lib.types.str;
         default = "couchdb";
         description = ''
           User account under which couchdb runs.
         '';
       };
 
-      group = mkOption {
-        type = types.str;
+      group = lib.mkOption {
+        type = lib.types.str;
         default = "couchdb";
         description = ''
           Group account under which couchdb runs.
         '';
       };
 
-      # couchdb options: http://docs.couchdb.org/en/latest/config/index.html
+      # couchdb options: https://docs.couchdb.org/en/latest/config/index.html
 
-      databaseDir = mkOption {
-        type = types.path;
+      databaseDir = lib.mkOption {
+        type = lib.types.path;
         default = "/var/lib/couchdb";
         description = ''
           Specifies location of CouchDB database files (*.couch named). This
@@ -97,8 +81,8 @@ in {
         '';
       };
 
-      uriFile = mkOption {
-        type = types.path;
+      uriFile = lib.mkOption {
+        type = lib.types.path;
         default = "/run/couchdb/couchdb.uri";
         description = ''
           This file contains the full URI that can be used to access this
@@ -109,8 +93,8 @@ in {
         '';
       };
 
-      viewIndexDir = mkOption {
-        type = types.path;
+      viewIndexDir = lib.mkOption {
+        type = lib.types.path;
         default = "/var/lib/couchdb";
         description = ''
           Specifies location of CouchDB view index files. This location should
@@ -119,49 +103,49 @@ in {
         '';
       };
 
-      bindAddress = mkOption {
-        type = types.str;
+      bindAddress = lib.mkOption {
+        type = lib.types.str;
         default = "127.0.0.1";
         description = ''
           Defines the IP address by which CouchDB will be accessible.
         '';
       };
 
-      port = mkOption {
-        type = types.int;
+      port = lib.mkOption {
+        type = lib.types.port;
         default = 5984;
         description = ''
           Defined the port number to listen.
         '';
       };
 
-      logFile = mkOption {
-        type = types.path;
+      logFile = lib.mkOption {
+        type = lib.types.path;
         default = "/var/log/couchdb.log";
         description = ''
           Specifies the location of file for logging output.
         '';
       };
 
-      extraConfig = mkOption {
-        type = types.lines;
+      extraConfig = lib.mkOption {
+        type = lib.types.lines;
         default = "";
         description = ''
-          Extra configuration. Overrides any other cofiguration.
+          Extra configuration. Overrides any other configuration.
         '';
       };
 
-      argsFile = mkOption {
-        type = types.path;
+      argsFile = lib.mkOption {
+        type = lib.types.path;
         default = "${cfg.package}/etc/vm.args";
-        defaultText = literalExpression ''"config.${opt.package}/etc/vm.args"'';
+        defaultText = lib.literalExpression ''"config.${opt.package}/etc/vm.args"'';
         description = ''
           vm.args configuration. Overrides Couchdb's Erlang VM parameters file.
         '';
       };
 
-      configFile = mkOption {
-        type = types.path;
+      configFile = lib.mkOption {
+        type = lib.types.path;
         description = ''
           Configuration file for persisting runtime changes. File
           needs to be readable and writable from couchdb user/group.
@@ -174,11 +158,11 @@ in {
 
   ###### implementation
 
-  config = mkIf config.services.couchdb.enable {
+  config = lib.mkIf config.services.couchdb.enable {
 
     environment.systemPackages = [ cfg.package ];
 
-    services.couchdb.configFile = mkDefault "/var/lib/couchdb/local.ini";
+    services.couchdb.configFile = lib.mkDefault "/var/lib/couchdb/local.ini";
 
     systemd.tmpfiles.rules = [
       "d '${dirOf cfg.uriFile}' - ${cfg.user} ${cfg.group} - -"

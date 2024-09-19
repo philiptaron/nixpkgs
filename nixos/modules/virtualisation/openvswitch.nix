@@ -24,18 +24,11 @@ in {
       default = false;
       description = ''
         Whether to reset the Open vSwitch configuration database to a default
-        configuration on every start of the systemd <literal>ovsdb.service</literal>.
+        configuration on every start of the systemd `ovsdb.service`.
         '';
     };
 
-    package = mkOption {
-      type = types.package;
-      default = pkgs.openvswitch;
-      defaultText = literalExpression "pkgs.openvswitch";
-      description = ''
-        Open vSwitch package to use.
-      '';
-    };
+    package = mkPackageOption pkgs "openvswitch" { };
   };
 
   config = mkIf cfg.enable (let

@@ -1,68 +1,77 @@
-{ lib
-, buildPythonPackage
-, pythonOlder
-, fetchFromGitHub
-, anyio
-, certifi
-, h11
-, h2
-, pproxy
-, pytest-asyncio
-, pytestCheckHook
-, pytest-cov
-, pytest-httpbin
-, sniffio
-, socksio
-, trio
-, trustme
-, uvicorn
+{
+  lib,
+  anyio,
+  buildPythonPackage,
+  certifi,
+  fetchFromGitHub,
+  hatchling,
+  hatch-fancy-pypi-readme,
+  h11,
+  h2,
+  pproxy,
+  pytest-asyncio,
+  pytest-httpbin,
+  pytest-trio,
+  pytestCheckHook,
+  pythonOlder,
+  socksio,
+  trio,
+  # for passthru.tests
+  httpx,
+  httpx-socks,
+  respx,
 }:
 
 buildPythonPackage rec {
   pname = "httpcore";
-  version = "0.14.7";
-  disabled = pythonOlder "3.6";
+  version = "1.0.5";
+  pyproject = true;
+
+  disabled = pythonOlder "3.8";
 
   src = fetchFromGitHub {
     owner = "encode";
-    repo = pname;
-    rev = version;
-    sha256 = "sha256-h+3MfP1p/ifN0mF/xxrOKPTjD4Q7WzRh94YO4DYSuXE=";
+    repo = "httpcore";
+    rev = "refs/tags/${version}";
+    hash = "sha256-05jYLrBiPRg1qQEz8mRvYJKHFsfneh7z9yHIXuYYa5o=";
   };
 
-  postPatch = ''
-    substituteInPlace setup.py \
-      --replace "h11>=0.11,<0.13" "h11>=0.11,<0.14"
-  '';
+  nativeBuildInputs = [
+    hatchling
+    hatch-fancy-pypi-readme
+  ];
 
   propagatedBuildInputs = [
-    anyio
     certifi
     h11
-    sniffio
   ];
 
   passthru.optional-dependencies = {
+    asyncio = [ anyio ];
     http2 = [ h2 ];
     socks = [ socksio ];
+    trio = [ trio ];
   };
 
-  checkInputs = [
+  nativeCheckInputs = [
     pproxy
     pytest-asyncio
-    pytestCheckHook
-    pytest-cov
     pytest-httpbin
-    trio
-    trustme
-    uvicorn
-  ] ++ passthru.optional-dependencies.http2
-    ++ passthru.optional-dependencies.socks;
+    pytest-trio
+    pytestCheckHook
+  ] ++ lib.flatten (builtins.attrValues passthru.optional-dependencies);
 
   pythonImportsCheck = [ "httpcore" ];
 
+  __darwinAllowLocalNetworking = true;
+
+  passthru.tests = {
+    inherit httpx httpx-socks respx;
+  };
+
   meta = with lib; {
-    description = "A minimal low-level HTTP client";
+    changelog = "https://github.com/encode/httpcore/blob/${version}/CHANGELOG.md";
+    description = "Minimal low-level HTTP client";
     homepage = "https://github.com/encode/httpcore";
     license = licenses.bsd3;
     maintainers = with maintainers; [ ris ];

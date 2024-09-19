@@ -1,5 +1,5 @@
 { lib, stdenv, fetchurl, pkg-config, perl, util-linux, keyutils, nss, nspr, python2, pam, enablePython ? false
-, intltool, makeWrapper, coreutils, bash, gettext, cryptsetup, lvm2, rsync, which, lsof }:
+, intltool, makeWrapper, coreutils, bash, gettext, cryptsetup, lvm2, rsync, which, lsof, nixosTests }:
 
 stdenv.mkDerivation rec {
   pname = "ecryptfs";
@@ -35,11 +35,11 @@ stdenv.mkDerivation rec {
 
   configureFlags = lib.optionals (!enablePython) [ "--disable-pywrap" ];
 
-  nativeBuildInputs = [ pkg-config makeWrapper ]
+  nativeBuildInputs = [ pkg-config makeWrapper intltool ]
   # if python2 support is requested, it is needed at builtime as well as runtime.
   ++ lib.optionals (enablePython) [ python2 ]
   ;
-  buildInputs = [ perl nss nspr pam intltool ]
+  buildInputs = [ perl nss nspr pam ]
   ++ lib.optionals (enablePython) [ python2 ]
   ;
   propagatedBuildInputs = [ coreutils gettext cryptsetup lvm2 rsync keyutils which ];
@@ -57,6 +57,8 @@ stdenv.mkDerivation rec {
         --prefix PATH ":" "$out/bin"
     done
   '';
+
+  passthru.tests = { inherit (nixosTests) ecryptfs; };
 
   meta = with lib; {
     description = "Enterprise-class stacked cryptographic filesystem";

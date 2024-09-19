@@ -1,48 +1,38 @@
 { callPackage
 , libsForQt5
+, python311Packages
 }:
 
 let
-  stableVersion = "2.2.31";
-  previewVersion = stableVersion;
-  addVersion = args:
-    let version = if args.stable then stableVersion else previewVersion;
-        branch = if args.stable then "stable" else "preview";
-    in args // { inherit version branch; };
-  extraArgs = rec {
-    mkOverride = attrname: version: sha256:
-      self: super: {
-        ${attrname} = super.${attrname}.overridePythonAttrs (oldAttrs: {
-          inherit version;
-          src = oldAttrs.src.override {
-            inherit version sha256;
-          };
-        });
-      };
-    commonOverrides = [
-      (mkOverride "jsonschema" "3.2.0" "0ykr61yiiizgvm3bzipa3l73rvj49wmrybbfwhvpgk3pscl5pa68")
-    ];
+  mkGui = args: callPackage (import ./gui.nix (args)) {
+    inherit (libsForQt5) wrapQtAppsHook;
+    python3Packages = python311Packages;
   };
-  mkGui = args: libsForQt5.callPackage (import ./gui.nix (addVersion args // extraArgs)) { };
-  mkServer = args: callPackage (import ./server.nix (addVersion args // extraArgs)) { };
-  guiSrcHash = "sha256-o9j/avuapiUKIDO6aO/uWFF/5gu+xdfhL7ZSDSaQ858=";
-  serverSrcHash = "sha256-8r8nWNqbHUDtJ6x+/SxHxaw1isSuWF/5as3YXLB6LFw=";
-in {
+
+  mkServer = args: callPackage (import ./server.nix (args)) { };
+in
+{
   guiStable = mkGui {
-    stable = true;
-    sha256Hash = guiSrcHash;
+    channel = "stable";
+    version = "2.2.49";
+    hash = "sha256-hvLJ4VilcgtpxHeboeSUuGAco9LEnUB8J6vy/ZPajbU=";
   };
+
   guiPreview = mkGui {
-    stable = false;
-    sha256Hash = guiSrcHash;
+    channel = "stable";
+    version = "2.2.49";
+    hash = "sha256-hvLJ4VilcgtpxHeboeSUuGAco9LEnUB8J6vy/ZPajbU=";
   };
 
   serverStable = mkServer {
-    stable = true;
-    sha256Hash = serverSrcHash;
+    channel = "stable";
+    version = "2.2.49";
+    hash = "sha256-fI49MxA6b2kPkUihLl32a6jo8oHcEwDEjmvSVDj8/So=";
   };
+
   serverPreview = mkServer {
-    stable = false;
-    sha256Hash = serverSrcHash;
+    channel = "stable";
+    version = "2.2.49";
+    hash = "sha256-fI49MxA6b2kPkUihLl32a6jo8oHcEwDEjmvSVDj8/So=";
   };
 }

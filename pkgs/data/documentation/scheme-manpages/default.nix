@@ -1,14 +1,14 @@
-{ lib, stdenv, fetchFromGitHub }:
+{ lib, stdenvNoCC, fetchFromGitHub, unstableGitUpdater }:
 
-stdenv.mkDerivation rec {
-  pname = "scheme-manpages-unstable";
-  version = "2022-04-21";
+stdenvNoCC.mkDerivation rec {
+  pname = "scheme-manpages";
+  version = "0-unstable-2024-02-11";
 
   src = fetchFromGitHub {
     owner = "schemedoc";
     repo = "manpages";
-    rev = "e3faaa1b80b3493ee644958a105f84f2995a0436";
-    sha256 = "sha256-28e6tFRTqX/PWMhdoUZ4nQU1e/JL2uR+NjVXGBwogMM=";
+    rev = "1ef440525db569799774c83634d28bfa630358da";
+    hash = "sha256-ZBovG9i0qKD6dP4qcLP1T1fke0hC8MmRjZRzxuojd60=";
   };
 
   dontBuild = true;
@@ -18,11 +18,13 @@ stdenv.mkDerivation rec {
     cp -r man3/ man7/ $out/share/man/
   '';
 
+  passthru.updateScript = unstableGitUpdater { };
+
   meta = with lib; {
     description = "Unix manual pages for R6RS and R7RS";
     homepage = "https://github.com/schemedoc/manpages";
     license = licenses.mit;
-    maintainers = [ maintainers.marsam ];
+    maintainers = [ ];
     platforms = platforms.all;
   };
 }

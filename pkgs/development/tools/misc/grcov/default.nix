@@ -2,16 +2,16 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "grcov";
-  version = "0.8.9";
+  version = "0.8.19";
 
   src = fetchFromGitHub {
     owner = "mozilla";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-VSjKZoK/o05kYX5mRCnaS6r/+4dZep9Bp9Im1Zw7piM=";
+    sha256 = "sha256-1t+hzB9sSApLScCkjBnLk9i2dsoEwZmWCFukEOvHhZI=";
   };
 
-  cargoSha256 = "sha256-7I0BizeDbikpog0YG/X8vwoO4PGE1qYzRTWTr0RUQws=";
+  cargoHash = "sha256-4KzFbfUqnGmle2fwSaHMPIJHQFDq8H2Qzm4FdYdqpuM=";
 
   # tests do not find grcov path correctly
   checkFlags = let
@@ -31,6 +31,7 @@ rustPlatform.buildRustPackage rec {
   meta = with lib; {
     description =
       "Rust tool to collect and aggregate code coverage data for multiple source files";
+    mainProgram = "grcov";
     homepage = "https://github.com/mozilla/grcov";
     license = licenses.mpl20;
     maintainers = with maintainers; [ DieracDelta ];

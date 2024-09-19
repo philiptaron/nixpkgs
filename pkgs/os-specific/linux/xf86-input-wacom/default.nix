@@ -19,13 +19,13 @@
 
 stdenv.mkDerivation rec {
   pname = "xf86-input-wacom";
-  version = "1.0.0";
+  version = "1.2.2";
 
   src = fetchFromGitHub {
     owner = "linuxwacom";
     repo = pname;
     rev = "${pname}-${version}";
-    sha256 = "sha256-WitvT1y9KpXJriMr6Z9CrmAQdKPBZ5g9fP2nIgzJzAc=";
+    sha256 = "sha256-3w12OjjMdu03BhUVEjkyj1ngDFnp0Cp66L0nn3LuU8Q=";
   };
 
   nativeBuildInputs = [ autoreconfHook pkg-config ];
@@ -52,9 +52,9 @@ stdenv.mkDerivation rec {
   ];
 
   meta = with lib; {
-    maintainers = with maintainers; [ goibhniu fortuneteller2k ];
+    maintainers = with maintainers; [ moni ];
     description = "Wacom digitizer driver for X11";
-    homepage = "http://linuxwacom.sourceforge.net";
+    homepage = "https://linuxwacom.sourceforge.net";
     license = licenses.gpl2Only;
     platforms = platforms.linux; # Probably, works with other unixes as well
   };

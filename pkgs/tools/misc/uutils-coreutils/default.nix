@@ -12,19 +12,19 @@
 
 stdenv.mkDerivation rec {
   pname = "uutils-coreutils";
-  version = "0.0.14";
+  version = "0.0.27";
 
   src = fetchFromGitHub {
     owner = "uutils";
     repo = "coreutils";
     rev = version;
-    sha256 = "sha256-BLNWtf5RLeHQGH97M6vfZCXvCdPxUAU+hY1PBsGZ8jU=";
+    hash = "sha256-6MbX3C5NVwiOwXW5xJO2X3qKMh3pUSALR9aK2IbgaaU=";
   };
 
   cargoDeps = rustPlatform.fetchCargoTarball {
     inherit src;
-    name = "${pname}-${version}";
-    hash = "sha256-lHyIrzf286Hjef6cqy3tJF6U2OnnokGXcH4yMotZay4=";
+    name = "uutils-coreutils-${version}";
+    hash = "sha256-JowORfYHxN8GqvWeUm0ACnHNM3uZviYbhR7BOeAfphw=";
   };
 
   nativeBuildInputs = [ rustPlatform.cargoSetupHook sphinx ];
@@ -49,7 +49,7 @@ stdenv.mkDerivation rec {
       CLI utils in Rust. This repo is to aggregate the GNU coreutils rewrites.
     '';
     homepage = "https://github.com/uutils/coreutils";
-    maintainers = with maintainers; [ siraben SuperSandro2000 ];
+    maintainers = with maintainers; [ siraben ];
     license = licenses.mit;
     platforms = platforms.unix;
   };

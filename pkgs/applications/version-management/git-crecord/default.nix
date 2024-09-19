@@ -2,13 +2,13 @@
 
 python3.pkgs.buildPythonApplication rec {
   pname = "git-crecord";
-  version = "20201025.0";
+  version = "20230226.0";
 
   src = fetchFromGitHub {
     owner = "andrewshadura";
     repo = "git-crecord";
-    rev = version;
-    sha256 = "1rkdmy2d2vsx22fx97nd9afh0g5lq4pns7rdxyl711apq1bhiihn";
+    rev = "refs/tags/${version}";
+    sha256 = "sha256-zsrMAD9EU+TvkWfWl9x6WbMXuw7YEz50LxQzSFVkKdQ=";
   };
 
   propagatedBuildInputs = with python3.pkgs; [ docutils ];
@@ -16,9 +16,11 @@ python3.pkgs.buildPythonApplication rec {
   # has no tests
   doCheck = false;
 
-  meta = {
+  meta = with lib; {
     homepage = "https://github.com/andrewshadura/git-crecord";
     description = "Git subcommand to interactively select changes to commit or stage";
-    license = lib.licenses.gpl2Plus;
+    license = licenses.gpl2Plus;
+    maintainers = with maintainers; [ onny ];
+    mainProgram = "git-crecord";
   };
 }

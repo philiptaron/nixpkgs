@@ -1,28 +1,60 @@
 { lib
+, stdenv
 , rustPlatform
-, fetchgit
+, fetchFromGitea
+, fetchpatch
 , makeWrapper
+, pkg-config
+, glib
+, libopus
+, vips
 , ffmpeg
 , callPackage
-, unstableGitUpdater
+, darwin
+, testers
+, faircamp
 }:
 
-rustPlatform.buildRustPackage {
+rustPlatform.buildRustPackage rec {
   pname = "faircamp";
-  version = "unstable-2022-03-20";
+  version = "0.15.1";
 
-  # TODO when switching to a stable release, use fetchFromGitea and add a
-  # version test. Meanwhile, fetchgit is used to make unstableGitUpdater work.
-  src = fetchgit {
-    url = "https://codeberg.org/simonrepp/faircamp.git";
-    rev = "863cecb468a58a774bd2d1d93f99f3c8ecd8205c";
-    sha256 = "sha256-JodIo601BYesbiHarnBk4/GuFR/bpCswxQbaysRP+CI=";
+  src = fetchFromGitea {
+    domain = "codeberg.org";
+    owner = "simonrepp";
+    repo = "faircamp";
+    rev = version;
+    hash = "sha256-TMN4DLur61bJAPp2kahBAAjf2lto62X/7rhC88nhISg=";
   };
 
-  cargoHash = "sha256-XqsUUc+s01t4KHtktbNhm52r0NeLbcBg5DVw3Xn0oZk=";
+  patches = [
+    # Fix build error in tests
+    (fetchpatch {
+      url = "https://codeberg.org/simonrepp/faircamp/commit/7240dd707f3669d49e755088393d27369ca368c2.patch";
+      hash = "sha256-Ec75Gte2zUp/q912keLdYXUse60QirTQ+DkSaCwEboQ=";
+    })
+  ];
+
+  cargoLock = {
+    lockFile = ./Cargo.lock;
+    outputHashes = {
+      "enolib-0.4.2" = "sha256-FJuWKcwjoi/wKfTzxghobNWblhnKRdUvHOejhpCF7kY=";
+    };
+  };
+
+  buildFeatures = [ "libvips" ];
 
   nativeBuildInputs = [
     makeWrapper
+    pkg-config
+  ];
+
+  buildInputs = [
+    glib
+    libopus
+    vips
+  ] ++ lib.optionals stdenv.isDarwin [
+    darwin.apple_sdk.frameworks.CoreServices
   ];
 
   postInstall = ''
@@ -30,12 +62,14 @@ rustPlatform.buildRustPackage {
       --prefix PATH : ${lib.makeBinPath [ ffmpeg ]}
   '';
 
-  passthru.tests.wav = callPackage ./test-wav.nix { };
-
-  passthru.updateScript = unstableGitUpdater { };
+  passthru.tests = {
+    wav = callPackage ./test-wav.nix { };
+    version = testers.testVersion { package = faircamp; };
+  };
 
   meta = with lib; {
-    description = "A self-hostable, statically generated bandcamp alternative";
+    description = "Self-hostable, statically generated bandcamp alternative";
+    mainProgram = "faircamp";
     longDescription = ''
       Faircamp takes a directory on your disk - your Catalog - and from it
       produces a fancy-looking (and technically simple and completely static)
@@ -48,7 +82,7 @@ rustPlatform.buildRustPackage {
       website for you automatically, otherwise you can use FTP or whichever
       means you prefer to do that manually.
     '';
-    homepage = "https://codeberg.org/simonrepp/faircamp";
+    homepage = "https://simonrepp.com/faircamp/";
     license = licenses.gpl3Plus;
     maintainers = with maintainers; [ fgaz ];
     platforms = platforms.all;

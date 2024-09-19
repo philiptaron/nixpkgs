@@ -2,13 +2,13 @@
 
 stdenv.mkDerivation rec {
   pname = "rum";
-  version = "1.3.11";
+  version = "1.3.13";
 
   src = fetchFromGitHub {
     owner = "postgrespro";
     repo = "rum";
     rev = version;
-    sha256 = "sha256-OuVyZ30loPycQkDwlL0289H/4RRPneibqgibgzqhWo4=";
+    hash = "sha256-yy2xeDnk3fENN+En0st4mv60nZlqPafIzwf68jwJ5fE=";
   };
 
   buildInputs = [ postgresql ];
@@ -16,7 +16,7 @@ stdenv.mkDerivation rec {
   makeFlags = [ "USE_PGXS=1" ];
 
   installPhase = ''
-    install -D -t $out/lib *.so
+    install -D -t $out/lib *${postgresql.dlSuffix}
     install -D -t $out/share/postgresql/extension *.control
     install -D -t $out/share/postgresql/extension *.sql
   '';

@@ -23,11 +23,51 @@ let
   infraContainer = pkgs.dockerTools.buildImage {
     name = "pause";
     tag = "latest";
-    contents = top.package.pause;
+    copyToRoot = pkgs.buildEnv {
+      name = "image-root";
+      pathsToLink = [ "/bin" ];
+      paths = [ top.package.pause ];
+    };
     config.Cmd = ["/bin/pause"];
   };
 
   kubeconfig = top.lib.mkKubeConfig "kubelet" cfg.kubeconfig;
+
+  # Flag based settings are deprecated, use the `--config` flag with a
+  # `KubeletConfiguration` struct.
+  # https://kubernetes.io/docs/tasks/administer-cluster/kubelet-config-file/
+  #
+  # NOTE: registerWithTaints requires a []core/v1.Taint, therefore requires
+  # additional work to be put in config format.
+  #
+  kubeletConfig = pkgs.writeText "kubelet-config" (builtins.toJSON ({
+    apiVersion = "kubelet.config.k8s.io/v1beta1";
+    kind = "KubeletConfiguration";
+    address = cfg.address;
+    port = cfg.port;
+    authentication = {
+      x509 = lib.optionalAttrs (cfg.clientCaFile != null) { clientCAFile = cfg.clientCaFile; };
+      webhook = {
+        enabled = true;
+        cacheTTL = "10s";
+      };
+    };
+    authorization = {
+      mode = "Webhook";
+    };
+    cgroupDriver = "systemd";
+    hairpinMode = "hairpin-veth";
+    registerNode = cfg.registerNode;
+    containerRuntimeEndpoint = cfg.containerRuntimeEndpoint;
+    healthzPort = cfg.healthz.port;
+    healthzBindAddress = cfg.healthz.bind;
+  } // lib.optionalAttrs (cfg.tlsCertFile != null)  { tlsCertFile = cfg.tlsCertFile; }
+    // lib.optionalAttrs (cfg.tlsKeyFile != null)   { tlsPrivateKeyFile = cfg.tlsKeyFile; }
+    // lib.optionalAttrs (cfg.clusterDomain != "")  { clusterDomain = cfg.clusterDomain; }
+    // lib.optionalAttrs (cfg.clusterDns != [])     { clusterDNS = cfg.clusterDns; }
+    // lib.optionalAttrs (cfg.featureGates != {})   { featureGates = cfg.featureGates; }
+    // lib.optionalAttrs (cfg.extraConfig != {})    cfg.extraConfig
+  ));
 
   manifestPath = "kubernetes/manifests";
 
@@ -36,7 +76,7 @@ let
       key = mkOption {
         description = "Key of taint.";
         default = name;
-        defaultText = literalDocBook "Name of this submodule.";
+        defaultText = literalMD "Name of this submodule.";
         type = str;
       };
       value = mkOption {
@@ -58,6 +98,8 @@ in
     (mkRemovedOptionModule [ "services" "kubernetes" "kubelet" "applyManifests" ] "")
     (mkRemovedOptionModule [ "services" "kubernetes" "kubelet" "cadvisorPort" ] "")
     (mkRemovedOptionModule [ "services" "kubernetes" "kubelet" "allowPrivileged" ] "")
+    (mkRemovedOptionModule [ "services" "kubernetes" "kubelet" "networkPlugin" ] "")
+    (mkRemovedOptionModule [ "services" "kubernetes" "kubelet" "containerRuntime" ] "")
   ];
 
   ###### interface
@@ -71,8 +113,8 @@ in
 
     clusterDns = mkOption {
       description = "Use alternative DNS.";
-      default = "10.1.0.1";
-      type = str;
+      default = [ "10.1.0.1" ];
+      type = listOf str;
     };
 
     clusterDomain = mkOption {
@@ -129,19 +171,13 @@ in
       };
     };
 
-    containerRuntime = mkOption {
-      description = "Which container runtime type to use";
-      type = enum ["docker" "remote"];
-      default = "remote";
-    };
-
     containerRuntimeEndpoint = mkOption {
       description = "Endpoint at which to find the container runtime api interface/socket";
       type = str;
       default = "unix:///run/containerd/containerd.sock";
     };
 
-    enable = mkEnableOption "Kubernetes kubelet.";
+    enable = mkEnableOption "Kubernetes kubelet";
 
     extraOpts = mkOption {
       description = "Kubernetes kubelet extra command line options.";
@@ -149,11 +185,17 @@ in
       type = separatedString " ";
     };
 
+    extraConfig = mkOption {
+      description = "Kubernetes kubelet extra configuration file entries.";
+      default = {};
+      type = attrsOf attrs;
+    };
+
     featureGates = mkOption {
-      description = "List set of feature gates";
+      description = "Attribute set of feature gate";
       default = top.featureGates;
       defaultText = literalExpression "config.${otop.featureGates}";
-      type = listOf str;
+      type = attrsOf bool;
     };
 
     healthz = {
@@ -166,14 +208,13 @@ in
       port = mkOption {
         description = "Kubernetes kubelet healthz port.";
         default = 10248;
-        type = int;
+        type = port;
       };
     };
 
     hostname = mkOption {
       description = "Kubernetes kubelet hostname override.";
-      default = config.networking.hostName;
-      defaultText = literalExpression "config.networking.hostName";
+      defaultText = literalExpression "config.networking.fqdnOrHostName";
       type = str;
     };
 
@@ -183,12 +224,6 @@ in
       description = "List of manifests to bootstrap with kubelet (only pods can be created as manifest entry)";
       type = attrsOf attrs;
       default = {};
-    };
-
-    networkPlugin = mkOption {
-      description = "Network plugin to use by Kubernetes.";
-      type = nullOr (enum ["cni" "kubenet"]);
-      default = "kubenet";
     };
 
     nodeIp = mkOption {
@@ -206,7 +241,7 @@ in
     port = mkOption {
       description = "Kubernetes kubelet info server listening port.";
       default = 10250;
-      type = int;
+      type = port;
     };
 
     seedDockerImages = mkOption {
@@ -242,7 +277,7 @@ in
     verbosity = mkOption {
       description = ''
         Optional glog verbosity level for logging statements. See
-        <link xlink:href="https://github.com/kubernetes/community/blob/master/contributors/devel/logging.md"/>
+        <https://github.com/kubernetes/community/blob/master/contributors/devel/logging.md>
       '';
       default = null;
       type = nullOr int;
@@ -301,44 +336,18 @@ in
           Restart = "on-failure";
           RestartSec = "1000ms";
           ExecStart = ''${top.package}/bin/kubelet \
-            --address=${cfg.address} \
-            --authentication-token-webhook \
-            --authentication-token-webhook-cache-ttl="10s" \
-            --authorization-mode=Webhook \
-            ${optionalString (cfg.clientCaFile != null)
-              "--client-ca-file=${cfg.clientCaFile}"} \
-            ${optionalString (cfg.clusterDns != "")
-              "--cluster-dns=${cfg.clusterDns}"} \
-            ${optionalString (cfg.clusterDomain != "")
-              "--cluster-domain=${cfg.clusterDomain}"} \
-            --cni-conf-dir=${cniConfig} \
-            ${optionalString (cfg.featureGates != [])
-              "--feature-gates=${concatMapStringsSep "," (feature: "${feature}=true") cfg.featureGates}"} \
-            --hairpin-mode=hairpin-veth \
-            --healthz-bind-address=${cfg.healthz.bind} \
-            --healthz-port=${toString cfg.healthz.port} \
+            --config=${kubeletConfig} \
             --hostname-override=${cfg.hostname} \
             --kubeconfig=${kubeconfig} \
-            ${optionalString (cfg.networkPlugin != null)
-              "--network-plugin=${cfg.networkPlugin}"} \
             ${optionalString (cfg.nodeIp != null)
               "--node-ip=${cfg.nodeIp}"} \
             --pod-infra-container-image=pause \
             ${optionalString (cfg.manifests != {})
               "--pod-manifest-path=/etc/${manifestPath}"} \
-            --port=${toString cfg.port} \
-            --register-node=${boolToString cfg.registerNode} \
             ${optionalString (taints != "")
               "--register-with-taints=${taints}"} \
             --root-dir=${top.dataDir} \
-            ${optionalString (cfg.tlsCertFile != null)
-              "--tls-cert-file=${cfg.tlsCertFile}"} \
-            ${optionalString (cfg.tlsKeyFile != null)
-              "--tls-private-key-file=${cfg.tlsKeyFile}"} \
             ${optionalString (cfg.verbosity != null) "--v=${toString cfg.verbosity}"} \
-            --container-runtime=${cfg.containerRuntime} \
-            --container-runtime-endpoint=${cfg.containerRuntimeEndpoint} \
-            --cgroup-driver=systemd \
             ${cfg.extraOpts}
           '';
           WorkingDirectory = top.dataDir;
@@ -348,13 +357,13 @@ in
         };
       };
 
-      # Allways include cni plugins
+      # Always include cni plugins
       services.kubernetes.kubelet.cni.packages = [pkgs.cni-plugins pkgs.cni-plugin-flannel];
 
       boot.kernelModules = ["br_netfilter" "overlay"];
 
-      services.kubernetes.kubelet.hostname = with config.networking;
-        mkDefault (hostName + optionalString (domain != null) ".${domain}");
+      services.kubernetes.kubelet.hostname =
+        mkDefault (lib.toLower config.networking.fqdnOrHostName);
 
       services.kubernetes.pki.certs = with top.lib; {
         kubelet = mkCert {

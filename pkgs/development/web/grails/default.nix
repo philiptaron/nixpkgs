@@ -11,11 +11,11 @@ let
 in
 stdenv.mkDerivation rec {
   pname = "grails";
-  version = "5.1.6";
+  version = "6.1.2";
 
   src = fetchurl {
     url = "https://github.com/grails/grails-core/releases/download/v${version}/grails-${version}.zip";
-    sha256 = "sha256-H4c/Nu6iOgaRLl/uV51nYnNQg5p9cjl/taexZnl4t+I=";
+    sha256 = "sha256-PoiXZuAJbKsyBRVaxwsKSDh1BzPYlgAwe/xC0qfeDgs=";
   };
 
   nativeBuildInputs = [ unzip ];
@@ -38,6 +38,7 @@ stdenv.mkDerivation rec {
 
   meta = with lib; {
     description = "Full stack, web application framework for the JVM";
+    mainProgram = "grails";
     longDescription = ''
       Grails is an Open Source, full stack, web application framework for the
       JVM. It takes advantage of the Groovy programming language and convention
@@ -46,6 +47,7 @@ stdenv.mkDerivation rec {
     '';
     homepage = "https://grails.org/";
     license = licenses.asl20;
+    sourceProvenance = with sourceTypes; [ binaryBytecode ];
     platforms = platforms.linux;
     maintainers = [ maintainers.bjornfor ];
   };

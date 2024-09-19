@@ -1,34 +1,39 @@
 { stdenv
 , lib
 , fetchurl
-, meson
-, ninja
-, pkg-config
-, wrapGAppsHook4
 , fontconfig
 , glib
+, gnome
+, gnome-desktop
 , gsettings-desktop-schemas
 , gtk4
 , libadwaita
-, gnome-desktop
-, xdg-desktop-portal
+, libjxl
+, librsvg
+, meson
+, ninja
+, pkg-config
 , wayland
-, gnome
+, wayland-scanner
+, webp-pixbuf-loader
+, wrapGAppsHook4
+, xdg-desktop-portal
 }:
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation (finalAttrs: {
   pname = "xdg-desktop-portal-gnome";
-  version = "42.1";
+  version = "46.2";
 
   src = fetchurl {
-    url = "mirror://gnome/sources/${pname}/${lib.versions.major version}/${pname}-${version}.tar.xz";
-    sha256 = "doW2aVzZi+gjgXECDByXE8RkfSaAAGyYzo5N+FgxLNI=";
+    url = "mirror://gnome/sources/xdg-desktop-portal-gnome/${lib.versions.major finalAttrs.version}/xdg-desktop-portal-gnome-${finalAttrs.version}.tar.xz";
+    hash = "sha256-tcZeol6Eg1AtAzphO+bca3GIOsB/Gj5HStGAScR9FtY=";
   };
 
   nativeBuildInputs = [
     meson
     ninja
     pkg-config
+    wayland-scanner
     wrapGAppsHook4
   ];
 
@@ -47,16 +52,29 @@ stdenv.mkDerivation rec {
     "-Dsystemduserunitdir=${placeholder "out"}/lib/systemd/user"
   ];
 
+  postInstall = ''
+    # Pull in WebP and JXL support for gnome-backgrounds.
+    # In postInstall to run before gappsWrapperArgsHook.
+    export GDK_PIXBUF_MODULE_FILE="${gnome._gdkPixbufCacheBuilder_DO_NOT_USE {
+      extraLoaders = [
+        libjxl
+        librsvg
+        webp-pixbuf-loader
+      ];
+    }}"
+  '';
+
   passthru = {
     updateScript = gnome.updateScript {
-      packageName = pname;
+      packageName = "xdg-desktop-portal-gnome";
     };
   };
 
   meta = with lib; {
     description = "Backend implementation for xdg-desktop-portal for the GNOME desktop environment";
+    homepage = "https://gitlab.gnome.org/GNOME/xdg-desktop-portal-gnome";
     maintainers = teams.gnome.members;
     platforms = platforms.linux;
     license = licenses.lgpl21Plus;
   };
-}
+})

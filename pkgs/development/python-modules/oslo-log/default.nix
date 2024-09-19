@@ -1,44 +1,48 @@
-{ lib
-, stdenv
-, buildPythonPackage
-, fetchPypi
-, oslo-config
-, oslo-context
-, oslo-serialization
-, oslo-utils
-, oslotest
-, pbr
-, pyinotify
-, python-dateutil
-, pytestCheckHook
-, pythonOlder
+{
+  lib,
+  stdenv,
+  buildPythonPackage,
+  fetchPypi,
+  eventlet,
+  oslo-config,
+  oslo-context,
+  oslo-serialization,
+  oslo-utils,
+  oslotest,
+  pbr,
+  pyinotify,
+  python-dateutil,
+  pytestCheckHook,
+  pythonOlder,
+  setuptools,
 }:
 
 buildPythonPackage rec {
   pname = "oslo-log";
-  version = "5.0.0";
-  format = "setuptools";
+  version = "6.1.2";
+  pyproject = true;
 
-  disabled = pythonOlder "3.6";
+  disabled = pythonOlder "3.8";
 
   src = fetchPypi {
     pname = "oslo.log";
     inherit version;
-    hash = "sha256-c6tyNKii1QvfUmyHTfocsrEIO6+a2VvC64r1YkidTQE=";
+    hash = "sha256-92gEffnXBsSE3WZl3LvqKJAh1Iy3zlq/eh9poJSR9f4=";
   };
 
-  propagatedBuildInputs = [
+  build-system = [ setuptools ];
+
+  dependencies = [
     oslo-config
     oslo-context
     oslo-serialization
     oslo-utils
     pbr
     python-dateutil
-  ] ++ lib.optionals stdenv.isLinux [
-    pyinotify
-  ];
+  ] ++ lib.optionals stdenv.isLinux [ pyinotify ];
 
-  checkInputs = [
+  nativeCheckInputs = [
+    eventlet
     oslotest
     pytestCheckHook
   ];
@@ -46,15 +50,15 @@ buildPythonPackage rec {
   disabledTests = [
     # not compatible with sandbox
     "test_logging_handle_error"
+    # File which is used doesn't seem not to be present
+    "test_log_config_append_invalid"
   ];
 
-  pythonImportsCheck = [
-    "oslo_log"
-  ];
+  pythonImportsCheck = [ "oslo_log" ];
 
   meta = with lib; {
-    broken = stdenv.isDarwin;
     description = "oslo.log library";
+    mainProgram = "convert-json";
     homepage = "https://github.com/openstack/oslo.log";
     license = licenses.asl20;
     maintainers = teams.openstack.members;

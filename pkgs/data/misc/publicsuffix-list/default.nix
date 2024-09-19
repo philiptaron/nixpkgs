@@ -1,19 +1,27 @@
-{ lib, fetchFromGitHub }:
+{ lib, stdenvNoCC, fetchFromGitHub, unstableGitUpdater }:
 
-let
+stdenvNoCC.mkDerivation {
   pname = "publicsuffix-list";
-  version = "2021-09-03";
-in fetchFromGitHub {
-  name = "${pname}-${version}";
-  owner = "publicsuffix";
-  repo = "list";
-  rev = "2533d032871e1ef1f410fc0754b848d4587c8021";
-  sha256 = "sha256-Q8uIXM1CMu8dlWcVoL17M1XRGu3kG7Y7jpx0oHQh+2I=";
+  version = "0-unstable-2024-08-21";
 
-  postFetch = ''
-    tar xf $downloadedFile --strip=1
+  src = fetchFromGitHub {
+    owner = "publicsuffix";
+    repo = "list";
+    rev = "30c3fc2db5ec0ecbc2efbb798b12459e9a22fffd";
+    hash = "sha256-RmSlBl6lHFFvEEG2rsnwMpF9X8tv0VhPwhnke4UxUmA=";
+  };
+
+  dontBuild = true;
+
+  installPhase = ''
+    runHook preInstall
+
     install -Dm0444 public_suffix_list.dat tests/test_psl.txt -t $out/share/publicsuffix
+
+    runHook postInstall
   '';
+
+  passthru.updateScript = unstableGitUpdater { };
 
   meta = with lib; {
     homepage = "https://publicsuffix.org/";

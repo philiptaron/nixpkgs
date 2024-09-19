@@ -2,25 +2,24 @@
 
 buildGoModule rec {
   pname = "sptlrx";
-  version = "0.2.0";
+  version = "1.1.0";
 
   src = fetchFromGitHub {
     owner = "raitonoberu";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-b38DACSdnjwPsLMrkt0Ubpqpn/4SDAgrdSlp9iAcxfE=";
+    hash = "sha256-6GbefTWrhH6RdASmSrugd4xESkwqFVF5qwFmf0JUDTY=";
   };
 
-  vendorSha256 = "sha256-/fqWnRQBpLNoTwqrFDKqQuv1r9do1voysBhLuj223S0=";
+  vendorHash = "sha256-Ll5jUjpx4165BAE86/z95i4xa8fdKlfxqrUc/gDLqJ0=";
 
   ldflags = [ "-s" "-w" ];
 
   passthru = {
-    updateScript = nix-update-script { attrPath = pname; };
+    updateScript = nix-update-script { };
     tests.version = testers.testVersion {
       package = sptlrx;
-      # TODO Wrong version in `0.2.0`. Has been fixed upstream.
-      version = "v0.1.0";
+      version = "v${version}"; # needed because testVersion uses grep -Fw
     };
   };
 
@@ -30,5 +29,6 @@ buildGoModule rec {
     changelog = "https://github.com/raitonoberu/sptlrx/releases/tag/v${version}";
     license = licenses.mit;
     maintainers = with maintainers; [ MoritzBoehme ];
+    mainProgram = "sptlrx";
   };
 }

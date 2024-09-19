@@ -20,13 +20,13 @@ in {
   options.virtualisation.digitalOcean.defaultConfigFile = mkOption {
     type = types.path;
     default = defaultConfigFile;
-    defaultText = literalDocBook ''
+    defaultText = literalMD ''
       The default configuration imports user-data if applicable and
-      <literal>(modulesPath + "/virtualisation/digital-ocean-config.nix")</literal>.
+      `(modulesPath + "/virtualisation/digital-ocean-config.nix")`.
     '';
     description = ''
       A path to a configuration file which will be placed at
-      <literal>/etc/nixos/configuration.nix</literal> and be used when switching to
+      `/etc/nixos/configuration.nix` and be used when switching to
       a new configuration.
     '';
   };

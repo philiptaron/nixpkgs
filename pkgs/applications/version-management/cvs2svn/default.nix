@@ -15,7 +15,7 @@ pypy2Packages.buildPythonApplication  rec {
 
   nativeBuildInputs = [ makeWrapper installShellFiles ];
 
-  checkInputs = [ subversion git breezy ];
+  nativeCheckInputs = [ subversion git breezy ];
 
   checkPhase = "${pypy2Packages.python.interpreter} run-tests.py";
 
@@ -31,7 +31,7 @@ pypy2Packages.buildPythonApplication  rec {
   '';
 
   meta = with lib; {
-    description = "A tool to convert CVS repositories to Subversion repositories";
+    description = "Tool to convert CVS repositories to Subversion repositories";
     homepage = "https://github.com/mhagger/cvs2svn";
     maintainers = with maintainers; [ makefu viraptor ];
     platforms = platforms.unix;

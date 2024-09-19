@@ -8,39 +8,15 @@
 , common-updater-scripts
 }:
 
-let
-  version = "2.8.1";
-
-  sources = {
-    "x86_64-linux" = fetchurl {
-      url = "https://packages.blackfire.io/debian/pool/any/main/b/blackfire/blackfire_${version}_amd64.deb";
-      sha256 = "znaM00jM6yrpb+bGTxzJUxViCUzv4G+CYK2EB5dxhfY=";
-    };
-    "i686-linux" = fetchurl {
-      url = "https://packages.blackfire.io/debian/pool/any/main/b/blackfire/blackfire_${version}_i386.deb";
-      sha256 = "QIY4qGm333H5MWhe3CIfEieqTEk8st5A7SJHkwGnnxw=";
-    };
-    "aarch64-linux" = fetchurl {
-      url = "https://packages.blackfire.io/debian/pool/any/main/b/blackfire/blackfire_${version}_arm64.deb";
-      sha256 = "eZbKoKYC2tt4Rxn5OJr7iA1aJlYFC0tpRmbLq7qSrIU=";
-    };
-    "aarch64-darwin" = fetchurl {
-      url = "https://packages.blackfire.io/blackfire/${version}/blackfire-darwin_arm64.pkg.tar.gz";
-      sha256 = "tn2vF3v7KfF7CfWqyydL5Iyh5tP9Tez87PJH+URgSIw=";
-    };
-    "x86_64-darwin" = fetchurl {
-      url = "https://packages.blackfire.io/blackfire/${version}/blackfire-darwin_amd64.pkg.tar.gz";
-      sha256 = "CRFlnqpX4j2CMGzS+UvXwNty2mHpONOjym6UJPE2Yg4=";
-    };
-  };
-in
 stdenv.mkDerivation rec {
   pname = "blackfire";
-  inherit version;
+  version = "2.28.11";
 
-  src = sources.${stdenv.hostPlatform.system};
+  src = passthru.sources.${stdenv.hostPlatform.system} or (throw "Unsupported platform for blackfire: ${stdenv.hostPlatform.system}");
 
-  nativeBuildInputs = lib.optionals stdenv.isLinux [ dpkg ];
+  nativeBuildInputs = lib.optionals stdenv.isLinux [
+    dpkg
+  ];
 
   dontUnpack = true;
 
@@ -78,7 +54,30 @@ stdenv.mkDerivation rec {
   '';
 
   passthru = {
-    updateScript = writeShellScript "update-${pname}" ''
+    sources = {
+      "x86_64-linux" = fetchurl {
+        url = "https://packages.blackfire.io/debian/pool/any/main/b/blackfire/blackfire_${version}_amd64.deb";
+        sha256 = "g/Wt/rTmqSAM+m46J7bTGJnX3lD7aYHJKIqXGL2cUlo=";
+      };
+      "i686-linux" = fetchurl {
+        url = "https://packages.blackfire.io/debian/pool/any/main/b/blackfire/blackfire_${version}_i386.deb";
+        sha256 = "GDNy0Y0ytySvU/6LgoY6OoEZex+EujhdWjfrOdmK968=";
+      };
+      "aarch64-linux" = fetchurl {
+        url = "https://packages.blackfire.io/debian/pool/any/main/b/blackfire/blackfire_${version}_arm64.deb";
+        sha256 = "QzK4uxgt+nUtR9sY62PNk6ea3ZuUFVI1Ve16MdCeOog=";
+      };
+      "aarch64-darwin" = fetchurl {
+        url = "https://packages.blackfire.io/blackfire/${version}/blackfire-darwin_arm64.pkg.tar.gz";
+        sha256 = "jrBP8iCD6/DNa/9UNBODvI1Du2SjiQSR2fJAXeWdIiY=";
+      };
+      "x86_64-darwin" = fetchurl {
+        url = "https://packages.blackfire.io/blackfire/${version}/blackfire-darwin_amd64.pkg.tar.gz";
+        sha256 = "2xCz5/G/aFMopI3VGXEkXz4cetFI2NdUg+6dXfvOxFQ=";
+      };
+    };
+
+    updateScript = writeShellScript "update-blackfire" ''
       set -o errexit
       export PATH="${lib.makeBinPath [ curl jq common-updater-scripts ]}"
       NEW_VERSION=$(curl -s https://blackfire.io/api/v1/releases | jq .cli --raw-output)
@@ -88,9 +87,8 @@ stdenv.mkDerivation rec {
           exit 0
       fi
 
-      for platform in ${lib.concatStringsSep " " meta.platforms}; do
-        update-source-version "blackfire" "0" "${lib.fakeSha256}" "--system=$platform"
-        update-source-version "blackfire" "$NEW_VERSION" "--system=$platform" --ignore-same-hash
+      for platform in ${lib.escapeShellArgs meta.platforms}; do
+        update-source-version "blackfire" "$NEW_VERSION" --ignore-same-version --source-key="sources.$platform"
       done
     '';
   };
@@ -98,8 +96,9 @@ stdenv.mkDerivation rec {
   meta = with lib; {
     description = "Blackfire Profiler agent and client";
     homepage = "https://blackfire.io/";
+    sourceProvenance = with sourceTypes; [ binaryNativeCode ];
     license = licenses.unfree;
-    maintainers = with maintainers; [ jtojnar shyim ];
+    maintainers = with maintainers; [ shyim ];
     platforms = [ "x86_64-linux" "aarch64-linux" "i686-linux" "x86_64-darwin" "aarch64-darwin" ];
   };
 }

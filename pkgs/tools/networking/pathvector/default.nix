@@ -2,16 +2,16 @@
 
 buildGoModule rec {
   pname = "pathvector";
-  version = "5.12.0";
+  version = "6.3.2";
 
   src = fetchFromGitHub {
     owner = "natesales";
     repo = "pathvector";
     rev = "v${version}";
-    sha256 = "sha256-RdUZkkALEdyq+YKtgGE/P8eTX2v3fdYHF1wpZEyfkgY=";
+    sha256 = "sha256-TqGasguEAcA5ET2E/uFjgIl7IHI2v9m5EaXpIMG3T8c=";
   };
 
-  vendorSha256 = "sha256-oxLMfmHLaOQwpRYwnHRQY0mIV5/fZ65RDgKVs0Kzd2Q=";
+  vendorHash = "sha256-hgUuntT6jMWI14qDE3Yjm5W8UqQ6CcvoILmSDaVEZac=";
 
   CGO_ENABLED = 0;
 
@@ -24,5 +24,6 @@ buildGoModule rec {
     homepage = "https://pathvector.io";
     license = licenses.gpl3;
     maintainers = with maintainers; [ matthewpi ];
+    mainProgram = "pathvector";
   };
 }

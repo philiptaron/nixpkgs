@@ -1,21 +1,38 @@
-{ lib, buildGoModule, fetchFromGitHub, installShellFiles }:
-
+{
+  lib,
+  buildGoModule,
+  fetchFromGitHub,
+  installShellFiles,
+  nixosTests,
+}:
 buildGoModule rec {
   pname = "headscale";
-  version = "0.15.0";
+  version = "0.22.3";
 
   src = fetchFromGitHub {
     owner = "juanfont";
     repo = "headscale";
     rev = "v${version}";
-    sha256 = "sha256-ZgChln6jcxyEHbCy89kNnwd9qWcB0yDq05xFkM69WLs=";
+    hash = "sha256-nqmTqe3F3Oh8rnJH0clwACD/0RpqmfOMXNubr3C8rEc=";
   };
 
-  vendorSha256 = "sha256-0jZ37tmBG8E0HS/wbQyQvAKo1UKQdaZDa+OTGfGDAi4=";
+  vendorHash = "sha256-IOkbbFtE6+tNKnglE/8ZuNxhPSnloqM2sLgTvagMmnc=";
 
-  ldflags = [ "-s" "-w" "-X github.com/juanfont/headscale/cmd/headscale/cli.Version=v${version}" ];
+  patches = [
+    # backport of https://github.com/juanfont/headscale/pull/1697
+    ./trim-oidc-secret-path.patch
 
-  nativeBuildInputs = [ installShellFiles ];
+    # fix for headscale not reacting to SIGTERM
+    # see https://github.com/juanfont/headscale/pull/1480 and https://github.com/juanfont/headscale/issues/1461
+    ./sigterm-fix.patch
+  ];
+
+  ldflags = ["-s" "-w" "-X github.com/juanfont/headscale/cmd/headscale/cli.Version=v${version}"];
+
+  nativeBuildInputs = [installShellFiles];
+  checkFlags = ["-short"];
+
+  tags = ["ts2019"];
 
   postInstall = ''
     installShellCompletion --cmd headscale \
@@ -24,9 +41,11 @@ buildGoModule rec {
       --zsh <($out/bin/headscale completion zsh)
   '';
 
+  passthru.tests = { inherit (nixosTests) headscale; };
+
   meta = with lib; {
     homepage = "https://github.com/juanfont/headscale";
-    description = "An open source, self-hosted implementation of the Tailscale control server";
+    description = "Open source, self-hosted implementation of the Tailscale control server";
     longDescription = ''
       Tailscale is a modern VPN built on top of Wireguard. It works like an
       overlay network between the computers of your networks - using all kinds
@@ -44,6 +63,6 @@ buildGoModule rec {
       Headscale implements this coordination server.
     '';
     license = licenses.bsd3;
-    maintainers = with maintainers; [ nkje jk kradalby ];
+    maintainers = with maintainers; [nkje jk kradalby misterio77 ghuntley];
   };
 }

@@ -2,10 +2,10 @@
 
 stdenv.mkDerivation rec {
   pname = "apache-activemq";
-  version = "5.17.1";
+  version = "6.1.2";
 
   src = fetchurl {
-    sha256 = "sha256-YX7CUQLMYiUubZsGzElnZq8RbJdSUlW8jEs+de6eAMg=";
+    sha256 = "sha256-EJZWrGvXICxp+eDzrX5BPnl/ZuUMO7utKgaS2c4IBQ0=";
     url = "mirror://apache/activemq/${version}/${pname}-${version}-bin.tar.gz";
   };
 

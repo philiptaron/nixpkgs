@@ -1,5 +1,4 @@
-{ atomEnv
-, autoPatchelfHook
+{ autoPatchelfHook
 , dpkg
 , fetchurl
 , makeDesktopItem
@@ -7,11 +6,15 @@
 , stdenv
 , lib
 , udev
-, wrapGAppsHook
+, wrapGAppsHook3
 , cpio
 , xar
 , libdbusmenu
-, libxshmfence
+, alsa-lib
+, mesa
+, nss
+, nspr
+, systemd
 }:
 
 let
@@ -22,18 +25,24 @@ let
 
   pname = "wire-desktop";
 
-  version = {
-    x86_64-darwin = "3.27.4357";
-    x86_64-linux = "3.27.2944";
+  version = let
+    x86_64-darwin = "3.35.4861";
+  in {
+    inherit x86_64-darwin;
+    aarch64-darwin = x86_64-darwin;
+    x86_64-linux = "3.36.3462";
   }.${system} or throwSystem;
 
-  sha256 = {
-    x86_64-darwin = "0xihg9fzsbwib2fmb1yqx9015i9q4k0ph8lna4mzgicmrjkw54g8";
-    x86_64-linux = "1wqnrmp8q84izvqv25fgks5pv6la3vahm5dsn7bc6zxqb0xz2xvy";
+  hash = let
+    x86_64-darwin = "sha256-QPxslMEz1jOH2LceFOdCyVDtpya1SfJ8GWMIAIhie4U=";
+  in {
+    inherit x86_64-darwin;
+    aarch64-darwin = x86_64-darwin;
+    x86_64-linux = "sha256-tlX15AT4PcrmD2Vna99TGqo0b/8xv2YOAt03aCqSeXg=";
   }.${system} or throwSystem;
 
   meta = with lib; {
-    description = "A modern, secure messenger for everyone";
+    description = "Modern, secure messenger for everyone";
     longDescription = ''
       Wire Personal is a secure, privacy-friendly messenger. It combines useful
       and fun features, audited security, and a beautiful, distinct user
@@ -47,25 +56,24 @@ let
     '';
     homepage = "https://wire.com/";
     downloadPage = "https://wire.com/download/";
+    sourceProvenance = with sourceTypes; [ binaryNativeCode ];
     license = licenses.gpl3Plus;
     maintainers = with maintainers; [
       arianvp
-      kiwi
       toonn
     ];
-    platforms = [
-      "x86_64-darwin"
+    platforms = platforms.darwin ++ [
       "x86_64-linux"
     ];
+    hydraPlatforms = [];
   };
 
   linux = stdenv.mkDerivation rec {
     inherit pname version meta;
 
     src = fetchurl {
-      url = "https://wire-app.wire.com/linux/debian/pool/main/"
-      + "Wire-${version}_amd64.deb";
-      inherit sha256;
+      url = "https://wire-app.wire.com/linux/debian/pool/main/Wire-${version}_amd64.deb";
+      inherit hash;
     };
 
     desktopItem = makeDesktopItem {
@@ -84,14 +92,21 @@ let
     dontPatchELF = true;
     dontWrapGApps = true;
 
+    # TODO: migrate off autoPatchelfHook and use nixpkgs' electron
     nativeBuildInputs = [
       autoPatchelfHook
       dpkg
       makeWrapper
-      wrapGAppsHook
+      wrapGAppsHook3
     ];
 
-    buildInputs = [ libxshmfence ] ++ atomEnv.packages;
+    buildInputs = [
+      alsa-lib
+      mesa
+      nss
+      nspr
+      systemd
+    ];
 
     unpackPhase = ''
       runHook preUnpack
@@ -121,6 +136,10 @@ let
       libdbusmenu
     ];
 
+    preFixup = ''
+      gappsWrapperArgs+=(--add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto --ozone-platform=wayland --enable-features=WaylandWindowDecorations}}")
+    '';
+
     postFixup = ''
       makeWrapper $out/opt/Wire/wire-desktop $out/bin/wire-desktop \
         "''${gappsWrapperArgs[@]}"
@@ -131,9 +150,8 @@ let
     inherit pname version meta;
 
     src = fetchurl {
-      url = "https://github.com/wireapp/wire-desktop/releases/download/"
-          + "macos%2F${version}/Wire.pkg";
-      inherit sha256;
+      url = "https://github.com/wireapp/wire-desktop/releases/download/macos%2F${version}/Wire.pkg";
+      inherit hash;
     };
 
     buildInputs = [

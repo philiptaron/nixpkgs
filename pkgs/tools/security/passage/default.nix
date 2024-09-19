@@ -1,20 +1,55 @@
-{ lib, stdenv, fetchFromGitHub, makeBinaryWrapper, bash, age, git ? null
-, xclip ? null }:
+{ lib
+, stdenv
+, fetchFromGitHub
+, makeBinaryWrapper
+, substituteAll
+, age
+, getopt
+, coreutils
+, findutils
+, gnugrep
+, gnused
+, qrencode ? null
+, wl-clipboard ? null
+, git ? null
+, xclip ? null
+# Used to pretty-print list of all stored passwords, but is not needed to fetch
+# or store password by its name. Most users would want this dependency.
+, tree ? null
+}:
 
-stdenv.mkDerivation {
+stdenv.mkDerivation (finalAttrs: {
   pname = "passage";
-  version = "unstable-2022-05-01";
+  version = "1.7.4a2";
 
   src = fetchFromGitHub {
     owner = "FiloSottile";
     repo = "passage";
-    rev = "1262d308f09db9b243513a428ab4b8fb1c30d31d";
-    sha256 = "1val8wl9kzlxj4i1rrh2iiyf97w9akffvr0idvbkdb09hfzz4lz8";
+    rev = "${finalAttrs.version}";
+    hash = "sha256-tGHJFzDc2K117r5EMFdKsfw/+EpdZ0qzaExt+RGI4qo=";
   };
+
+  patches = [
+    (substituteAll {
+      src = ./darwin-getopt-path.patch;
+      inherit getopt;
+    })
+  ];
 
   nativeBuildInputs = [ makeBinaryWrapper ];
 
-  extraPath = lib.makeBinPath [ age git xclip ];
+  extraPath = lib.makeBinPath [
+    age
+    coreutils
+    findutils
+    git
+    gnugrep
+    gnused
+    qrencode
+    tree
+    wl-clipboard
+    xclip
+  ];
 
   # Using $0 is bad, it causes --help to mention ".passage-wrapped".
   postInstall = ''
@@ -28,8 +63,9 @@ stdenv.mkDerivation {
     description = "Stores, retrieves, generates, and synchronizes passwords securely";
     homepage    = "https://github.com/FiloSottile/passage";
     license     = licenses.gpl2Plus;
-    maintainers = with maintainers; [ kaction ];
+    maintainers = with maintainers; [ kaction ma27 ];
     platforms   = platforms.unix;
+    mainProgram = "passage";
 
     longDescription = ''
       passage is a fork of password-store (https://www.passwordstore.org) that uses
@@ -41,4 +77,4 @@ stdenv.mkDerivation {
       passwords.
     '';
   };
-}
+})

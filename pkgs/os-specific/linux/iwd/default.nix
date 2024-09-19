@@ -8,16 +8,17 @@
 , readline
 , openssl
 , python3Packages
+, gitUpdater
 }:
 
 stdenv.mkDerivation rec {
   pname = "iwd";
-  version = "1.27";
+  version = "2.19";
 
   src = fetchgit {
     url = "https://git.kernel.org/pub/scm/network/wireless/iwd.git";
     rev = version;
-    sha256 = "sha256-gN9+9Cc6zjZBXDhcHBH5wyucO5/vL7bKSLWM5laFqaA=";
+    hash = "sha256-LIzcV8OvtHItMpgFVHDQhUisD3kaMPMESd3cgOaIu/8=";
   };
 
   outputs = [ "out" "man" "doc" ]
@@ -36,7 +37,7 @@ stdenv.mkDerivation rec {
     readline
   ];
 
-  checkInputs = [ openssl ];
+  nativeCheckInputs = [ openssl ];
 
   # wrapPython wraps the scripts in $test. They pull in gobject-introspection,
   # which doesn't cross-compile.
@@ -80,18 +81,23 @@ stdenv.mkDerivation rec {
 
   postFixup = ''
     substituteInPlace $out/share/dbus-1/system-services/net.connman.ead.service \
-      --replace /bin/false ${coreutils}/bin/false
+      --replace-fail /bin/false ${coreutils}/bin/false
     substituteInPlace $out/share/dbus-1/system-services/net.connman.iwd.service \
-      --replace /bin/false ${coreutils}/bin/false
+      --replace-fail /bin/false ${coreutils}/bin/false
   '';
 
   enableParallelBuilding = true;
+
+  passthru.updateScript = gitUpdater {
+    # No nicer place to find latest release.
+    url = "https://git.kernel.org/pub/scm/network/wireless/iwd.git";
+  };
 
   meta = with lib; {
     homepage = "https://git.kernel.org/pub/scm/network/wireless/iwd.git";
     description = "Wireless daemon for Linux";
     license = licenses.lgpl21Plus;
     platforms = platforms.linux;
-    maintainers = with maintainers; [ dtzWill fpletz maxeaubrey ];
+    maintainers = with maintainers; [ dtzWill fpletz ];
   };
 }

@@ -36,7 +36,6 @@ let
       This index includes documentation for many Haskell modules.
     '';
 
-  # TODO: closePropagation is deprecated; replace
   docPackages = lib.closePropagation
     # we grab the doc outputs
     (map (lib.getOutput "doc") packages);
@@ -119,7 +118,7 @@ buildPackages.stdenv.mkDerivation {
   };
 
   meta = {
-    description = "A local Hoogle database";
+    description = "Local Hoogle database";
     platforms = ghc.meta.platforms;
     hydraPlatforms = with lib.platforms; none;
     maintainers = with lib.maintainers; [ ttuegel ];

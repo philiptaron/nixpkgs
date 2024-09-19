@@ -45,7 +45,6 @@ import ../make-test-python.nix (
             enable_registration = true;
             enable_registration_without_verification = true;
             registration_shared_secret = "supersecret-registration";
-            enable_registration_without_verification = true;
 
             listeners = [ {
               # The default but tls=false
@@ -99,6 +98,8 @@ import ../make-test-python.nix (
             enable = true;
             username = "mjolnir";
             passwordFile = pkgs.writeText "password.txt" "mjolnir-password";
+            # otherwise mjolnir tries to connect to ::1, which is not listened by pantalaimon
+            options.listenAddress = "127.0.0.1";
           };
           managementRoom = "#moderators:homeserver";
         };
@@ -107,7 +108,10 @@ import ../make-test-python.nix (
       client = { pkgs, ... }: {
         environment.systemPackages = [
           (pkgs.writers.writePython3Bin "create_management_room_and_invite_mjolnir"
-            { libraries = [ pkgs.python3Packages.matrix-nio ]; } ''
+            { libraries = with pkgs.python3Packages; [
+                (matrix-nio.override { withOlm = true; })
+              ];
+            } ''
             import asyncio
 
             from nio import (

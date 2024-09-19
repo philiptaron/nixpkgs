@@ -2,11 +2,11 @@
 
 stdenv.mkDerivation rec {
   pname = "lhapdf";
-  version = "6.5.1";
+  version = "6.5.4";
 
   src = fetchurl {
     url = "https://www.hepforge.org/archive/lhapdf/LHAPDF-${version}.tar.gz";
-    sha256 = "sha256-ElZBniIn0aT5M4f+HagF5kg1FBfTdV6K9aMKNaamZ1E=";
+    sha256 = "sha256-JEOksyzDsFl8gki9biVwOs6ckaeiU8X2CxtUKO+chp4=";
   };
 
   # The Apple SDK only exports locale_t from xlocale.h whereas glibc
@@ -36,7 +36,7 @@ stdenv.mkDerivation rec {
   '';
 
   meta = with lib; {
-    description = "A general purpose interpolator, used for evaluating Parton Distribution Functions from discretised data files";
+    description = "General purpose interpolator, used for evaluating Parton Distribution Functions from discretised data files";
     license     = licenses.gpl2;
     homepage    = "http://lhapdf.hepforge.org";
     platforms   = platforms.unix;

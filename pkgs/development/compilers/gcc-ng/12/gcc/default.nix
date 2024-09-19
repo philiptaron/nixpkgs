@@ -55,8 +55,8 @@ stdenv.mkDerivation ({
   src = gcc_src;
 
   patches = [
-    ../../../gcc/gcc-12-no-sys-dirs.patch
-    ../../../gcc/no-sys-dirs-riscv.patch
+    ../../../gcc/patches/gcc-12-no-sys-dirs.patch
+    ../../../gcc/patches/no-sys-dirs-riscv.patch
     ./find-prefixed-progs.patch
   ] ++ lib.optional langFortran ../../gcc/gfortran-driving.patch
     ++ lib.optional (stdenv.isDarwin && stdenv.isAarch64) (fetchpatch {

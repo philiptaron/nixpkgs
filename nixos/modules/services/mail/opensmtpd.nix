@@ -1,12 +1,9 @@
 { config, lib, pkgs, ... }:
-
-with lib;
-
 let
 
   cfg = config.services.opensmtpd;
   conf = pkgs.writeText "smtpd.conf" cfg.serverConfiguration;
-  args = concatStringsSep " " cfg.extraServerArgs;
+  args = lib.concatStringsSep " " cfg.extraServerArgs;
 
   sendmail = pkgs.runCommand "opensmtpd-sendmail" { preferLocalBuild = true; } ''
     mkdir -p $out/bin
@@ -18,34 +15,29 @@ in {
   ###### interface
 
   imports = [
-    (mkRenamedOptionModule [ "services" "opensmtpd" "addSendmailToSystemPath" ] [ "services" "opensmtpd" "setSendmail" ])
+    (lib.mkRenamedOptionModule [ "services" "opensmtpd" "addSendmailToSystemPath" ] [ "services" "opensmtpd" "setSendmail" ])
   ];
 
   options = {
 
     services.opensmtpd = {
 
-      enable = mkOption {
-        type = types.bool;
+      enable = lib.mkOption {
+        type = lib.types.bool;
         default = false;
         description = "Whether to enable the OpenSMTPD server.";
       };
 
-      package = mkOption {
-        type = types.package;
-        default = pkgs.opensmtpd;
-        defaultText = literalExpression "pkgs.opensmtpd";
-        description = "The OpenSMTPD package to use.";
-      };
+      package = lib.mkPackageOption pkgs "opensmtpd" { };
 
-      setSendmail = mkOption {
-        type = types.bool;
+      setSendmail = lib.mkOption {
+        type = lib.types.bool;
         default = true;
         description = "Whether to set the system sendmail to OpenSMTPD's.";
       };
 
-      extraServerArgs = mkOption {
-        type = types.listOf types.str;
+      extraServerArgs = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
         default = [];
         example = [ "-v" "-P mta" ];
         description = ''
@@ -54,8 +46,8 @@ in {
         '';
       };
 
-      serverConfiguration = mkOption {
-        type = types.lines;
+      serverConfiguration = lib.mkOption {
+        type = lib.types.lines;
         example = ''
           listen on lo
           accept for any deliver to lmtp localhost:24
@@ -66,8 +58,8 @@ in {
         '';
       };
 
-      procPackages = mkOption {
-        type = types.listOf types.package;
+      procPackages = lib.mkOption {
+        type = lib.types.listOf lib.types.package;
         default = [];
         description = ''
           Packages to search for filters, tables, queues, and schedulers.
@@ -83,7 +75,7 @@ in {
 
   ###### implementation
 
-  config = mkIf cfg.enable rec {
+  config = lib.mkIf cfg.enable rec {
     users.groups = {
       smtpd.gid = config.ids.gids.smtpd;
       smtpq.gid = config.ids.gids.smtpq;
@@ -110,7 +102,7 @@ in {
       source = "${cfg.package}/bin/smtpctl";
     };
 
-    services.mail.sendmailSetuidWrapper = mkIf cfg.setSendmail
+    services.mail.sendmailSetuidWrapper = lib.mkIf cfg.setSendmail
       (security.wrappers.smtpctl // { program = "sendmail"; });
 
     systemd.tmpfiles.rules = [

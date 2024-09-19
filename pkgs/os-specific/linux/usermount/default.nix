@@ -14,7 +14,7 @@ stdenv.mkDerivation {
   nativeBuildInputs = [ pkg-config ];
   buildInputs = [ dbus libnotify udisks2 gdk-pixbuf ];
 
-  NIX_CFLAGS_COMPILE = "-DENABLE_NOTIFICATIONS";
+  env.NIX_CFLAGS_COMPILE = "-DENABLE_NOTIFICATIONS";
 
   installPhase = ''
     mkdir -p $out/bin
@@ -23,7 +23,8 @@ stdenv.mkDerivation {
 
   meta = {
     homepage = "https://github.com/tom5760/usermount";
-    description = "A simple tool to automatically mount removable drives using UDisks2 and D-Bus";
+    description = "Simple tool to automatically mount removable drives using UDisks2 and D-Bus";
+    mainProgram = "usermount";
     license = lib.licenses.mit;
     platforms = lib.platforms.linux;
   };

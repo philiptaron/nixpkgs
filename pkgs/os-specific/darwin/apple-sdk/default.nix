@@ -1,4 +1,4 @@
-{ stdenv, fetchurl, xar, cpio, pkgs, python3, pbzx, lib, darwin-stubs, print-reexports }:
+{ stdenv, stdenvNoCC, fetchurl, cpio, pbzx, pkgs, lib, darwin-stubs, print-reexports }:
 
 let
   # sadly needs to be exported because security_tool needs it
@@ -16,27 +16,23 @@ let
       sha256 = "13xq34sb7383b37hwy076gnhf96prpk1b4087p87xnwswxbrisih";
     };
 
-    nativeBuildInputs = [ xar cpio python3 pbzx ];
+    nativeBuildInputs = [ cpio pbzx ];
 
     outputs = [ "out" "dev" "man" ];
 
     unpackPhase = ''
-      xar -x -f $src
+      pbzx $src | cpio -idm
     '';
 
+    sourceRoot = ".";
+
     installPhase = ''
-      start="$(pwd)"
       mkdir -p $out
-      cd $out
-      pbzx -n $start/Payload | cpio -idm
 
-      mv usr/* .
-      rmdir usr
+      cp -R System/Library $out
+      cp -R usr/* $out
 
-      mv System/* .
-      rmdir System
-
-      pushd lib
+      pushd $out/lib
       cp ${darwin-stubs}/usr/lib/libcups*.tbd .
       ln -s libcups.2.tbd      libcups.tbd
       ln -s libcupscgi.1.tbd   libcupscgi.tbd
@@ -167,17 +163,6 @@ let
 
     propagatedBuildInputs = builtins.attrValues deps;
 
-    # don't use pure CF for dylibs that depend on frameworks
-    setupHook = ./framework-setup-hook.sh;
-
-    # Not going to be more specific than this for now
-    __propagatedImpureHostDeps = lib.optionals (name != "Kernel") [
-      # The setup-hook ensures that everyone uses the impure CoreFoundation who uses these SDK frameworks, so let's expose it
-      "/System/Library/Frameworks/CoreFoundation.framework"
-      "/System/Library/Frameworks/${name}.framework"
-      "/System/Library/Frameworks/${name}.framework/${name}"
-    ];
-
     meta = with lib; {
       description = "Apple SDK framework ${name}";
       maintainers = with maintainers; [ copumpkin ];
@@ -267,6 +252,15 @@ in rec {
         ln -s libsandbox.1.tbd $out/lib/libsandbox.tbd
       '';
     };
+
+    simd = stdenvNoCC.mkDerivation {
+      name = "apple-lib-simd";
+
+      preferLocalBuild = true;
+      allowSubstitutes = false;
+
+      buildCommand = "echo 'simd library not available in the 10.12 SDK'; exit 1";
+    };
   };
 
   overrides = super: {
@@ -320,13 +314,32 @@ in rec {
       '';
     });
 
+    System = lib.overrideDerivation super.System (drv: {
+      installPhase = ''
+        mkdir -p $out/Library/Frameworks/System.framework/Versions/B
+        ln -s $out/Library/Frameworks/System.framework/Versions/{B,Current}
+        ln -s ${pkgs.darwin.Libsystem}/lib/libSystem.B.tbd $out/Library/Frameworks/System.framework/Versions/B/System.tbd
+        ln -s $out/Library/Frameworks/System.framework/{Versions/Current/,}System.tbd
+      '';
+    });
+
     WebKit = lib.overrideDerivation super.WebKit (drv: {
       extraTBDFiles = [
         "Versions/A/Frameworks/WebCore.framework/Versions/A/WebCore.tbd"
         "Versions/A/Frameworks/WebKitLegacy.framework/Versions/A/WebKitLegacy.tbd"
       ];
     });
-  } // lib.genAttrs [ "ContactsPersistence" "CoreSymbolication" "GameCenter" "SkyLight" "UIFoundation" ] (x: tbdOnlyFramework x {});
+  } // lib.genAttrs [
+    "ContactsPersistence"
+    "CoreSymbolication"
+    "DebugSymbols"
+    "DisplayServices"
+    "GameCenter"
+    "MultitouchSupport"
+    "SkyLight"
+    "UIFoundation"
+  ]
+    (x: tbdOnlyFramework x {});
 
   bareFrameworks = lib.mapAttrs framework (import ./frameworks.nix {
     inherit frameworks libs;
@@ -334,6 +347,14 @@ in rec {
   });
 
   frameworks = bareFrameworks // overrides bareFrameworks;
+
+  inherit darwin-stubs;
+
+  objc4 = pkgs.darwin.libobjc;
+
+  sdkRoot = pkgs.callPackage ./sdkRoot.nix { sdkVersion = "10.12.4"; };
+
+  inherit (pkgs.darwin) Libsystem;
 
   inherit sdk;
 }

@@ -1,33 +1,39 @@
 { lib, stdenv, fetchurl, mono, libmediainfo, sqlite, curl, makeWrapper, icu, dotnet-runtime, openssl, nixosTests, zlib }:
 
 let
+  pname = "prowlarr";
+
+  unsupported = throw "Unsupported system ${stdenv.hostPlatform.system} for ${pname}";
+
   os =
     if stdenv.isDarwin then
       "osx"
     else if stdenv.isLinux then
       "linux"
     else
-      throw "Not supported on ${stdenv.hostPlatform.system}.";
+      unsupported;
 
   arch = {
-    x86_64-linux = "x64";
+    aarch64-darwin = "arm64";
     aarch64-linux = "arm64";
     x86_64-darwin = "x64";
-  }."${stdenv.hostPlatform.system}" or (throw "Unsupported system: ${stdenv.hostPlatform.system}");
+    x86_64-linux = "x64";
+  }.${stdenv.hostPlatform.system} or unsupported;
 
   hash = {
-    x64-linux_hash = "sha256-NTkb6E0GRofd63TozLPxyNZ6GxO4pAc+MWsUDKWLZDY=";
-    arm64-linux_hash = "sha256-eB1Izvf/E0iOGkWt6fSc4oAt1sJ7XTxn/iwDNYz7WkA=";
-    x64-osx_hash = "sha256-TAphdcbzbNUZpWYVaHBkhI+RsgxWmI8n8Z6VwYxHXWg=";
-  }."${arch}-${os}_hash";
+    aarch64-darwin = "sha256-ZvkuScsFGlt6Cd6wTtikygCSYAzOuHmJLJa9Bos8VvM=";
+    aarch64-linux = "sha256-Ojf2PjoN+Vcxc0N0durgQOM9aumyggOtYr2rc7+IaZI=";
+    x86_64-darwin = "sha256-Uv4wunz/flGFzxeneW9NRmKLF831HR0Kjfkz6lnmhfA=";
+    x86_64-linux = "sha256-7LdJvJYArfpYMKdAt98jxW08p8a+o5OTjoTRRX74ds8=";
+  }.${stdenv.hostPlatform.system} or unsupported;
 
 in stdenv.mkDerivation rec {
-  pname = "prowlarr";
-  version = "0.2.0.1448";
+  inherit pname;
+  version = "1.23.1.4708";
 
   src = fetchurl {
-    url = "https://github.com/Prowlarr/Prowlarr/releases/download/v${version}/Prowlarr.develop.${version}.${os}-core-${arch}.tar.gz";
-    sha256 = hash;
+    url = "https://github.com/Prowlarr/Prowlarr/releases/download/v${version}/Prowlarr.master.${version}.${os}-core-${arch}.tar.gz";
+    inherit hash;
   };
 
   nativeBuildInputs = [ makeWrapper ];
@@ -52,10 +58,17 @@ in stdenv.mkDerivation rec {
   };
 
   meta = with lib; {
-    description = "An indexer manager/proxy built on the popular arr .net/reactjs base stack";
+    description = "Indexer manager/proxy built on the popular arr .net/reactjs base stack";
     homepage = "https://wiki.servarr.com/prowlarr";
+    changelog = "https://github.com/Prowlarr/Prowlarr/releases/tag/v${version}";
     license = licenses.gpl3Only;
     maintainers = with maintainers; [ jdreaver ];
-    platforms = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" ];
+    mainProgram = "Prowlarr";
+    platforms = [
+      "aarch64-darwin"
+      "aarch64-linux"
+      "x86_64-darwin"
+      "x86_64-linux"
+    ];
   };
 }

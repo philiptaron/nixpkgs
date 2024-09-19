@@ -13,25 +13,30 @@
 # package without splicing See: https://github.com/NixOS/nixpkgs/pull/107606
 , pkgs
 , fetchurl
-, fetchpatch
+, autoreconfHook
 , zlib
 , openssl
 , libedit
+, ldns
 , pkg-config
 , pam
 , libredirect
 , etcDir ? null
-, withKerberos ? !(stdenv.hostPlatform.isDarwin && stdenv.hostPlatform.isAarch64)
-, libkrb5
+, withKerberos ? false
+, withLdns ? true
+, krb5
 , libfido2
+, libxcrypt
 , hostname
 , nixosTests
 , withFIDO ? stdenv.hostPlatform.isUnix && !stdenv.hostPlatform.isMusl
+, withPAM ? stdenv.hostPlatform.isLinux
+, dsaKeysSupport ? false
 , linkOpenssl ? true
+, isNixos ? stdenv.hostPlatform.isLinux
 }:
 
-with lib;
-stdenv.mkDerivation rec {
+stdenv.mkDerivation (finalAttrs: {
   inherit pname version src;
 
   patches = [
@@ -53,22 +58,31 @@ stdenv.mkDerivation rec {
       substituteInPlace Makefile.in --replace '$(INSTALL) -m 4711' '$(INSTALL) -m 0711'
     '';
 
-  nativeBuildInputs = [ pkg-config ]
-    # This is not the same as the libkrb5 from the inputs! pkgs.libkrb5 is
+  strictDeps = true;
+  nativeBuildInputs = [ autoreconfHook pkg-config ]
+    # This is not the same as the krb5 from the inputs! pkgs.krb5 is
     # needed here to access krb5-config in order to cross compile. See:
     # https://github.com/NixOS/nixpkgs/pull/107606
-    ++ optional withKerberos pkgs.libkrb5
+    ++ lib.optional withKerberos pkgs.krb5
     ++ extraNativeBuildInputs;
-  buildInputs = [ zlib openssl libedit ]
-    ++ optional withFIDO libfido2
-    ++ optional withKerberos libkrb5
-    ++ optional stdenv.isLinux pam;
+  buildInputs = [ zlib libedit ]
+    ++ [ (if linkOpenssl then openssl else libxcrypt) ]
+    ++ lib.optional withFIDO libfido2
+    ++ lib.optional withKerberos krb5
+    ++ lib.optional withLdns ldns
+    ++ lib.optional withPAM pam;
 
   preConfigure = ''
     # Setting LD causes `configure' and `make' to disagree about which linker
     # to use: `configure' wants `gcc', but `make' wants `ld'.
     unset LD
   '';
+
+  env = lib.optionalAttrs isNixos {
+    # openssh calls passwd to allow the user to reset an expired password, but nixos
+    # doesn't ship it at /usr/bin/passwd.
+    PATH_PASSWD_PROG = "/run/wrappers/bin/passwd";
+  };
 
   # I set --disable-strip because later we strip anyway. And it fails to strip
   # properly when cross building.
@@ -79,12 +93,14 @@ stdenv.mkDerivation rec {
     "--with-mantype=man"
     "--with-libedit=yes"
     "--disable-strip"
-    (if stdenv.isLinux then "--with-pam" else "--without-pam")
-  ] ++ optional (etcDir != null) "--sysconfdir=${etcDir}"
-    ++ optional withFIDO "--with-security-key-builtin=yes"
-    ++ optional withKerberos (assert libkrb5 != null; "--with-kerberos5=${libkrb5}")
-    ++ optional stdenv.isDarwin "--disable-libutil"
-    ++ optional (!linkOpenssl) "--without-openssl"
+    (lib.withFeature withPAM "pam")
+    (lib.enableFeature dsaKeysSupport "dsa-keys")
+  ] ++ lib.optional (etcDir != null) "--sysconfdir=${etcDir}"
+    ++ lib.optional withFIDO "--with-security-key-builtin=yes"
+    ++ lib.optional withKerberos (assert krb5 != null; "--with-kerberos5=${lib.getDev krb5}")
+    ++ lib.optional stdenv.isDarwin "--disable-libutil"
+    ++ lib.optional (!linkOpenssl) "--without-openssl"
+    ++ lib.optional withLdns "--with-ldns"
     ++ extraConfigureFlags;
 
   ${if stdenv.hostPlatform.isStatic then "NIX_LDFLAGS" else null}= [ "-laudit" ] ++ lib.optionals withKerberos [ "-lkeyutils" ];
@@ -95,9 +111,9 @@ stdenv.mkDerivation rec {
 
   hardeningEnable = [ "pie" ];
 
-  doCheck = true;
+  doCheck = false;
   enableParallelChecking = false;
-  checkInputs = optional (!stdenv.isDarwin) hostname;
+  nativeCheckInputs = [ openssl ] ++ lib.optional (!stdenv.isDarwin) hostname;
   preCheck = lib.optionalString (stdenv.hostPlatform == stdenv.buildPlatform) ''
     # construct a dummy HOME
     export HOME=$(realpath ../dummy-home)
@@ -145,7 +161,7 @@ stdenv.mkDerivation rec {
   # integration tests hard to get working on darwin with its shaky
   # sandbox
   # t-exec tests fail on musl
-  checkTarget = optional (!stdenv.isDarwin && !stdenv.hostPlatform.isMusl) "t-exec"
+  checkTarget = lib.optional (!stdenv.isDarwin && !stdenv.hostPlatform.isMusl) "t-exec"
     # other tests are less demanding of the environment
     ++ [ "unit" "file-tests" "interop-tests" ];
 
@@ -161,17 +177,25 @@ stdenv.mkDerivation rec {
     "sysconfdir=\${out}/etc/ssh"
   ];
 
-  passthru.tests = {
-    borgbackup-integration = nixosTests.borgbackup;
+  passthru = {
+    inherit withKerberos;
+    tests = {
+      borgbackup-integration = nixosTests.borgbackup;
+      nixosTest = nixosTests.openssh;
+      openssh = finalAttrs.finalPackage.overrideAttrs (previousAttrs: {
+        pname = previousAttrs.pname + "-test";
+        doCheck = true;
+      });
+    };
   };
 
-  meta = {
-    description = "An implementation of the SSH protocol${extraDesc}";
+  meta = with lib; {
+    description = "Implementation of the SSH protocol${extraDesc}";
     homepage = "https://www.openssh.com/";
     changelog = "https://www.openssh.com/releasenotes.html";
     license = licenses.bsd2;
     platforms = platforms.unix ++ platforms.windows;
-    maintainers = (extraMeta.maintainers or []) ++ (with maintainers; [ eelco aneeshusa ]);
+    maintainers = (extraMeta.maintainers or []) ++ (with maintainers; [ aneeshusa ]);
     mainProgram = "ssh";
   } // extraMeta;
-}
+})

@@ -1,10 +1,10 @@
 { rustPlatform, lib, fetchFromGitHub
 , zlib, openssl
-, pkg-config, protobuf, llvmPackages
+, pkg-config, protobuf
 }:
 rustPlatform.buildRustPackage rec {
   pname = "nearcore";
-  version = "1.26.1";
+  version = "1.30.1";
 
   # https://github.com/near/nearcore/tags
   src = fetchFromGitHub {
@@ -12,10 +12,12 @@ rustPlatform.buildRustPackage rec {
     repo = "nearcore";
     # there is also a branch for this version number, so we need to be explicit
     rev = "refs/tags/${version}";
-    sha256 = "sha256-WoQtDdbFcvl6Wp5uv2tr/W/YYH8dyezF+LzSJ5oJcYY=";
+
+    sha256 = "sha256-VjvHCiWjsx5Y7xxqck/O9gSNrL8mxCTosLwLqC85ywY=";
   };
 
-  cargoSha256 = "sha256-7h14XzhhPmkPoTx0kkJl7I7CPqbRAtxa1zpplYxg4p4=";
+  cargoHash = "sha256-5Gs1sAzjuUO3IkwMX1NeA/Sbax0qtwvulyT66AQaNjs=";
+  cargoPatches = [ ./0001-make-near-test-contracts-optional.patch ];
 
   postPatch = ''
     substituteInPlace neard/build.rs \
@@ -40,19 +42,17 @@ rustPlatform.buildRustPackage rec {
   nativeBuildInputs = [
     pkg-config
     protobuf
+    rustPlatform.bindgenHook
   ];
 
   # fat LTO requires ~3.4GB RAM
   requiredSystemFeatures = [ "big-parallel" ];
 
-  LIBCLANG_PATH = "${llvmPackages.libclang.lib}/lib";
-  BINDGEN_EXTRA_CLANG_ARGS = "-isystem ${llvmPackages.libclang.lib}/lib/clang/${lib.getVersion llvmPackages.clang}/include";
-
   meta = with lib; {
     description = "Reference client for NEAR Protocol";
     homepage = "https://github.com/near/nearcore";
     license = licenses.gpl3;
-    maintainers = with maintainers; [ mic92 mikroskeem ];
+    maintainers = with maintainers; [ mikroskeem ];
     # only x86_64 is supported in nearcore because of sse4+ support, macOS might
     # be also possible
     platforms = [ "x86_64-linux" ];

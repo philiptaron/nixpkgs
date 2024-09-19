@@ -36,7 +36,7 @@ stdenv.mkDerivation rec {
   CFLAGS = lib.optionalString debug " -DDEBUG=2";
 
   meta = {
-    homepage = "http://eflite.sourceforge.net";
+    homepage = "https://eflite.sourceforge.net";
     description = "Speech server for screen readers";
     longDescription = ''
       EFlite is a speech server for Emacspeak and other screen
@@ -46,6 +46,7 @@ stdenv.mkDerivation rec {
     '';
     license = lib.licenses.gpl2;
     platforms = lib.platforms.linux;
-    maintainers = with lib.maintainers; [ jhhuh ];
+    maintainers = [ ];
+    mainProgram = "eflite";
   };
 }

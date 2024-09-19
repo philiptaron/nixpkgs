@@ -1,7 +1,4 @@
 { config, lib, pkgs, ... }:
-
-with lib;
-
 let
 
   cfg = config.virtualbox;
@@ -10,51 +7,51 @@ in {
 
   options = {
     virtualbox = {
-      baseImageSize = mkOption {
-        type = with types; either (enum [ "auto" ]) int;
+      baseImageSize = lib.mkOption {
+        type = with lib.types; either (enum [ "auto" ]) int;
         default = "auto";
         example = 50 * 1024;
         description = ''
           The size of the VirtualBox base image in MiB.
         '';
       };
-      baseImageFreeSpace = mkOption {
-        type = with types; int;
+      baseImageFreeSpace = lib.mkOption {
+        type = with lib.types; int;
         default = 30 * 1024;
         description = ''
           Free space in the VirtualBox base image in MiB.
         '';
       };
-      memorySize = mkOption {
-        type = types.int;
+      memorySize = lib.mkOption {
+        type = lib.types.int;
         default = 1536;
         description = ''
           The amount of RAM the VirtualBox appliance can use in MiB.
         '';
       };
-      vmDerivationName = mkOption {
-        type = types.str;
+      vmDerivationName = lib.mkOption {
+        type = lib.types.str;
         default = "nixos-ova-${config.system.nixos.label}-${pkgs.stdenv.hostPlatform.system}";
         description = ''
           The name of the derivation for the VirtualBox appliance.
         '';
       };
-      vmName = mkOption {
-        type = types.str;
-        default = "NixOS ${config.system.nixos.label} (${pkgs.stdenv.hostPlatform.system})";
+      vmName = lib.mkOption {
+        type = lib.types.str;
+        default = "${config.system.nixos.distroName} ${config.system.nixos.label} (${pkgs.stdenv.hostPlatform.system})";
         description = ''
           The name of the VirtualBox appliance.
         '';
       };
-      vmFileName = mkOption {
-        type = types.str;
+      vmFileName = lib.mkOption {
+        type = lib.types.str;
         default = "nixos-${config.system.nixos.label}-${pkgs.stdenv.hostPlatform.system}.ova";
         description = ''
           The file name of the VirtualBox appliance.
         '';
       };
-      params = mkOption {
-        type = with types; attrsOf (oneOf [ str int bool (listOf str) ]);
+      params = lib.mkOption {
+        type = with lib.types; attrsOf (oneOf [ str int bool (listOf str) ]);
         example = {
           audio = "alsa";
           rtcuseutc = "on";
@@ -63,11 +60,11 @@ in {
         description = ''
           Parameters passed to the Virtualbox appliance.
 
-          Run <literal>VBoxManage modifyvm --help</literal> to see more options.
+          Run `VBoxManage modifyvm --help` to see more options.
         '';
       };
-      exportParams = mkOption {
-        type = with types; listOf (oneOf [ str int bool (listOf str) ]);
+      exportParams = lib.mkOption {
+        type = with lib.types; listOf (oneOf [ str int bool (listOf str) ]);
         example = [
           "--vsys" "0" "--vendor" "ACME Inc."
         ];
@@ -75,13 +72,13 @@ in {
         description = ''
           Parameters passed to the Virtualbox export command.
 
-          Run <literal>VBoxManage export --help</literal> to see more options.
+          Run `VBoxManage export --help` to see more options.
         '';
       };
-      extraDisk = mkOption {
+      extraDisk = lib.mkOption {
         description = ''
           Optional extra disk/hdd configuration.
-          The disk will be an 'ext4' partition on a separate VMDK file.
+          The disk will be an 'ext4' partition on a separate file.
         '';
         default = null;
         example = {
@@ -89,31 +86,71 @@ in {
           mountPoint = "/home/demo/storage";
           size = 100 * 1024;
         };
-        type = types.nullOr (types.submodule {
+        type = lib.types.nullOr (lib.types.submodule {
           options = {
-            size = mkOption {
-              type = types.int;
+            size = lib.mkOption {
+              type = lib.types.int;
               description = "Size in MiB";
             };
-            label = mkOption {
-              type = types.str;
+            label = lib.mkOption {
+              type = lib.types.str;
               default = "vm-extra-storage";
               description = "Label for the disk partition";
             };
-            mountPoint = mkOption {
-              type = types.str;
+            mountPoint = lib.mkOption {
+              type = lib.types.str;
               description = "Path where to mount this disk.";
             };
           };
         });
+      };
+      postExportCommands = lib.mkOption {
+        type = lib.types.lines;
+        default = "";
+        example = ''
+          ${pkgs.cot}/bin/cot edit-hardware "$fn" \
+            -v vmx-14 \
+            --nics 2 \
+            --nic-types VMXNET3 \
+            --nic-names 'Nic name' \
+            --nic-networks 'Nic match' \
+            --network-descriptions 'Nic description' \
+            --scsi-subtypes VirtualSCSI
+        '';
+        description = ''
+          Extra commands to run after exporting the OVA to `$fn`.
+        '';
+      };
+      storageController = lib.mkOption {
+        type = with lib.types; attrsOf (oneOf [ str int bool (listOf str) ]);
+        example = {
+          name = "SCSI";
+          add = "scsi";
+          portcount = 16;
+          bootable = "on";
+          hostiocache = "on";
+        };
+        default = {
+          name = "SATA";
+          add = "sata";
+          portcount = 4;
+          bootable = "on";
+          hostiocache = "on";
+        };
+        description = ''
+          Parameters passed to the VirtualBox appliance. Must have at least
+          `name`.
+
+          Run `VBoxManage storagectl --help` to see more options.
+        '';
       };
     };
   };
 
   config = {
 
-    virtualbox.params = mkMerge [
-      (mapAttrs (name: mkDefault) {
+    virtualbox.params = lib.mkMerge [
+      (lib.mapAttrs (name: lib.mkDefault) {
         acpi = "on";
         vram = 32;
         nictype1 = "virtio";
@@ -127,7 +164,7 @@ in {
         usbehci = "on";
         mouse = "usbtablet";
       })
-      (mkIf (pkgs.stdenv.hostPlatform.system == "i686-linux") { pae = "on"; })
+      (lib.mkIf (pkgs.stdenv.hostPlatform.system == "i686-linux") { pae = "on"; })
     ];
 
     system.build.virtualBoxOVA = import ../../lib/make-disk-image.nix {
@@ -143,10 +180,10 @@ in {
           export HOME=$PWD
           export PATH=${pkgs.virtualbox}/bin:$PATH
 
-          echo "creating VirtualBox pass-through disk wrapper (no copying involved)..."
-          VBoxManage internalcommands createrawvmdk -filename disk.vmdk -rawdisk $diskImage
+          echo "converting image to VirtualBox format..."
+          VBoxManage convertfromraw $diskImage disk.vdi
 
-          ${optionalString (cfg.extraDisk != null) ''
+          ${lib.optionalString (cfg.extraDisk != null) ''
             echo "creating extra disk: data-disk.raw"
             dataDiskImage=data-disk.raw
             truncate -s ${toString cfg.extraDisk.size}M $dataDiskImage
@@ -156,8 +193,8 @@ in {
               mkpart primary ext4 1MiB -1
             eval $(partx $dataDiskImage -o START,SECTORS --nr 1 --pairs)
             mkfs.ext4 -F -L ${cfg.extraDisk.label} $dataDiskImage -E offset=$(sectorsToBytes $START) $(sectorsToKilobytes $SECTORS)K
-            echo "creating extra disk: data-disk.vmdk"
-            VBoxManage internalcommands createrawvmdk -filename data-disk.vmdk -rawdisk $dataDiskImage
+            echo "creating extra disk: data-disk.vdi"
+            VBoxManage convertfromraw $dataDiskImage data-disk.vdi
           ''}
 
           echo "creating VirtualBox VM..."
@@ -167,18 +204,19 @@ in {
           VBoxManage modifyvm "$vmName" \
             --memory ${toString cfg.memorySize} \
             ${lib.cli.toGNUCommandLineShell { } cfg.params}
-          VBoxManage storagectl "$vmName" --name SATA --add sata --portcount 4 --bootable on --hostiocache on
-          VBoxManage storageattach "$vmName" --storagectl SATA --port 0 --device 0 --type hdd \
-            --medium disk.vmdk
-          ${optionalString (cfg.extraDisk != null) ''
-            VBoxManage storageattach "$vmName" --storagectl SATA --port 1 --device 0 --type hdd \
-            --medium data-disk.vmdk
+          VBoxManage storagectl "$vmName" ${lib.cli.toGNUCommandLineShell { } cfg.storageController}
+          VBoxManage storageattach "$vmName" --storagectl ${cfg.storageController.name} --port 0 --device 0 --type hdd \
+            --medium disk.vdi
+          ${lib.optionalString (cfg.extraDisk != null) ''
+            VBoxManage storageattach "$vmName" --storagectl ${cfg.storageController.name} --port 1 --device 0 --type hdd \
+            --medium data-disk.vdi
           ''}
 
           echo "exporting VirtualBox VM..."
           mkdir -p $out
           fn="$out/${cfg.vmFileName}"
-          VBoxManage export "$vmName" --output "$fn" --options manifest ${escapeShellArgs cfg.exportParams}
+          VBoxManage export "$vmName" --output "$fn" --options manifest ${lib.escapeShellArgs cfg.exportParams}
+          ${cfg.postExportCommands}
 
           rm -v $diskImage
 

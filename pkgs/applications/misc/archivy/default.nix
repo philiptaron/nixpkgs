@@ -1,15 +1,17 @@
 { lib
-, stdenv
 , python3
+, fetchPypi
 }:
 
 let
   py = python3.override {
+    self = py;
     packageOverrides = self: super: {
       wtforms = super.wtforms.overridePythonAttrs (oldAttrs: rec {
         version = "2.3.1";
 
-        src = oldAttrs.src.override {
+        src = fetchPypi {
+          pname = "WTForms";
           inherit version;
           sha256 = "sha256-hhoTs65SHWcA2sOydxlwvTVKY7pwQ+zDqCtSiFlqGXI=";
         };
@@ -31,7 +33,6 @@ buildPythonApplication rec {
     hash = "sha256-ns1Y0DqqnTAQMEt+oBJ/P2gqKqPsX9P3/Z4561qzuns";
   };
 
-  nativeBuildInputs = [ pythonRelaxDepsHook ];
 
   pythonRelaxDeps = true;
 
@@ -42,7 +43,7 @@ buildPythonApplication rec {
     click-plugins
     elasticsearch
     flask-compress
-    flask_login
+    flask-login
     flask-wtf
     html2text
     python-dotenv

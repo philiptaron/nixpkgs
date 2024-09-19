@@ -3,7 +3,7 @@
 , fetchurl
 , runCommand
 , makeWrapper
-, buildFHSUserEnv
+, buildFHSEnv
 , libselinux
 , libarchive
 , libGL
@@ -42,7 +42,7 @@ let
         zlib # libz.so.1
       ];
     in
-      runCommand "conda-install" { buildInputs = [ makeWrapper zlib]; }
+      runCommand "conda-install" { nativeBuildInputs = [ makeWrapper ]; buildInputs = [ zlib]; }
         # on line 10, we have 'unset LD_LIBRARY_PATH'
         # we have to comment it out however in a way that the number of bytes in the
         # file does not change. So we replace the 'u' in the line with a '#'
@@ -63,7 +63,7 @@ let
             --prefix "LD_LIBRARY_PATH" : "${libPath}"
         '');
 in
-  buildFHSUserEnv {
+  buildFHSEnv {
     name = "conda-shell";
     targetPkgs = pkgs: (builtins.concatLists [ [ conda ] condaDeps extraPkgs]);
     profile = ''
@@ -77,13 +77,18 @@ in
       export QTCOMPOSE=${xorg.libX11}/share/X11/locale
       export LIBARCHIVE=${libarchive.lib}/lib/libarchive.so
       # Allows `conda activate` to work properly
-      source ${installationPath}/etc/profile.d/conda.sh
+      condaSh=${installationPath}/etc/profile.d/conda.sh
+      if [ ! -f $condaSh ]; then
+        conda-install
+      fi
+      source $condaSh
     '';
 
     runScript = "bash -l";
 
     meta = {
       description = "Conda is a package manager for Python";
+      mainProgram = "conda-shell";
       homepage = "https://conda.io/";
       platforms = lib.platforms.linux;
       license = lib.licenses.bsd3;

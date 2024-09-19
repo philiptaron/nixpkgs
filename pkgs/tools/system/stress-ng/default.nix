@@ -1,16 +1,17 @@
 { lib, stdenv, fetchFromGitHub
 , attr, judy, keyutils, libaio, libapparmor, libbsd, libcap, libgcrypt, lksctp-tools, zlib
+, libglvnd, mesa
 }:
 
 stdenv.mkDerivation rec {
   pname = "stress-ng";
-  version = "0.13.09";
+  version = "0.18.04";
 
   src = fetchFromGitHub {
     owner = "ColinIanKing";
     repo = pname;
     rev = "V${version}";
-    hash = "sha256-BOOB5fA/Cy1gsRA4j8aj3lVY2y4OvIfoiRqOIY9nZzM=";
+    hash = "sha256-h7VBd3KFpDiIj84tWqXFIaDYzRkM8EaolOfdnycmHIA=";
   };
 
   postPatch = ''
@@ -20,7 +21,7 @@ stdenv.mkDerivation rec {
   # All platforms inputs then Linux-only ones
   buildInputs = [ judy libbsd libgcrypt zlib ]
     ++ lib.optionals stdenv.hostPlatform.isLinux [
-      attr keyutils libaio libapparmor libcap lksctp-tools
+      attr keyutils libaio libapparmor libcap lksctp-tools libglvnd mesa
     ];
 
   makeFlags = [
@@ -30,7 +31,7 @@ stdenv.mkDerivation rec {
     "BASHDIR=${placeholder "out"}/share/bash-completion/completions"
   ];
 
-  NIX_CFLAGS_COMPILE = lib.optionalString stdenv.hostPlatform.isMusl "-D_LINUX_SYSINFO_H=1";
+  env.NIX_CFLAGS_COMPILE = lib.optionalString stdenv.hostPlatform.isMusl "-D_LINUX_SYSINFO_H=1";
 
   # Won't build on i686 because the binary will be linked again in the
   # install phase without checking the dependencies. This will prevent
@@ -70,5 +71,6 @@ stdenv.mkDerivation rec {
     license = licenses.gpl2Plus;
     maintainers = with maintainers; [ c0bw3b ];
     platforms = platforms.unix;
+    mainProgram = "stress-ng";
   };
 }

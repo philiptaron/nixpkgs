@@ -11,11 +11,9 @@ rustPlatform.buildRustPackage rec {
     sha256 = "0hj5in5h7pj72m4ag80ing513fh65q8xlsf341qzm3vmxm3y3jgd";
   };
 
-  cargoSha256 = "1lam4gwzcj6w0pyxf61l2cpbvvf5gmj2gwi8dangnhd60qhlnvrx";
+  cargoHash = "sha256-PW9LIQamQfusaijyJ2R9xe29LhM0GNf9BdxI9vkjVdE=";
 
-  nativeBuildInputs = [ llvmPackages.clang ];
-  buildInputs = [ llvmPackages.libclang ];
-  LIBCLANG_PATH = "${llvmPackages.libclang.lib}/lib";
+  nativeBuildInputs = [ llvmPackages.clang rustPlatform.bindgenHook ];
 
   postInstall = ''
     mkdir -p $out/share/kak/autoload/plugins
@@ -29,6 +27,7 @@ rustPlatform.buildRustPackage rec {
 
   meta = with lib; {
     description = "Infer parentheses for Clojure, Lisp, and Scheme";
+    mainProgram = "parinfer-rust";
     homepage = "https://github.com/eraserhd/parinfer-rust";
     license = licenses.isc;
     maintainers = with maintainers; [ eraserhd ];

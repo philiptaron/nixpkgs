@@ -21,17 +21,18 @@
 , withEspeak ? true, espeak, sonic, pcaudiolib
 , mbrola
 , withPico ? true, svox
+, libsOnly ? false
 }:
 
 let
   inherit (python3Packages) python pyxdg wrapPython;
 in stdenv.mkDerivation rec {
   pname = "speech-dispatcher";
-  version = "0.11.1";
+  version = "0.11.5";
 
   src = fetchurl {
     url = "https://github.com/brailcom/speechd/releases/download/${version}/${pname}-${version}.tar.gz";
-    sha256 = "sha256-0doS7T2shPE3mbai7Dm6LTyiGoST9E3BhVvQupbC3cY=";
+    sha256 = "sha256-HOR1n/q7rxrrQzpewHOb4Gdum9+66URKezvhsq8+wSs=";
   };
 
   patches = [
@@ -39,7 +40,7 @@ in stdenv.mkDerivation rec {
       src = ./fix-paths.patch;
       utillinux = util-linux;
     })
-  ] ++ lib.optionals espeak.mbrolaSupport [
+  ] ++ lib.optionals (withEspeak && espeak.mbrolaSupport) [
     # Replace FHS paths.
     (substituteAll {
       src = ./fix-mbrola-paths.patch;
@@ -69,9 +70,9 @@ in stdenv.mkDerivation rec {
     espeak
     sonic
     pcaudiolib
-  ] ++ lib.optional withFlite [
+  ] ++ lib.optionals withFlite [
     flite
-  ] ++ lib.optional withPico [
+  ] ++ lib.optionals withPico [
     svox
   ];
 
@@ -83,17 +84,17 @@ in stdenv.mkDerivation rec {
     # Audio method falls back from left to right.
     "--with-default-audio-method=\"libao,pulse,alsa,oss\""
     "--with-systemdsystemunitdir=${placeholder "out"}/lib/systemd/system"
-  ] ++ lib.optional withPulse [
+  ] ++ lib.optionals withPulse [
   "--with-pulse"
-  ] ++ lib.optional withAlsa [
+  ] ++ lib.optionals withAlsa [
     "--with-alsa"
-  ] ++ lib.optional withLibao [
+  ] ++ lib.optionals withLibao [
     "--with-libao"
-  ] ++ lib.optional withOss [
+  ] ++ lib.optionals withOss [
     "--with-oss"
-  ] ++ lib.optional withEspeak [
+  ] ++ lib.optionals withEspeak [
     "--with-espeak-ng"
-  ] ++ lib.optional withPico [
+  ] ++ lib.optionals withPico [
     "--with-pico"
   ];
 
@@ -101,14 +102,16 @@ in stdenv.mkDerivation rec {
     substituteInPlace src/modules/pico.c --replace "/usr/share/pico/lang" "${svox}/share/pico/lang"
   '';
 
-  postInstall = ''
+  postInstall = if libsOnly then ''
+    rm -rf $out/{bin,etc,lib/speech-dispatcher,lib/systemd,libexec,share}
+  '' else ''
     wrapPythonPrograms
   '';
 
   enableParallelBuilding = true;
 
   meta = with lib; {
-    description = "Common interface to speech synthesis";
+    description = "Common interface to speech synthesis" + lib.optionalString libsOnly " - client libraries only";
     homepage = "https://devel.freebsoft.org/speechd";
     license = licenses.gpl2Plus;
     maintainers = with maintainers; [
@@ -116,5 +119,6 @@ in stdenv.mkDerivation rec {
       jtojnar
     ];
     platforms = platforms.linux;
+    mainProgram = "speech-dispatcher";
   };
 }

@@ -1,4 +1,4 @@
-{ fetchFromGitHub, fetchgit, fetchHex, rebar3WithPlugins, rebar3-nix, rebar3Relx
+{ fetchFromGitHub, fetchgit, fetchHex, rebar3Relx
 , buildRebar3, writeScript, lib }:
 
 let
@@ -8,10 +8,10 @@ in rebar3Relx rec {
   releaseType = "escript";
   # The package name "elvis" is already taken
   pname = "elvis-erlang";
-  version = "1.1.0";
+  version = "3.2.5";
   src = fetchFromGitHub {
     inherit owner repo;
-    sha256 = "6vNxr3AYpFuXaIVH9bWw7K5KiF1swfI+CSI43RoMQEA=";
+    sha256 = "I0GgfNyozkrM1PRkIXwANr1lji4qZCtOQ/bBEgZc5gc=";
     rev = version;
   };
   beamDeps = builtins.attrValues (import ./rebar-deps.nix {

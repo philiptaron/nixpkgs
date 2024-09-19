@@ -13,18 +13,18 @@
 
 buildGoModule rec {
   pname = "gopass";
-  version = "1.14.2";
+  version = "1.15.14";
 
   nativeBuildInputs = [ installShellFiles makeWrapper ];
 
   src = fetchFromGitHub {
     owner = "gopasspw";
-    repo = pname;
+    repo = "gopass";
     rev = "v${version}";
-    sha256 = "sha256-JhLFax0UR/AVl/736pdsAyyQF/555YmLWLnZrsLDjlA=";
+    hash = "sha256-3oXdHjW3svGfOEoikEeGm4oU9j+7IBOHw5KH7CCV/uw=";
   };
 
-  vendorSha256 = "sha256-ESIlmY3SzmfWLqLxf62dOhAsHPOKc2YYSOhzpJCjvCQ=";
+  vendorHash = "sha256-GeppWyIWE8kYIqhRf1iHksWksdjbIzy96rRpx+qQ3L0=";
 
   subPackages = [ "." ];
 
@@ -40,9 +40,10 @@ buildGoModule rec {
 
   postInstall = ''
     installManPage gopass.1
-    installShellCompletion --zsh --name _gopass zsh.completion
-    installShellCompletion --bash --name gopass.bash bash.completion
-    installShellCompletion --fish --name gopass.fish fish.completion
+    installShellCompletion --cmd gopass \
+      --zsh zsh.completion \
+      --bash bash.completion \
+      --fish fish.completion
   '' + lib.optionalString passAlias ''
     ln -s $out/bin/gopass $out/bin/pass
   '';
@@ -52,13 +53,16 @@ buildGoModule rec {
       --prefix PATH : "${wrapperPath}" \
       --set GOPASS_NO_REMINDER true
   '';
+  passthru = {
+    inherit wrapperPath;
+  };
 
   meta = with lib; {
-    description = "The slightly more awesome Standard Unix Password Manager for Teams. Written in Go";
+    description = "Slightly more awesome Standard Unix Password Manager for Teams. Written in Go";
     homepage = "https://www.gopass.pw/";
     license = licenses.mit;
     maintainers = with maintainers; [ rvolosatovs sikmir ];
-    changelog = "https://github.com/gopasspw/gopass/raw/v${version}/CHANGELOG.md";
+    changelog = "https://github.com/gopasspw/gopass/blob/v${version}/CHANGELOG.md";
 
     longDescription = ''
       gopass is a rewrite of the pass password manager in Go with the aim of
@@ -69,5 +73,6 @@ buildGoModule rec {
       users. We go by the UNIX philosophy and try to do one thing and do it
       well, providing a stellar user experience and a sane, simple interface.
     '';
+    mainProgram = "gopass";
   };
 }

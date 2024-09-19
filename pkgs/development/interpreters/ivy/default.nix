@@ -2,22 +2,25 @@
 
 buildGoModule rec {
   pname = "ivy";
-  version = "0.1.13";
+  version = "0.3.4";
 
   src = fetchFromGitHub {
     rev = "v${version}";
     owner = "robpike";
     repo = "ivy";
-    sha256 = "sha256-IiQrmmHitKUItm/ZSTQ3jGO3ls8vPPexyOtUvfq3yeU=";
+    hash = "sha256-/Q929ZXv3F6MZ+FdWKfbThNDT3JpvQw7WLGnbmitdOg=";
   };
 
-  vendorSha256 = "sha256-pQpattmS9VmO3ZIQUFn66az8GSmB4IvYhTTCFn6SUmo=";
+  vendorHash = null;
 
   subPackages = [ "." ];
+
+  ldflags = [ "-s" "-w" ];
 
   meta = with lib; {
     homepage = "https://github.com/robpike/ivy";
     description = "ivy, an APL-like calculator";
+    mainProgram = "ivy";
     license = licenses.bsd3;
     maintainers = with maintainers; [ smasher164 ];
   };

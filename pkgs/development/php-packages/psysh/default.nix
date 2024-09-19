@@ -1,33 +1,59 @@
-{ mkDerivation, fetchurl, makeWrapper, lib, php }:
+{
+  fetchFromGitHub,
+  fetchurl,
+  lib,
+  php,
+}:
+
 let
   pname = "psysh";
-  version = "0.11.2";
+  version = "0.12.4";
+
+  src = fetchFromGitHub {
+    owner = "bobthecow";
+    repo = "psysh";
+    rev = "v${version}";
+    hash = "sha256-Zvo0QWHkQhYD9OeT8cgTo2AW5tClzQfwdohSUd8pRBQ=";
+  };
+
+  composerLock = fetchurl {
+    name = "composer.lock";
+    url = "https://github.com/bobthecow/psysh/releases/download/v${version}/composer-v${version}.lock";
+    hash = "sha256-ur6mzla3uXeFL6aEHAPdpxGdvcgzOgTLW/CKPbNqeCg=";
+  };
 in
-mkDerivation {
-  inherit pname version;
+php.buildComposerProject2 (finalAttrs: {
+  inherit
+    pname
+    version
+    composerLock
+    src
+    ;
 
-  src = fetchurl {
-    url = "https://github.com/bobthecow/psysh/releases/download/v${version}/psysh-v${version}.tar.gz";
-    sha256 = "sha256-u7VTlZw9k7VDWKGK/8fzFw0bjNu6DMGsoQnDedHgCWg=";
+  composerVendor = php.mkComposerVendor {
+    inherit
+      src
+      version
+      pname
+      composerLock
+      ;
+
+    preBuild = ''
+      composer config platform.php 7.4
+      composer require --no-update symfony/polyfill-iconv:1.29 symfony/polyfill-mbstring:1.29
+      composer require --no-update --dev roave/security-advisories:dev-latest
+      composer update --lock --no-install
+    '';
+
+    vendorHash = "sha256-mW276lzOTCY68EnvSVR+tD+gh3Y61GrWchVJHDZ4dpg=";
   };
 
-  dontUnpack = true;
-
-  nativeBuildInputs = [ makeWrapper ];
-
-  installPhase = ''
-    runHook preInstall
-    mkdir -p $out/bin
-    tar -xzf $src -C $out/bin
-    chmod +x $out/bin/psysh
-    wrapProgram $out/bin/psysh --prefix PATH : "${lib.makeBinPath [ php ]}"
-    runHook postInstall
-  '';
-
-  meta = with lib; {
-    description = "PsySH is a runtime developer console, interactive debugger and REPL for PHP.";
-    license = licenses.mit;
+  meta = {
+    changelog = "https://github.com/bobthecow/psysh/releases/tag/v${finalAttrs.version}";
+    description = "PsySH is a runtime developer console, interactive debugger and REPL for PHP";
+    mainProgram = "psysh";
+    license = lib.licenses.mit;
     homepage = "https://psysh.org/";
-    maintainers = teams.php.members;
+    maintainers = lib.teams.php.members;
   };
-}
+})

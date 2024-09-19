@@ -1,33 +1,34 @@
-{ lib
-, buildPythonPackage
-, fetchPypi
-, pbr
-, sentinels
-, six
-, pytestCheckHook
+{
+  lib,
+  buildPythonPackage,
+  fetchPypi,
+  packaging,
+  pbr,
+  pytestCheckHook,
+  pythonOlder,
+  sentinels,
 }:
 
 buildPythonPackage rec {
   pname = "mongomock";
-  version = "4.0.0";
+  version = "4.1.2";
+  format = "setuptools";
+
+  disabled = pythonOlder "3.6";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-sYMsN0jUdETBiGc3PlzqdUwub2RKDPv9Zn8Xj2i97Pw=";
+    hash = "sha256-8GzWKvuK4+9jujE0mr0iCmV+8N1PAkOilYfFIT+TG30=";
   };
 
-  nativeBuildInputs = [
-    pbr
-  ];
+  nativeBuildInputs = [ pbr ];
 
   propagatedBuildInputs = [
+    packaging
     sentinels
-    six
   ];
 
-  checkInputs = [
-    pytestCheckHook
-  ];
+  nativeCheckInputs = [ pytestCheckHook ];
 
   pythonImportsCheck = [ "mongomock" ];
 

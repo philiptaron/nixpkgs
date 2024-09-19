@@ -6,11 +6,11 @@
 
 stdenv.mkDerivation rec {
   pname = "dnsdist";
-  version = "1.7.0";
+  version = "1.8.3";
 
   src = fetchurl {
     url = "https://downloads.powerdns.com/releases/dnsdist-${version}.tar.bz2";
-    sha256 = "sha256-eMxyywzPf7Xz8vrgnHntplpSVjdNoJu1Qbc16mho/GQ=";
+    hash = "sha256-hYMj8u1RgUiLt1WPv0+E7HGYYAsHCyxTddFdQGlXJ/Q=";
   };
 
   patches = [
@@ -45,8 +45,9 @@ stdenv.mkDerivation rec {
 
   meta = with lib; {
     description = "DNS Loadbalancer";
+    mainProgram = "dnsdist";
     homepage = "https://dnsdist.org";
-    license = licenses.gpl2;
+    license = licenses.gpl2Only;
     maintainers = with maintainers; [ jojosch ];
   };
 }

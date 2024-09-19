@@ -22,9 +22,10 @@ stdenv.mkDerivation rec {
 
   meta = with lib; {
     homepage = "https://github.com/vipersaudio/viperfx_core_binary";
-    description = "The ViPER FX core";
+    description = "ViPER FX core";
     license = licenses.unfreeRedistributable;
     maintainers = with maintainers; [ rewine ];
     platforms = [ "x86_64-linux" ];
+    sourceProvenance = with sourceTypes; [ binaryNativeCode ];
   };
 }

@@ -1,36 +1,38 @@
-{ lib
-, buildPythonPackage
-, fetchFromGitHub
-, decorator
-, packaging
-, pynput
-, regex
-, lark
-, enum34
-, pyperclip
-, six
-, requests
-, psutil
-, json-rpc
-, werkzeug
-, kaldi-active-grammar
-, sounddevice
-, webrtcvad
-, setuptools
-, xdotool
-, wmctrl
-, xorg
+{
+  lib,
+  buildPythonPackage,
+  fetchFromGitHub,
+  decorator,
+  packaging,
+  pynput,
+  regex,
+  lark,
+  enum34,
+  pyperclip,
+  six,
+  requests,
+  psutil,
+  json-rpc,
+  werkzeug,
+  kaldi-active-grammar,
+  sounddevice,
+  webrtcvad,
+  setuptools,
+  xdotool,
+  wmctrl,
+  xorg,
 }:
 
 buildPythonPackage rec {
   pname = "dragonfly";
   version = "0.35.0";
+  format = "setuptools";
 
   src = fetchFromGitHub {
     owner = "dictation-toolbox";
     repo = pname;
     rev = version;
-    sha256 = "sha256-sqEEEr5/KG3cn4rmOGJt9zMNAjeLO6h3NJgg0EyewrM=";
+    hash = "sha256-sqEEEr5/KG3cn4rmOGJt9zMNAjeLO6h3NJgg0EyewrM=";
   };
 
   postPatch = ''
@@ -72,6 +74,6 @@ buildPythonPackage rec {
     description = "Speech recognition framework allowing powerful Python-based scripting";
     homepage = "https://github.com/dictation-toolbox/dragonfly";
     license = licenses.lgpl3Plus;
-    maintainers = with maintainers; [ ckie ];
+    maintainers = [ ];
   };
 }

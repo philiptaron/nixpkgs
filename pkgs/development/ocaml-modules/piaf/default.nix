@@ -1,52 +1,55 @@
 { alcotest-lwt
 , buildDunePackage
+, ocaml
+, bigarray-compat
 , dune-site
-, fetchzip
+, fetchurl
 , gluten-lwt-unix
 , lib
 , logs
-, lwt_ssl
 , magic-mime
 , mrmime
-, openssl
-, pecu
 , psq
-, ssl
+, rresult
 , uri
 }:
+
+lib.throwIf (lib.versionAtLeast ocaml.version "5.0")
+  "piaf is not available for OCaml ${ocaml.version}"
 
 buildDunePackage rec {
   pname = "piaf";
   version = "0.1.0";
 
-  src = fetchzip {
+  src = fetchurl {
     url = "https://github.com/anmonteiro/piaf/releases/download/${version}/piaf-${version}.tbz";
-    sha256 = "0d431kz3bkwlgdamvsv94mzd9631ppcjpv516ii91glzlfdzh5hz";
+    hash = "sha256-AMO+ptGox33Bi7u/H0SaeCU88XORrRU3UbLof3EwcmU=";
   };
 
   postPatch = ''
     substituteInPlace ./vendor/dune --replace "mrmime.prettym" "prettym"
   '';
 
-  useDune2 = true;
-
   propagatedBuildInputs = [
+    bigarray-compat
     logs
     magic-mime
     mrmime
     psq
+    rresult
     uri
     gluten-lwt-unix
   ];
 
-  checkInputs = [
+  nativeCheckInputs = [
     alcotest-lwt
     dune-site
   ];
-  doCheck = true;
+  # Check fails with OpenSSL 3
+  doCheck = false;
 
   meta = {
-    description = "An HTTP library with HTTP/2 support written entirely in OCaml";
+    description = "HTTP library with HTTP/2 support written entirely in OCaml";
     homepage = "https://github.com/anmonteiro/piaf";
     license = lib.licenses.bsd3;
     maintainers = with lib.maintainers; [ anmonteiro ];

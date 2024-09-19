@@ -6,16 +6,16 @@
 
 buildGoModule rec {
   pname = "cliam";
-  version = "1.0.0";
+  version = "2.2.0";
 
   src = fetchFromGitHub {
     owner = "securisec";
     repo = pname;
     rev = version;
-    hash = "sha256-bq7u6pknokyY4WwO1qMYPuY86UZlDgeYEa1AJpk8d+4=";
+    hash = "sha256-59nPoH0+k1umMwFg95hQHOr/SRGKqr1URFG7xtVRiTs=";
   };
 
-  vendorSha256 = "sha256-aGBA97EvIUv9myqcrtltiVxh1/0VtrQy2j9GU6r197g=";
+  vendorHash = "sha256-Tcz8W/PX+9WE+0iFVhqHuElJI7qWD+AdwOKdTc7FQTE=";
 
   nativeBuildInputs = [
     installShellFiles
@@ -41,6 +41,7 @@ buildGoModule rec {
 
   meta = with lib; {
     description = "Cloud agnostic IAM permissions enumerator";
+    mainProgram = "cliam";
     homepage = "https://github.com/securisec/cliam";
     license = licenses.gpl3Only;
     maintainers = with maintainers; [ fab ];

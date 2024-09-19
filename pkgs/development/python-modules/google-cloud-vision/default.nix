@@ -1,34 +1,39 @@
-{ lib
-, buildPythonPackage
-, fetchPypi
-, google-api-core
-, libcst
-, mock
-, proto-plus
-, pytestCheckHook
-, pytest-asyncio
-, pythonOlder
+{
+  lib,
+  buildPythonPackage,
+  fetchPypi,
+  google-api-core,
+  mock,
+  proto-plus,
+  protobuf,
+  pytest-asyncio,
+  pytestCheckHook,
+  pythonOlder,
+  setuptools,
 }:
 
 buildPythonPackage rec {
   pname = "google-cloud-vision";
-  version = "2.7.2";
-  format = "setuptools";
+  version = "3.7.4";
+  pyproject = true;
 
-  disabled = pythonOlder "3.6";
+  disabled = pythonOlder "3.7";
 
   src = fetchPypi {
-    inherit pname version;
-    hash = "sha256-4NTWyf3rndw1zHINlBMtoEmdfSXGnU/jEhxab807Vg4=";
+    pname = "google_cloud_vision";
+    inherit version;
+    hash = "sha256-gLZ/Ci3Fh6MddILT0mkqdz8l+9CUaP2d5F0AtnGq2Zk=";
   };
 
-  propagatedBuildInputs = [
-    libcst
+  build-system = [ setuptools ];
+
+  dependencies = [
     google-api-core
     proto-plus
-  ];
+    protobuf
+  ] ++ google-api-core.optional-dependencies.grpc;
 
-  checkInputs = [
+  nativeCheckInputs = [
     mock
     pytestCheckHook
     pytest-asyncio
@@ -44,10 +49,16 @@ buildPythonPackage rec {
     "google.cloud.vision_v1p4beta1"
   ];
 
+  disabledTests = [
+    # Tests require PROJECT_ID
+    "test_list_products"
+  ];
+
   meta = with lib; {
     description = "Cloud Vision API API client library";
     homepage = "https://github.com/googleapis/python-vision";
+    changelog = "https://github.com/googleapis/python-vision/blob/v${version}/CHANGELOG.md";
     license = licenses.asl20;
-    maintainers = with maintainers; [ SuperSandro2000 ];
+    maintainers = [ ];
   };
 }

@@ -7,6 +7,7 @@
 python3Packages.buildPythonApplication rec {
   pname = "zpool-iostat-viz";
   version = "unstable-2021-11-13";
+  format = "other";
 
   src = fetchFromGitHub {
     owner = "chadmiller";
@@ -36,5 +37,6 @@ python3Packages.buildPythonApplication rec {
     homepage = "https://github.com/chadmiller/zpool-iostat-viz";
     license = licenses.bsd2;
     maintainers = with maintainers; [ julm ];
+    mainProgram = "zpool-iostat-viz";
   };
 }

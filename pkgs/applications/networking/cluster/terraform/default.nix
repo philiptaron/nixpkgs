@@ -8,40 +8,37 @@
 , runtimeShell
 , writeText
 , terraform-providers
-, fetchpatch
+, installShellFiles
 }:
 
 let
-  generic = { version, sha256, vendorSha256 ? null, ... }@attrs:
-    let attrs' = builtins.removeAttrs attrs [ "version" "sha256" "vendorSha256" ];
+  generic = { version, hash, vendorHash ? null, ... }@attrs:
+    let attrs' = builtins.removeAttrs attrs [ "version" "hash" "vendorHash" ];
     in
     buildGoModule ({
-      name = "terraform-${version}";
-
-      inherit vendorSha256;
+      pname = "terraform";
+      inherit version vendorHash;
 
       src = fetchFromGitHub {
         owner = "hashicorp";
         repo = "terraform";
         rev = "v${version}";
-        inherit sha256;
+        inherit hash;
       };
 
-      ldflags = [ "-s" "-w" ];
+      ldflags = [ "-s" "-w" "-X 'github.com/hashicorp/terraform/version.dev=no'" ];
 
       postConfigure = ''
         # speakeasy hardcodes /bin/stty https://github.com/bgentry/speakeasy/issues/22
         substituteInPlace vendor/github.com/bgentry/speakeasy/speakeasy_unix.go \
-          --replace "/bin/stty" "${coreutils}/bin/stty"
+          --replace-fail "/bin/stty" "${coreutils}/bin/stty"
       '';
 
+      nativeBuildInputs = [ installShellFiles ];
+
       postInstall = ''
-        # remove all plugins, they are part of the main binary now
-        for i in $out/bin/*; do
-          if [[ $(basename $i) != terraform ]]; then
-            rm "$i"
-          fi
-        done
+        # https://github.com/posener/complete/blob/9a4745ac49b29530e07dc2581745a218b646b7a3/cmd/install/bash.go#L8
+        installShellCompletion --bash --name terraform <(echo complete -C terraform terraform)
       '';
 
       preCheck = ''
@@ -56,18 +53,17 @@ let
           "Tool for building, changing, and versioning infrastructure";
         homepage = "https://www.terraform.io/";
         changelog = "https://github.com/hashicorp/terraform/blob/v${version}/CHANGELOG.md";
-        license = licenses.mpl20;
+        license = licenses.bsl11;
         maintainers = with maintainers; [
           Chili-Man
-          babariviere
           kalbasit
-          marsam
-          maxeaubrey
           timstott
           zimbatm
           zowoq
           techknowlogick
+          qjoly
         ];
+        mainProgram = "terraform";
       };
     } // attrs');
 
@@ -122,7 +118,7 @@ let
             (orig: { passthru = orig.passthru // passthru; })
         else
           lib.appendToName "with-plugins" (stdenv.mkDerivation {
-            inherit (terraform) name meta;
+            inherit (terraform) meta pname version;
             nativeBuildInputs = [ makeWrapper ];
 
             # Expose the passthru set with the override functions
@@ -168,33 +164,10 @@ rec {
   # Constructor for other terraform versions
   mkTerraform = attrs: pluggable (generic attrs);
 
-  terraform_0_13 = mkTerraform {
-    version = "0.13.7";
-    sha256 = "1cahnmp66dk21g7ga6454yfhaqrxff7hpwpdgc87cswyq823fgjn";
-    patches = [ ./provider-path.patch ];
-    passthru = { inherit plugins; };
-  };
-
-  terraform_0_14 = mkTerraform {
-    version = "0.14.11";
-    sha256 = "1yi1jj3n61g1kn8klw6l78shd23q79llb7qqwigqrx3ki2mp279j";
-    vendorSha256 = "sha256-tWrSr6JCS9s+I0T1o3jgZ395u8IBmh73XGrnJidWI7U=";
-    patches = [ ./provider-path.patch ];
-    passthru = { inherit plugins; };
-  };
-
-  terraform_0_15 = mkTerraform {
-    version = "0.15.5";
-    sha256 = "18f4a6l24s3cym7gk40agxikd90i56q84wziskw1spy9rgv2yx6d";
-    vendorSha256 = "sha256-oFvoEsDunJR4IULdGwS6nHBKWEgUehgT+nNM41W/GYo=";
-    patches = [ ./provider-path-0_15.patch ];
-    passthru = { inherit plugins; };
-  };
-
   terraform_1 = mkTerraform {
-    version = "1.2.2";
-    sha256 = "sha256-LkRCumyNHVBSsXRp1ovNMGCeidK/jVCjh9H1HSE1Lm8=";
-    vendorSha256 = "sha256-CVgAmPM0nt0Wx+N0qs+IO5KwCWnbfif70EHjBi0bIsQ=";
+    version = "1.9.6";
+    hash = "sha256-rlqpqiMlLcn2LqqKRU9iFaVqUz/QQtpiiZ39h5ZvpbI=";
+    vendorHash = "sha256-tH9KQF4oHcQh34ikB9Bx6fij/iLZN+waxv5ZilqGGlU=";
     patches = [ ./provider-path-0_15.patch ];
     passthru = {
       inherit plugins;

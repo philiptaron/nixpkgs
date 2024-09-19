@@ -1,21 +1,22 @@
-{
-  lib,
-  buildGoModule,
-  fetchFromGitHub
+{ lib
+, buildGoModule
+, fetchFromGitHub
+, testers
+, devspace
 }:
 
 buildGoModule rec {
   pname = "devspace";
-  version = "5.18.5";
+  version = "6.3.12";
 
   src = fetchFromGitHub {
-    owner = "loft-sh";
+    owner = "devspace-sh";
     repo = "devspace";
     rev = "v${version}";
-    sha256 = "1i4ir8p3xpfy8z8w8gzpk1hyzs04b5llrjd6hl2hzrxd1likl0sh";
+    hash = "sha256-tnkMXB0BWavSZF3HEdvtCE42zgcHNRGI5CdK3RDvv9c=";
   };
 
-  vendorSha256 = null;
+  vendorHash = null;
 
   ldflags = [
     "-s"
@@ -27,10 +28,14 @@ buildGoModule rec {
   # TODO: add a nixosTest to be able to perform the package check
   doCheck = false;
 
+  passthru.tests.version = testers.testVersion {
+    package = devspace;
+  };
+
   meta = with lib; {
-    description = "DevSpace is an open-source developer tool for Kubernetes that lets you develop and deploy cloud-native software faster";
+    description = "Open-source developer tool for Kubernetes that lets you develop and deploy cloud-native software faster";
     homepage = "https://devspace.sh/";
-    changelog = "https://github.com/loft-sh/devspace/releases/tag/v${version}";
+    changelog = "https://github.com/devspace-sh/devspace/releases/tag/v${version}";
     license = licenses.asl20;
     maintainers = with maintainers; [ darkonion0 ];
   };

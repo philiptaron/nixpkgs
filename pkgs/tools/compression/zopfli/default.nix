@@ -1,4 +1,4 @@
-{ lib, stdenv, fetchFromGitHub, fetchpatch, cmake }:
+{ lib, stdenv, fetchFromGitHub, cmake }:
 
 stdenv.mkDerivation rec {
   pname = "zopfli";
@@ -34,6 +34,7 @@ stdenv.mkDerivation rec {
     '';
     platforms = platforms.unix;
     license = licenses.asl20;
+    mainProgram = "zopfli";
     maintainers = with maintainers; [ bobvanderlinden edef ];
   };
 }

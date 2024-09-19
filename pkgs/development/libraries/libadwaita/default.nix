@@ -1,27 +1,30 @@
 { lib
 , stdenv
 , fetchFromGitLab
-, docbook-xsl-nons
 , gi-docgen
-, gtk-doc
-, libxml2
 , meson
 , ninja
 , pkg-config
 , sassc
 , vala
 , gobject-introspection
+, appstream
 , fribidi
 , glib
 , gtk4
 , gnome
+, adwaita-icon-theme
 , gsettings-desktop-schemas
+, desktop-file-utils
 , xvfb-run
+, AppKit
+, Foundation
+, testers
 }:
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation (finalAttrs: {
   pname = "libadwaita";
-  version = "1.1.2";
+  version = "1.5.3";
 
   outputs = [ "out" "dev" "devdoc" ];
   outputBin = "devdoc"; # demo app
@@ -30,41 +33,55 @@ stdenv.mkDerivation rec {
     domain = "gitlab.gnome.org";
     owner = "GNOME";
     repo = "libadwaita";
-    rev = version;
-    hash = "sha256-OyjuUWfKE8GoGFCmaCS7YAf5GAS0VwMPht7cvFtkA/Y=";
+    rev = finalAttrs.version;
+    hash = "sha256-NCQCd/QnJg2fEI6q5ys8HQXinGnKaoxhMUHd8rwxAmk=";
   };
 
+  depsBuildBuild = [
+    pkg-config
+  ];
+
   nativeBuildInputs = [
-    docbook-xsl-nons
     gi-docgen
-    gtk-doc
-    libxml2 # for xmllint
     meson
     ninja
     pkg-config
     sassc
     vala
+    gobject-introspection
+    desktop-file-utils  # for validate-desktop-file
   ];
 
   mesonFlags = [
     "-Dgtk_doc=true"
+  ] ++ lib.optionals (!finalAttrs.finalPackage.doCheck) [
+    "-Dtests=false"
   ];
 
   buildInputs = [
+    appstream
     fribidi
-    gobject-introspection
+  ] ++ lib.optionals stdenv.isDarwin [
+    AppKit
+    Foundation
   ];
 
   propagatedBuildInputs = [
     gtk4
   ];
 
-  checkInputs = [
-    gnome.adwaita-icon-theme
+  nativeCheckInputs = [
+    adwaita-icon-theme
+  ] ++ lib.optionals (!stdenv.isDarwin) [
     xvfb-run
   ];
 
-  doCheck = true;
+  # Tests had to be disabled on Darwin because test-button-content fails
+  #
+  # not ok /Adwaita/ButtonContent/style_class_button - Gdk-FATAL-CRITICAL:
+  # gdk_macos_monitor_get_workarea: assertion 'GDK_IS_MACOS_MONITOR (self)' failed
+  doCheck = !stdenv.isDarwin;
+  separateDebugInfo = true;
 
   checkPhase = ''
     runHook preCheck
@@ -81,27 +98,39 @@ stdenv.mkDerivation rec {
       # Tests need a cache directory
       "HOME=$TMPDIR"
     )
-    env "''${testEnvironment[@]}" xvfb-run \
+    env "''${testEnvironment[@]}" ${lib.optionalString (!stdenv.isDarwin) "xvfb-run"} \
       meson test --print-errorlogs
 
     runHook postCheck
   '';
 
-  postInstall = ''
-    mv $out/share/{doc,gtk-doc}
+  postFixup = ''
+    # Cannot be in postInstall, otherwise _multioutDocs hook in preFixup will move right back.
+    moveToOutput "share/doc" "$devdoc"
+
+    # Put all resources related to demo app into devdoc output.
+    for d in applications icons metainfo; do
+      moveToOutput "share/$d" "$devdoc"
+    done
   '';
 
   passthru = {
     updateScript = gnome.updateScript {
-      packageName = pname;
+      packageName = finalAttrs.pname;
+    };
+    tests.pkg-config = testers.hasPkgConfigModules {
+      package = finalAttrs.finalPackage;
     };
   };
 
   meta = with lib; {
+    changelog = "https://gitlab.gnome.org/GNOME/libadwaita/-/blob/${finalAttrs.src.rev}/NEWS";
     description = "Library to help with developing UI for mobile devices using GTK/GNOME";
+    mainProgram = "adwaita-1-demo";
     homepage = "https://gitlab.gnome.org/GNOME/libadwaita";
     license = licenses.lgpl21Plus;
     maintainers = teams.gnome.members ++ (with maintainers; [ dotlambda ]);
-    platforms = platforms.linux;
+    platforms = platforms.unix;
+    pkgConfigModules = [ "libadwaita-1" ];
   };
-}
+})

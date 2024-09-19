@@ -1,7 +1,6 @@
 { lib
 , stdenv
-, fetchzip
-, substituteAll
+, fetchFromGitLab
 , cmake
 , extra-cmake-modules
 , qttools
@@ -10,26 +9,28 @@
 , tesseract4
 , qtmultimedia
 , qtx11extras
-, qttranslations
 , wrapQtAppsHook
+, gst_all_1
+, testers
 }:
 
-stdenv.mkDerivation rec {
+stdenv.mkDerivation (finalAttrs: {
   pname = "crow-translate";
-  version = "2.9.8";
+  version = "3.0.0";
 
-  src = fetchzip {
-    url = "https://github.com/${pname}/${pname}/releases/download/${version}/${pname}-${version}-source.tar.gz";
-    hash = "sha256-ZqiQVpKwGpglSc05Y1r6uScZyG4qnklPXqTGKxpS3f8=";
+  src = fetchFromGitLab {
+    domain = "invent.kde.org";
+    owner = "office";
+    repo = "crow-translate";
+    rev = "v${finalAttrs.version}";
+    hash = "sha256-hdrhxbv44DlxoF1JU1d2auP/vR8a3IJI+hN7PhdPMaY=";
+    fetchSubmodules = true;
   };
 
-  patches = [
-    (substituteAll {
-      # See https://github.com/NixOS/nixpkgs/issues/86054
-      src = ./fix-qttranslations-path.patch;
-      inherit qttranslations;
-    })
-  ];
+  postPatch = ''
+    substituteInPlace data/org.kde.CrowTranslate.desktop.in \
+      --subst-var-by QT_BIN_DIR ${lib.getBin qttools}/bin
+  '';
 
   nativeBuildInputs = [
     cmake
@@ -44,18 +45,27 @@ stdenv.mkDerivation rec {
     tesseract4
     qtmultimedia
     qtx11extras
-  ];
+  ] ++ (with gst_all_1; [
+    gstreamer
+    gst-plugins-base
+    gst-plugins-good
+    gst-plugins-bad
+  ]);
 
-  postInstall = ''
-    substituteInPlace $out/share/applications/io.crow_translate.CrowTranslate.desktop \
-      --replace "Exec=qdbus" "Exec=${lib.getBin qttools}/bin/qdbus"
+  preFixup = ''
+    qtWrapperArgs+=(--prefix GST_PLUGIN_SYSTEM_PATH_1_0 : "$GST_PLUGIN_SYSTEM_PATH_1_0")
   '';
 
-  meta = with lib; {
-    description = "A simple and lightweight translator that allows to translate and speak text using Google, Yandex and Bing";
-    homepage = "https://crow-translate.github.io/";
-    license = licenses.gpl3Plus;
-    maintainers = with maintainers; [ sikmir ];
-    platforms = platforms.linux;
+  passthru.tests.version = testers.testVersion {
+    package = finalAttrs.finalPackage;
   };
-}
+
+  meta = {
+    description = "Simple and lightweight translator that allows to translate and speak text using Google, Yandex and Bing";
+    homepage = "https://invent.kde.org/office/crow-translate";
+    license = lib.licenses.gpl3Plus;
+    maintainers = with lib.maintainers; [ sikmir ];
+    platforms = lib.platforms.linux;
+    mainProgram = "crow";
+  };
+})

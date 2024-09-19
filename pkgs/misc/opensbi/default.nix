@@ -1,4 +1,7 @@
-{ lib, stdenv, fetchFromGitHub
+{ lib
+, stdenv
+, fetchFromGitHub
+, python3
 , withPlatform ? "generic"
 , withPayload ? null
 , withFDT ? null
@@ -6,14 +9,20 @@
 
 stdenv.mkDerivation rec {
   pname = "opensbi";
-  version = "1.0";
+  version = "1.5";
 
   src = fetchFromGitHub {
     owner = "riscv-software-src";
     repo = "opensbi";
     rev = "v${version}";
-    sha256 = "sha256-OgzcH+RLU680qF3+lUiWFFbif6YtjIknJriGlRqcOGs=";
+    hash = "sha256-vK14P97FcaVz4GDr/0055Z6s/k7BPKPQGZ/MQxbOWu0=";
   };
+
+  postPatch = ''
+    patchShebangs ./scripts
+  '';
+
+  nativeBuildInputs = [ python3 ];
 
   installFlags = [
     "I=$(out)"
@@ -27,6 +36,8 @@ stdenv.mkDerivation rec {
     "FW_FDT_PATH=${withFDT}"
   ];
 
+  enableParallelBuilding = true;
+
   dontStrip = true;
   dontPatchELF = true;
 
@@ -35,6 +46,6 @@ stdenv.mkDerivation rec {
     homepage = "https://github.com/riscv-software-src/opensbi";
     license = licenses.bsd2;
     maintainers = with maintainers; [ ius nickcao zhaofengli ];
-    platforms = [ "riscv64-linux" ];
+    platforms = [ "riscv64-linux" "riscv32-linux" ];
   };
 }

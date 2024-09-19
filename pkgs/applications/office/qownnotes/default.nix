@@ -1,30 +1,86 @@
-{ mkDerivation, lib, stdenv, fetchurl
-, qmake, qttools, qtbase, qtsvg, qtdeclarative, qtxmlpatterns, qtwebsockets
-, qtx11extras, qtwayland
+{ lib
+, stdenv
+, fetchurl
+, cmake
+, qttools
+, qtbase
+, qtdeclarative
+, qtsvg
+, qtwayland
+, qtwebsockets
+, makeWrapper
+, wrapQtAppsHook
+, botan2
+, pkg-config
+, nixosTests
+, installShellFiles
+, xvfb-run
 }:
 
-mkDerivation rec {
+let
   pname = "qownnotes";
-  version = "22.5.0";
+  appname = "QOwnNotes";
+  version = "24.9.6";
+in
+stdenv.mkDerivation {
+  inherit pname version;
 
   src = fetchurl {
-    url = "https://download.tuxfamily.org/${pname}/src/${pname}-${version}.tar.xz";
-    # Fetch the checksum of current version with curl:
-    # curl https://download.tuxfamily.org/qownnotes/src/qownnotes-<version>.tar.xz.sha256
-    sha256 = "52a81401a4a03c77e28f37f56c3ebdc6696ff43c75cc9330d10ba7e801f48ccd";
+    url = "https://github.com/pbek/QOwnNotes/releases/download/v${version}/qownnotes-${version}.tar.xz";
+    hash = "sha256-r5X8/BObkDlhB0LkfMSdrYWaU8mwquQhSiPUDJjV1qM=";
   };
 
-  nativeBuildInputs = [ qmake qttools ];
+  nativeBuildInputs = [
+    cmake
+    qttools
+    wrapQtAppsHook
+    pkg-config
+    installShellFiles
+    xvfb-run
+  ] ++ lib.optionals stdenv.isDarwin [ makeWrapper ];
 
-  buildInputs = [ qtbase qtsvg qtdeclarative qtxmlpatterns qtwebsockets qtx11extras ]
-    ++ lib.optionals stdenv.isLinux [ qtwayland ];
+  buildInputs = [
+    qtbase
+    qtdeclarative
+    qtsvg
+    qtwebsockets
+    botan2
+  ] ++ lib.optionals stdenv.isLinux [ qtwayland ];
+
+  cmakeFlags = [
+    "-DQON_QT6_BUILD=ON"
+    "-DBUILD_WITH_SYSTEM_BOTAN=ON"
+  ];
+
+  postInstall = ''
+    installShellCompletion --cmd ${appname} \
+      --bash <(xvfb-run $out/bin/${appname} --completion bash) \
+      --fish <(xvfb-run $out/bin/${appname} --completion fish)
+    installShellCompletion --cmd ${pname} \
+      --bash <(xvfb-run $out/bin/${appname} --completion bash) \
+      --fish <(xvfb-run $out/bin/${appname} --completion fish)
+  ''
+  # Create a lowercase symlink for Linux
+  + lib.optionalString stdenv.isLinux ''
+    ln -s $out/bin/${appname} $out/bin/${pname}
+  ''
+  # Wrap application for macOS as lowercase binary
+  + lib.optionalString stdenv.isDarwin ''
+    mkdir -p $out/Applications
+    mv $out/bin/${appname}.app $out/Applications
+    makeWrapper $out/Applications/${appname}.app/Contents/MacOS/${appname} $out/bin/${pname}
+  '';
+
+  # Tests QOwnNotes using the NixOS module by launching xterm:
+  passthru.tests.basic-nixos-module-functionality = nixosTests.qownnotes;
 
   meta = with lib; {
-    description = "Plain-text file notepad and todo-list manager with markdown support and Nextcloud/ownCloud integration.";
-    longDescription = "QOwnNotes is a plain-text file notepad and todo-list manager with markdown support and Nextcloud/ownCloud integration.";
+    description = "Plain-text file notepad and todo-list manager with markdown support and Nextcloud/ownCloud integration";
     homepage = "https://www.qownnotes.org/";
+    changelog = "https://www.qownnotes.org/changelog.html";
+    downloadPage = "https://github.com/pbek/QOwnNotes/releases/tag/v${version}";
     license = licenses.gpl2Only;
-    maintainers = with maintainers; [ dtzWill totoroot ];
-    platforms = platforms.linux;
+    maintainers = with maintainers; [ pbek totoroot ];
+    platforms = platforms.unix;
   };
 }

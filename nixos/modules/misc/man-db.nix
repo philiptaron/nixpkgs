@@ -13,21 +13,31 @@ in
         example = false;
       };
 
+      skipPackages = lib.mkOption {
+        type = lib.types.listOf lib.types.package;
+        default = [];
+        internal = true;
+        description = ''
+          Packages to *not* include in the man-db.
+          This can be useful to avoid unnecessary rebuilds due to packages that change frequently, like nixos-version.
+        '';
+      };
+
       manualPages = lib.mkOption {
         type = lib.types.path;
         default = pkgs.buildEnv {
           name = "man-paths";
-          paths = config.environment.systemPackages;
+          paths = lib.subtractLists cfg.skipPackages config.environment.systemPackages;
           pathsToLink = [ "/share/man" ];
           extraOutputsToInstall = [ "man" ]
             ++ lib.optionals config.documentation.dev.enable [ "devman" ];
           ignoreCollisions = true;
         };
-        defaultText = lib.literalDocBook "all man pages in <option>config.environment.systemPackages</option>";
+        defaultText = lib.literalMD "all man pages in {option}`config.environment.systemPackages`";
         description = ''
-          The manual pages to generate caches for if <option>documentation.man.generateCaches</option>
+          The manual pages to generate caches for if {option}`documentation.man.generateCaches`
           is enabled. Must be a path to a directory with man pages under
-          <literal>/share/man</literal>; see the source for an example.
+          `/share/man`; see the source for an example.
           Advanced users can make this a content-addressed derivation to save a few rebuilds.
         '';
       };
@@ -37,7 +47,7 @@ in
         default = pkgs.man-db;
         defaultText = lib.literalExpression "pkgs.man-db";
         description = ''
-          The <literal>man-db</literal> derivation to use. Useful to override
+          The `man-db` derivation to use. Useful to override
           configuration options used for the package.
         '';
       };
@@ -52,9 +62,11 @@ in
     environment.systemPackages = [ cfg.package ];
     environment.etc."man_db.conf".text =
       let
-        manualCache = pkgs.runCommandLocal "man-cache" { } ''
+        manualCache = pkgs.runCommand "man-cache" {
+          nativeBuildInputs = [ cfg.package ];
+        } ''
           echo "MANDB_MAP ${cfg.manualPages}/share/man $out" > man.conf
-          ${cfg.package}/bin/mandb -C man.conf -psc >/dev/null 2>&1
+          mandb -C man.conf -psc >/dev/null 2>&1
         '';
       in
       ''

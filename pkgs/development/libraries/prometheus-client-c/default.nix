@@ -48,7 +48,7 @@ let
       #   ld: CMakeFiles/prom.dir/src/prom_process_stat.c.o:(.bss+0x0): multiple definition of
       #     `prom_process_start_time_seconds'; CMakeFiles/prom.dir/src/prom_collector.c.o:(.bss+0x0): first defined here
       # Should be fixed in 1.2.0 and later: https://github.com/digitalocean/prometheus-client-c/pull/25
-      NIX_CFLAGS_COMPILE = "-fcommon";
+      env.NIX_CFLAGS_COMPILE = "-fcommon";
 
       preConfigure = ''
         cd ${subdir}
@@ -67,12 +67,12 @@ rec {
   libprom = build {
     pname = "libprom";
     subdir = "prom";
-    description = "A Prometheus Client in C";
+    description = "Prometheus Client in C";
   };
   libpromhttp = build {
     pname = "libpromhttp";
     subdir = "promhttp";
     buildInputs = [ libmicrohttpd libprom ];
-    description = "A Prometheus HTTP Endpoint in C";
+    description = "Prometheus HTTP Endpoint in C";
   };
 }

@@ -1,11 +1,12 @@
-{ fetchurl, fetchFromGitLab }:
-let src = builtins.fromJSON (builtins.readFile ./src.json);
+{ lib, fetchurl, fetchFromGitea }:
+let src = lib.importJSON ./src.json;
 in
 {
   inherit (src) packageVersion;
-  source = fetchFromGitLab {
-    owner = "librewolf-community";
-    repo = "browser/source";
+  source = fetchFromGitea {
+    domain = "codeberg.org";
+    owner = "librewolf";
+    repo = "source";
     fetchSubmodules = true;
     inherit (src.source) rev sha256;
   };

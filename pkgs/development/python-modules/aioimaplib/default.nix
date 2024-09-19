@@ -1,46 +1,48 @@
-{ lib
-, pythonOlder
-, pythonAtLeast
-, asynctest
-, buildPythonPackage
-, docutils
-, fetchFromGitHub
-, imaplib2
-, mock
-, nose
-, pyopenssl
-, pytestCheckHook
-, pytz
-, tzlocal
+{
+  lib,
+  asynctest,
+  buildPythonPackage,
+  docutils,
+  fetchFromGitHub,
+  imaplib2,
+  mock,
+  pyopenssl,
+  pytestCheckHook,
+  pythonOlder,
+  pytz,
+  setuptools,
+  tzlocal,
 }:
 
 buildPythonPackage rec {
   pname = "aioimaplib";
-  version = "0.9.0";
-  format = "setuptools";
+  version = "1.1.0";
+  pyproject = true;
 
-  # Check https://github.com/bamthomas/aioimaplib/issues/75
-  # for Python 3.10 support
-  disabled = pythonOlder "3.5" || pythonAtLeast "3.10";
+  disabled = pythonOlder "3.7";
 
   src = fetchFromGitHub {
     owner = "bamthomas";
-    repo = pname;
-    rev = version;
-    sha256 = "sha256-xxZAeJDuqrPv4kGgDr0ypFuZJk1zcs/bmgeEzI0jpqY=";
+    repo = "aioimaplib";
+    rev = "refs/tags/${version}";
+    hash = "sha256-TjCPGZGsSb+04kQNzHU3kWBo2vY34ujEqh1GIMIehJc=";
   };
 
-  checkInputs = [
+  build-system = [ setuptools ];
+
+  nativeCheckInputs = [
     asynctest
     docutils
     imaplib2
     mock
-    nose
     pyopenssl
     pytestCheckHook
     pytz
     tzlocal
   ];
+
+  # https://github.com/bamthomas/aioimaplib/issues/54
+  doCheck = pythonOlder "3.11";
 
   pythonImportsCheck = [ "aioimaplib" ];
 

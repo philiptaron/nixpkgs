@@ -1,17 +1,29 @@
 { stdenv, lib, buildPackages, fetchurl, attr, runtimeShell
 , usePam ? !isStatic, pam ? null
 , isStatic ? stdenv.hostPlatform.isStatic
+
+# passthru.tests
+, bind
+, chrony
+, htop
+, libgcrypt
+, libvirt
+, ntp
+, qemu
+, squid
+, tor
+, uwsgi
 }:
 
 assert usePam -> pam != null;
 
 stdenv.mkDerivation rec {
   pname = "libcap";
-  version = "2.63";
+  version = "2.70";
 
   src = fetchurl {
     url = "mirror://kernel/linux/libs/security/linux-privs/libcap2/${pname}-${version}.tar.xz";
-    sha256 = "sha256-DGN7j0T8fYYneH6c9X8VrAbB3cy1PkH+7FSWvjRm938=";
+    sha256 = "sha256-I6bviq2vHj6HX2M7stEWz++JUtunvHxWmxNFjhlSsw8=";
   };
 
   outputs = [ "out" "dev" "lib" "man" "doc" ]
@@ -29,7 +41,7 @@ stdenv.mkDerivation rec {
     "BUILD_CC=$(CC_FOR_BUILD)"
     "CC:=$(CC)"
     "CROSS_COMPILE=${stdenv.cc.targetPrefix}"
-  ] ++ lib.optional isStatic "SHARED=no";
+  ] ++ lib.optionals isStatic [ "SHARED=no" "LIBCSTATIC=yes" ];
 
   postPatch = ''
     patchShebangs ./progs/mkcapshdoc.sh
@@ -56,6 +68,20 @@ stdenv.mkDerivation rec {
     mkdir -p "$pam/lib/security"
     mv "$lib"/lib/security "$pam/lib"
   '';
+
+  passthru.tests = {
+    inherit
+      bind
+      chrony
+      htop
+      libgcrypt
+      libvirt
+      ntp
+      qemu
+      squid
+      tor
+      uwsgi;
+  };
 
   meta = {
     description = "Library for working with POSIX capabilities";

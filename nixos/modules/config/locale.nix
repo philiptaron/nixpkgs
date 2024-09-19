@@ -1,12 +1,9 @@
 { config, lib, pkgs, ... }:
-
-with lib;
-
 let
 
   tzdir = "${pkgs.tzdata}/share/zoneinfo";
-  nospace  = str: filter (c: c == " ") (stringToCharacters str) == [];
-  timezone = types.nullOr (types.addCheck types.str nospace)
+  nospace  = str: lib.filter (c: c == " ") (lib.stringToCharacters str) == [];
+  timezone = lib.types.nullOr (lib.types.addCheck lib.types.str nospace)
     // { description = "null or string without spaces"; };
 
   lcfg = config.location;
@@ -18,13 +15,12 @@ in
 
     time = {
 
-      timeZone = mkOption {
+      timeZone = lib.mkOption {
         default = null;
         type = timezone;
         example = "America/New_York";
         description = ''
-          The time zone used when displaying times and dates. See <link
-          xlink:href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones"/>
+          The time zone used when displaying times and dates. See <https://en.wikipedia.org/wiki/List_of_tz_database_time_zones>
           for a comprehensive list of possible values for this setting.
 
           If null, the timezone will default to UTC and can be set imperatively
@@ -32,9 +28,9 @@ in
         '';
       };
 
-      hardwareClockInLocalTime = mkOption {
+      hardwareClockInLocalTime = lib.mkOption {
         default = false;
-        type = types.bool;
+        type = lib.types.bool;
         description = "If set, keep the hardware clock in local time instead of UTC.";
       };
 
@@ -42,30 +38,30 @@ in
 
     location = {
 
-      latitude = mkOption {
-        type = types.float;
+      latitude = lib.mkOption {
+        type = lib.types.float;
         description = ''
           Your current latitude, between
-          <literal>-90.0</literal> and <literal>90.0</literal>. Must be provided
+          `-90.0` and `90.0`. Must be provided
           along with longitude.
         '';
       };
 
-      longitude = mkOption {
-        type = types.float;
+      longitude = lib.mkOption {
+        type = lib.types.float;
         description = ''
           Your current longitude, between
-          between <literal>-180.0</literal> and <literal>180.0</literal>. Must be
+          between `-180.0` and `180.0`. Must be
           provided along with latitude.
         '';
       };
 
-      provider = mkOption {
-        type = types.enum [ "manual" "geoclue2" ];
+      provider = lib.mkOption {
+        type = lib.types.enum [ "manual" "geoclue2" ];
         default = "manual";
         description = ''
           The location provider to use for determining your location. If set to
-          <literal>manual</literal> you must also provide latitude/longitude.
+          `manual` you must also provide latitude/longitude.
         '';
       };
 
@@ -76,7 +72,7 @@ in
 
     environment.sessionVariables.TZDIR = "/etc/zoneinfo";
 
-    services.geoclue2.enable = mkIf (lcfg.provider == "geoclue2") true;
+    services.geoclue2.enable = lib.mkIf (lcfg.provider == "geoclue2") true;
 
     # This way services are restarted when tzdata changes.
     systemd.globalEnvironment.TZDIR = tzdir;

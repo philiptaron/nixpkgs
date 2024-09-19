@@ -1,14 +1,19 @@
-{ lib, stdenv, fetchFromGitHub, kernel }:
+{
+  lib,
+  stdenv,
+  fetchFromGitHub,
+  kernel,
+}:
 
 stdenv.mkDerivation rec {
-  version = "2.7.1";
+  version = "2.12.3";
   name = "ena-${version}-${kernel.version}";
 
   src = fetchFromGitHub {
     owner = "amzn";
     repo = "amzn-drivers";
     rev = "ena_linux_${version}";
-    sha256 = "sha256-JkGzmmsAmLvL9e+bg58H79GNHgsqydK/79VoWEq5/Mc=";
+    hash = "sha256-F8vDPPwO0PnGXhqt0EeT4m/+d8w/rjMHWRV3RYC/wVQ=";
   };
 
   hardeningDisable = [ "pic" ];
@@ -16,13 +21,17 @@ stdenv.mkDerivation rec {
   nativeBuildInputs = kernel.moduleBuildDependencies;
   makeFlags = kernel.makeFlags;
 
-  # linux 3.12
-  NIX_CFLAGS_COMPILE = "-Wno-error=implicit-function-declaration";
+  env.KERNEL_BUILD_DIR = "${kernel.dev}/lib/modules/${kernel.modDirVersion}/build";
+
+  patches = [
+    # https://github.com/amzn/amzn-drivers/issues/313
+    ./0001-workaround-patch-for-kernel-6.10.patch
+  ];
 
   configurePhase = ''
     runHook preConfigure
     cd kernel/linux/ena
-    substituteInPlace Makefile --replace '/lib/modules/$(BUILD_KERNEL)' ${kernel.dev}/lib/modules/${kernel.modDirVersion}
+    export ENA_PHC_INCLUDE=1
     runHook postConfigure
   '';
 
@@ -40,8 +49,10 @@ stdenv.mkDerivation rec {
     description = "Amazon Elastic Network Adapter (ENA) driver for Linux";
     homepage = "https://github.com/amzn/amzn-drivers";
     license = licenses.gpl2Only;
-    maintainers = [ maintainers.eelco ];
+    maintainers = with maintainers; [
+      sielicki
+      arianvp
+    ];
     platforms = platforms.linux;
-    broken = kernel.kernelAtLeast "5.17";
   };
 }

@@ -11,15 +11,6 @@ let
     addCheck (listOf x) (y: length y == 2)
     // { description = "pair of ${x.description}"; };
 
-  floatBetween = a: b: with types;
-    let
-      # toString prints floats with hardcoded high precision
-      floatToString = f: builtins.toJSON f;
-    in
-      addCheck float (x: x <= b && x >= a)
-      // { description = "a floating point number in " +
-                         "range [${floatToString a}, ${floatToString b}]"; };
-
   mkDefaultAttrs = mapAttrs (n: v: mkDefault v);
 
   # Basically a tinkered lib.generators.mkKeyValueDefault
@@ -50,7 +41,15 @@ let
 in {
 
   imports = [
-    (mkAliasOptionModule [ "services" "compton" ] [ "services" "picom" ])
+    (mkAliasOptionModuleMD [ "services" "compton" ] [ "services" "picom" ])
+    (mkRemovedOptionModule [ "services" "picom" "refreshRate" ] ''
+      This option corresponds to `refresh-rate`, which has been unused
+      since picom v6 and was subsequently removed by upstream.
+      See https://github.com/yshui/picom/commit/bcbc410
+    '')
+    (mkRemovedOptionModule [ "services" "picom" "experimentalBackends" ] ''
+      This option was removed by upstream since picom v10.
+    '')
   ];
 
   options.services.picom = {
@@ -62,13 +61,7 @@ in {
       '';
     };
 
-    experimentalBackends = mkOption {
-      type = types.bool;
-      default = false;
-      description = ''
-        Whether to use the unstable new reimplementation of the backends.
-      '';
-    };
+    package = mkPackageOption pkgs "picom" { };
 
     fade = mkOption {
       type = types.bool;
@@ -88,7 +81,7 @@ in {
     };
 
     fadeSteps = mkOption {
-      type = pairOf (floatBetween 0.01 1);
+      type = pairOf (types.numbers.between 0.01 1);
       default = [ 0.028 0.03 ];
       example = [ 0.04 0.04 ];
       description = ''
@@ -106,7 +99,7 @@ in {
       ];
       description = ''
         List of conditions of windows that should not be faded.
-        See <literal>picom(1)</literal> man page for more examples.
+        See `picom(1)` man page for more examples.
       '';
     };
 
@@ -128,7 +121,7 @@ in {
     };
 
     shadowOpacity = mkOption {
-      type = floatBetween 0 1;
+      type = types.numbers.between 0 1;
       default = 0.75;
       example = 0.8;
       description = ''
@@ -146,12 +139,12 @@ in {
       ];
       description = ''
         List of conditions of windows that should have no shadow.
-        See <literal>picom(1)</literal> man page for more examples.
+        See `picom(1)` man page for more examples.
       '';
     };
 
     activeOpacity = mkOption {
-      type = floatBetween 0 1;
+      type = types.numbers.between 0 1;
       default = 1.0;
       example = 0.8;
       description = ''
@@ -160,7 +153,7 @@ in {
     };
 
     inactiveOpacity = mkOption {
-      type = floatBetween 0.1 1;
+      type = types.numbers.between 0.1 1;
       default = 1.0;
       example = 0.8;
       description = ''
@@ -169,7 +162,7 @@ in {
     };
 
     menuOpacity = mkOption {
-      type = floatBetween 0 1;
+      type = types.numbers.between 0 1;
       default = 1.0;
       example = 0.8;
       description = ''
@@ -208,10 +201,10 @@ in {
     };
 
     backend = mkOption {
-      type = types.enum [ "glx" "xrender" "xr_glx_hybrid" ];
+      type = types.enum [ "egl" "glx" "xrender" "xr_glx_hybrid" ];
       default = "xrender";
       description = ''
-        Backend to use: <literal>glx</literal>, <literal>xrender</literal> or <literal>xr_glx_hybrid</literal>.
+        Backend to use: `egl`, `glx`, `xrender` or `xr_glx_hybrid`.
       '';
     };
 
@@ -232,15 +225,6 @@ in {
         Enable vertical synchronization. Chooses the best method
         (drm, opengl, opengl-oml, opengl-swc, opengl-mswc) automatically.
         The bool value should be used, the others are just for backwards compatibility.
-      '';
-    };
-
-    refreshRate = mkOption {
-      type = types.ints.unsigned;
-      default = 0;
-      example = 60;
-      description = ''
-       Screen refresh rate (0 = automatically detect).
       '';
     };
 
@@ -274,7 +258,7 @@ in {
       description = ''
         Picom settings. Use this option to configure Picom settings not exposed
         in a NixOS option or to bypass one.  For the available options see the
-        CONFIGURATION FILES section at <literal>picom(1)</literal>.
+        CONFIGURATION FILES section at `picom(1)`.
       '';
     };
   };
@@ -306,7 +290,6 @@ in {
       # other options
       backend          = cfg.backend;
       vsync            = cfg.vSync;
-      refresh-rate     = cfg.refreshRate;
     };
 
     systemd.user.services.picom = {
@@ -320,14 +303,13 @@ in {
       };
 
       serviceConfig = {
-        ExecStart = "${pkgs.picom}/bin/picom --config ${configFile}"
-          + (optionalString cfg.experimentalBackends " --experimental-backends");
+        ExecStart = "${getExe cfg.package} --config ${configFile}";
         RestartSec = 3;
         Restart = "always";
       };
     };
 
-    environment.systemPackages = [ pkgs.picom ];
+    environment.systemPackages = [ cfg.package ];
   };
 
   meta.maintainers = with lib.maintainers; [ rnhmjoj ];

@@ -2,18 +2,18 @@
 
 buildGoModule rec {
   pname = "flex-ndax";
-  version = "0.2-20220427";
+  version = "0.4-20240818";
 
   src = fetchFromGitHub {
     owner = "kc2g-flex-tools";
     repo = "nDAX";
     rev = "v${version}";
-    hash = "sha256-KmvTLfGC6xzXcWYAzmBYiYSF65lqMdsdMQjUEk3siqc=";
+    hash = "sha256-FCF22apO6uAc24H36SkvfKEKdyqY4l+j7ABdOnhZP6M=";
   };
 
   buildInputs = [ libpulseaudio ];
 
-  vendorSha256 = "sha256-u/5LiVo/ZOefprEKr/L1+3+OfYb0a4wq+CWoUjYNvzg=";
+  vendorHash = "sha256-05LWJm4MoJqjJaFrBZvutKlqSTGl4dSp433AfHHO6LU=";
 
   meta = with lib; {
     broken = stdenv.isDarwin;
@@ -21,5 +21,6 @@ buildGoModule rec {
     description = "FlexRadio digital audio transport (DAX) connector for PulseAudio";
     license = licenses.mit;
     maintainers = with maintainers; [ mvs ];
+    mainProgram = "nDAX";
   };
 }

@@ -1,46 +1,49 @@
-{ stdenv
-, lib
-, buildPythonPackage
-, fetchFromGitHub
-, fetchpatch
-, pulumi
-, parver
-, semver
-, isPy27
+{
+  lib,
+  buildPythonPackage,
+  fetchFromGitHub,
+  parver,
+  pulumi,
+  pythonOlder,
+  semver,
+  setuptools,
 }:
 
 buildPythonPackage rec {
   pname = "pulumi-aws";
-  # version is independant of pulumi's.
-  version = "5.3.0";
-  disabled = isPy27;
+  # Version is independant of pulumi's.
+  version = "6.51.0";
+
+  pyproject = true;
+  build-system = [ setuptools ];
+
+  disabled = pythonOlder "3.8";
 
   src = fetchFromGitHub {
     owner = "pulumi";
     repo = "pulumi-aws";
-    rev = "v${version}";
-    sha256 = "sha256-LrWiNYJeQQvXJDOxklRO86VSiaadvkOepQVPhh2BBkk=";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-aEyi4zFj0Q3KNBXjUX5J7nmmPCcnYn5w0mIC02gbGJc=";
   };
 
+  sourceRoot = "${src.name}/sdk/python";
+
   propagatedBuildInputs = [
-    pulumi
     parver
+    pulumi
     semver
   ];
 
-  postPatch = ''
-    cd sdk/python
-  '';
-
-  # checks require cloud resources
+  # Checks require cloud resources
   doCheck = false;
-  pythonImportsCheck = ["pulumi_aws"];
+
+  pythonImportsCheck = [ "pulumi_aws" ];
 
   meta = with lib; {
-    broken = (stdenv.isLinux && stdenv.isAarch64) || stdenv.isDarwin;
     description = "Pulumi python amazon web services provider";
     homepage = "https://github.com/pulumi/pulumi-aws";
+    changelog = "https://github.com/pulumi/pulumi-aws/releases/tag/v${version}";
     license = licenses.asl20;
-    maintainers = with maintainers; [ costrouc ];
+    maintainers = [ ];
   };
 }

@@ -59,11 +59,9 @@ in
     # Allow root logins
     services.openssh = {
       enable = true;
-      permitRootLogin = "prohibit-password";
-      passwordAuthentication = mkDefault false;
+      settings.PermitRootLogin = "prohibit-password";
+      settings.PasswordAuthentication = mkDefault false;
     };
-
-    users.users.root.initialPassword = "foobar";
 
     # Enable the serial console on tty1
     systemd.services."serial-getty@tty1".enable = true;

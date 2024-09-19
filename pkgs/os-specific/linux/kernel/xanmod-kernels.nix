@@ -1,21 +1,25 @@
-{ lib, stdenv, fetchFromGitHub, buildLinux, ... } @ args:
+{ lib, stdenv, fetchFromGitHub, buildLinux, variant, ... } @ args:
 
 let
-  stableVariant = {
-    version = "5.15.43";
-    suffix = "xanmod1";
-    hash = "sha256-MeH9RUPDiuN22eAZ18v+N3aIT18dQ3FnTkcQV0MjB4k=";
+  # These names are how they are designated in https://xanmod.org.
+
+  # NOTE: When updating these, please also take a look at the changes done to
+  # kernel config in the xanmod version commit
+  variants = {
+    lts = {
+      version = "6.6.51";
+      hash = "sha256-dNUTePfL6cAA0EmEG/D36dNJUobDRBHR5+BYrLIYot4=";
+    };
+    main = {
+      version = "6.10.10";
+      hash = "sha256-abxhlF0zmY9WvcQ+FnkR5fNMvrw+oTCIMaCs8DFJ+oA=";
+    };
   };
 
-  edgeVariant = {
-    version = "5.18.1";
-    suffix = "xanmod1";
-    hash = "sha256-dqvB4F2S7cklSJ7XTUNvWVKTsZGLevOXME5lvhmfyis=";
-  };
-
-  xanmodKernelFor = { version, suffix, hash }: buildLinux (args // rec {
+  xanmodKernelFor = { version, suffix ? "xanmod1", hash }: buildLinux (args // rec {
     inherit version;
-    modDirVersion = "${version}-${suffix}";
+    pname = "linux-xanmod";
+    modDirVersion = lib.versions.pad 3 "${version}-${suffix}";
 
     src = fetchFromGitHub {
       owner = "xanmod";
@@ -24,64 +28,39 @@ let
       inherit hash;
     };
 
-    structuredExtraConfig =
-      with lib.kernel;
-      with (lib.kernel.whenHelpers version);
-      {
-        # TODO: remove this once https://github.com/NixOS/nixpkgs/pull/175433 is in master
-        WERROR = no;
+    structuredExtraConfig = with lib.kernel; {
+      # CPUFreq governor Performance
+      CPU_FREQ_DEFAULT_GOV_PERFORMANCE = lib.mkOverride 60 yes;
+      CPU_FREQ_DEFAULT_GOV_SCHEDUTIL = lib.mkOverride 60 no;
 
-        # removed options
-        CFS_BANDWIDTH = lib.mkForce (option no);
-        RT_GROUP_SCHED = lib.mkForce (option no);
-        SCHED_AUTOGROUP = lib.mkForce (option no);
+      # Full preemption
+      PREEMPT = lib.mkOverride 60 yes;
+      PREEMPT_VOLUNTARY = lib.mkOverride 60 no;
 
-        # AMD P-state driver
-        X86_AMD_PSTATE = yes;
+      # Google's BBRv3 TCP congestion Control
+      TCP_CONG_BBR = yes;
+      DEFAULT_BBR = yes;
 
-        # Linux RNG framework
-        LRNG = whenOlder "5.18" yes;
+      # Preemptive Full Tickless Kernel at 250Hz
+      HZ = freeform "250";
+      HZ_250 = yes;
+      HZ_1000 = no;
 
-        # Paragon's NTFS3 driver
-        NTFS3_FS = module;
-        NTFS3_LZX_XPRESS = yes;
-        NTFS3_FS_POSIX_ACL = yes;
-
-        # Preemptive Full Tickless Kernel at 500Hz
-        SCHED_CORE = lib.mkForce (option no);
-        PREEMPT_VOLUNTARY = lib.mkForce no;
-        PREEMPT = lib.mkForce yes;
-        NO_HZ_FULL = yes;
-        HZ_500 = yes;
-
-        # Google's BBRv2 TCP congestion Control
-        TCP_CONG_BBR2 = yes;
-        DEFAULT_BBR2 = yes;
-
-        # FQ-PIE Packet Scheduling
-        NET_SCH_DEFAULT = yes;
-        DEFAULT_FQ_PIE = yes;
-
-        # Graysky's additional CPU optimizations
-        CC_OPTIMIZE_FOR_PERFORMANCE_O3 = yes;
-
-        # Futex WAIT_MULTIPLE implementation for Wine / Proton Fsync.
-        FUTEX = yes;
-        FUTEX_PI = yes;
-
-        # WineSync driver for fast kernel-backed Wine
-        WINESYNC = module;
-      };
+      # RCU_BOOST and RCU_EXP_KTHREAD
+      RCU_EXPERT = yes;
+      RCU_FANOUT = freeform "64";
+      RCU_FANOUT_LEAF = freeform "16";
+      RCU_BOOST = yes;
+      RCU_BOOST_DELAY = freeform "0";
+      RCU_EXP_KTHREAD = yes;
+    };
 
     extraMeta = {
       branch = lib.versions.majorMinor version;
-      maintainers = with lib.maintainers; [ fortuneteller2k lovesegfault atemu ];
+      maintainers = with lib.maintainers; [ moni lovesegfault atemu shawn8901 zzzsy ];
       description = "Built with custom settings and new features built to provide a stable, responsive and smooth desktop experience";
       broken = stdenv.isAarch64;
     };
   } // (args.argsOverride or { }));
 in
-{
-  stable = xanmodKernelFor stableVariant;
-  edge = xanmodKernelFor edgeVariant;
-}
+xanmodKernelFor variants.${variant}

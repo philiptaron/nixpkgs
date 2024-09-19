@@ -21,6 +21,9 @@
 , # size of the FAT partition, in megabytes.
   bootSize ? 1024
 
+  , # memory allocated for virtualized build instance
+  memSize ? 1024
+
 , # The size of the root partition, in megabytes.
   rootSize ? 2048
 
@@ -116,7 +119,7 @@ let
       gptfdisk
       nix
       parted
-      utillinux
+      util-linux
       zfs
     ]
   );
@@ -130,15 +133,6 @@ let
       )
       properties
   );
-
-  featuresToProperties = features:
-    lib.listToAttrs
-      (builtins.map
-        (feature: {
-          name = "feature@${feature}";
-          value = "enabled";
-        })
-        features);
 
   createDatasets =
     let
@@ -239,7 +233,7 @@ let
   ).runInLinuxVM (
     pkgs.runCommand name
       {
-        memSize = 1024;
+        inherit memSize;
         QEMU_OPTS = "-drive file=$rootDiskImage,if=virtio,cache=unsafe,werror=report";
         preVM = ''
           PATH=$PATH:${pkgs.qemu_kvm}/bin
@@ -253,7 +247,7 @@ let
             ${if formatOpt == "raw" then ''
             mv $rootDiskImage $out/${rootFilename}
           '' else ''
-            ${pkgs.qemu}/bin/qemu-img convert -f raw -O ${formatOpt} ${compress} $rootDiskImage $out/${rootFilename}
+            ${pkgs.qemu_kvm}/bin/qemu-img convert -f raw -O ${formatOpt} ${compress} $rootDiskImage $out/${rootFilename}
           ''}
             rootDiskImage=$out/${rootFilename}
             set -x

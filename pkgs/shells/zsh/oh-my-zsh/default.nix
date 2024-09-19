@@ -2,18 +2,17 @@
 #
 #   https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=oh-my-zsh-git
 { lib, stdenv, fetchFromGitHub, nixosTests, writeScript, common-updater-scripts
-, git, nix, nixfmt, jq, coreutils, gnused, curl, cacert, bash }:
+, git, nix, nixfmt-classic, jq, coreutils, gnused, curl, cacert, bash }:
 
 stdenv.mkDerivation rec {
-  version = "2022-06-06";
+  version = "2024-09-01";
   pname = "oh-my-zsh";
-  rev = "d41ca84af1271e8bfbe26f581cebe3b86521d0db";
 
   src = fetchFromGitHub {
-    inherit rev;
     owner = "ohmyzsh";
     repo = "ohmyzsh";
-    sha256 = "87jAe5cEPj6e1raovj8sD4LZB1sfrSZkCleW8of2HP8=";
+    rev = "b8c69d265257fae88fe504ea43cbcf2728bc1308";
+    sha256 = "sha256-Q0SjYWkWY5/haoPunp5yusYoXIXzmB2tces/9gOZgJM=";
   };
 
   strictDeps = true;
@@ -85,7 +84,7 @@ stdenv.mkDerivation rec {
           curl
           cacert
           git
-          nixfmt
+          nixfmt-classic
           nix
           jq
           coreutils
@@ -100,8 +99,7 @@ stdenv.mkDerivation rec {
         nixpkgs="$(git rev-parse --show-toplevel)"
         default_nix="$nixpkgs/pkgs/shells/zsh/oh-my-zsh/default.nix"
         latestDate="$(curl -L -s https://api.github.com/repos/ohmyzsh/ohmyzsh/commits/$latestSha | jq '.commit.committer.date' | sed 's|"\(.*\)T.*|\1|g')"
-        update-source-version oh-my-zsh "$latestSha" --version-key=rev
-        update-source-version oh-my-zsh "$latestDate" --ignore-same-hash
+        update-source-version oh-my-zsh "$latestDate" --rev="$latestSha"
         nixfmt "$default_nix"
       else
         echo "${pname} is already up-to-date"
@@ -110,7 +108,7 @@ stdenv.mkDerivation rec {
   };
 
   meta = with lib; {
-    description = "A framework for managing your zsh configuration";
+    description = "Framework for managing your zsh configuration";
     longDescription = ''
       Oh My Zsh is a framework for managing your zsh configuration.
 

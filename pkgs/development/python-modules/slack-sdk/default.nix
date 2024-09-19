@@ -1,28 +1,28 @@
-{ stdenv
-, lib
-, aiodns
-, aiohttp
-, boto3
-, buildPythonPackage
-, codecov
-, databases
-, fetchFromGitHub
-, flake8
-, flask-sockets
-, moto
-, pythonOlder
-, psutil
-, pytest-asyncio
-, pytestCheckHook
-, sqlalchemy
-, websocket-client
-, websockets
+{
+  lib,
+  aiodns,
+  aiohttp,
+  boto3,
+  buildPythonPackage,
+  codecov,
+  fetchFromGitHub,
+  flake8,
+  flask-sockets,
+  moto,
+  pythonOlder,
+  psutil,
+  pytest-asyncio,
+  pytestCheckHook,
+  setuptools,
+  sqlalchemy,
+  websocket-client,
+  websockets,
 }:
 
 buildPythonPackage rec {
   pname = "slack-sdk";
-  version = "3.17.0";
-  format = "setuptools";
+  version = "3.33.0";
+  pyproject = true;
 
   disabled = pythonOlder "3.6";
 
@@ -30,10 +30,17 @@ buildPythonPackage rec {
     owner = "slackapi";
     repo = "python-slack-sdk";
     rev = "refs/tags/v${version}";
-    sha256 = "sha256-XyxvJsALAEuAJWORhIs4bGB4vYnCbFHecerA4gTr6ak=";
+    hash = "sha256-S41OyTyFjEfKvTlKwxHq7P/uzWreMIHimI6pECItTzo=";
   };
 
-  propagatedBuildInputs = [
+  postPatch = ''
+    substituteInPlace pyproject.toml \
+      --replace-fail ', "pytest-runner"' ""
+  '';
+
+  build-system = [ setuptools ];
+
+  dependencies = [
     aiodns
     aiohttp
     boto3
@@ -42,9 +49,8 @@ buildPythonPackage rec {
     websockets
   ];
 
-  checkInputs = [
+  nativeCheckInputs = [
     codecov
-    databases
     flake8
     flask-sockets
     moto
@@ -67,17 +73,16 @@ buildPythonPackage rec {
     "test_start_raises_an_error_if_rtm_ws_url_is_not_returned"
     "test_org_installation"
     "test_interactions"
+    "test_issue_690_oauth_access"
   ];
 
-  pythonImportsCheck = [
-    "slack_sdk"
-  ];
+  pythonImportsCheck = [ "slack_sdk" ];
 
   meta = with lib; {
-    broken = stdenv.isDarwin;
     description = "Slack Developer Kit for Python";
     homepage = "https://slack.dev/python-slack-sdk/";
-    license = with licenses; [ mit ];
+    changelog = "https://github.com/slackapi/python-slack-sdk/releases/tag/v${version}";
+    license = licenses.mit;
     maintainers = with maintainers; [ fab ];
   };
 }

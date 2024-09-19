@@ -1,10 +1,10 @@
-{ lib, stdenv, fetchurl, geant_version }:
+{ lib, stdenv, fetchurl, geant4 }:
 
 let
   mkDataset = { pname, version, sha256, envvar }:
     stdenv.mkDerivation {
       inherit pname version;
-      inherit geant_version;
+      geant_version = geant4.version;
 
       src = fetchurl {
         url = "https://cern.ch/geant4-data/datasets/${pname}.${version}.tar.gz";
@@ -15,7 +15,7 @@ let
       dontBuild = true;
       dontConfigure = true;
 
-      datadir = "${placeholder "out"}/share/Geant4-${geant_version}/data/${pname}${version}";
+      datadir = "${placeholder "out"}/share/Geant4-${geant4.version}/data/${pname}${version}";
       installPhase = ''
         mkdir -p $datadir
         mv ./* $datadir
@@ -35,15 +35,15 @@ in
   builtins.listToAttrs (map (a: { name = a.pname; value = mkDataset a; }) [
     {
       pname = "G4NDL";
-      version = "4.6";
-      sha256 = "sha256-nSh88q4PuIeirc6AHudPub4hsNFm2rSby+6UCKUUVAg=";
+      version = "4.7.1";
+      sha256 = "sha256-06yuSGIhGNJXneJKVNUz+yQWvw2p3SiPFyTfFIWkbHw=";
       envvar = "NEUTRONHP";
     }
 
     {
       pname = "G4EMLOW";
-      version = "8.0";
-      sha256 = "sha256-2Rmo5YOGiCV7kkimE5EOsqdjMFngMMi1DAosKtn9Kzs=";
+      version = "8.5";
+      sha256 = "sha256-ZrrKSaxdReKsEMEltPsmYiXlEYA+ZpgZCc6c0+m873M=";
       envvar = "LE";
     }
 
@@ -77,15 +77,15 @@ in
 
     {
       pname = "G4ABLA";
-      version = "3.1";
-      sha256 = "sha256-dpiwUrWL8bmIa+rNvWr2B63B4Jn8cwq2shz38JDAJ+0=";
+      version = "3.3";
+      sha256 = "sha256-HgQbMlLunO+IbWJPdT5pMwOqMtfl7zu6h7NPNtkuorE=";
       envvar = "ABLA";
     }
 
     {
       pname = "G4INCL";
-      version = "1.0";
-      sha256 = "sha256-cWFhghrp89BWX788LPNPTgLj5RnrQZqCI27vIsLENn0=";
+      version = "1.2";
+      sha256 = "sha256-+ICxYHPuCpLXSU8ydqbVLU3h02d6DUx8WHADlu0OGn4=";
       envvar = "INCL";
     }
 

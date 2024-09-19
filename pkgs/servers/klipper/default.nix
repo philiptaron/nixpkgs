@@ -1,32 +1,48 @@
 { stdenv
 , lib
 , fetchFromGitHub
-, python2
+, python3
 , unstableGitUpdater
+, makeWrapper
 }:
+
 stdenv.mkDerivation rec {
   pname = "klipper";
-  version = "unstable-2022-03-14";
+  version = "0.12.0-unstable-2024-09-01";
 
   src = fetchFromGitHub {
     owner = "KevinOConnor";
     repo = "klipper";
-    rev = "30098db22a43274ceb87e078e603889f403a35c4";
-    sha256 = "sha256-ORpXBFGPY6A/HEYX9Hhwb3wP2KcAE+z3pTxf6j7CwGg=";
+    rev = "08a1c9f12760ee6d89db2b82e76c7d93453212db";
+    sha256 = "sha256-bVHSiWqswum4ykVpPTt11wJSGnSjJnMT8OUvbYGFopY=";
   };
 
-  sourceRoot = "source/klippy";
+  sourceRoot = "${src.name}/klippy";
 
-  # there is currently an attempt at moving it to Python 3, but it will remain
-  # Python 2 for the foreseeable future.
-  # c.f. https://github.com/KevinOConnor/klipper/pull/3278
   # NB: This is needed for the postBuild step
-  nativeBuildInputs = [ (python2.withPackages ( p: with p; [ cffi ] )) ];
+  nativeBuildInputs = [
+    (python3.withPackages ( p: with p; [ cffi ] ))
+    makeWrapper
+  ];
 
-  buildInputs = [ (python2.withPackages (p: with p; [ cffi pyserial greenlet jinja2 numpy ])) ];
+  buildInputs = [ (python3.withPackages (p: with p; [ python-can cffi pyserial greenlet jinja2 markupsafe numpy ])) ];
 
   # we need to run this to prebuild the chelper.
-  postBuild = "python2 ./chelper/__init__.py";
+  postBuild = ''
+    python ./chelper/__init__.py
+  '';
+
+  # Python 3 is already supported but shebangs aren't updated yet
+  postPatch = ''
+    for file in klippy.py console.py parsedump.py; do
+      substituteInPlace $file \
+        --replace '/usr/bin/env python2' '/usr/bin/env python'
+    done
+
+    # needed for cross compilation
+    substituteInPlace ./chelper/__init__.py \
+      --replace 'GCC_CMD = "gcc"' 'GCC_CMD = "${stdenv.cc.targetPrefix}cc"'
+  '';
 
   # NB: We don't move the main entry point into `/bin`, or even symlink it,
   # because it uses relative paths to find necessary modules. We could wrap but
@@ -41,16 +57,26 @@ stdenv.mkDerivation rec {
     cp -r $src/docs $out/lib/docs
     cp -r $src/config $out/lib/config
 
+    # Add version information. For the normal procedure see https://www.klipper3d.org/Packaging.html#versioning
+    # This is done like this because scripts/make_version.py is not available when sourceRoot is set to "${src.name}/klippy"
+    echo "${version}-NixOS" > $out/lib/klipper/.version
+
+    mkdir -p $out/bin
     chmod 755 $out/lib/klipper/klippy.py
+    makeWrapper $out/lib/klipper/klippy.py $out/bin/klippy --chdir $out/lib/klipper
     runHook postInstall
   '';
 
-  passthru.updateScript = unstableGitUpdater { url = meta.homepage; };
+  passthru.updateScript = unstableGitUpdater {
+    url = meta.homepage;
+    tagPrefix = "v";
+  };
 
   meta = with lib; {
-    description = "The Klipper 3D printer firmware";
+    description = "Klipper 3D printer firmware";
+    mainProgram = "klippy";
     homepage = "https://github.com/KevinOConnor/klipper";
-    maintainers = with maintainers; [ lovesegfault zhaofengli ];
+    maintainers = with maintainers; [ lovesegfault zhaofengli cab404 ];
     platforms = platforms.linux;
     license = licenses.gpl3Only;
   };

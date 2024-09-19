@@ -1,4 +1,4 @@
-{ stdenv, lib, buildFHSUserEnv, writeScript, makeDesktopItem }:
+{ stdenv, lib, buildFHSEnv, writeScript, makeDesktopItem }:
 
 let platforms = [ "i686-linux" "x86_64-linux" ]; in
 
@@ -7,7 +7,7 @@ assert lib.elem stdenv.hostPlatform.system platforms;
 # Dropbox client to bootstrap installation.
 # The client is self-updating, so the actual version may be newer.
 let
-  version = "111.3.447";
+  version = "206.3.6386";
 
   arch = {
     x86_64-linux = "x86_64";
@@ -15,9 +15,7 @@ let
   }.${stdenv.hostPlatform.system};
 
   installer = "https://clientupdates.dropboxstatic.com/dbx-releng/client/dropbox-lnx.${arch}-${version}.tar.gz";
-in
 
-let
   desktopItem = makeDesktopItem {
     name = "dropbox";
     exec = "dropbox";
@@ -30,8 +28,12 @@ let
   };
 in
 
-buildFHSUserEnv {
+buildFHSEnv {
   name = "dropbox";
+
+  # dropbox-cli (i.e. nautilus-dropbox) needs the PID to confirm dropbox is running.
+  # Dropbox's internal limit-to-one-instance check also relies on the PID.
+  unsharePid = false;
 
   targetPkgs = pkgs: with pkgs; with xorg; [
     libICE libSM libX11 libXcomposite libXdamage libXext libXfixes libXrender
@@ -82,5 +84,6 @@ buildFHSUserEnv {
     license     = licenses.unfree;
     maintainers = with maintainers; [ ttuegel ];
     platforms   = [ "i686-linux" "x86_64-linux" ];
+    mainProgram = "dropbox";
   };
 }

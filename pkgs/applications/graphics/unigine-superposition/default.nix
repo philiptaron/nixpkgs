@@ -22,7 +22,7 @@
 , mkDerivation
 , xkeyboard_config
 , fetchurl
-, buildFHSUserEnv
+, buildFHSEnv
 , openal
 , makeDesktopItem
 }:
@@ -94,9 +94,9 @@ let
 in
 
 # We can patch the "/bin/superposition", but "/bin/launcher" checks it for changes.
-# For that we need use a buildFHSUserEnv.
+# For that we need use a buildFHSEnv.
 
-buildFHSUserEnv {
+buildFHSEnv {
   name = "Superposition";
 
   targetPkgs = pkgs: [
@@ -137,10 +137,12 @@ buildFHSUserEnv {
   '';
 
   meta = {
-    description = "The Unigine Superposition GPU benchmarking tool";
+    description = "Unigine Superposition GPU benchmarking tool";
     homepage = "https://benchmark.unigine.com/superposition";
+    sourceProvenance = with lib.sourceTypes; [ binaryNativeCode ];
     license = lib.licenses.unfree;
     maintainers = [ lib.maintainers.BarinovMaxim ];
     platforms = [ "x86_64-linux" ];
+    mainProgram = "Superposition";
   };
 }

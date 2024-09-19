@@ -1,29 +1,53 @@
 { lib
 , fetchFromGitHub
+, installShellFiles
 , rustPlatform
 , protobuf
+, stdenv
 }:
 
 rustPlatform.buildRustPackage rec {
   pname = "tokio-console";
-  version = "0.1.3";
+  version = "0.1.10";
 
   src = fetchFromGitHub {
     owner = "tokio-rs";
     repo = "console";
     rev = "tokio-console-v${version}";
-    sha256 = "sha256-v9BxfBLRJug/1AgvDV7P5AOXwZfCu1mNgJjhbipoZNg=";
+    hash = "sha256-sjfdxOeaNANYJuJMjZ/tCGc2mWM+98d8yPHAVSl4cF4=";
   };
 
-  cargoSha256 = "sha256-584EC9x7tJE3pHqgQVh6LWKuCgLXuBBEnaPvo1A8RIs=";
+  cargoHash = "sha256-86KQpRpYSCQs6SUeG0HV26b58x/QUyovoL+5fg8JCOI=";
 
-  nativeBuildInputs = [ protobuf ];
+  buildAndTestSubdir = "tokio-console";
+
+  nativeBuildInputs = [
+    installShellFiles
+    protobuf
+  ];
+
+  # uses currently unstable tokio features
+  RUSTFLAGS = "--cfg tokio_unstable";
+
+  checkFlags = [
+    # tests depend upon git repository at test execution time
+    "--skip bootstrap"
+    "--skip config::tests::args_example_changed"
+    "--skip config::tests::toml_example_changed"
+  ];
+
+  postInstall = lib.optionalString (stdenv.buildPlatform.canExecute stdenv.hostPlatform) ''
+    installShellCompletion --cmd tokio-console \
+      --bash <($out/bin/tokio-console --log-dir $(mktemp -d) gen-completion bash) \
+      --fish <($out/bin/tokio-console --log-dir $(mktemp -d) gen-completion fish) \
+      --zsh <($out/bin/tokio-console --log-dir $(mktemp -d) gen-completion zsh)
+  '';
 
   meta = with lib; {
-    description = "A debugger for asynchronous Rust code";
+    description = "Debugger for asynchronous Rust code";
     homepage = "https://github.com/tokio-rs/console";
+    mainProgram = "tokio-console";
     license = with licenses; [ mit ];
     maintainers = with maintainers; [ max-niederman ];
   };
 }
-

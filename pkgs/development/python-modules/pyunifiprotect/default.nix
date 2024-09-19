@@ -1,51 +1,76 @@
-{ lib
-, aiohttp
-, aioshutil
-, buildPythonPackage
-, fetchFromGitHub
-, ipython
-, packaging
-, pillow
-, poetry-core
-, pydantic
-, pyjwt
-, pytest-aiohttp
-, pytest-asyncio
-, pytest-benchmark
-, pytest-timeout
-, pytest-xdist
-, pytestCheckHook
-, python-dotenv
-, pythonOlder
-, pytz
-, termcolor
-, typer
+{
+  lib,
+  aiofiles,
+  aiohttp,
+  aioshutil,
+  async-timeout,
+  buildPythonPackage,
+  dateparser,
+  fetchFromGitHub,
+  ffmpeg,
+  hatch-vcs,
+  hatchling,
+  ipython,
+  orjson,
+  packaging,
+  pillow,
+  platformdirs,
+  py,
+  pydantic,
+  pyjwt,
+  pytest-aiohttp,
+  pytest-asyncio,
+  pytest-benchmark,
+  pytest-timeout,
+  pytest-xdist,
+  pytestCheckHook,
+  python-dotenv,
+  pythonOlder,
+  pytz,
+  termcolor,
+  typer,
 }:
 
 buildPythonPackage rec {
   pname = "pyunifiprotect";
-  version = "3.8.0";
-  format = "pyproject";
+  version = "5.1.2";
+  pyproject = true;
 
   disabled = pythonOlder "3.9";
 
   src = fetchFromGitHub {
     owner = "briis";
-    repo = pname;
+    repo = "pyunifiprotect";
     rev = "refs/tags/v${version}";
-    hash = "sha256-YFdGWGm+DUi/0l9YBliQH1VgpYEVcHVgLirJTrNmNP4=";
+    hash = "sha256-DtQm6u3O0kdVJ23Ch+hJQ6HTOt5iAMdhCzC1K/oICWk=";
   };
 
-  propagatedBuildInputs = [
+  env.SETUPTOOLS_SCM_PRETEND_VERSION = version;
+
+  postPatch = ''
+    substituteInPlace pyproject.toml \
+      --replace-fail "--strict-markers -ra -Wd --ignore=.* --no-cov-on-fail --cov=pyunifiprotect --cov-append --maxfail=10 -n=auto" ""
+  '';
+
+  build-system = [
+    hatch-vcs
+    hatchling
+  ];
+
+  dependencies = [
+    aiofiles
     aiohttp
     aioshutil
+    dateparser
+    orjson
     packaging
     pillow
+    platformdirs
     pydantic
     pyjwt
     pytz
     typer
-  ];
+  ] ++ lib.optionals (pythonOlder "3.11") [ async-timeout ];
 
   passthru.optional-dependencies = {
     shell = [
@@ -55,7 +80,9 @@ buildPythonPackage rec {
     ];
   };
 
-  checkInputs = [
+  nativeCheckInputs = [
+    ffmpeg # Required for command ffprobe
+    py
     pytest-aiohttp
     pytest-asyncio
     pytest-benchmark
@@ -64,27 +91,15 @@ buildPythonPackage rec {
     pytestCheckHook
   ];
 
-  postPatch = ''
-    substituteInPlace pyproject.toml \
-      --replace "--cov=pyunifiprotect --cov-append" ""
-  '';
+  pythonImportsCheck = [ "pyunifiprotect" ];
 
-  pythonImportsCheck = [
-    "pyunifiprotect"
-  ];
-
-  pytestFlagsArray = [
-    "--benchmark-disable"
-  ];
-
-  disabledTests = [
-    # Tests require ffprobe
-    "test_get_camera_video"
-  ];
+  pytestFlagsArray = [ "--benchmark-disable" ];
 
   meta = with lib; {
     description = "Library for interacting with the Unifi Protect API";
+    mainProgram = "unifi-protect";
     homepage = "https://github.com/briis/pyunifiprotect";
+    changelog = "https://github.com/AngellusMortis/pyunifiprotect/releases/tag/v${version}";
     license = with licenses; [ mit ];
     maintainers = with maintainers; [ fab ];
   };

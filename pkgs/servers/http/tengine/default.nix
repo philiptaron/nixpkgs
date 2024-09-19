@@ -1,4 +1,4 @@
-{ lib, stdenv, fetchFromGitHub, openssl, zlib, pcre, libxml2, libxslt
+{ lib, stdenv, fetchFromGitHub, openssl, zlib, pcre, libxcrypt, libxml2, libxslt
 , substituteAll, gd, geoip, gperftools, jemalloc, nixosTests
 , withDebug ? false
 , withMail ? false
@@ -7,24 +7,25 @@
 , ...
 }:
 
-with lib;
-
+let
+  inherit (lib) optional optionals optionalString;
+in
 stdenv.mkDerivation rec {
-  version = "2.3.3";
+  version = "3.1.0";
   pname = "tengine";
 
   src = fetchFromGitHub {
     owner = "alibaba";
     repo = pname;
     rev = version;
-    sha256 = "0p43qsldwhx4zfwp585x8kps0akrf7b0gxdgf0sh0yqcp7l28gmx";
+    hash = "sha256-cClSNBlresMHqJrqSFWvUo589TlwJ2tL5FWJG9QBuis=";
   };
 
   buildInputs =
-    [ openssl zlib pcre libxml2 libxslt gd geoip gperftools jemalloc ]
-    ++ concatMap (mod: mod.inputs or []) modules;
+    [ openssl zlib pcre libxcrypt libxml2 libxslt gd geoip gperftools jemalloc ]
+    ++ lib.concatMap (mod: mod.inputs or []) modules;
 
-  patches = singleton (substituteAll {
+  patches = lib.singleton (substituteAll {
     src = ../nginx/nix-etag-1.15.4.patch;
     preInstall = ''
       export nixStoreDir="$NIX_STORE" nixStoreDirLen="''${#NIX_STORE}"
@@ -98,10 +99,10 @@ stdenv.mkDerivation rec {
     ++ optional (with stdenv.hostPlatform; isLinux || isFreeBSD) "--with-file-aio"
     ++ map (mod: "--add-module=${mod.src}") modules;
 
-  NIX_CFLAGS_COMPILE = "-I${libxml2.dev}/include/libxml2 -Wno-error=implicit-fallthrough"
+  env.NIX_CFLAGS_COMPILE = "-I${libxml2.dev}/include/libxml2 -Wno-error=implicit-fallthrough"
     + optionalString stdenv.isDarwin " -Wno-error=deprecated-declarations";
 
-  preConfigure = (concatMapStringsSep "\n" (mod: mod.preConfigure or "") modules);
+  preConfigure = (lib.concatMapStringsSep "\n" (mod: mod.preConfigure or "") modules);
 
   hardeningEnable = optional (!stdenv.isDarwin) "pie";
 
@@ -116,8 +117,9 @@ stdenv.mkDerivation rec {
     tests = nixosTests.nginx-variants.tengine;
   };
 
-  meta = {
-    description = "A web server based on Nginx and has many advanced features, originated by Taobao";
+  meta = with lib; {
+    description = "Web server based on Nginx and has many advanced features, originated by Taobao";
+    mainProgram = "nginx";
     homepage    = "https://tengine.taobao.org";
     license     = licenses.bsd2;
     platforms   = platforms.all;

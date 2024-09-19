@@ -2,12 +2,12 @@
 
 stdenv.mkDerivation rec {
   pname = "apache-jena";
-  version = "4.4.0";
+  version = "5.1.0";
   src = fetchurl {
-    url = "https://dlcdn.apache.org/jena/binaries/apache-jena-${version}.tar.gz";
-    sha256 = "sha256-/+F7wKklFiJ3dTHd650IBSnAYOAx/ZLbk9ofoZF9E8k=";
+    url = "mirror://apache/jena/binaries/apache-jena-${version}.tar.gz";
+    hash = "sha256-LsNno/s2KFKykxKN7klTLfmFWu/jtXJCV9TFPX/Osh4=";
   };
-  buildInputs = [
+  nativeBuildInputs = [
     makeWrapper
   ];
   installPhase = ''

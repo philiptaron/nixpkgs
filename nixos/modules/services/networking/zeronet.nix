@@ -1,7 +1,8 @@
 { config, lib, pkgs, ... }:
 
 let
-  inherit (lib) generators literalExpression mkEnableOption mkIf mkOption recursiveUpdate types;
+  inherit (lib) generators literalExpression mkEnableOption mkPackageOption
+                mkIf mkOption recursiveUpdate types;
   cfg = config.services.zeronet;
   dataDir = "/var/lib/zeronet";
   configFile = pkgs.writeText "zeronet.conf" (generators.toINI {} (recursiveUpdate defaultSettings cfg.settings));
@@ -19,12 +20,7 @@ in with lib; {
   options.services.zeronet = {
     enable = mkEnableOption "zeronet";
 
-    package = mkOption {
-      type = types.package;
-      default = pkgs.zeronet;
-      defaultText = literalExpression "pkgs.zeronet";
-      description = "ZeroNet package to use";
-    };
+    package = mkPackageOption pkgs "zeronet" { };
 
     settings = mkOption {
       type = with types; attrsOf (oneOf [ str int bool (listOf str) ]);
@@ -32,8 +28,8 @@ in with lib; {
       example = literalExpression "{ global.tor = enable; }";
 
       description = ''
-        <filename>zeronet.conf</filename> configuration. Refer to
-        <link xlink:href="https://zeronet.readthedocs.io/en/latest/faq/#is-it-possible-to-use-a-configuration-file"/>
+        {file}`zeronet.conf` configuration. Refer to
+        <https://zeronet.readthedocs.io/en/latest/faq/#is-it-possible-to-use-a-configuration-file>
         for details on supported values;
       '';
     };

@@ -1,21 +1,21 @@
-{ lib
-, stdenv
-, fetchFromGitHub
-, rustPlatform
+{
+  lib,
+  fetchFromGitHub,
+  rustPlatform,
 }:
 
 rustPlatform.buildRustPackage rec {
   pname = "evtx";
-  version = "0.7.2";
+  version = "0.8.3";
 
   src = fetchFromGitHub {
     owner = "omerbenamram";
-    repo = pname;
-    rev = "v${version}";
-    hash = "sha256-T165PZhjuX5tUENZoO6x1u2MpMQTfv9dGRmxyNY2ACg=";
+    repo = "evtx";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-q2IpWWL/wmjVKSwupAa43zpXF+8/a1Cm/lKOmpwcsLA=";
   };
 
-  cargoSha256 = "sha256-qcjJoXB0DV1Z5bhGrtyJzfWqE+tVWBOYMJEd+MWFcD8=";
+  cargoHash = "sha256-O6XnBvLLoTvYA3G5Ws/aaYWJvEmDT7nnz+mc4QVkftg=";
 
   postPatch = ''
     # CLI tests will fail in the sandbox
@@ -25,7 +25,12 @@ rustPlatform.buildRustPackage rec {
   meta = with lib; {
     description = "Parser for the Windows XML Event Log (EVTX) format";
     homepage = "https://github.com/omerbenamram/evtx";
-    license = with licenses; [ asl20 /* or */ mit ];
+    changelog = "https://github.com/omerbenamram/evtx/blob/v${version}/CHANGELOG.md";
+    license = with licenses; [
+      asl20 # or
+      mit
+    ];
     maintainers = with maintainers; [ fab ];
+    mainProgram = "evtx_dump";
   };
 }

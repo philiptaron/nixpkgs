@@ -3,16 +3,16 @@
 rustPlatform.buildRustPackage rec {
   # Renaming it to amber-secret because another package named amber exists
   pname = "amber-secret";
-  version = "0.1.3";
+  version = "0.1.6";
 
   src = fetchFromGitHub {
     owner = "fpco";
     repo = "amber";
     rev = "v${version}";
-    sha256 = "sha256-kPDNTwsfI+8nOgsLv2aONrLGSRZhw5YzNntJ2tbE0oI=";
+    sha256 = "sha256-FoERgkyFCZ1nU01LXpzrqz9eJ9a16L/t+9g8jsABHK4=";
   };
 
-  cargoSha256 = "sha256-fTdTgbeOQXEpLHq9tHiPLkttvaxS/WJ86h3jRdrfbJM=";
+  cargoHash = "sha256-Joy+SO1zR78Eh5eK2bxyT0l3hCuLX/J3u/UvN+++6vg=";
 
   buildInputs = lib.optionals stdenv.isDarwin [ Security ];
 

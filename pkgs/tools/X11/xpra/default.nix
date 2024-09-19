@@ -1,10 +1,10 @@
 { lib
-, fetchurl
+, fetchFromGitHub
 , substituteAll
 , pkg-config
 , runCommand
 , writeText
-, wrapGAppsHook
+, wrapGAppsHook3
 , withNvenc ? false
 , atk
 , cairo
@@ -16,10 +16,12 @@
 , gobject-introspection
 , gst_all_1
 , gtk3
+, libappindicator
 , libfakeXinerama
 , librsvg
 , libvpx
 , libwebp
+, lz4
 , nv-codec-headers-10
 , nvidia_x11 ? null
 , pam
@@ -27,16 +29,16 @@
 , pango
 , pulseaudio
 , python3
+, stdenv
 , util-linux
 , which
 , x264
 , x265
 , xauth
+, xdg-utils
 , xorg
 , xorgserver
 }:
-
-with lib;
 
 let
   inherit (python3.pkgs) cython buildPythonApplication;
@@ -47,8 +49,6 @@ let
       ./0002-Constant-DPI.patch
       # https://github.com/Xpra-org/xpra/issues/349
       ./0003-fix-pointer-limits.patch
-      # patch provided by Xpra upstream
-      ./0005-support-for-30-bit-depth-in-dummy-driver.patch
     ];
   });
 
@@ -70,11 +70,13 @@ let
   '';
 in buildPythonApplication rec {
   pname = "xpra";
-  version = "4.3.3";
+  version = "5.0.9";
 
-  src = fetchurl {
-    url = "https://xpra.org/src/${pname}-${version}.tar.xz";
-    hash = "sha256-J6zzkho0A1faCVzS/0wDlbgLtJmyPrnBkEcR7kDld7A=";
+  src = fetchFromGitHub {
+    owner = "Xpra-org";
+    repo = "xpra";
+    rev = "v${version}";
+    hash = "sha256-gwo5plCAryGC8/BKVEqyMkgB+3FM8HXG6sESomDOtNM=";
   };
 
   patches = [
@@ -86,11 +88,17 @@ in buildPythonApplication rec {
     ./fix-122159.patch # https://github.com/NixOS/nixpkgs/issues/122159
   ];
 
+  postPatch = lib.optionalString stdenv.isLinux ''
+    substituteInPlace xpra/platform/posix/features.py \
+      --replace-fail "/usr/bin/xdg-open" "${xdg-utils}/bin/xdg-open"
+  '';
+
   INCLUDE_DIRS = "${pam}/include";
 
   nativeBuildInputs = [
+    gobject-introspection
     pkg-config
-    wrapGAppsHook
+    wrapGAppsHook3
     pandoc
   ] ++ lib.optional withNvenc cudatoolkit;
 
@@ -119,11 +127,12 @@ in buildPythonApplication rec {
     ffmpeg
     gdk-pixbuf
     glib
-    gobject-introspection
     gtk3
+    libappindicator
     librsvg
     libvpx
     libwebp
+    lz4
     pam
     pango
     x264
@@ -151,13 +160,14 @@ in buildPythonApplication rec {
     python-uinput
     pyxdg
     rencode
+    invoke
   ] ++ lib.optionals withNvenc [
     pycuda
     pynvml
   ]);
 
   # error: 'import_cairo' defined but not used
-  NIX_CFLAGS_COMPILE = "-Wno-error=unused-function";
+  env.NIX_CFLAGS_COMPILE = "-Wno-error=unused-function";
 
   setupPyBuildFlags = [
     "--with-Xdummy"
@@ -186,9 +196,15 @@ in buildPythonApplication rec {
     )
   '';
 
-  # append module paths to xorg.conf
   postInstall = ''
+    # append module paths to xorg.conf
     cat ${xorgModulePaths} >> $out/etc/xpra/xorg.conf
+    cat ${xorgModulePaths} >> $out/etc/xpra/xorg-uinput.conf
+
+    # make application icon visible to desktop environemnts
+    icon_dir="$out/share/icons/hicolor/64x64/apps"
+    mkdir -p "$icon_dir"
+    ln -sr "$out/share/icons/xpra.png" "$icon_dir"
   '';
 
   doCheck = false;
@@ -200,12 +216,13 @@ in buildPythonApplication rec {
     updateScript = ./update.sh;
   };
 
-  meta = {
+  meta = with lib; {
     homepage = "https://xpra.org/";
     downloadPage = "https://xpra.org/src/";
     description = "Persistent remote applications for X";
+    changelog = "https://github.com/Xpra-org/xpra/releases/tag/v${version}";
     platforms = platforms.linux;
-    license = licenses.gpl2;
-    maintainers = with maintainers; [ tstrobel offline numinit mvnetbiz ];
+    license = licenses.gpl2Only;
+    maintainers = with maintainers; [ offline numinit mvnetbiz ];
   };
 }

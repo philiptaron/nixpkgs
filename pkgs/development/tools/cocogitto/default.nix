@@ -1,40 +1,38 @@
-{ lib, rustPlatform, fetchFromGitHub, installShellFiles, stdenv, Security, makeWrapper, git }:
+{ lib, rustPlatform, fetchFromGitHub, installShellFiles, stdenv, Security, libgit2 }:
 
 rustPlatform.buildRustPackage rec {
   pname = "cocogitto";
-  version = "5.1.0";
+  version = "6.1.0";
 
   src = fetchFromGitHub {
     owner = "oknozor";
     repo = pname;
     rev = version;
-    sha256 = "sha256-q2WJKAXpIO+VsOFrjdyEx06yis8f2SkCuB0blUgqq0M=";
+    sha256 = "sha256-yGwGWXME9ZjFJk/3pVDRTa1phG6kd8+YhXe/MxOEdF0=";
   };
 
-  cargoSha256 = "sha256-UArYBcUkXPYlNRLQBMwNhsd3bNgLeEwtJdzepMTt2no=";
+  cargoHash = "sha256-iS/nRfy63bgo7MeL/5jJ3Vn6S7dG49erIZ+0516YxKM=";
 
-  # Test depend on git configuration that would likly exist in a normal user enviroment
+  # Test depend on git configuration that would likely exist in a normal user environment
   # and might be failing to create the test repository it works in.
   doCheck = false;
 
-  nativeBuildInputs = [ installShellFiles makeWrapper ];
+  nativeBuildInputs = [ installShellFiles ];
 
-  buildInputs = lib.optional stdenv.isDarwin Security;
+  buildInputs = [ libgit2 ] ++ lib.optional stdenv.isDarwin Security;
 
-  postInstall = ''
+  postInstall = lib.optionalString (stdenv.buildPlatform.canExecute stdenv.hostPlatform) ''
     installShellCompletion --cmd cog \
       --bash <($out/bin/cog generate-completions bash) \
       --fish <($out/bin/cog generate-completions fish) \
       --zsh  <($out/bin/cog generate-completions zsh)
-
-    wrapProgram $out/bin/cog \
-      --prefix PATH : "${lib.makeBinPath [ git ]}"
   '';
 
   meta = with lib; {
-    description = "A set of cli tools for the conventional commit and semver specifications";
+    description = "Set of cli tools for the conventional commit and semver specifications";
+    mainProgram = "cog";
     homepage = "https://github.com/oknozor/cocogitto";
     license = licenses.mit;
-    maintainers = with maintainers; [ travisdavis-ops ];
+    maintainers = [ ];
   };
 }

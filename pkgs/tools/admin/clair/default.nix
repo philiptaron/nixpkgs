@@ -1,23 +1,38 @@
-{ lib, buildGoModule, fetchFromGitHub, makeWrapper, rpm, xz }:
+{ lib
+, buildGoModule
+, fetchFromGitHub
+, makeWrapper
+, rpm
+, xz
+}:
 
 buildGoModule rec {
   pname = "clair";
-  version = "4.4.2";
+  version = "4.7.4";
 
   src = fetchFromGitHub {
     owner = "quay";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-6nlVcuWAp9lWji4ruAZ//D6iEbL+zSjLDX9bYyRfTQ8=";
+    hash = "sha256-NEivDkcMB6Upc8UJFFnCs4yjsENXP/qOK3X582VVbmY=";
   };
 
-  vendorSha256 = "sha256-35rUeDi+7xSI2kSk9FvtubxhZq5LePNoXC66dIy6gs8=";
+  vendorHash = "sha256-12nrMAGS7CRTq2Dr8Lnm9B/HTZAzJOaJ8TqTOHknCRE=";
 
-  nativeBuildInputs = [ makeWrapper ];
+  nativeBuildInputs = [
+    makeWrapper
+  ];
 
-  subPackages = [ "cmd/clair" "cmd/clairctl" ];
+  subPackages = [
+    "cmd/clair"
+    "cmd/clairctl"
+  ];
 
-  ldflags = [ "-s" "-w" "-X main.Version=${version}" ];
+  ldflags = [
+    "-s"
+    "-w"
+    "-X main.Version=${version}"
+  ];
 
   postInstall = ''
     wrapProgram $out/bin/clair \
@@ -29,6 +44,6 @@ buildGoModule rec {
     homepage = "https://github.com/quay/clair";
     changelog = "https://github.com/quay/clair/blob/v${version}/CHANGELOG.md";
     license = licenses.asl20;
-    maintainers = with maintainers; [ marsam ];
+    maintainers = [ ];
   };
 }

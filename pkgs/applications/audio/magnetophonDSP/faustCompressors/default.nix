@@ -12,6 +12,8 @@ stdenv.mkDerivation rec {
 
   buildInputs = [ faust2jaqt faust2lv2 ];
 
+  dontWrapQtApps = true;
+
   buildPhase = ''
     echo "hack out autoComp.dsp due to https://github.com/grame-cncm/faust/407/issues "
     rm autoComp.dsp
@@ -33,14 +35,13 @@ stdenv.mkDerivation rec {
     mv *.lv2/ $out/lib/lv2
     mkdir -p $out/bin
     rm newlib.sh
-    for f in $(find . -executable -type f);
-    do
+    for f in $(find . -executable -type f); do
       cp $f $out/bin/
     done
   '';
 
   meta = {
-    description = "A collection of bread and butter compressors";
+    description = "Collection of bread and butter compressors";
     homepage = "https://github.com/magnetophon/faustCompressors";
     license = lib.licenses.gpl3;
     maintainers = [ lib.maintainers.magnetophon ];

@@ -2,7 +2,7 @@
 , which
 
 # GUI support
-, gtk2, gtk3, qt5
+, gtk3, qt5
 
 , pluginSearchPaths ? [
     "/run/current-system/sw/lib/gwenhywfar/plugins"
@@ -11,14 +11,14 @@
 }:
 
 let
-  inherit ((import ./sources.nix).gwenhywfar) sha256 releaseId version;
+  inherit ((import ./sources.nix).gwenhywfar) hash releaseId version;
 in stdenv.mkDerivation rec {
   pname = "gwenhywfar";
   inherit version;
 
   src = fetchurl {
     url = "https://www.aquamaniac.de/rdm/attachments/download/${releaseId}/${pname}-${version}.tar.gz";
-    inherit sha256;
+    inherit hash;
   };
 
   configureFlags = [
@@ -27,7 +27,7 @@ in stdenv.mkDerivation rec {
   ];
 
   preConfigure = ''
-    configureFlagsArray+=("--with-guis=gtk2 gtk3 qt5")
+    configureFlagsArray+=("--with-guis=gtk3 qt5")
   '';
 
   postPatch = let
@@ -55,7 +55,7 @@ in stdenv.mkDerivation rec {
 
   nativeBuildInputs = [ pkg-config gettext which ];
 
-  buildInputs = [ gtk2 gtk3 qt5.qtbase gnutls openssl libgcrypt libgpg-error ];
+  buildInputs = [ gtk3 qt5.qtbase gnutls openssl libgcrypt libgpg-error ];
 
   dontWrapQtApps = true;
 
@@ -63,7 +63,7 @@ in stdenv.mkDerivation rec {
     description = "OS abstraction functions used by aqbanking and related tools";
     homepage = "https://www.aquamaniac.de/rdm/projects/gwenhywfar";
     license = licenses.lgpl21Plus;
-    maintainers = with maintainers; [ goibhniu ];
+    maintainers = [ ];
     platforms = platforms.linux;
   };
 }

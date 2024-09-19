@@ -4,13 +4,13 @@ let
 in
 stdenv.mkDerivation rec {
   pname = "taoup";
-  version = "1.1.16";
+  version = "1.21";
 
   src = fetchFromGitHub {
     owner = "globalcitizen";
-    repo = pname;
+    repo = "taoup";
     rev = "v${version}";
-    hash = "sha256-LNS4m7Er4dQKYDuHMF/5mAi4yGcYzppxfqVKFOT6I/s=";
+    hash = "sha256-UHo3c+DQn77CJONy/QXM55rpIdhVkJbhR82tqmUltPQ=";
   };
 
   buildInputs = [ rubyEnv bash ncurses ];
@@ -27,7 +27,7 @@ stdenv.mkDerivation rec {
   postPatch = ''
     substituteInPlace taoup \
      --subst-var-by ncurses ${ncurses} \
-     --subst-var-by pname ${pname}
+     --subst-var-by pname taoup
     substituteInPlace taoup-fortune \
       --subst-var-by out $out \
       --replace "/bin/bash" "${bash}/bin/bash"
@@ -58,7 +58,7 @@ stdenv.mkDerivation rec {
   '';
 
   meta = {
-    description = "The Tao of Unix Programming (Ruby-powered ANSI colored fortunes)";
+    description = "Tao of Unix Programming (Ruby-powered ANSI colored fortunes)";
     homepage = "https://github.com/globalcitizen/taoup";
     license = lib.licenses.gpl3Only;
     maintainers = [ lib.maintainers.zakame ];

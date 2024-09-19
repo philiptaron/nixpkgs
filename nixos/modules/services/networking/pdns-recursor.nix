@@ -38,7 +38,7 @@ in {
     };
 
     dns.port = mkOption {
-      type = types.int;
+      type = types.port;
       default = 53;
       description = ''
         Port number Recursor DNS server will bind to.
@@ -67,7 +67,7 @@ in {
     };
 
     api.port = mkOption {
-      type = types.int;
+      type = types.port;
       default = 8082;
       description = ''
         Port number Recursor REST API server will bind to.
@@ -122,9 +122,9 @@ in {
       default = true;
       description = ''
         Whether to directly resolve the RFC1918 reverse-mapping domains:
-        <literal>10.in-addr.arpa</literal>,
-        <literal>168.192.in-addr.arpa</literal>,
-        <literal>16-31.172.in-addr.arpa</literal>
+        `10.in-addr.arpa`,
+        `168.192.in-addr.arpa`,
+        `16-31.172.in-addr.arpa`
         This saves load on the AS112 servers.
       '';
     };
@@ -142,7 +142,7 @@ in {
         PowerDNS Recursor settings. Use this option to configure Recursor
         settings not exposed in a NixOS option or to bypass one.
         See the full documentation at
-        <link xlink:href="https://doc.powerdns.com/recursor/settings.html"/>
+        <https://doc.powerdns.com/recursor/settings.html>
         for the available options.
       '';
     };
@@ -152,12 +152,14 @@ in {
       default = "";
       description = ''
         The content Lua configuration file for PowerDNS Recursor. See
-        <link xlink:href="https://doc.powerdns.com/recursor/lua-config/index.html"/>.
+        <https://doc.powerdns.com/recursor/lua-config/index.html>.
       '';
     };
   };
 
   config = mkIf cfg.enable {
+
+    environment.etc."pdns-recursor".source = configDir;
 
     services.pdns-recursor.settings = mkDefaultAttrs {
       local-address = cfg.dns.address;

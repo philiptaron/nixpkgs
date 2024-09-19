@@ -3,44 +3,46 @@
 , fetchFromGitHub
 , pkg-config
 , which
+, zip
+, libicns
+, botan3
 , capstone
 , jansson
 , libunistring
-, lua5_3
-, wxGTK31
+, wxGTK32
+, lua53Packages
+, perlPackages
+, gtk3
 , Carbon
 , Cocoa
 , IOKit
-, libicns
-, wxmac
 }:
 
 stdenv.mkDerivation rec {
   pname = "rehex";
-  version = "0.4.1";
+  version = "0.62.1";
 
   src = fetchFromGitHub {
     owner = "solemnwarning";
     repo = pname;
     rev = version;
-    hash = "sha256-NuWWaYABQDaS9wkwmXkBJWHzLFJbUUCiePNQNo4yZrk=";
+    hash = "sha256-RlYpg3aon1d25n8K/bbHGVLn5/iOOUSlvjT8U0fp9hA=";
   };
 
-  postPatch = ''
-    # See https://github.com/solemnwarning/rehex/pull/148
-    substituteInPlace Makefile.osx \
-      --replace '$(filter-out %@2x.png,$(wildcard $(ICONSET)/*.png))' 'res/icon{16,32,128,256,512}.png'
-  '';
-
-  nativeBuildInputs = [ pkg-config which ]
+  nativeBuildInputs = [ pkg-config which zip ]
     ++ lib.optionals stdenv.isDarwin [ libicns ];
 
-  buildInputs = [ capstone jansson libunistring lua5_3 ]
-    ++ lib.optionals (!stdenv.isDarwin) [ wxGTK31 ]
-    ++ lib.optionals stdenv.isDarwin [ Carbon Cocoa IOKit wxmac ];
+  buildInputs = [ botan3 capstone jansson libunistring wxGTK32 ]
+    ++ (with lua53Packages; [ lua busted ])
+    ++ (with perlPackages; [ perl TemplateToolkit ])
+    ++ lib.optionals stdenv.isLinux [ gtk3 ]
+    ++ lib.optionals stdenv.isDarwin [ Carbon Cocoa IOKit ];
 
-  makeFlags = [ "prefix=${placeholder "out"}" ]
-    ++ lib.optionals stdenv.isDarwin [ "-f Makefile.osx" ];
+  makeFlags = [
+    "prefix=${placeholder "out"}"
+    "BOTAN_PKG=botan-3"
+    "CXXSTD=-std=c++20"
+  ] ++ lib.optionals stdenv.isDarwin [ "-f Makefile.osx" ];
 
   enableParallelBuilding = true;
 
@@ -53,7 +55,8 @@ stdenv.mkDerivation rec {
     homepage = "https://github.com/solemnwarning/rehex";
     changelog = "https://github.com/solemnwarning/rehex/raw/${version}/CHANGES.txt";
     license = licenses.gpl2Only;
-    maintainers = with maintainers; [ markus1189 SuperSandro2000 ];
+    maintainers = with maintainers; [ markus1189 wegank ];
     platforms = platforms.all;
+    mainProgram = "rehex";
   };
 }

@@ -1,18 +1,19 @@
-{ lib, buildGoModule, fetchFromGitHub, stdenv }:
+{ lib, buildGoModule, fetchFromGitHub }:
 
 buildGoModule rec {
   pname = "terraform-ls";
-  version = "0.26.0";
+  version = "0.34.3";
 
   src = fetchFromGitHub {
     owner = "hashicorp";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-Xq9HojFjUrdThXvQ4M8o4LLmxopVErnN3WGUgI79BCw=";
+    hash = "sha256-fN/C7H0s7ZhXSg8pLn9iex6WglMKsx6hA8OK/HYqbRU=";
   };
-  vendorSha256 = "sha256-iSgK+FOD9olVN4bR2jmtWndaRHrh9pfo/42COTiIh9c=";
 
-  ldflags = [ "-s" "-w" "-X main.version=v${version}" "-X main.prerelease=" ];
+  vendorHash = "sha256-NL5pqcQTjauxLschhj3kCiZLBLagABSCU/zHLcG2anM=";
+
+  ldflags = [ "-s" "-w" ];
 
   # There's a mixture of tests that use networking and several that fail on aarch64
   doCheck = false;
@@ -21,12 +22,13 @@ buildGoModule rec {
   installCheckPhase = ''
     runHook preInstallCheck
     $out/bin/terraform-ls --help
-    $out/bin/terraform-ls version | grep "v${version}"
+    $out/bin/terraform-ls --version | grep "${version}"
     runHook postInstallCheck
   '';
 
   meta = with lib; {
     description = "Terraform Language Server (official)";
+    mainProgram = "terraform-ls";
     homepage = "https://github.com/hashicorp/terraform-ls";
     changelog = "https://github.com/hashicorp/terraform-ls/blob/v${version}/CHANGELOG.md";
     license = licenses.mpl20;

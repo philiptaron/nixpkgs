@@ -4,21 +4,24 @@
 
 # dependencies
 , cyrus_sasl
-, db
 , groff
 , libsodium
 , libtool
 , openssl
 , systemdMinimal
+, libxcrypt
+
+# passthru
+, nixosTests
 }:
 
 stdenv.mkDerivation rec {
   pname = "openldap";
-  version = "2.6.2";
+  version = "2.6.8";
 
   src = fetchurl {
     url = "https://www.openldap.org/software/download/OpenLDAP/openldap-release/${pname}-${version}.tgz";
-    hash = "sha256-gdCTRSMutiSG7PWsrNLFbAxFtKbIwGZhLn9CGiOhz4c";
+    hash = "sha256-SJaTI+lOO+OwPGoTKULcun741UXyrTVAFwkBn2lsPE4=";
   };
 
   # TODO: separate "out" and "bin"
@@ -29,6 +32,8 @@ stdenv.mkDerivation rec {
     "devdoc"
   ];
 
+  __darwinAllowLocalNetworking = true;
+
   enableParallelBuilding = true;
 
   nativeBuildInputs = [
@@ -36,12 +41,14 @@ stdenv.mkDerivation rec {
   ];
 
   buildInputs = [
-    cyrus_sasl
-    db
+    (cyrus_sasl.override {
+      inherit openssl;
+    })
     libsodium
     libtool
     openssl
   ] ++ lib.optionals (stdenv.isLinux) [
+    libxcrypt # causes linking issues on *-darwin
     systemdMinimal
   ];
 
@@ -59,18 +66,18 @@ stdenv.mkDerivation rec {
     "ac_cv_func_memcmp_working=yes"
   ] ++ lib.optional stdenv.isFreeBSD "--with-pic";
 
+  env.NIX_CFLAGS_COMPILE = toString [ "-DLDAPI_SOCK=\"/run/openldap/ldapi\"" ];
+
   makeFlags= [
     "CC=${stdenv.cc.targetPrefix}cc"
     "STRIP="  # Disable install stripping as it breaks cross-compiling. We strip binaries anyway in fixupPhase.
+    "STRIP_OPTS="
     "prefix=${placeholder "out"}"
-    "sysconfdir=${placeholder "out"}/etc"
+    "sysconfdir=/etc"
     "systemdsystemunitdir=${placeholder "out"}/lib/systemd/system"
     # contrib modules require these
     "moduledir=${placeholder "out"}/lib/modules"
     "mandir=${placeholder "out"}/share/man"
-  ] ++ lib.optionals (stdenv.buildPlatform != stdenv.hostPlatform) [
-    # Can be unconditional, doing it like this to prevent a mass rebuild.
-    "STRIP_OPTS="
   ];
 
   extraContribModules = [
@@ -81,7 +88,7 @@ stdenv.mkDerivation rec {
   ];
 
   postBuild = ''
-    for module in ${lib.concatStringsSep " " extraContribModules}; do
+    for module in $extraContribModules; do
       make $makeFlags CC=$CC -C contrib/slapd-modules/$module
     done
   '';
@@ -89,6 +96,14 @@ stdenv.mkDerivation rec {
   preCheck = ''
     substituteInPlace tests/scripts/all \
       --replace "/bin/rm" "rm"
+
+    # skip flaky tests
+    rm -f tests/scripts/test063-delta-multiprovider
+
+    # https://bugs.openldap.org/show_bug.cgi?id=10009
+    # can probably be re-added once https://github.com/cyrusimap/cyrus-sasl/pull/772
+    # has made it to a release
+    rm -f tests/scripts/test076-authid-rewrite
   '';
 
   doCheck = true;
@@ -100,22 +115,27 @@ stdenv.mkDerivation rec {
 
   installFlags = [
     "prefix=${placeholder "out"}"
+    "sysconfdir=${placeholder "out"}/etc"
     "moduledir=${placeholder "out"}/lib/modules"
     "INSTALL=install"
   ];
 
   postInstall = ''
-    for module in ${lib.concatStringsSep " " extraContribModules}; do
+    for module in $extraContribModules; do
       make $installFlags install -C contrib/slapd-modules/$module
     done
     chmod +x "$out"/lib/*.{so,dylib}
   '';
 
+  passthru.tests = {
+    inherit (nixosTests) openldap;
+  };
+
   meta = with lib; {
     homepage = "https://www.openldap.org/";
-    description = "An open source implementation of the Lightweight Directory Access Protocol";
+    description = "Open source implementation of the Lightweight Directory Access Protocol";
     license = licenses.openldap;
-    maintainers = with maintainers; [ ajs124 das_j hexa ];
-    platforms   = platforms.unix;
+    maintainers = with maintainers; [ hexa ] ++ teams.helsinki-systems.members;
+    platforms = platforms.unix;
   };
 }

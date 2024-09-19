@@ -32,6 +32,7 @@ let
         description = "Username to authenticate with.";
         example = "example-user";
         type = types.nullOr types.str;
+        default = null;
       };
 
       # Note: It does not make sense to provide a way to declaratively
@@ -40,8 +41,8 @@ let
       passwordFile = mkOption {
         description = ''
           File containing the password to authenticate with. This
-          is passed to <code>openconnect</code> via the
-          <code>--passwd-on-stdin</code> option.
+          is passed to `openconnect` via the
+          `--passwd-on-stdin` option.
         '';
         default = null;
         example = "/var/lib/secrets/openconnect-passwd";
@@ -66,10 +67,10 @@ let
         description = ''
           Extra config to be appended to the interface config. It should
           contain long-format options as would be accepted on the command
-          line by <code>openconnect</code>
+          line by `openconnect`
           (see https://www.infradead.org/openconnect/manual.html).
-          Non-key-value options like <code>deflate</code> can be used by
-          declaring them as booleans, i. e. <code>deflate = true;</code>.
+          Non-key-value options like `deflate` can be used by
+          declaring them as booleans, i. e. `deflate = true;`.
         '';
         default = { };
         example = {
@@ -89,6 +90,7 @@ let
   generateConfig = name: icfg:
     pkgs.writeText "config" ''
       interface=${name}
+      ${optionalString (icfg.protocol != null) "protocol=${icfg.protocol}"}
       ${optionalString (icfg.user != null) "user=${icfg.user}"}
       ${optionalString (icfg.passwordFile != null) "passwd-on-stdin"}
       ${optionalString (icfg.certificate != null)
@@ -108,7 +110,7 @@ let
       ExecStart = "${openconnect}/bin/openconnect --config=${
           generateConfig name icfg
         } ${icfg.gateway}";
-      StandardInput = "file:${icfg.passwordFile}";
+      StandardInput = lib.mkIf (icfg.passwordFile != null) "file:${icfg.passwordFile}";
 
       ProtectHome = true;
     };

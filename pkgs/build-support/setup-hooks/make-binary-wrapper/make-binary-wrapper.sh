@@ -15,17 +15,20 @@ assertExecutable() {
 # makeWrapper EXECUTABLE OUT_PATH ARGS
 
 # ARGS:
-# --argv0       NAME    : set the name of the executed process to NAME
-#                         (if unset or empty, defaults to EXECUTABLE)
-# --inherit-argv0       : the executable inherits argv0 from the wrapper.
-#                         (use instead of --argv0 '$0')
-# --set         VAR VAL : add VAR with value VAL to the executable's environment
-# --set-default VAR VAL : like --set, but only adds VAR if not already set in
-#                         the environment
-# --unset       VAR     : remove VAR from the environment
-# --chdir       DIR     : change working directory (use instead of --run "cd DIR")
-# --add-flags   FLAGS   : add FLAGS to invocation of executable
-# TODO(@ncfavier): --append-flags
+# --argv0        NAME    : set the name of the executed process to NAME
+#                          (if unset or empty, defaults to EXECUTABLE)
+# --inherit-argv0        : the executable inherits argv0 from the wrapper.
+#                          (use instead of --argv0 '$0')
+# --resolve-argv0        : if argv0 doesn't include a / character, resolve it against PATH
+# --set          VAR VAL : add VAR with value VAL to the executable's environment
+# --set-default  VAR VAL : like --set, but only adds VAR if not already set in
+#                          the environment
+# --unset        VAR     : remove VAR from the environment
+# --chdir        DIR     : change working directory (use instead of --run "cd DIR")
+# --add-flags    ARGS    : prepend ARGS to the invocation of the executable
+#                          (that is, *before* any arguments passed on the command line)
+# --append-flags ARGS    : append ARGS to the invocation of the executable
+#                          (that is, *after* any arguments passed on the command line)
 
 # --prefix          ENV SEP VAL   : suffix/prefix ENV with VAL, separated by SEP
 # --suffix
@@ -65,7 +68,7 @@ wrapProgramBinary() {
       hidden="${hidden}_"
     done
     mv "$prog" "$hidden"
-    makeWrapper "$hidden" "$prog" --inherit-argv0 "${@:2}"
+    makeBinaryWrapper "$hidden" "$prog" --inherit-argv0 "${@:2}"
 }
 
 # Generate source code for the wrapper in such a way that the wrapper inputs
@@ -83,8 +86,9 @@ makeDocumentedCWrapper() {
 # makeCWrapper EXECUTABLE ARGS
 # ARGS: same as makeWrapper
 makeCWrapper() {
-    local argv0 inherit_argv0 n params cmd main flagsBefore flags executable length
+    local argv0 inherit_argv0 n params cmd main flagsBefore flagsAfter flags executable length
     local uses_prefix uses_suffix uses_assert uses_assert_success uses_stdio uses_asprintf
+    local resolve_path
     executable=$(escapeStringLiteral "$1")
     params=("$@")
     length=${#params[*]}
@@ -150,6 +154,13 @@ makeCWrapper() {
                 n=$((n + 1))
                 [ $n -ge "$length" ] && main="$main#error makeCWrapper: $p takes 1 argument"$'\n'
             ;;
+            --append-flags)
+                flags="${params[n + 1]}"
+                flagsAfter="$flagsAfter $flags"
+                uses_assert=1
+                n=$((n + 1))
+                [ $n -ge "$length" ] && main="$main#error makeCWrapper: $p takes 1 argument"$'\n'
+            ;;
             --argv0)
                 argv0=$(escapeStringLiteral "${params[n + 1]}")
                 inherit_argv0=
@@ -160,14 +171,20 @@ makeCWrapper() {
                 # Whichever comes last of --argv0 and --inherit-argv0 wins
                 inherit_argv0=1
             ;;
+            --resolve-argv0)
+                # this gets processed after other argv0 flags
+                uses_stdio=1
+                uses_string=1
+                resolve_argv0=1
+            ;;
             *) # Using an error macro, we will make sure the compiler gives an understandable error message
                 main="$main#error makeCWrapper: Unknown argument ${p}"$'\n'
             ;;
         esac
     done
-    # shellcheck disable=SC2086
-    [ -z "$flagsBefore" ] || main="$main"${main:+$'\n'}$(addFlags $flagsBefore)$'\n'$'\n'
+    [[ -z "$flagsBefore" && -z "$flagsAfter" ]] || main="$main"${main:+$'\n'}$(addFlags "$flagsBefore" "$flagsAfter")$'\n'$'\n'
     [ -z "$inherit_argv0" ] && main="${main}argv[0] = \"${argv0:-${executable}}\";"$'\n'
+    [ -z "$resolve_argv0" ] || main="${main}argv[0] = resolve_argv0(argv[0]);"$'\n'
     main="${main}return execv(\"${executable}\", argv);"$'\n'
 
     [ -z "$uses_asprintf" ] || printf '%s\n' "#define _GNU_SOURCE         /* See feature_test_macros(7) */"
@@ -175,30 +192,51 @@ makeCWrapper() {
     printf '%s\n' "#include <stdlib.h>"
     [ -z "$uses_assert" ]   || printf '%s\n' "#include <assert.h>"
     [ -z "$uses_stdio" ]    || printf '%s\n' "#include <stdio.h>"
+    [ -z "$uses_string" ]   || printf '%s\n' "#include <string.h>"
     [ -z "$uses_assert_success" ] || printf '\n%s\n' "#define assert_success(e) do { if ((e) < 0) { perror(#e); abort(); } } while (0)"
     [ -z "$uses_prefix" ] || printf '\n%s\n' "$(setEnvPrefixFn)"
     [ -z "$uses_suffix" ] || printf '\n%s\n' "$(setEnvSuffixFn)"
+    [ -z "$resolve_argv0" ] || printf '\n%s\n' "$(resolveArgv0Fn)"
     printf '\n%s' "int main(int argc, char **argv) {"
     printf '\n%s' "$(indent4 "$main")"
     printf '\n%s\n' "}"
 }
 
 addFlags() {
-    local result n flag flags var
+    local n flag before after var
+
+    # Disable file globbing, since bash will otherwise try to find
+    # filenames matching the the value to be prefixed/suffixed if
+    # it contains characters considered wildcards, such as `?` and
+    # `*`. We want the value as is, except we also want to split
+    # it on on the separator; hence we can't quote it.
+    local reenableGlob=0
+    if [[ ! -o noglob ]]; then
+        reenableGlob=1
+    fi
+    set -o noglob
+    # shellcheck disable=SC2086
+    before=($1) after=($2)
+    if (( reenableGlob )); then
+        set +o noglob
+    fi
+
     var="argv_tmp"
-    flags=("$@")
-    for ((n = 0; n < ${#flags[*]}; n += 1)); do
-        flag=$(escapeStringLiteral "${flags[$n]}")
-        result="$result${var}[$((n+1))] = \"$flag\";"$'\n'
-    done
-    printf '%s\n' "char **$var = calloc($((n+1)) + argc, sizeof(*$var));"
+    printf '%s\n' "char **$var = calloc(${#before[@]} + argc + ${#after[@]} + 1, sizeof(*$var));"
     printf '%s\n' "assert($var != NULL);"
     printf '%s\n' "${var}[0] = argv[0];"
-    printf '%s' "$result"
+    for ((n = 0; n < ${#before[@]}; n += 1)); do
+        flag=$(escapeStringLiteral "${before[n]}")
+        printf '%s\n' "${var}[$((n + 1))] = \"$flag\";"
+    done
     printf '%s\n' "for (int i = 1; i < argc; ++i) {"
-    printf '%s\n' "    ${var}[$n + i] = argv[i];"
+    printf '%s\n' "    ${var}[${#before[@]} + i] = argv[i];"
     printf '%s\n' "}"
-    printf '%s\n' "${var}[$n + argc] = NULL;"
+    for ((n = 0; n < ${#after[@]}; n += 1)); do
+        flag=$(escapeStringLiteral "${after[n]}")
+        printf '%s\n' "${var}[${#before[@]} + argc + $n] = \"$flag\";"
+    done
+    printf '%s\n' "${var}[${#before[@]} + argc + ${#after[@]}] = NULL;"
     printf '%s\n' "argv = $var;"
 }
 
@@ -311,6 +349,41 @@ void set_env_suffix(char *env, char *sep, char *suffix) {
 "
 }
 
+resolveArgv0Fn() {
+  printf '%s' "\
+char *resolve_argv0(char *argv0) {
+  if (strchr(argv0, '/') != NULL) {
+    return argv0;
+  }
+  char *path = getenv(\"PATH\");
+  if (path == NULL) {
+    return argv0;
+  }
+  char *path_copy = strdup(path);
+  if (path_copy == NULL) {
+    return argv0;
+  }
+  char *dir = strtok(path_copy, \":\");
+  while (dir != NULL) {
+    char *candidate = malloc(strlen(dir) + strlen(argv0) + 2);
+    if (candidate == NULL) {
+      free(path_copy);
+      return argv0;
+    }
+    sprintf(candidate, \"%s/%s\", dir, argv0);
+    if (access(candidate, X_OK) == 0) {
+      free(path_copy);
+      return candidate;
+    }
+    free(candidate);
+    dir = strtok(NULL, \":\");
+  }
+  free(path_copy);
+  return argv0;
+}
+"
+}
+
 # Embed a C string which shows up as readable text in the compiled binary wrapper,
 # giving instructions for recreating the wrapper.
 # Keep in sync with makeBinaryWrapper.extractCmd
@@ -363,6 +436,10 @@ formatArgs() {
                 shift 1
             ;;
             --add-flags)
+                formatArgsLine 1 "$@"
+                shift 1
+            ;;
+            --append-flags)
                 formatArgsLine 1 "$@"
                 shift 1
             ;;

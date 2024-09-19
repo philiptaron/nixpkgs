@@ -1,14 +1,26 @@
-{ stdenv, lib, fetchFromGitHub, cmake, folly, boost, gflags, glog, openssl, double-conversion, fmt }:
+{ stdenv
+, lib
+, fetchFromGitHub
+, cmake
+, folly
+, boost
+, gflags
+, glog
+, openssl
+, double-conversion
+, fmt
+, unstableGitUpdater
+}:
 
 stdenv.mkDerivation {
   pname = "wdt";
-  version = "unstable-2022-03-24";
+  version = "1.27.1612021-unstable-2024-08-22";
 
   src = fetchFromGitHub {
     owner = "facebook";
     repo = "wdt";
-    rev = "43319e59d0c77092468367cdadab37d12d7a2383";
-    sha256 = "sha256-MajYK2eTUbWhEql0iTlgW5yLg9xAGZQk+Dx4fNxFFqw=";
+    rev = "4cc8a21cfa29e55aa803365ab69248d0bf8fbb82";
+    sha256 = "sha256-BEoZ662KsL6gf6hfN9ahgoPtHOFBi9k3gjRuGWs3zOw=";
   };
 
   nativeBuildInputs = [ cmake ];
@@ -23,6 +35,12 @@ stdenv.mkDerivation {
   cmakeFlags = [
     "-DWDT_USE_SYSTEM_FOLLY=ON"
   ];
+
+  passthru = {
+    updateScript = unstableGitUpdater {
+      tagPrefix = "v";
+    };
+  };
 
   meta = with lib; {
     description = "Warp speed Data Transfer";

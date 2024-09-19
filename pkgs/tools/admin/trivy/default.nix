@@ -1,45 +1,70 @@
-{ lib
-, stdenv
-, buildGoModule
-, fetchFromGitHub
+{
+  lib,
+  stdenv,
+  buildPackages,
+  buildGoModule,
+  fetchFromGitHub,
+  installShellFiles,
+  testers,
+  trivy,
 }:
 
 buildGoModule rec {
   pname = "trivy";
-  version = "0.28.1";
+  version = "0.55.1";
 
   src = fetchFromGitHub {
     owner = "aquasecurity";
-    repo = pname;
-    rev = "v${version}";
-    sha256 = "sha256-x9mojwA86zgXRwKDp1kIh5/LRdHjm02119CKYlIkZgw=";
+    repo = "trivy";
+    rev = "refs/tags/v${version}";
+    hash = "sha256-NStDXhJ2nOaPxirD6qbLyqIZZFLp5vm5/u5tego7MyI=";
   };
-  vendorSha256 = "sha256-7rX4j188IXhSS4E4NStAsJq4FEfAFxIys7jucDCCe+4=";
 
-  excludedPackages = "misc";
+  # Hash mismatch on across Linux and Darwin
+  proxyVendor = true;
+
+  vendorHash = "sha256-h/hVzejcPvtGActgeVrmOmb2gn2mUdnzOvAWUrV5CvI=";
+
+  subPackages = [ "cmd/trivy" ];
 
   ldflags = [
     "-s"
     "-w"
-    "-X main.version=v${version}"
+    "-X=github.com/aquasecurity/trivy/pkg/version.ver=v${version}"
   ];
+
+  nativeBuildInputs = [ installShellFiles ];
 
   # Tests require network access
   doCheck = false;
 
+  postInstall =
+    let
+      trivy =
+        if stdenv.buildPlatform.canExecute stdenv.hostPlatform then
+          placeholder "out"
+        else
+          buildPackages.trivy;
+    in
+    ''
+      installShellCompletion --cmd trivy \
+        --bash <(${trivy}/bin/trivy completion bash) \
+        --fish <(${trivy}/bin/trivy completion fish) \
+        --zsh <(${trivy}/bin/trivy completion zsh)
+    '';
+
   doInstallCheck = true;
 
-  installCheckPhase = ''
-    runHook preInstallCheck
-    $out/bin/trivy --help
-    $out/bin/trivy --version | grep "v${version}"
-    runHook postInstallCheck
-  '';
+  passthru.tests.version = testers.testVersion {
+    package = trivy;
+    command = "trivy --version";
+    version = "Version: v${version}";
+  };
 
   meta = with lib; {
     homepage = "https://github.com/aquasecurity/trivy";
     changelog = "https://github.com/aquasecurity/trivy/releases/tag/v${version}";
-    description = "A simple and comprehensive vulnerability scanner for containers, suitable for CI";
+    description = "Simple and comprehensive vulnerability scanner for containers, suitable for CI";
     longDescription = ''
       Trivy is a simple and comprehensive vulnerability scanner for containers
       and other artifacts. A software vulnerability is a glitch, flaw, or
@@ -47,10 +72,11 @@ buildGoModule rec {
       vulnerabilities of OS packages (Alpine, RHEL, CentOS, etc.) and
       application dependencies (Bundler, Composer, npm, yarn, etc.).
     '';
+    mainProgram = "trivy";
     license = licenses.asl20;
-    maintainers = with maintainers; [ jk ];
-    # Need updated macOS SDK
-    # https://github.com/NixOS/nixpkgs/issues/101229
-    broken = (stdenv.isDarwin && stdenv.isx86_64);
+    maintainers = with maintainers; [
+      fab
+      jk
+    ];
   };
 }

@@ -1,26 +1,25 @@
-{ pkgs ? (import ./.. { }), nixpkgs ? { }}:
+{ nixpkgsPath, revision, libsetsJSON }:
 let
-  revision = pkgs.lib.trivial.revisionWithDefault (nixpkgs.revision or "master");
+  lib = import (nixpkgsPath + "/lib");
+  libsets = builtins.fromJSON libsetsJSON;
 
-  libDefPos = set:
-    builtins.map
-      (name: {
-        name = name;
+  libDefPos = prefix: set:
+    builtins.concatMap
+      (name: [{
+        name = builtins.concatStringsSep "." (prefix ++ [name]);
         location = builtins.unsafeGetAttrPos name set;
-      })
-      (builtins.attrNames set);
+      }] ++ lib.optionals
+        (builtins.length prefix == 0 && builtins.isAttrs set.${name})
+        (libDefPos (prefix ++ [name]) set.${name})
+      ) (builtins.attrNames set);
 
   libset = toplib:
     builtins.map
       (subsetname: {
         subsetname = subsetname;
-        functions = libDefPos toplib.${subsetname};
+        functions = libDefPos [] toplib.${subsetname};
       })
-      (builtins.filter
-        (name: builtins.isAttrs toplib.${name})
-        (builtins.attrNames toplib));
-
-  nixpkgsLib = pkgs.lib;
+      (builtins.map (x: x.name) libsets);
 
   flattenedLibSubset = { subsetname, functions }:
   builtins.map
@@ -38,13 +37,13 @@ let
       substr = builtins.substring prefixLen filenameLen filename;
       in substr;
 
-  removeNixpkgs = removeFilenamePrefix (builtins.toString pkgs.path);
+  removeNixpkgs = removeFilenamePrefix (builtins.toString nixpkgsPath);
 
   liblocations =
     builtins.filter
       (elem: elem.value != null)
-      (nixpkgsLib.lists.flatten
-        (locatedlibsets nixpkgsLib));
+      (lib.lists.flatten
+        (locatedlibsets lib));
 
   fnLocationRelative = { name, value }:
     {
@@ -58,28 +57,18 @@ let
     [ "-prime" ];
 
   urlPrefix = "https://github.com/NixOS/nixpkgs/blob/${revision}";
-  xmlstrings = (nixpkgsLib.strings.concatMapStrings
-      ({ name, value }:
-      ''
-      <section><title>${name}</title>
-        <para xml:id="${sanitizeId name}">
-        Located at
-        <link
-          xlink:href="${urlPrefix}/${value.file}#L${builtins.toString value.line}">${value.file}:${builtins.toString value.line}</link>
-        in  <literal>&lt;nixpkgs&gt;</literal>.
-        </para>
-        </section>
-      '')
-      relativeLocs);
+  jsonLocs = builtins.listToAttrs
+    (builtins.map
+      ({ name, value }: {
+        name = sanitizeId name;
+        value =
+          let
+            text = "${value.file}:${builtins.toString value.line}";
+            target = "${urlPrefix}/${value.file}#L${builtins.toString value.line}";
+          in
+            "[${text}](${target}) in `<nixpkgs>`";
+      })
+    relativeLocs);
 
-in pkgs.writeText
-    "locations.xml"
-    ''
-    <section xmlns="http://docbook.org/ns/docbook"
-         xmlns:xlink="http://www.w3.org/1999/xlink"
-         version="5">
-         <title>All the locations for every lib function</title>
-         <para>This file is only for inclusion by other files.</para>
-         ${xmlstrings}
-    </section>
-    ''
+in
+jsonLocs

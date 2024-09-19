@@ -8,21 +8,30 @@
   libuv,
   openfecSupport ? true,
   openfec,
-  libunwindSupport ? true,
+  speexdsp,
+  libunwindSupport ? lib.meta.availableOn stdenv.hostPlatform libunwind,
   libunwind,
   pulseaudioSupport ? true,
-  libpulseaudio
+  libpulseaudio,
+  opensslSupport ? true,
+  openssl,
+  soxSupport ? true,
+  sox,
+  libsndfileSupport ? true,
+  libsndfile
 }:
 
 stdenv.mkDerivation rec {
   pname = "roc-toolkit";
-  version = "0.1.5";
+  version = "0.4.0";
+
+  outputs = [ "out" "dev" ];
 
   src = fetchFromGitHub {
     owner = "roc-streaming";
     repo = "roc-toolkit";
     rev = "v${version}";
-    sha256 = "sha256:1pld340zfch4p3qaf5anrspq7vmxrgf9ddsdsq92pk49axaaz19w";
+    hash = "sha256-53irDq803dTg0YqtC1SOXmYNGypSMAEK+9HJ65pR5PA=";
   };
 
   nativeBuildInputs = [
@@ -32,35 +41,29 @@ stdenv.mkDerivation rec {
     pkg-config
   ];
 
-  buildInputs = [
+  propagatedBuildInputs = [
     libuv
-    libunwind
-    openfec
-    libpulseaudio
-  ];
+    speexdsp
+  ] ++ lib.optional openfecSupport openfec
+    ++ lib.optional libunwindSupport libunwind
+    ++ lib.optional pulseaudioSupport libpulseaudio
+    ++ lib.optional opensslSupport openssl
+    ++ lib.optional soxSupport sox
+    ++ lib.optional libsndfileSupport libsndfile;
 
-  sconsFlags =
+  sconsFlags = lib.optionals (!stdenv.hostPlatform.isDarwin)
     [ "--build=${stdenv.buildPlatform.config}"
-      "--host=${stdenv.hostPlatform.config}"
-      "--prefix=${placeholder "out"}"
-      "--disable-sox"
-      "--disable-doc"
-      "--disable-tests" ] ++
+      "--host=${stdenv.hostPlatform.config}" ] ++
+    [ "--prefix=${placeholder "out"}" ] ++
+    lib.optional (!opensslSupport) "--disable-openssl" ++
+    lib.optional (!soxSupport) "--disable-sox" ++
     lib.optional (!libunwindSupport) "--disable-libunwind" ++
     lib.optional (!pulseaudioSupport) "--disable-pulseaudio" ++
+    lib.optional (!libsndfileSupport) "--disable-sndfile" ++
     (if (!openfecSupport)
        then ["--disable-openfec"]
        else [ "--with-libraries=${openfec}/lib"
               "--with-openfec-includes=${openfec.dev}/include" ]);
-
-  prePatch = lib.optionalString stdenv.isAarch64
-    "sed -i 's/c++98/c++11/g' SConstruct";
-
-  # TODO: Remove these patches in the next version.
-  patches = [
-    ./0001-Remove-deprecated-scons-call.patch
-    ./0002-Fix-compatibility-with-new-SCons.patch
-  ];
 
   meta = with lib; {
     description = "Roc is a toolkit for real-time audio streaming over the network";
