@@ -57,6 +57,14 @@ stdenv.mkDerivation ({
   patches = [
     ../../../gcc/patches/gcc-12-no-sys-dirs.patch
     ../../../gcc/patches/13/no-sys-dirs-riscv.patch
+    # Submitted:
+    #  - https://gcc.gnu.org/pipermail/gcc-patches/2021-August/577639.html
+    #  - https://gcc.gnu.org/pipermail/gcc-patches/2021-August/577640.html
+    #  - https://gcc.gnu.org/pipermail/gcc-patches/2021-August/577638.html
+    #
+    # In Git: https://github.com/Ericson2314/gcc/tree/prog-target-14
+    #
+    # This is all 3 commits squashed.
     ./find-prefixed-progs.patch
   ] ++ lib.optional langFortran ../../gcc/patches/gcc-12-gfortran-driving.patch
     ++ lib.optional (stdenv.isDarwin && stdenv.isAarch64) (fetchpatch {
