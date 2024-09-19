@@ -1,4 +1,5 @@
 { lowPrio, newScope, pkgs, lib, stdenv
+, buildPackages
 , fetchzip, wrapCCWith, overrideCC
 , preLibcCrossHeaders
 , buildGccTools # tools, but from the previous stage, for cross
@@ -15,7 +16,7 @@ let
   version = "14.2.0";
 
   # fetchzip to unpack makes debug cycle much better
-  gcc_src = fetchzip {
+  gcc_src = buildPackages.buildPackages.fetchzip {
     url = "mirror://gcc/releases/gcc-${version}/gcc-${version}.tar.xz";
     hash = "sha256-Cf7+3LR81JcDHLmyA0OadyJgL6/K9n+pN2GIcRI1t60=";
   };
@@ -73,10 +74,10 @@ let
       extraBuildCommands = mkExtraBuildCommands cc;
     };
 
-	# Below, is the GCC Next Gen bootstrapping logic. It handles building a
-	# fully GCC toolchain from scratch via Nix. No LLVM toolchain should be
-	# pulled in. We should deduplicate this bootstrapping with its LLVM
-	# equivalence one GCC "old gen" is gone.
+    # Below, is the GCC Next Gen bootstrapping logic. It handles
+    # building a fully GCC toolchain from scratch via Nix. No LLVM
+    # toolchain should be pulled in. We should deduplicate this
+    # bootstrapping with its LLVM equivalence one GCC "old gen" is gone.
 
     gccUseGccNg = wrapCCWith rec {
       cc = tools.gcc-unwrapped;

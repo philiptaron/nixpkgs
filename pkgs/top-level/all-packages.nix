@@ -61,16 +61,20 @@ with pkgs;
       # thing to to create an earlier thing (leading to infinite recursion) and
       # we also would still respect the stage arguments choices for these
       # things.
-      (if stdenvNoCC.hostPlatform.isDarwin || stdenvNoCC.hostPlatform.useLLVM or false
-       then overrideCC stdenvNoCC buildPackages.llvmPackages.clangNoCompilerRt
+      (/**/ if stdenvNoCC.hostPlatform.isDarwin || stdenvNoCC.hostPlatform.useLLVM or false
+         then overrideCC stdenvNoCC buildPackages.llvmPackages.clangNoCompilerRt
+       else if stdenvNoCC.hostPlatform.useGccNg or false
+         then overrideCC stdenvNoCC buildPackages.llvmPackages.tools.gccNoLibgcc
        else gccCrossLibcStdenv)
     else mkStdenvNoLibs stdenv;
 
   stdenvNoLibc =
     if stdenvNoCC.hostPlatform != stdenvNoCC.buildPlatform
     then
-      (if stdenvNoCC.hostPlatform.isDarwin || stdenvNoCC.hostPlatform.useLLVM or false
-       then overrideCC stdenvNoCC buildPackages.llvmPackages.clangNoLibc
+      (/**/ if stdenvNoCC.hostPlatform.isDarwin || stdenvNoCC.hostPlatform.useLLVM or false
+         then overrideCC stdenvNoCC buildPackages.llvmPackages.clangNoLibc
+       else if stdenvNoCC.hostPlatform.useGccNg or false
+         then overrideCC stdenvNoCC buildPackages.gccNgPackages.tools.gccNoLibc
        else gccCrossLibcStdenv)
     else mkStdenvNoLibs stdenv;
 
