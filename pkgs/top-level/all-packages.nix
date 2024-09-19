@@ -17619,8 +17619,10 @@ with pkgs;
 
   libcxx = llvmPackages.libcxx;
 
+  libgcc = stdenv.cc.cc.libgcc or null;
+
   # TODO move to aliases
-  libgcc = gccNgPackages.libgcc;
+  libgccNg = gccNgPackages.libgcc;
 
   # This is for e.g. LLVM libraries on linux.
   gccForLibs =
