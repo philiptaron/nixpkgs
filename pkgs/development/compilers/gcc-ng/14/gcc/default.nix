@@ -68,7 +68,8 @@ stdenv.mkDerivation ({
     ++ lib.optional targetPlatform.isMinGW ../../gcc/14/Added-mcf-thread-model-support-from-mcfgthread.patch;
 
   # TODO someday avoid target-specific subdirs all over the place and split libs from binaries
-  outputs = [ "out" "dev" "man" "info" ];
+  # TODO dev stopped working.
+  outputs = [ "out" /*"dev"*/ "man" "info" ];
 
   strictDeps = true;
 
@@ -188,7 +189,7 @@ stdenv.mkDerivation ({
   ];
 
   postInstall = ''
-    moveToOutput "lib/gcc/${targetPlatform.config}/${version}/plugin/include" "$dev"
+    moveToOutput "lib/gcc/${targetPlatform.config}/${version}/plugin/include" "''${!outputDev}"
   '';
 
   passthru = {
