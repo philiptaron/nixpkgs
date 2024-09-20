@@ -14807,7 +14807,7 @@ with pkgs;
 
   gccCrossLibcStdenv =
     if stdenv.hostPlatform.useGccNg or false
-    then overrideCC stdenvNoCC buildPackages.gccNgPackages.gccNoLibc
+    then overrideCC stdenvNoCC buildPackages.gccNgPackages.gccWithLibgcc
     else overrideCC stdenvNoCC buildPackages.gccWithoutTargetLibc;
 
   # The GCC used to build libc for the target platform. Normal gccs will be

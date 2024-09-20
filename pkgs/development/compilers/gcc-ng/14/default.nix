@@ -84,8 +84,6 @@ let
       libcxx = targetGccLibraries.libstdcxx;
       extraPackages = [
         targetGccLibraries.libgcc
-      ] ++ lib.optionals (!stdenv.targetPlatform.isWasm) [
-        targetGccLibraries.libunwind
       ];
       extraBuildCommands = ''
         echo "-B${targetGccLibraries.libgcc}/lib" >> $out/nix-support/cc-cflags
@@ -120,6 +118,17 @@ let
       extraBuildCommands = ''
         echo "-B${targetGccLibraries.libgcc}/lib" >> $out/nix-support/cc-cflags
         echo "-B${targetGccLibraries.libssp}/lib" >> $out/nix-support/cc-cflags
+      '' + mkExtraBuildCommands cc;
+    };
+
+    gccWithLibc = wrapCCWith rec {
+      cc = tools.gcc-unwrapped;
+      libcxx = null;
+      extraPackages = [
+        targetGccLibraries.libgcc
+      ];
+      extraBuildCommands = ''
+        echo "-B${targetGccLibraries.libgcc}/lib" >> $out/nix-support/cc-cflags
       '' + mkExtraBuildCommands cc;
     };
 
@@ -159,22 +168,22 @@ let
 
     libstdcxxStdenv = overrideCC stdenv buildGccTools.libstdcxxGcc;
 
-    libada = callPackage ./libada { };
+    # TODO
+    #libada = callPackage ./libada { };
 
     libatomic = callPackage ./libatomic {
-      # TODO should libatomic be built before or after libc?
       stdenv = overrideCC stdenv buildGccTools.gccWithLibssp;
     };
 
     libssp = callPackage ./libssp {
-      # TODO should libssp be built before or after libc?
-      stdenv = overrideCC stdenv buildGccTools.gccWithLibgcc;
+      stdenv = overrideCC stdenv buildGccTools.gccWithLibc;
     };
 
-    libgfortran = callPackage ./libgfortran { };
+    # TODO
+    #libgfortran = callPackage ./libgfortran { };
 
     libstdcxx = callPackage ./libstdcxx {
-      stdenv = overrideCC stdenv buildGccTools.gccWithLibgcc;
+      stdenv = overrideCC stdenv buildGccTools.gccWithLibatomic;
     };
 
     # TODO add (gnu) libunwind here? can already be built separately aiui
