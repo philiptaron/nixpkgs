@@ -96,7 +96,7 @@ let
       '' + mkExtraBuildCommands cc;
     };
 
-    gccNoLibstdcxx = wrapCCWith rec {
+    gccWithLibatomic = wrapCCWith rec {
       cc = tools.gcc-unwrapped;
       libcxx = null;
       extraPackages = [

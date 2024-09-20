@@ -17623,10 +17623,11 @@ with pkgs;
 
   libcxx = llvmPackages.libcxx;
 
-  libgcc = stdenv.cc.cc.libgcc or null;
-
   # TODO move to aliases
-  libgccNg = gccNgPackages.libgcc;
+  libgcc =
+    if stdenv.hostPlatform.useGccNg or false
+      then gccNgPackages.libgcc
+    else stdenv.cc.cc.libgcc or null;
 
   # This is for e.g. LLVM libraries on linux.
   gccForLibs =
@@ -20024,14 +20025,15 @@ with pkgs;
   };
 
   # Being redundant to avoid cycles on boot. TODO: find a better way
-  glibcCross = callPackage ../development/libraries/glibc {
+  glibcCross = callPackage ../development/libraries/glibc ({
     stdenv = gccCrossLibcStdenv; # doesn't compile without gcc
+  } // lib.optionalAttrs (!(stdenv.hostPlatform.useGccNg or false)) {
     libgcc = callPackage ../development/libraries/gcc/libgcc {
       gcc = gccCrossLibcStdenv.cc;
       glibc = glibcCross.override { libgcc = null; };
       stdenvNoLibs = gccCrossLibcStdenv;
     };
-  };
+  });
 
   muslCross = musl.override {
     stdenv = stdenvNoLibc;

@@ -38,6 +38,12 @@ stdenv.mkDerivation rec {
     "--disable-multilib"
   ];
 
+  hardeningDisable = [
+    "fortify"
+    # Because we are building it!
+    "stackprotector"
+  ];
+
   meta = gcc_libs_meta // {
     description = gcc_libs_meta.description + " - stack smashing protector support";
   };
