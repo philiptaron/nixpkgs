@@ -64,7 +64,7 @@ with pkgs;
       (/**/ if stdenvNoCC.hostPlatform.isDarwin || stdenvNoCC.hostPlatform.useLLVM or false
          then overrideCC stdenvNoCC buildPackages.llvmPackages.clangNoCompilerRt
        else if stdenvNoCC.hostPlatform.useGccNg or false
-         then overrideCC stdenvNoCC buildPackages.llvmPackages.tools.gccNoLibgcc
+         then overrideCC stdenvNoCC buildPackages.gccNgPackages.tools.gccNoLibgcc
        else gccCrossLibcStdenv)
     else mkStdenvNoLibs stdenv;
 
