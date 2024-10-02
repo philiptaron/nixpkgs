@@ -48,4 +48,9 @@ stdenv.mkDerivation rec {
   ] ++ lib.optional stdenv.hostPlatform.isMusl [
     "libat_cv_have_ifunc=no"
   ];
+
+  hardeningDisable = [
+    # PATH_MAX
+    "fortify"
+  ];
 }
