@@ -17,6 +17,11 @@ busybox.override (
       CONFIG_FEATURE_SH_MATH_64 y
       CONFIG_FEATURE_TEST_64 y
 
+      CONFIG_MKDIR y
+      CONFIG_LN y
+      CONFIG_MV y
+      CONFIG_CP y
+
       CONFIG_ASH y
       CONFIG_ASH_OPTIMIZE_FOR_SIZE y
 
