@@ -27,9 +27,11 @@ let
           config = {
             allowAliases = false;
             allowBroken = includeBroken;
-            allowUnfree = false;
+            allowUnfree = true;
             allowInsecurePredicate = x: true;
             checkMeta = checkMeta;
+            segger-jlink.acceptLicense = true;
+            nvidia.acceptLicense = true;
 
             handleEvalIssue =
               reason: errormsg:

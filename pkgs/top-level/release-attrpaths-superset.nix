@@ -123,23 +123,54 @@ let
   # the job tree so that this is not the case.
   #
   justAttrNames =
-    path: value:
+    path:
     let
+      pathLength = builtins.length path;
+      pathHasItems = pathLength > 0;
+      lastElement = builtins.elemAt path (pathLength - 1);
+      lastElementIsSrc = pathHasItems && "src" == lastElement;
+      recurse =
+        attrset:
+        lib.pipe attrset [
+          (builtins.mapAttrs (
+            name: value:
+            builtins.addErrorContext
+              "while evaluating package set attribute path '${lib.showAttrPath (path ++ [ name ])}'"
+              (
+                if excluded-attrnames-at-any-depth.${name} or false then
+                  [ ]
+                else
+                  (justAttrNames (path ++ [ name ]) value)
+              )
+          ))
+          builtins.attrValues
+          builtins.concatLists
+        ];
+    in
+    value:
+    let
+      isDerivation = lib.isDerivation value;
+
+      # in some places we have *derivations* with jobsets as subattributes, ugh
+      hiddenJobset = value.__recurseIntoDerivationForReleaseJobs or false;
+
+      # Whether we should recurse into this derivation's src
+      urlIsMirror = url: builtins.substring 0 6 url == "mirror";
+      srcIsRelevant =
+        value ? src && !lastElementIsSrc && value.src ? urls && builtins.any urlIsMirror value.src.urls;
+
       attempt =
-        if
-          lib.isDerivation value
-          &&
-            # in some places we have *derivations* with jobsets as subattributes, ugh
-            !(value.__recurseIntoDerivationForReleaseJobs or false)
-        then
+        if lastElementIsSrc then
           [ path ]
+        else if isDerivation && !hiddenJobset then
+          if srcIsRelevant then recurse { inherit (value) src; } else [ ]
 
         # Even wackier case: we have meta.broken==true jobs with
         # !meta.broken jobs as subattributes with license=unfree, and
         # check-meta.nix won't throw an "unfree" failure because the
         # enclosing derivation is marked broken.  Yeah.  Bonkers.
         # We should just forbid jobsets enclosed by derivations.
-        else if lib.isDerivation value && !value.meta.available then
+        else if isDerivation && !value.meta.available then
           [ ]
 
         else if !(lib.isAttrs value) then
@@ -147,21 +178,7 @@ let
         else if (value.__attrsFailEvaluation or false) then
           [ ]
         else
-          lib.pipe value [
-            (builtins.mapAttrs (
-              name: value:
-              builtins.addErrorContext
-                "while evaluating package set attribute path '${lib.showAttrPath (path ++ [ name ])}'"
-                (
-                  if excluded-attrnames-at-any-depth.${name} or false then
-                    [ ]
-                  else
-                    (justAttrNames (path ++ [ name ]) value)
-                )
-            ))
-            builtins.attrValues
-            builtins.concatLists
-          ];
+          recurse value;
 
       seq = builtins.deepSeq attempt attempt;
       tried = builtins.tryEval seq;
