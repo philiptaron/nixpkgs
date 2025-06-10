@@ -5,13 +5,13 @@
   llama-index-agent-openai,
   llama-index-core,
   llama-index-llms-openai,
-  poetry-core,
+  hatchling,
   pythonOlder,
 }:
 
 buildPythonPackage rec {
   pname = "llama-index-program-openai";
-  version = "0.3.1";
+  version = "0.3.2";
   pyproject = true;
 
   disabled = pythonOlder "3.8";
@@ -19,12 +19,12 @@ buildPythonPackage rec {
   src = fetchPypi {
     pname = "llama_index_program_openai";
     inherit version;
-    hash = "sha256-YDmmzb/2LGOIwH6CoVf+Lt07vvDFrfKSrYVGv07HW4I=";
+    hash = "sha256-BMlZouYWSJiUvS7uu5lQDW8cF9WIw9oN3HXr0+t0Ue4=";
   };
 
   pythonRelaxDeps = [ "llama-index-agent-openai" ];
 
-  build-system = [ poetry-core ];
+  build-system = [ hatchling ];
 
   dependencies = [
     llama-index-agent-openai
