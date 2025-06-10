@@ -38,7 +38,7 @@
 
 buildPythonPackage rec {
   pname = "llama-index-core";
-  version = "0.12.39";
+  version = "0.12.41";
   pyproject = true;
 
   disabled = pythonOlder "3.9";
@@ -47,7 +47,7 @@ buildPythonPackage rec {
     owner = "run-llama";
     repo = "llama_index";
     tag = "v${version}";
-    hash = "sha256-cZUeDosuVHSlT57wLLMDR8IC7q1uWE4tiodgxjaqMII=";
+    hash = "sha256-EaDAkkq6S4xBcGKKQZroW9LxB6NArahKmyqSpaLqdEE=";
   };
 
   sourceRoot = "${src.name}/${pname}";
@@ -133,6 +133,7 @@ buildPythonPackage rec {
 
   disabledTests = [
     # Tests require network access
+    "test_complete_workflow"
     "test_context_extraction_basic"
     "test_context_extraction_custom_prompt"
     "test_context_extraction_oversized_document"
@@ -142,9 +143,19 @@ buildPythonPackage rec {
     "test_document_block_from_url"
     "test_from_namespaced_persist_dir"
     "test_from_persist_dir"
+    "test_image_document_path"
+    "test_image_document_path_serialization"
+    "test_image_document_url"
+    "test_image_documents_to_base64_failed_url"
+    "test_image_documents_to_base64_multiple_sources"
+    "test_load_image_urls"
     "test_mimetype_raw_data"
     "test_multiple_documents_context"
+    "test_real_image_path"
+    "test_real_image_url"
     "test_resource"
+    "test_set_base64_and_mimetype_for_image_docs"
+
     # asyncio.exceptions.InvalidStateError: invalid state
     "test_workflow_context_to_dict_mid_run"
     "test_SimpleDirectoryReader"
