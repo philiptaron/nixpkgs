@@ -776,8 +776,7 @@ in
 
     Print a warning before returning the second argument.
 
-    See [`builtins.warn`](https://nix.dev/manual/nix/latest/language/builtins.html#builtins-warn) (Nix >= 2.23).
-    On older versions, the Nix 2.23 behavior is emulated with [`builtins.trace`](https://nix.dev/manual/nix/latest/language/builtins.html#builtins-warn), including the [`NIX_ABORT_ON_WARN`](https://nix.dev/manual/nix/latest/command-ref/conf-file#conf-abort-on-warn) behavior, but not the `nix.conf` setting or command line option.
+    See [`builtins.warn`](https://nix.dev/manual/nix/stable/language/builtins.html#builtins-warn).
 
     # Inputs
 
@@ -795,27 +794,7 @@ in
     String -> a -> a
     ```
   */
-  warn =
-    # Since Nix 2.23, https://github.com/NixOS/nix/pull/10592
-    builtins.warn or (
-      let
-        mustAbort = lib.elem (builtins.getEnv "NIX_ABORT_ON_WARN") [
-          "1"
-          "true"
-          "yes"
-        ];
-      in
-      # Do not eta reduce v, so that we have the same strictness as `builtins.warn`.
-      msg: v:
-      # `builtins.warn` requires a string message, so we enforce that in our implementation, so that callers aren't accidentally incompatible with newer Nix versions.
-      assert isString msg;
-      if mustAbort then
-        builtins.trace "[1;31mevaluation warning:[0m ${msg}" (
-          abort "NIX_ABORT_ON_WARN=true; warnings are treated as unrecoverable errors."
-        )
-      else
-        builtins.trace "[1;35mevaluation warning:[0m ${msg}" v
-    );
+  warn = builtins.warn;
 
   /**
     `warnIf` *`condition`* *`message`* *`value`*
