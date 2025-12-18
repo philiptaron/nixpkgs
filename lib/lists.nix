@@ -1496,7 +1496,15 @@ rec {
 
     :::
   */
-  takeEnd = n: xs: drop (max 0 (length xs - n)) xs;
+  takeEnd =
+    n: list:
+    let
+      len = length list;
+      # Clamp n to [0, len] to avoid negative sizes
+      count = if n < 0 then 0 else if n > len then len else n;
+      start = len - count;
+    in
+    genList (i: elemAt list (i + start)) count;
 
   /**
     Remove the first (at most) N elements of a list.
@@ -1530,7 +1538,14 @@ rec {
 
     :::
   */
-  drop = count: list: sublist count (length list) list;
+  drop =
+    count: list:
+    let
+      len = length list;
+      # Clamp start to [0, len]
+      start = if count < 0 then 0 else if count > len then len else count;
+    in
+    genList (n: elemAt list (n + start)) (len - start);
 
   /**
     Remove the last (at most) N elements of a list.
