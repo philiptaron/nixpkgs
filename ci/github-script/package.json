@@ -1,10 +1,17 @@
 {
   "private": true,
+  "scripts": {
+    "typecheck": "tsc --project jsconfig.json"
+  },
   "dependencies": {
     "@actions/artifact": "2.3.2",
     "@actions/core": "1.11.1",
     "@actions/github": "6.0.1",
     "bottleneck": "2.19.5",
     "commander": "14.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
   }
 }
