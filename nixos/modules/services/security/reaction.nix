@@ -200,10 +200,8 @@ in
       environment.systemPackages = [ cfg.package ];
     };
 
-  meta.maintainers =
-    with lib.maintainers;
-    [
-      ppom
-    ]
-    ++ lib.teams.ngi.members;
+  meta.teams = [ lib.teams.ngi ];
+  meta.maintainers = with lib.maintainers; [
+    ppom
+  ];
 }
