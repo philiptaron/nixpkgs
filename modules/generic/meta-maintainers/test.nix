@@ -16,7 +16,13 @@ in
 rec {
   lib = import ../../../lib;
 
+  # Inject ghost into lib.maintainers so it passes the addCheck validation
+  testLib = lib // {
+    maintainers = lib.maintainers // { ghost = ghost; };
+  };
+
   example = lib.evalModules {
+    specialArgs = { lib = testLib; };
     modules = [
       ../meta-maintainers.nix
       {
@@ -30,8 +36,8 @@ rec {
     assert
       example.config.meta.maintainers == {
         ${toString ../meta-maintainers.nix} = [
-          lib.maintainers.pierron
-          lib.maintainers.roberth
+          testLib.maintainers.pierron
+          testLib.maintainers.roberth
         ];
         "ghost.nix" = [ ghost ];
       };
