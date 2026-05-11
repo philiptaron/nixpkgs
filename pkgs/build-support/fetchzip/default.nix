@@ -14,6 +14,12 @@
   glibcLocalesUtf8,
 }:
 
+let
+  inherit (lib)
+    optionals
+    warn
+    ;
+in
 lib.extendMkDerivation {
   constructDrv = fetchurl;
 
@@ -69,7 +75,7 @@ lib.extendMkDerivation {
       # UTF-8 aware locale:
       #   https://github.com/NixOS/nixpkgs/issues/176225#issuecomment-1146617263
       nativeBuildInputs =
-        lib.optionals withUnzip [
+        optionals withUnzip [
           unzip
           glibcLocalesUtf8
         ]
@@ -108,7 +114,7 @@ lib.extendMkDerivation {
         ${postFetch}
         ${
           if extraPostFetch != "" then
-            lib.warn "use 'postFetch' instead of 'extraPostFetch' with 'fetchzip' and 'fetchFromGitHub' or 'fetchFromGitLab'." extraPostFetch
+            warn "use 'postFetch' instead of 'extraPostFetch' with 'fetchzip' and 'fetchFromGitHub' or 'fetchFromGitLab'." extraPostFetch
           else
             extraPostFetch
         }
