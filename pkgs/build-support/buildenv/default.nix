@@ -13,7 +13,10 @@ let
   builder = replaceVars ./builder.pl {
     inherit (builtins) storeDir;
   };
-  inherit (lib) concatMap;
+  inherit (lib)
+    concatMap
+    optionalString
+    ;
 in
 
 # Backward compatibility for deprecated custom overrider <env-pkg>.override
@@ -132,10 +135,10 @@ lib.makeOverridable (
           # Silently use the original `paths` if `passthru.paths` is missing.
         }) finalAttrs.passthru.paths or paths;
 
-        extraPathsFrom = lib.optionalString finalAttrs.includeClosures (
+        extraPathsFrom = optionalString finalAttrs.includeClosures (
           # filter all null elements and concatenate the output paths together
           # in the final closure
-          writeClosure (lib.concatMap (p: if p == null then [ ] else p.paths) finalAttrs.chosenOutputs)
+          writeClosure (concatMap (p: if p == null then [ ] else p.paths) finalAttrs.chosenOutputs)
         );
 
         preferLocalBuild = derivationArgs.preferLocalBuild or true;
