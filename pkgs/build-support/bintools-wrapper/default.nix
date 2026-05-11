@@ -72,15 +72,15 @@ let
     concatStringsSep
     getBin
     getDev
+    getExe'
     getLib
     getName
     getVersion
     hasSuffix
     optional
     optionalAttrs
-    optionals
     optionalString
-    platforms
+    optionals
     removePrefix
     replaceStrings
     ;
@@ -107,7 +107,7 @@ let
   # See description in cc-wrapper.
   suffixSalt =
     replaceStrings [ "-" "." ] [ "_" "_" ] targetPlatform.config
-    + lib.optionalString (targetPlatform.isDarwin && targetPlatform.isStatic) "_static";
+    + optionalString (targetPlatform.isDarwin && targetPlatform.isStatic) "_static";
 
   # The dynamic linker has different names on different platforms. This is a
   # shell glob that ought to match it.
@@ -333,7 +333,7 @@ stdenvNoCC.mkDerivation {
         fi
       ''
       + optionalString (libc.w32api or null != null) ''
-        echo '-L${lib.getLib libc.w32api}${libc.libdir or "/lib/w32api"}' >> $out/nix-support/libc-ldflags
+        echo '-L${getLib libc.w32api}${libc.libdir or "/lib/w32api"}' >> $out/nix-support/libc-ldflags
       ''
     )
 
@@ -452,8 +452,8 @@ stdenvNoCC.mkDerivation {
     # TODO(@sternenseemann): rename env var via stdenv rebuild
     shell = (getBin runtimeShell + runtimeShell.shellPath or "");
     gnugrep_bin = optionalString (!nativeTools) gnugrep;
-    rm = if nativeTools then "rm" else lib.getExe' coreutils "rm";
-    mktemp = if nativeTools then "mktemp" else lib.getExe' coreutils "mktemp";
+    rm = if nativeTools then "rm" else getExe' coreutils "rm";
+    mktemp = if nativeTools then "mktemp" else getExe' coreutils "mktemp";
     wrapperName = "BINTOOLS_WRAPPER";
     inherit
       dynamicLinker
@@ -469,10 +469,10 @@ stdenvNoCC.mkDerivation {
       ;
     default_hardening_flags_str = toString defaultHardeningFlags;
     # These will become empty strings when not targeting Darwin.
-    darwinPlatform = lib.optionalString targetPlatform.isDarwin targetPlatform.darwinPlatform;
-    darwinSdkVersion = lib.optionalString targetPlatform.isDarwin targetPlatform.darwinSdkVersion;
-    darwinMinVersion = lib.optionalString targetPlatform.isDarwin targetPlatform.darwinMinVersion;
-    darwinMinVersionVariable = lib.optionalString targetPlatform.isDarwin targetPlatform.darwinMinVersionVariable;
+    darwinPlatform = optionalString targetPlatform.isDarwin targetPlatform.darwinPlatform;
+    darwinSdkVersion = optionalString targetPlatform.isDarwin targetPlatform.darwinSdkVersion;
+    darwinMinVersion = optionalString targetPlatform.isDarwin targetPlatform.darwinMinVersion;
+    darwinMinVersionVariable = optionalString targetPlatform.isDarwin targetPlatform.darwinMinVersionVariable;
     # Wrapped compilers should do something useful even when no SDK is provided at `DEVELOPER_DIR`.
     ${if stdenvNoCC.targetPlatform.isDarwin && apple-sdk != null then "fallback_sdk" else null} =
       apple-sdk.__spliced.buildTarget or apple-sdk;
