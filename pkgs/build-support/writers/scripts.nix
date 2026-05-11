@@ -13,9 +13,20 @@
 let
   inherit (lib)
     concatMapStringsSep
+    concatStringsSep
     elem
     escapeShellArg
+    escapeShellArgs
+    getBin
+    getExe
+    getLib
+    isAttrs
+    isDerivation
+    isFunction
     last
+    makeBinPath
+    optional
+    optionals
     optionalString
     strings
     toFunction
@@ -275,11 +286,11 @@ rec {
           )
           ''
             ${compileScript}
-            ${lib.optionalString strip "${lib.getBin buildPackages.bintools-unwrapped}/bin/${buildPackages.bintools-unwrapped.targetPrefix}strip -S $out"}
+            ${optionalString strip "${getBin buildPackages.bintools-unwrapped}/bin/${buildPackages.bintools-unwrapped.targetPrefix}strip -S $out"}
             # Sometimes binaries produced for darwin (e. g. by GHC) won't be valid
             # mach-o executables from the get-go, but need to be corrected somehow
             # which is done by fixupPhase.
-            ${lib.optionalString pkgs.stdenvNoCC.hostPlatform.isDarwin "fixupPhase"}
+            ${optionalString pkgs.stdenvNoCC.hostPlatform.isDarwin "fixupPhase"}
             mv $out tmp
             mkdir -p $out/$(dirname "${path}")
             mv tmp $out/${path}
@@ -320,7 +331,7 @@ rec {
     writeBash "example"
     {
       makeWrapperArgs = [
-        "--prefix" "PATH" ":" "${lib.makeBinPath [ pkgs.hello ]}"
+        "--prefix" "PATH" ":" "${makeBinPath [ pkgs.hello ]}"
       ];
     }
     ''
@@ -331,10 +342,10 @@ rec {
   */
   writeBash =
     name: argsOrScript:
-    if lib.isAttrs argsOrScript && !lib.isDerivation argsOrScript then
-      makeScriptWriter (argsOrScript // { interpreter = "${lib.getExe pkgs.bashNonInteractive}"; }) name
+    if isAttrs argsOrScript && !isDerivation argsOrScript then
+      makeScriptWriter (argsOrScript // { interpreter = "${getExe pkgs.bashNonInteractive}"; }) name
     else
-      makeScriptWriter { interpreter = "${lib.getExe pkgs.bashNonInteractive}"; } name argsOrScript;
+      makeScriptWriter { interpreter = "${getExe pkgs.bashNonInteractive}"; } name argsOrScript;
 
   /**
     Like writeScriptBin but the first line is a shebang to bash
@@ -359,7 +370,7 @@ rec {
     writeBashBin "example"
     {
       makeWrapperArgs = [
-        "--prefix" "PATH" ":" "${lib.makeBinPath [ pkgs.hello ]}"
+        "--prefix" "PATH" ":" "${makeBinPath [ pkgs.hello ]}"
       ];
     }
     ''
@@ -393,7 +404,7 @@ rec {
     writeDash "example"
     {
       makeWrapperArgs = [
-        "--prefix" "PATH" ":" "${lib.makeBinPath [ pkgs.hello ]}"
+        "--prefix" "PATH" ":" "${makeBinPath [ pkgs.hello ]}"
       ];
     }
     ''
@@ -404,10 +415,10 @@ rec {
   */
   writeDash =
     name: argsOrScript:
-    if lib.isAttrs argsOrScript && !lib.isDerivation argsOrScript then
-      makeScriptWriter (argsOrScript // { interpreter = "${lib.getExe pkgs.dash}"; }) name
+    if isAttrs argsOrScript && !isDerivation argsOrScript then
+      makeScriptWriter (argsOrScript // { interpreter = "${getExe pkgs.dash}"; }) name
     else
-      makeScriptWriter { interpreter = "${lib.getExe pkgs.dash}"; } name argsOrScript;
+      makeScriptWriter { interpreter = "${getExe pkgs.dash}"; } name argsOrScript;
 
   /**
     Like writeScriptBin but the first line is a shebang to dash
@@ -432,7 +443,7 @@ rec {
     writeDashBin "example"
     {
       makeWrapperArgs = [
-        "--prefix" "PATH" ":" "${lib.makeBinPath [ pkgs.hello ]}"
+        "--prefix" "PATH" ":" "${makeBinPath [ pkgs.hello ]}"
       ];
     }
     ''
@@ -465,7 +476,7 @@ rec {
     writeFish "example"
     {
       makeWrapperArgs = [
-        "--prefix" "PATH" ":" "${lib.makeBinPath [ pkgs.hello ]}"
+        "--prefix" "PATH" ":" "${makeBinPath [ pkgs.hello ]}"
       ];
     }
     ''
@@ -476,18 +487,18 @@ rec {
   */
   writeFish =
     name: argsOrScript:
-    if lib.isAttrs argsOrScript && !lib.isDerivation argsOrScript then
+    if isAttrs argsOrScript && !isDerivation argsOrScript then
       makeScriptWriter (
         argsOrScript
         // {
-          interpreter = "${lib.getExe pkgs.fish} --no-config";
-          check = "${lib.getExe pkgs.fish} --no-config --no-execute"; # syntax check only
+          interpreter = "${getExe pkgs.fish} --no-config";
+          check = "${getExe pkgs.fish} --no-config --no-execute"; # syntax check only
         }
       ) name
     else
       makeScriptWriter {
-        interpreter = "${lib.getExe pkgs.fish} --no-config";
-        check = "${lib.getExe pkgs.fish} --no-config --no-execute"; # syntax check only
+        interpreter = "${getExe pkgs.fish} --no-config";
+        check = "${getExe pkgs.fish} --no-config --no-execute"; # syntax check only
       } name argsOrScript;
 
   /**
@@ -513,7 +524,7 @@ rec {
     writeFishBin "example"
     {
       makeWrapperArgs = [
-        "--prefix" "PATH" ":" "${lib.makeBinPath [ pkgs.hello ]}"
+        "--prefix" "PATH" ":" "${makeBinPath [ pkgs.hello ]}"
       ];
     }
     ''
@@ -548,7 +559,7 @@ rec {
     writeBabashka "example"
     {
       makeWrapperArgs = [
-        "--prefix" "PATH" ":" "${lib.makeBinPath [ pkgs.hello ]}"
+        "--prefix" "PATH" ":" "${makeBinPath [ pkgs.hello ]}"
       ];
     }
     ''
@@ -597,7 +608,7 @@ rec {
     {
       makeWrapperArgs ? [ ],
       babashka ? pkgs.babashka-unwrapped,
-      check ? "${lib.getExe pkgs.clj-kondo} --lint",
+      check ? "${getExe pkgs.clj-kondo} --lint",
       ...
     }@args:
     makeScriptWriter (
@@ -605,7 +616,7 @@ rec {
         "babashka"
       ])
       // {
-        interpreter = "${lib.getExe babashka}";
+        interpreter = "${getExe babashka}";
       }
     ) name;
 
@@ -702,7 +713,7 @@ rec {
           "srfi"
         ])
         // {
-          interpreter = "${lib.getExe finalGuile} \\";
+          interpreter = "${getExe finalGuile} \\";
           makeWrapperArgs = [
             "--set"
             "GUILE_LOAD_PATH"
@@ -725,12 +736,12 @@ rec {
         certain complication must be made to ensure correctness.
       */
       (
-        lib.concatStringsSep "\n" [
-          (lib.concatStringsSep " " (
+        concatStringsSep "\n" [
+          (concatStringsSep " " (
             [ "--no-auto-compile" ]
-            ++ lib.optional r6rs "--r6rs"
-            ++ lib.optional r7rs "--r7rs"
-            ++ lib.optional (srfi != [ ]) ("--use-srfi=" + concatMapStringsSep "," toString srfi)
+            ++ optional r6rs "--r6rs"
+            ++ optional r7rs "--r7rs"
+            ++ optional (srfi != [ ]) ("--use-srfi=" + concatMapStringsSep "," toString srfi)
             ++ [ "-s" ]
           ))
           "!#"
@@ -779,7 +790,7 @@ rec {
     makeBinWriter {
       compileScript = ''
         cp $contentPath tmp.hs
-        ${(ghc.withPackages (toFunction libraries))}/bin/ghc ${lib.escapeShellArgs ghcArgs'} tmp.hs
+        ${(ghc.withPackages (toFunction libraries))}/bin/ghc ${escapeShellArgs ghcArgs'} tmp.hs
         mv tmp $out
       '';
       inherit makeWrapperArgs strip;
@@ -831,7 +842,7 @@ rec {
     makeBinWriter {
       compileScript = ''
         cp $contentPath tmp.nim
-        ${lib.getExe nim} compile ${nimCompileCmdArgs} tmp.nim
+        ${getExe nim} compile ${nimCompileCmdArgs} tmp.nim
         mv tmp $out
       '';
       inherit makeWrapperArgs strip;
@@ -866,7 +877,7 @@ rec {
     writeNu "example"
       {
         makeWrapperArgs = [
-          "--prefix" "PATH" ":" "${lib.makeBinPath [ pkgs.hello ]}"
+          "--prefix" "PATH" ":" "${makeBinPath [ pkgs.hello ]}"
         ];
       }
       ''
@@ -877,12 +888,10 @@ rec {
   */
   writeNu =
     name: argsOrScript:
-    if lib.isAttrs argsOrScript && !lib.isDerivation argsOrScript then
-      makeScriptWriter (
-        argsOrScript // { interpreter = "${lib.getExe pkgs.nushell} --no-config-file"; }
-      ) name
+    if isAttrs argsOrScript && !isDerivation argsOrScript then
+      makeScriptWriter (argsOrScript // { interpreter = "${getExe pkgs.nushell} --no-config-file"; }) name
     else
-      makeScriptWriter { interpreter = "${lib.getExe pkgs.nushell} --no-config-file"; } name argsOrScript;
+      makeScriptWriter { interpreter = "${getExe pkgs.nushell} --no-config-file"; } name argsOrScript;
 
   /**
     Like writeScriptBin but the first line is a shebang to nu
@@ -907,7 +916,7 @@ rec {
     writeNuBin "example"
       {
         makeWrapperArgs = [
-          "--prefix" "PATH" ":" "${lib.makeBinPath [ pkgs.hello ]}"
+          "--prefix" "PATH" ":" "${makeBinPath [ pkgs.hello ]}"
         ];
       }
       ''
@@ -935,7 +944,7 @@ rec {
           if libraries == [ ] then "${ruby}/bin/ruby" else "${(ruby.withPackages (ps: libraries))}/bin/ruby";
         # Rubocop doesn't seem to like running in this fashion.
         #check = (writeDash "rubocop.sh" ''
-        #  exec ${lib.getExe buildRubyPackages.rubocop} "$1"
+        #  exec ${getExe buildRubyPackages.rubocop} "$1"
         #'');
       }
     ) name;
@@ -1028,12 +1037,12 @@ rec {
       strip ? true,
     }:
     let
-      darwinArgs = lib.optionals stdenv.hostPlatform.isDarwin [ "-L${lib.getLib libiconv}/lib" ];
+      darwinArgs = optionals stdenv.hostPlatform.isDarwin [ "-L${getLib libiconv}/lib" ];
     in
     makeBinWriter {
       compileScript = ''
         cp "$contentPath" tmp.rs
-        PATH=${lib.makeBinPath [ pkgs.gcc ]} ${rustc}/bin/rustc ${lib.escapeShellArgs rustcArgs} ${lib.escapeShellArgs darwinArgs} -o "$out" tmp.rs
+        PATH=${makeBinPath [ pkgs.gcc ]} ${rustc}/bin/rustc ${escapeShellArgs rustcArgs} ${escapeShellArgs darwinArgs} -o "$out" tmp.rs
       '';
       inherit makeWrapperArgs strip;
     } name;
@@ -1088,7 +1097,7 @@ rec {
     in
     writeDash name ''
       export NODE_PATH=${node-env}/lib/node_modules
-      exec ${lib.getExe pkgs.nodejs-slim} ${pkgs.writeText "js" content} "$@"
+      exec ${getExe pkgs.nodejs-slim} ${pkgs.writeText "js" content} "$@"
     '';
 
   /**
@@ -1139,7 +1148,7 @@ rec {
     makeScriptWriter (
       (removeAttrs args [ "libraries" ])
       // {
-        interpreter = "${lib.getExe (pkgs.perl.withPackages (p: libraries))}";
+        interpreter = "${getExe (pkgs.perl.withPackages (p: libraries))}";
       }
     ) name;
 
@@ -1198,7 +1207,7 @@ rec {
         interpreter =
           if libraries == [ ] then
             python.interpreter
-          else if (lib.isFunction libraries) then
+          else if (isFunction libraries) then
             (python.withPackages libraries).interpreter
           else
             (python.withPackages (ps: libraries)).interpreter;
@@ -1323,10 +1332,10 @@ rec {
         export DOTNET_SKIP_WORKLOAD_INTEGRITY_CHECK=1
         script="$1"; shift
         (
-          ${lib.getExe dotnet-sdk} new nugetconfig
-          ${lib.getExe dotnet-sdk} nuget disable source nuget
+          ${getExe dotnet-sdk} new nugetconfig
+          ${getExe dotnet-sdk} nuget disable source nuget
         ) > /dev/null
-        ${lib.getExe dotnet-sdk} fsi --quiet --nologo --readline- ${fsi-flags} "$@" < "$script"
+        ${getExe dotnet-sdk} fsi --quiet --nologo --readline- ${fsi-flags} "$@" < "$script"
       '';
 
     in
