@@ -625,7 +625,10 @@ let
     }
 
     echo "copying staging root to image..."
+    # cptofs defaults to 100 MiB of LKL guest memory, which OOMs on large
+    # closures; give it the same memory as the build VM.
     cptofs -p ${lib.optionalString (partitionTableType != "none") "-P ${rootPartition}"} \
+           -m ${toString memSize} \
            -t ${fsType} \
            -i $diskImage \
            $root${lib.optionalString onlyNixStore builtins.storeDir}/* / ||
