@@ -2,6 +2,7 @@
   lib,
   stdenv,
   fetchFromGitHub,
+  fetchpatch,
   bc,
   python3,
   bison,
@@ -30,6 +31,15 @@ stdenv.mkDerivation {
     rev = "9c51103caa1481493ebbbaf858f016e7f25ab921";
     hash = "sha256-7S1lA6qfpGLj5lCqdOEEfcChxNw+35SC/NEjFWcwvko=";
   };
+
+  patches = [
+    # cptofs: Add --mb cli option; fixes OOM panics when copying very large
+    # filesystems with the default 100M of LKL guest memory.
+    (fetchpatch {
+      url = "https://github.com/lkl/linux/commit/9dcd61afcc95c97aa925f62a4195fd4c1e440204.patch";
+      hash = "sha256-ow1ujIAyImYkIspJ1l/5nKY/LFOt7xhPhQF84Tx/ju8=";
+    })
+  ];
 
   nativeBuildInputs = [
     bc
