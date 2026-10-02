@@ -118,3 +118,5 @@ Sample template for a new module review is provided below.
 ```
 
 See also [./README-modular-services.md](./README-modular-services.md).
+
+<!-- Test fixture for NixOS/nixpkgs#533268 (backport of a fork PR). -->
