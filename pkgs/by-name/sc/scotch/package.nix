@@ -79,7 +79,6 @@ stdenv.mkDerivation (finalAttrs: {
   passthru = {
     tests = {
       cmake-config = testers.hasCmakeConfigModules {
-        moduleNames = [ "SCOTCH" ];
         package = finalAttrs.finalPackage;
       };
       musl = pkgsMusl.scotch or null;
@@ -100,5 +99,6 @@ stdenv.mkDerivation (finalAttrs: {
       bzizou
       qbisi
     ];
+    cmakeConfigModules = [ "SCOTCH" ];
   };
 })
