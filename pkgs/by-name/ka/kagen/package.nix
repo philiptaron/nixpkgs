@@ -73,7 +73,6 @@ stdenv.mkDerivation (finalAttrs: {
   passthru = {
     tests = {
       cmake-config = testers.hasCmakeConfigModules {
-        moduleNames = [ "KaGen" ];
         package = finalAttrs.finalPackage;
       };
     };
@@ -92,5 +91,6 @@ stdenv.mkDerivation (finalAttrs: {
     ];
     platforms = lib.platforms.unix;
     maintainers = with lib.maintainers; [ qbisi ];
+    cmakeConfigModules = [ "KaGen" ];
   };
 })
