@@ -29,9 +29,6 @@ mkLinphoneDerivation (finalAttrs: {
   passthru.tests = {
     cmake-config = testers.hasCmakeConfigModules {
       package = finalAttrs.finalPackage;
-      moduleNames = [
-        "BCToolbox"
-      ];
     };
   };
 
@@ -45,5 +42,6 @@ mkLinphoneDerivation (finalAttrs: {
       naxdy
       raskin
     ];
+    cmakeConfigModules = [ "BCToolbox" ];
   };
 })
