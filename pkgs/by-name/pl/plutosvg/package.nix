@@ -52,7 +52,6 @@ stdenv.mkDerivation (finalAttrs: {
     pkg-config = testers.testMetaPkgConfig finalAttrs.finalPackage;
     cmake-config = testers.hasCmakeConfigModules {
       package = finalAttrs.finalPackage;
-      moduleNames = [ "plutosvg" ];
       versionCheck = true;
     };
   };
@@ -66,5 +65,6 @@ stdenv.mkDerivation (finalAttrs: {
     license = lib.licenses.mit;
     maintainers = with lib.maintainers; [ marcin-serwin ];
     pkgConfigModules = [ "plutosvg" ];
+    cmakeConfigModules = [ "plutosvg" ];
   };
 })
