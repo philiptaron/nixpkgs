@@ -87,7 +87,6 @@ stdenv.mkDerivation (finalAttrs: {
 
   passthru.tests = {
     cmake-config = testers.hasCmakeConfigModules {
-      moduleNames = [ "catalyst" ];
       package = finalAttrs.finalPackage;
     };
     serial = catalyst.override { mpiSupport = false; };
@@ -105,5 +104,6 @@ stdenv.mkDerivation (finalAttrs: {
     ];
     maintainers = with lib.maintainers; [ qbisi ];
     platforms = lib.platforms.unix;
+    cmakeConfigModules = [ "catalyst" ];
   };
 })
