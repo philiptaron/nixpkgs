@@ -95,7 +95,6 @@ stdenv.mkDerivation (finalAttrs: {
   passthru = {
     tests = {
       cmake-config = testers.hasCmakeConfigModules {
-        moduleNames = [ "HYPRE" ];
         package = finalAttrs.finalPackage;
       };
       ilp64 = hypre.override { isILP64 = true; };
@@ -116,5 +115,6 @@ stdenv.mkDerivation (finalAttrs: {
       mkez
       qbisi
     ];
+    cmakeConfigModules = [ "HYPRE" ];
   };
 })
