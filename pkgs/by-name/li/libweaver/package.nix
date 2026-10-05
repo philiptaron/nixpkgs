@@ -34,7 +34,6 @@ stdenv.mkDerivation (finalAttrs: {
     updateScript = unstableGitUpdater { hardcodeZeroVersion = true; };
     tests.cmake-config = testers.hasCmakeConfigModules {
       package = finalAttrs.finalPackage;
-      moduleNames = [ "libweaver" ];
     };
   };
 
@@ -45,5 +44,6 @@ stdenv.mkDerivation (finalAttrs: {
     maintainers = [
       lib.maintainers.RossSmyth
     ];
+    cmakeConfigModules = [ "libweaver" ];
   };
 })
