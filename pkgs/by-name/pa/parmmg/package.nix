@@ -72,7 +72,6 @@ stdenv.mkDerivation (finalAttrs: {
 
   passthru.tests = {
     cmake-config = testers.hasCmakeConfigModules {
-      moduleNames = [ "ParMmg" ];
       package = finalAttrs.finalPackage;
     };
   };
@@ -83,5 +82,6 @@ stdenv.mkDerivation (finalAttrs: {
     platforms = lib.platforms.unix;
     license = lib.licenses.lgpl3Plus;
     maintainers = with lib.maintainers; [ mkez ];
+    cmakeConfigModules = [ "ParMmg" ];
   };
 })
