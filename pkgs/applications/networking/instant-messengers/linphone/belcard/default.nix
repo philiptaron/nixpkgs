@@ -22,14 +22,12 @@ mkLinphoneDerivation (finalAttrs: {
   passthru.tests = {
     cmake-config = testers.hasCmakeConfigModules {
       package = finalAttrs.finalPackage;
-      moduleNames = [
-        "BelCard"
-      ];
     };
   };
 
   meta = {
     description = "C++ library to manipulate VCard standard format. Part of the Linphone project";
     license = lib.licenses.gpl3Only;
+    cmakeConfigModules = [ "BelCard" ];
   };
 })
