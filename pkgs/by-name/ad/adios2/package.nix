@@ -199,7 +199,6 @@ stdenv.mkDerivation (finalAttrs: {
 
   passthru.tests = {
     cmake-config = testers.hasCmakeConfigModules {
-      moduleNames = [ "adios2" ];
       package = finalAttrs.finalPackage;
     };
   }
@@ -215,5 +214,6 @@ stdenv.mkDerivation (finalAttrs: {
     license = lib.licenses.asl20;
     platforms = lib.platforms.unix;
     maintainers = with lib.maintainers; [ qbisi ];
+    cmakeConfigModules = [ "adios2" ];
   };
 })
