@@ -59,7 +59,6 @@ stdenv.mkDerivation (finalAttrs: {
   passthru.tests = {
     pkg-config = testers.testMetaPkgConfig finalAttrs.finalPackage;
     cmake-config = testers.hasCmakeConfigModules {
-      moduleNames = [ "Blosc2" ];
       package = finalAttrs.finalPackage;
     };
   };
@@ -69,6 +68,7 @@ stdenv.mkDerivation (finalAttrs: {
     homepage = "https://www.blosc.org";
     changelog = "https://github.com/Blosc/c-blosc2/releases/tag/v${finalAttrs.version}";
     pkgConfigModules = [ "blosc2" ];
+    cmakeConfigModules = [ "Blosc2" ];
     license = lib.licenses.bsd3;
     platforms = lib.platforms.all;
     maintainers = with lib.maintainers; [ ris ];
