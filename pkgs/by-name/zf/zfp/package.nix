@@ -91,7 +91,6 @@ effectiveStdenv.mkDerivation (finalAttrs: {
 
   passthru.tests = {
     cmake-config = testers.hasCmakeConfigModules {
-      moduleNames = [ "zfp" ];
       package = finalAttrs.finalPackage;
     };
   };
@@ -104,5 +103,6 @@ effectiveStdenv.mkDerivation (finalAttrs: {
     # 64-bit only
     platforms = lib.platforms.aarch64 ++ lib.platforms.x86_64;
     mainProgram = "zfp";
+    cmakeConfigModules = [ "zfp" ];
   };
 })
