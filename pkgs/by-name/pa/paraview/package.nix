@@ -101,8 +101,6 @@ stdenv.mkDerivation (finalAttrs: {
 
   passthru.tests = {
     cmake-config = testers.hasCmakeConfigModules {
-      moduleNames = [ "ParaView" ];
-
       package = finalAttrs.finalPackage;
 
       nativeBuildInputs = [
@@ -122,5 +120,6 @@ stdenv.mkDerivation (finalAttrs: {
       guibert
       qbisi
     ];
+    cmakeConfigModules = [ "ParaView" ];
   };
 })
