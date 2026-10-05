@@ -70,7 +70,6 @@ stdenv.mkDerivation (finalAttrs: {
   '';
 
   passthru.tests.cmake-config = testers.hasCmakeConfigModules {
-    moduleNames = [ "cgns" ];
     package = finalAttrs.finalPackage;
   };
 
@@ -82,5 +81,6 @@ stdenv.mkDerivation (finalAttrs: {
     license = lib.licenses.zlib;
     platforms = lib.platforms.unix;
     maintainers = with lib.maintainers; [ qbisi ];
+    cmakeConfigModules = [ "cgns" ];
   };
 })
