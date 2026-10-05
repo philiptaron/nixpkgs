@@ -333,7 +333,6 @@ stdenv.mkDerivation (finalAttrs: {
     };
     cmake = testers.hasCmakeConfigModules {
       package = finalAttrs.finalPackage;
-      moduleNames = [ "OpenBLAS" ];
     };
     aarch64-multiplatform = pkgsCross.aarch64-multiplatform.openblas;
   };
@@ -350,5 +349,6 @@ stdenv.mkDerivation (finalAttrs: {
       "cblas"
       "lapack"
     ];
+    cmakeConfigModules = [ "OpenBLAS" ];
   };
 })
