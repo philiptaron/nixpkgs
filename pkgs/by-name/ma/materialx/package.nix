@@ -72,7 +72,6 @@ stdenv.mkDerivation (finalAttrs: {
   passthru = {
     tests = {
       cmake-config = testers.hasCmakeConfigModules {
-        moduleNames = [ "MaterialX" ];
         package = finalAttrs.finalPackage;
       };
     };
@@ -85,5 +84,6 @@ stdenv.mkDerivation (finalAttrs: {
     maintainers = with lib.maintainers; [ gador ];
     platforms = lib.platforms.unix;
     license = lib.licenses.asl20;
+    cmakeConfigModules = [ "MaterialX" ];
   };
 })
