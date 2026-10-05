@@ -317,8 +317,6 @@ stdenv.mkDerivation (finalAttrs: {
 
     tests = {
       cmake-config = testers.hasCmakeConfigModules {
-        moduleNames = [ "VTK" ];
-
         package = finalAttrs.finalPackage;
 
         nativeBuildInputs = lib.optionals withQt6 [
@@ -337,5 +335,6 @@ stdenv.mkDerivation (finalAttrs: {
     license = lib.licenses.bsd3;
     maintainers = with lib.maintainers; [ qbisi ];
     platforms = lib.platforms.unix;
+    cmakeConfigModules = [ "VTK" ];
   };
 })
