@@ -35,7 +35,6 @@ stdenv.mkDerivation (finalAttrs: {
   passthru = {
     tests = {
       cmake-config = testers.hasCmakeConfigModules {
-        moduleNames = [ "soqt" ];
         package = finalAttrs.finalPackage;
         nativeBuildInputs = [ qt6.wrapQtAppsHook ];
       };
@@ -49,5 +48,6 @@ stdenv.mkDerivation (finalAttrs: {
     description = "Glue between Coin high-level 3D visualization library and Qt";
     maintainers = [ ];
     platforms = lib.platforms.unix;
+    cmakeConfigModules = [ "soqt" ];
   };
 })
