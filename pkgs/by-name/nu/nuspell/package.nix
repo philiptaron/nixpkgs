@@ -62,7 +62,6 @@ stdenv.mkDerivation (finalAttrs: {
       pkg-config = testers.testMetaPkgConfig finalAttrs.finalPackage;
 
       cmake = testers.hasCmakeConfigModules {
-        moduleNames = [ "Nuspell" ];
         package = finalAttrs.finalPackage;
         version = finalAttrs.version;
         versionCheck = true;
@@ -74,6 +73,7 @@ stdenv.mkDerivation (finalAttrs: {
     description = "Free and open source C++ spell checking library";
     mainProgram = "nuspell";
     pkgConfigModules = [ "nuspell" ];
+    cmakeConfigModules = [ "Nuspell" ];
     homepage = "https://nuspell.github.io/";
     platforms = lib.platforms.all;
     maintainers = with lib.maintainers; [ fpletz ];
