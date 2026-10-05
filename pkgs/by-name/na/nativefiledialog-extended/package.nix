@@ -55,7 +55,6 @@ stdenv.mkDerivation (finalAttrs: {
   passthru.tests = {
     cmake-config = testers.hasCmakeConfigModules {
       package = finalAttrs.finalPackage;
-      moduleNames = [ "nfd" ];
     };
   };
 
@@ -71,5 +70,6 @@ stdenv.mkDerivation (finalAttrs: {
     license = lib.licenses.zlib;
     maintainers = with lib.maintainers; [ yzx9 ];
     platforms = with lib.platforms; linux ++ darwin;
+    cmakeConfigModules = [ "nfd" ];
   };
 })
