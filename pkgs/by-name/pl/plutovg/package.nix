@@ -38,7 +38,6 @@ stdenv.mkDerivation (finalAttrs: {
     };
     cmake-config = testers.hasCmakeConfigModules {
       package = finalAttrs.finalPackage;
-      moduleNames = [ "plutovg" ];
       versionCheck = true;
     };
   };
@@ -50,5 +49,6 @@ stdenv.mkDerivation (finalAttrs: {
     license = lib.licenses.mit;
     maintainers = [ lib.maintainers.eymeric ];
     pkgConfigModules = [ "plutovg" ];
+    cmakeConfigModules = [ "plutovg" ];
   };
 })
