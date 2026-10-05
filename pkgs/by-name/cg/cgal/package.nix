@@ -41,7 +41,6 @@ stdenv.mkDerivation (finalAttrs: {
   passthru = {
     tests = {
       cmake-config = testers.hasCmakeConfigModules {
-        moduleNames = [ "CGAL" ];
         package = finalAttrs.finalPackage;
       };
     };
@@ -59,5 +58,6 @@ stdenv.mkDerivation (finalAttrs: {
       raskin
       ylannl
     ];
+    cmakeConfigModules = [ "CGAL" ];
   };
 })
