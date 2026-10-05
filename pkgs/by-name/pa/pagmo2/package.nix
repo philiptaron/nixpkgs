@@ -63,7 +63,6 @@ stdenv.mkDerivation (finalAttrs: {
 
   passthru = {
     tests.cmake-config = testers.hasCmakeConfigModules {
-      moduleNames = [ "pagmo" ];
       package = finalAttrs.finalPackage;
     };
   };
@@ -74,5 +73,6 @@ stdenv.mkDerivation (finalAttrs: {
     license = lib.licenses.gpl3Plus;
     platforms = lib.platforms.unix;
     maintainers = [ lib.maintainers.costrouc ];
+    cmakeConfigModules = [ "pagmo" ];
   };
 })
