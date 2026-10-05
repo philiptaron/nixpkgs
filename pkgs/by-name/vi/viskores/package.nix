@@ -44,7 +44,6 @@ stdenv.mkDerivation (finalAttrs: {
   ];
 
   passthru.tests.cmake-config = testers.hasCmakeConfigModules {
-    moduleNames = [ "Viskores" ];
     package = finalAttrs.finalPackage;
   };
 
@@ -55,5 +54,6 @@ stdenv.mkDerivation (finalAttrs: {
     license = lib.licenses.bsd3;
     platforms = lib.platforms.unix;
     maintainers = with lib.maintainers; [ qbisi ];
+    cmakeConfigModules = [ "Viskores" ];
   };
 })
