@@ -38,9 +38,6 @@ stdenv.mkDerivation (finalAttrs: {
   passthru.tests = {
     cmake-config = testers.hasCmakeConfigModules {
       package = finalAttrs.finalPackage;
-      moduleNames = [
-        "ISpell"
-      ];
     };
   };
 
@@ -57,5 +54,6 @@ stdenv.mkDerivation (finalAttrs: {
     maintainers = with lib.maintainers; [
       naxdy
     ];
+    cmakeConfigModules = [ "ISpell" ];
   };
 })
