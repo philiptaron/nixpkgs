@@ -85,7 +85,6 @@ stdenv.mkDerivation (finalAttrs: {
   passthru.tests = {
     pkg-config = testers.hasPkgConfigModules { package = finalAttrs.finalPackage; };
     cmake-config = testers.hasCmakeConfigModules {
-      moduleNames = [ "SpFFT" ];
       package = finalAttrs.finalPackage;
     };
   };
@@ -97,6 +96,7 @@ stdenv.mkDerivation (finalAttrs: {
     license = lib.licenses.bsd3;
     maintainers = [ lib.maintainers.sheepforce ];
     pkgConfigModules = [ "SpFFT" ];
+    cmakeConfigModules = [ "SpFFT" ];
     platforms = lib.platforms.linux;
   };
 })
