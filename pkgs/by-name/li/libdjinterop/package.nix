@@ -75,7 +75,6 @@ stdenv.mkDerivation (finalAttrs: {
   passthru.tests = {
     cmake-config = testers.hasCmakeConfigModules {
       package = finalAttrs.finalPackage;
-      moduleNames = [ "DjInterop" ];
     };
     pkg-config = testers.hasPkgConfigModules { package = finalAttrs.finalPackage; };
   };
@@ -87,5 +86,6 @@ stdenv.mkDerivation (finalAttrs: {
     maintainers = with lib.maintainers; [ benley ];
     platforms = lib.platforms.unix;
     pkgConfigModules = [ "djinterop" ];
+    cmakeConfigModules = [ "DjInterop" ];
   };
 })
