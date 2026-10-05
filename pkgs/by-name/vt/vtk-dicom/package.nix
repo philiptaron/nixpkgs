@@ -48,7 +48,6 @@ stdenv.mkDerivation (finalAttrs: {
     };
 
     cmake-config = testers.hasCmakeConfigModules {
-      moduleNames = [ "DICOM" ];
       package = finalAttrs.finalPackage;
     };
   };
@@ -63,5 +62,6 @@ stdenv.mkDerivation (finalAttrs: {
       bcdarwin
     ];
     platforms = lib.platforms.unix;
+    cmakeConfigModules = [ "DICOM" ];
   };
 })
