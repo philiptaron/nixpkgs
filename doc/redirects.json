@@ -2420,6 +2420,12 @@
   "vm-tools-runInLinuxVM-examples": [
     "index.html#vm-tools-runInLinuxVM-examples"
   ],
+  "vm-tools-runInLinuxVM-debugging": [
+    "index.html#vm-tools-runInLinuxVM-debugging"
+  ],
+  "vm-tools-override": [
+    "index.html#vm-tools-override"
+  ],
   "vm-tools-extractFs": [
     "index.html#vm-tools-extractFs"
   ],
@@ -2432,8 +2438,17 @@
   "vm-tools-extractMTDfs": [
     "index.html#vm-tools-extractMTDfs"
   ],
+  "vm-tools-extractMTDfs-examples": [
+    "index.html#vm-tools-extractMTDfs-examples"
+  ],
   "vm-tools-runInLinuxImage": [
     "index.html#vm-tools-runInLinuxImage"
+  ],
+  "vm-tools-runInLinuxImage-attributes": [
+    "index.html#vm-tools-runInLinuxImage-attributes"
+  ],
+  "vm-tools-runInLinuxImage-examples": [
+    "index.html#vm-tools-runInLinuxImage-examples"
   ],
   "vm-tools-makeImageTestScript": [
     "index.html#vm-tools-makeImageTestScript"
@@ -2458,6 +2473,9 @@
   ],
   "vm-tools-diskImages": [
     "index.html#vm-tools-diskImages"
+  ],
+  "vm-tools-packages": [
+    "index.html#vm-tools-packages"
   ],
   "sec-checkpoint-build": [
     "index.html#sec-checkpoint-build"
