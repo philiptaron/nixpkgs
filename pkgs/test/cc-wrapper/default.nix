@@ -185,7 +185,20 @@ stdenv.mkDerivation {
         exit 1
       fi
       ${emulator} ./rpath-fork-check
+
+      echo "checking whether rpath follows -L symlinks into the store... " >&2
+      mkdir -p links
+      ln -s ${libfoo}/lib links/foo-lib
+      ln -s ${libfoo} links/foo
+      for dir in "$NIX_BUILD_TOP/links/foo-lib" "$NIX_BUILD_TOP/links/foo/lib"; do
+        ${CC} -L"$dir" -lfoo -o rpath-link-check ${./ldflags-main.c}
+        ${READELF} -d rpath-link-check | grep -F "${libfoo}/lib"
+        ${emulator} ./rpath-link-check
+      done
     ''}
+
+    echo "checking whether ld-wrapper resolves -L directories for the rpath correctly... " >&2
+    ${stdenv.shell} ${./resolve-lib-dir.sh} ${stdenv.cc.bintools}/nix-support/utils.bash
 
     echo "Check whether -nostdinc and -nostdinc++ is handled correctly" >&2
     mkdir -p std-include

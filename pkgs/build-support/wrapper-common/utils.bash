@@ -133,6 +133,83 @@ badPathWithDarwinSdk() {
     badPath "$path"
 }
 
+# Resolves the library directory $1 for use in the rpath and stores the
+# result in `resolvedLibDir`. Returns 1 if the directory cannot be reached.
+#
+# Symlinks outside the store are resolved, so that a directory reached
+# through them is recognized as being in the store. Symlinks inside the
+# store are kept, because resolving them breaks bootstrapping (see issue
+# #454199), unless a `..` steps out of one: the kernel resolves `..` after
+# a symlink from the symlink's target. The store directory and its
+# ancestors are never resolved, as the store may itself be reached through
+# a symlink.
+resolveLibDir() {
+    local path=$1 store=${NIX_STORE:-}
+    local resolved='' rest component target
+    local -i symlinks=0
+
+    # Fast path: nearly every -L directory is a canonical store path, which
+    # stays as it is. ld-wrapper resolves every -L directory on every link,
+    # so this must not fork, see issue #545973.
+    if [[ "$path" == "$store"/* && "$path" != *//* && "$path" != */./* && "$path" != */../* \
+            && "$path" != */. && "$path" != */.. && "$path" != */ ]]; then
+        # resolvedLibDir is used by caller
+        # shellcheck disable=SC2034
+        resolvedLibDir=$path
+        return 0
+    fi
+
+    if [[ "$path" != /* ]]; then
+        path=$PWD/$path
+    fi
+    rest=${path#/}
+    # Walk the path one component at a time, appending to `resolved`.
+    while [[ -n "$rest" ]]; do
+        component=${rest%%/*}
+        if [[ "$rest" == */* ]]; then
+            rest=${rest#*/}
+        else
+            rest=
+        fi
+        case "$component" in
+            '' | .)
+                continue
+                ;;
+            ..)
+                if [[ ! -L "$resolved" ]]; then
+                    if [[ -n "$resolved" && ! -d "$resolved" ]]; then
+                        return 1
+                    fi
+                    resolved=${resolved%/*}
+                    continue
+                fi
+                # Resolve the symlink below, then step out of its target.
+                rest=..${rest:+/$rest}
+                ;;
+            *)
+                resolved=$resolved/$component
+                if [[ "$resolved" == "$store"/* || "$store" == "$resolved" || "$store" == "$resolved"/* \
+                        || ! -L "$resolved" ]]; then
+                    continue
+                fi
+                ;;
+        esac
+        # `resolved` is a symlink to resolve: walk its target instead.
+        if (( ++symlinks > 40 )); then
+            return 1
+        fi
+        target=$(readlink "$resolved") || return 1
+        rest=$target${rest:+/$rest}
+        if [[ "$target" == /* ]]; then
+            resolved=
+        else
+            resolved=${resolved%/*}
+        fi
+    done
+    # shellcheck disable=SC2034
+    resolvedLibDir=${resolved:-/}
+}
+
 expandResponseParams() {
     declare -ga params=("$@")
     local arg

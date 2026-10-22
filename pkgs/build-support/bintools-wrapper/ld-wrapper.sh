@@ -200,34 +200,17 @@ if [[ "$NIX_DONT_SET_RPATH_@suffixSalt@" != 1 && "$linkType" != static-pie ]]; t
     # so, add the directory to the rpath.
     # It's important to add the rpath in the order of -L..., so
     # the link time chosen objects will be those of runtime linking.
-    declare -A rpaths
+    declare -A rpaths seenLibDirs
     for dir in ${libDirs+"${libDirs[@]}"}; do
-        # If the path is in the store, do not resolve any symlinks and add it to the rpath.
-        # Resolving symlinks in the store breaks bootstrapping, see issue #454199.
-        # If it is outside the store, resolve symlinks step by step until it falls
-        # into the store or it becomes not a symlink.
-        # Always canonicalize the path before checking it is in the store or not.
-        # Only fork when the path is not already canonical: this loop runs for
-        # every -L directory on every link, see issue #545973.
-        if [[ "$dir" != /* || "$dir" == *//* || "$dir" == */./* || "$dir" == */../* || "$dir" == */. || "$dir" == */.. || "$dir" == */ ]]; then
-            if dir2=$(realpath -s "$dir"); then
-                dir="$dir2"
-            else
-                continue
-            fi
+        # The same directory is often passed many times.
+        if [ -z "$dir" ] || [ -n "${seenLibDirs[$dir]:-}" ]; then
+            continue
         fi
-        while [ -z "${rpaths[$dir]:-}" ] && [[ "$dir" != "${NIX_STORE:-}"/* ]] && [ -L "$dir" ]; do
-            if dir2=$(readlink "$dir"); then
-                dir="dir2"
-            else
-                break
-            fi
-            if dir2=$(realpath -s "$dir"); then
-                dir="dir2"
-            else
-                break
-            fi
-        done
+        seenLibDirs["$dir"]=1
+        if ! resolveLibDir "$dir"; then
+            continue
+        fi
+        dir="$resolvedLibDir"
         # If the path turns out to be outside the store, we do not add it to rpath.
         # This typically happens for libraries in /tmp that are later
         # copied to $out/lib. If not, we're screwed.
