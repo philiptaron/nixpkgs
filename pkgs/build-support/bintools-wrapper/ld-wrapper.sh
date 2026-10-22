@@ -207,10 +207,14 @@ if [[ "$NIX_DONT_SET_RPATH_@suffixSalt@" != 1 && "$linkType" != static-pie ]]; t
         # If it is outside the store, resolve symlinks step by step until it falls
         # into the store or it becomes not a symlink.
         # Always canonicalize the path before checking it is in the store or not.
-        if dir2=$(realpath -s "$dir"); then
-            dir="$dir2"
-        else
-            continue
+        # Only fork when the path is not already canonical: this loop runs for
+        # every -L directory on every link, see issue #545973.
+        if [[ "$dir" != /* || "$dir" == *//* || "$dir" == */./* || "$dir" == */../* || "$dir" == */. || "$dir" == */.. || "$dir" == */ ]]; then
+            if dir2=$(realpath -s "$dir"); then
+                dir="$dir2"
+            else
+                continue
+            fi
         fi
         while [ -z "${rpaths[$dir]:-}" ] && [[ "$dir" != "${NIX_STORE:-}"/* ]] && [ -L "$dir" ]; do
             if dir2=$(readlink "$dir"); then

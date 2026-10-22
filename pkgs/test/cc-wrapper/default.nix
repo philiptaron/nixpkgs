@@ -23,6 +23,25 @@ let
   CC = "PATH= ${lib.getExe' stdenv.cc "${stdenv.cc.targetPrefix}cc"}";
   CXX = "PATH= ${lib.getExe' stdenv.cc "${stdenv.cc.targetPrefix}c++"}";
   READELF = "PATH= ${lib.getExe' stdenv.cc "${stdenv.cc.targetPrefix}readelf"}";
+  rpathWorking =
+    stdenv.hostPlatform.isElf
+    && stdenv.hostPlatform.hasSharedLibraries
+    && !stdenv.hostPlatform.isStatic;
+  # A shared library whose lib directory is also reachable through a
+  # symlink in another store path, like bootstrapFiles' lib in the Linux
+  # stdenv bootstrap.
+  libfoo = stdenv.mkDerivation {
+    name = "cc-wrapper-test-libfoo";
+    outputs = [
+      "out"
+      "link"
+    ];
+    buildCommand = ''
+      mkdir -p $out/lib $link
+      ${CC} -shared -fPIC -DVALUE=42 -o $out/lib/libfoo.so ${./foo.c}
+      ln -s $out/lib $link/lib
+    '';
+  };
 in
 stdenv.mkDerivation {
   pname = "cc-wrapper-test-${stdenv.cc.cc.pname}${libcxxStdenvSuffix}";
@@ -142,6 +161,31 @@ stdenv.mkDerivation {
 
     NIX_LDFLAGS="-L$NIX_BUILD_TOP/foo/lib -rpath $NIX_BUILD_TOP/foo/lib" ${CC} -lfoo -o ldflags-check ${./ldflags-main.c}
     ${emulator} ./ldflags-check
+
+    ${lib.optionalString rpathWorking ''
+      # Regression test for https://github.com/NixOS/nixpkgs/issues/454199:
+      # canonicalizing a -L directory must not resolve symlinks in the store.
+      echo "checking whether rpath keeps symlinks in the store... " >&2
+      ${CC} -L${libfoo.link}/./lib -lfoo -o rpath-symlink-check ${./ldflags-main.c}
+      ${READELF} -d rpath-symlink-check | grep -F "${libfoo.link}/lib"
+      if ${READELF} -d rpath-symlink-check | grep -F "${libfoo}/lib"; then
+        echo "rpath resolved a symlink in the store" >&2
+        exit 1
+      fi
+      ${emulator} ./rpath-symlink-check
+
+      # Regression test for https://github.com/NixOS/nixpkgs/issues/545973:
+      # ld-wrapper examines every -L directory on every link, so it must not
+      # fork for directories that are already canonical store paths.
+      echo "checking whether rpath handling avoids forks for store paths... " >&2
+      NIX_DEBUG=7 ${CC} -L${libfoo}/lib -lfoo -o rpath-fork-check ${./ldflags-main.c} 2> rpath-fork-check.log
+      ${READELF} -d rpath-fork-check | grep -F "${libfoo}/lib"
+      if grep -E '^\++ (realpath|readlink) .*${libfoo}/lib' rpath-fork-check.log; then
+        echo "ld-wrapper forked for a canonical store path" >&2
+        exit 1
+      fi
+      ${emulator} ./rpath-fork-check
+    ''}
 
     echo "Check whether -nostdinc and -nostdinc++ is handled correctly" >&2
     mkdir -p std-include
