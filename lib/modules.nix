@@ -927,7 +927,7 @@ let
         # Fast path for the overwhelmingly common case: a single option declaration.
         if length decls == 1 && (head decls).options._type or null == "option" then
           {
-            matchedOptions = evalOptionValue loc (mergeSingleOptionDecl loc (head decls)) defns';
+            matchedOptions = evalSingleOptionDecl loc (head decls) defns';
             unmatchedDefns = [ ];
           }
         else if all isOptionDecl decls then
@@ -1113,37 +1113,73 @@ let
     else
       mergeOptionDecls' loc decls;
 
-  # Equivalent to `fixupOptionType loc (mergeOptionDecls loc [ decl ])`, but
-  # builds the option with a single attribute set update.
-  mergeSingleOptionDecl =
-    loc: decl:
+  # Equivalent to
+  #   evalOptionValue loc (fixupOptionType loc (mergeOptionDecls loc [ decl ])) defs
+  # but builds the option with a single attribute set update.
+  # Keep in sync with evalOptionValue.
+  evalSingleOptionDecl =
+    loc: decl: defs:
     let
       optOptions = decl.options;
       getSubModules = optOptions.type.getSubModules or null;
-    in
-    optOptions
-    // {
-      inherit loc;
-      declarations = [ decl._file ];
-      declarationPositions = [
-        (
-          if decl.pos != null then
-            decl.pos
-          else
-            {
-              file = decl._file;
-              line = null;
-              column = null;
-            }
-        )
-      ];
-      options = [ ];
       type =
         if getSubModules != null then
           optOptions.type.substSubModules (map (setDefaultModuleLocation decl._file) getSubModules)
         else
           optOptions.type or types.unspecified;
-    };
+      declarations = [ decl._file ];
+
+      # Add in the default value for this option, if any.
+      defs' =
+        if optOptions ? default then
+          [
+            {
+              file = decl._file;
+              value = mkOptionDefault optOptions.default;
+            }
+          ]
+          ++ defs
+        else
+          defs;
+
+      # Handle properties, check types, and merge everything together.
+      res =
+        if optOptions.readOnly or false && length defs' > 1 then
+          throwReadOnly loc type defs'
+        else
+          mergeDefinitions loc type defs';
+
+      opt = optOptions // {
+        inherit loc declarations type;
+        declarationPositions = [
+          (
+            if decl.pos != null then
+              decl.pos
+            else
+              {
+                file = decl._file;
+                line = null;
+                column = null;
+              }
+          )
+        ];
+        options = [ ];
+        value = addErrorContext "while evaluating the option `${showOption loc}':" (
+          if optOptions ? apply then optOptions.apply res.mergedValue else res.mergedValue
+        );
+        inherit (res.defsFinal') highestPrio;
+        definitions = catAttrs "value" res.defsFinal;
+        files = catAttrs "file" res.defsFinal;
+        definitionsWithLocations = res.defsFinal;
+        inherit (res) isDefined;
+        inherit (res.checkedAndMerged) valueMeta;
+        __toString = _: showOption loc;
+      };
+    in
+    if type.deprecationMessage != null then
+      warn "The type `types.${type.name}' of option `${showOption loc}' defined in ${showFiles declarations} is deprecated. ${type.deprecationMessage}" opt
+    else
+      opt;
 
   mergeOptionDecls' =
     loc:
@@ -1253,18 +1289,7 @@ let
       # Handle properties, check types, and merge everything together.
       res =
         if opt.readOnly or false && length defs' > 1 then
-          let
-            # For a better error message, evaluate all readOnly definitions as
-            # if they were the only definition.
-            separateDefs = map (
-              def:
-              def
-              // {
-                value = (mergeDefinitions loc opt.type [ def ]).mergedValue;
-              }
-            ) defs';
-          in
-          throw "The option `${showOption loc}' is read-only, but it's set multiple times. Definition values:${showDefs separateDefs}"
+          throwReadOnly loc opt.type defs'
         else
           mergeDefinitions loc opt.type defs';
     in
@@ -1289,6 +1314,21 @@ let
       # This allows options to be correctly displayed using `${options.path.to.it}`
       __toString = _: showOption loc;
     };
+
+  throwReadOnly =
+    loc: type: defs:
+    let
+      # For a better error message, evaluate all readOnly definitions as
+      # if they were the only definition.
+      separateDefs = map (
+        def:
+        def
+        // {
+          value = (mergeDefinitions loc type [ def ]).mergedValue;
+        }
+      ) defs;
+    in
+    throw "The option `${showOption loc}' is read-only, but it's set multiple times. Definition values:${showDefs separateDefs}";
 
   # Check that a type with v2 merge has a coherent check attribute.
   # Throws an error if the type uses an ad-hoc `type // { check }` override.
