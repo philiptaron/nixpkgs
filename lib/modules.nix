@@ -282,7 +282,8 @@ let
           # For definitions that have an associated option
           declaredConfig =
             let
-              recurse = mapAttrs (n: v: if isOption v then v.value else recurse v);
+              # `isOption v`, inlined
+              recurse = mapAttrs (n: v: if v._type or null == "option" then v.value else recurse v);
             in
             recurse options;
 
@@ -804,10 +805,19 @@ let
     mergeModules' prefix modules (
       concatMap (
         m:
-        map (config: {
-          file = m._file;
-          inherit config;
-        }) (pushDownProperties m.config)
+        # Inlined common case of pushDownProperties: no property to push down.
+        if m.config ? _type then
+          map (config: {
+            file = m._file;
+            inherit config;
+          }) (pushDownProperties m.config)
+        else
+          [
+            {
+              file = m._file;
+              inherit (m) config;
+            }
+          ]
       ) modules
     );
 
@@ -869,10 +879,19 @@ let
         name:
         concatMap (
           def:
-          map (config: {
-            inherit (def) file;
-            inherit config;
-          }) (pushDownProperties def.value)
+          # Inlined common case of pushDownProperties: no property to push down.
+          if def.value ? _type then
+            map (config: {
+              inherit (def) file;
+              inherit config;
+            }) (pushDownProperties def.value)
+          else
+            [
+              {
+                inherit (def) file;
+                config = def.value;
+              }
+            ]
         ) (rawDefinitionsByName.${name} or [ ]);
 
       # Convert an option tree decl to a submodule option decl
