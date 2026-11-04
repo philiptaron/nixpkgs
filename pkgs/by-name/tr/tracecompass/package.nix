@@ -8,7 +8,6 @@
   gsettings-desktop-schemas,
   gtk3,
   jdk21,
-  jre-generate-cacerts,
   lib,
   libx11,
   libxrender,
@@ -80,13 +79,7 @@ stdenv.mkDerivation (finalAttrs: rec {
 
     patchelf --set-interpreter "${stdenv.cc.bintools.dynamicLinker}" $out/trace-compass/tracecompass
 
-    # regenerate the bundled JustJ JRE's CA keystore from cacert, as openjdk does
-    (
-      cd $out/trace-compass/plugins/org.eclipse.justj.openjdk.*/jre/lib/security
-      rm cacerts
-      JAVA_TOOL_OPTIONS="-Dkeystore.pkcs12.certProtectionAlgorithm=NONE -Dkeystore.pkcs12.macAlgorithm=NONE" \
-        ${jre-generate-cacerts} ${jdk21}/bin/keytool ${cacert}/etc/ssl/certs/ca-bundle.crt
-    )
+    install -m 644 ${cacert.java-pkcs12} $out/trace-compass/plugins/org.eclipse.justj.openjdk.*/jre/lib/security/cacerts
 
     mkdir -p $out/bin
     makeWrapper $out/trace-compass/tracecompass $out/bin/tracecompass \
