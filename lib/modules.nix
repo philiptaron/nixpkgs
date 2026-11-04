@@ -898,7 +898,13 @@ let
             m.options ? _type
             && (m.options._type == "option" || throwDeclarationTypeError loc m.options._type m._file);
         in
-        if all isOptionDecl decls then
+        # Fast path for the overwhelmingly common case: a single option declaration.
+        if length decls == 1 && (head decls).options._type or null == "option" then
+          {
+            matchedOptions = evalOptionValue loc (mergeSingleOptionDecl loc (head decls)) defns';
+            unmatchedDefns = [ ];
+          }
+        else if all isOptionDecl decls then
           let
             opt = fixupOptionType loc (mergeOptionDecls loc decls);
           in
@@ -1080,6 +1086,38 @@ let
       }
     else
       mergeOptionDecls' loc decls;
+
+  # Equivalent to `fixupOptionType loc (mergeOptionDecls loc [ decl ])`, but
+  # builds the option with a single attribute set update.
+  mergeSingleOptionDecl =
+    loc: decl:
+    let
+      optOptions = decl.options;
+      getSubModules = optOptions.type.getSubModules or null;
+    in
+    optOptions
+    // {
+      inherit loc;
+      declarations = [ decl._file ];
+      declarationPositions = [
+        (
+          if decl.pos != null then
+            decl.pos
+          else
+            {
+              file = decl._file;
+              line = null;
+              column = null;
+            }
+        )
+      ];
+      options = [ ];
+      type =
+        if getSubModules != null then
+          optOptions.type.substSubModules (map (setDefaultModuleLocation decl._file) getSubModules)
+        else
+          optOptions.type or types.unspecified;
+    };
 
   mergeOptionDecls' =
     loc:
