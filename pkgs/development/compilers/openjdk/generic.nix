@@ -325,6 +325,8 @@ stdenv.mkDerivation (finalAttrs: {
     "OBJDUMP=${stdenv.cc.targetPrefix}objdump"
     "OBJCOPY=${stdenv.cc.targetPrefix}objcopy"
     "--with-boot-jdk=${jdk-bootstrap'.home}"
+    # For JDK 11+ it goes into the java.base jmod, so jlink images also get it.
+    "--with-cacerts-file=${cacert.java-pkcs12}"
     "--enable-unlimited-crypto"
     "--with-native-debug-symbols=internal"
     "--with-stdc++lib=dynamic"
@@ -398,19 +400,6 @@ stdenv.mkDerivation (finalAttrs: {
     # Set number of jobs to use when building.
     ''
       configureFlags+=("--with-jobs=''${NIX_BUILD_CORES}")
-    ''
-    # Build lib/security/cacerts from cacert instead of the bundled CA list.
-    # JDK 8's keytool writes its default JKS format for this list.
-    # For JDK 11+ it goes into the java.base jmod, so jlink images also get it.
-    # Like upstream it is a PKCS12 store without a password: the JDK opens
-    # cacerts without one, and cannot read password-protected certificates.
-    + ''
-      mkdir "$NIX_BUILD_TOP/cacerts-gen"
-      pushd "$NIX_BUILD_TOP/cacerts-gen"
-      JAVA_TOOL_OPTIONS="-Dkeystore.pkcs12.certProtectionAlgorithm=NONE -Dkeystore.pkcs12.macAlgorithm=NONE" \
-        ${buildPackages.jre-generate-cacerts} ${lib.getExe' jdk-bootstrap' "keytool"} ${cacert}/etc/ssl/certs/ca-bundle.crt
-      popd
-      configureFlags+=("--with-cacerts-file=$NIX_BUILD_TOP/cacerts-gen/cacerts")
     '';
 
   env = {
