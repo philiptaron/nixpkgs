@@ -1330,6 +1330,7 @@ mapAliases {
   journalist = throw "'journalist' has been removed due to being archived upstream."; # Added 2026-11-01
   jp-zip-codes = throw "'jp-zip-codes' has been removed as there are no more packages that depend on it"; # Added 2026-06-14
   jpegrescan = throw "'jpegrescan' has been removed due to being archived upstream. Use mozjpeg instead."; # Added 2026-09-18
+  jre-generate-cacerts = throw "'jre-generate-cacerts' has been removed. Use 'cacert.java-pkcs12', or 'pem-to-java-pkcs12' for another PEM bundle."; # Added 2026-11-04
   jscoverage = throw "jscoverage has been removed, as it was broken"; # Added 2025-08-25
   jsduck = throw "jsduck has been removed, as it was broken and unmaintained upstream."; # Added 2025-12-02
   jwm-settings-manager = throw "'jwm-settings-manager' has been removed, as it is unmaintained upstream"; # Added 2026-08-01
