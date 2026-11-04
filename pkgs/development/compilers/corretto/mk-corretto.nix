@@ -9,7 +9,6 @@
   stdenv,
   gradle,
   cacert,
-  jre-generate-cacerts,
   nixpkgs-openjdk-updater,
   extraConfig ? [ ],
   rsync,
@@ -126,24 +125,15 @@ jdk.overrideAttrs (
         # Note that the OpenJdK flags contain "--with-boot-jdk=..."!
         substituteInPlace build.gradle --replace-fail "correttoCommonFlags = [" "correttoCommonFlags = [${jdk_configure_flags} ,"
         # Finally, *append* our flags. build.gradle places corretto.extra_config
-        # after Corretto's own flags, so our --with-cacerts-file (see preBuild)
-        # overrides Corretto's, and the nix-corretto-version specific flags in
+        # after Corretto's own flags, so our --with-cacerts-file overrides
+        # Corretto's, and the nix-corretto-version specific flags in
         # extra_config come last and can override ours.
-        gradleFlagsArray+=(-Pcorretto.extra_config="--with-cacerts-file=$NIX_BUILD_TOP/cacerts-gen/cacerts ${extra_config}")
+        gradleFlagsArray+=(-Pcorretto.extra_config="--with-cacerts-file=${cacert.java-pkcs12} ${extra_config}")
       '';
 
     # since we dontConfigure, we must run this manually
-    # dontConfigure also skips OpenJDK's preConfigure, so build
-    # lib/security/cacerts from cacert here, the same way it does.
     preBuild = ''
       gradleConfigureHook
-
-      mkdir "$NIX_BUILD_TOP/cacerts-gen"
-      (
-        cd "$NIX_BUILD_TOP/cacerts-gen"
-        JAVA_TOOL_OPTIONS="-Dkeystore.pkcs12.certProtectionAlgorithm=NONE -Dkeystore.pkcs12.macAlgorithm=NONE" \
-          ${jre-generate-cacerts} ${jdk.home}/bin/keytool ${cacert}/etc/ssl/certs/ca-bundle.crt
-      )
     '';
 
     # The Linux installer is placed at linux/universal/tar whereas the MacOS
