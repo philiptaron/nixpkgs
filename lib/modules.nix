@@ -13,14 +13,15 @@ let
     concatMap
     concatStringsSep
     elem
+    elemAt
     filter
     foldl'
     functionArgs
     getAttrFromPath
     genericClosure
+    genList
     head
     id
-    imap1
     init
     isAttrs
     isBool
@@ -449,26 +450,22 @@ let
           in
           throw "Module imports can't be nested lists. Perhaps you meant to remove one level of lists? Definitions: ${showDefs defs}"
         else
-          unifyModuleSyntax (toString m) (toString m) (
-            applyModuleArgsIfFunction (toString m) (import m) args
-          );
+          let
+            file = toString m;
+            f = import m;
+          in
+          unifyModuleSyntax file file (if isFunction f then applyModuleArgs file f args else f);
 
-      checkModule =
-        if class != null then
-          m:
-          if m._class == null || m._class == class then
-            m
-          else
-            throw ''
-              The module `${m._file or m.key}` (class: ${lib.strings.escapeNixString m._class}) cannot be imported into a module evaluation that expects class ${lib.strings.escapeNixString class}.
+      throwClassMismatch =
+        m:
+        throw ''
+          The module `${m._file or m.key}` (class: ${lib.strings.escapeNixString m._class}) cannot be imported into a module evaluation that expects class ${lib.strings.escapeNixString class}.
 
-              Help:
-              - Ensure that you are importing the correct module.
-              - Verify that the module's `_class`, ${lib.strings.escapeNixString m._class} matches the expected `class` ${lib.strings.escapeNixString class}.
-              - If you are using a custom class, make sure it is correctly defined and used consistently across your modules.
-            ''
-        else
-          m: m;
+          Help:
+          - Ensure that you are importing the correct module.
+          - Verify that the module's `_class`, ${lib.strings.escapeNixString m._class} matches the expected `class` ${lib.strings.escapeNixString class}.
+          - If you are using a custom class, make sure it is correctly defined and used consistently across your modules.
+        '';
 
       # isDisabled :: String -> [ { disabled, file } ] -> StructuredModule -> bool
       #
@@ -525,40 +522,46 @@ let
           }
       */
       collectStructuredModules =
+        args:
         let
-          collectResults = modules: {
-            disabled = concatLists (catAttrs "disabled" modules);
-            inherit modules;
-          };
-        in
-        parentFile: parentKey: initialModules: args:
-        collectResults (
-          imap1 (
-            n: x:
+          # `args` is the same for every module, so only apply it once.
+          load = loadModule args;
+          collect =
+            parentFile: parentKey: initialModules:
             let
-              module = checkModule (loadModule args parentFile "${parentKey}:anon-${toString n}" x);
-              collectedImports = collectStructuredModules module._file module.key module.imports args;
+              modules = genList (
+                i:
+                let
+                  m = load parentFile "${parentKey}:anon-${toString (i + 1)}" (elemAt initialModules i);
+                  module = if class == null || m._class == null || m._class == class then m else throwClassMismatch m;
+                  collectedImports = collect module._file module.key module.imports;
+                in
+                {
+                  key = module.key;
+                  module = module;
+                  modules = collectedImports.modules;
+                  disabled =
+                    (
+                      if module.disabledModules != [ ] then
+                        [
+                          {
+                            file = module._file;
+                            disabled = module.disabledModules;
+                          }
+                        ]
+                      else
+                        [ ]
+                    )
+                    ++ collectedImports.disabled;
+                }
+              ) (length initialModules);
             in
             {
-              key = module.key;
-              module = module;
-              modules = collectedImports.modules;
-              disabled =
-                (
-                  if module.disabledModules != [ ] then
-                    [
-                      {
-                        file = module._file;
-                        disabled = module.disabledModules;
-                      }
-                    ]
-                  else
-                    [ ]
-                )
-                ++ collectedImports.disabled;
-            }
-          ) initialModules
-        );
+              disabled = concatLists (catAttrs "disabled" modules);
+              inherit modules;
+            };
+        in
+        collect;
 
       # filterModules :: String -> { disabled, modules } -> [ Module ]
       #
@@ -602,11 +605,11 @@ let
         map toModuleGraph (filter (x: x.key != "lib/modules.nix") modules);
     in
     modulesPath: initialModules: args: {
-      modules = filterModules modulesPath (collectStructuredModules unknownModule "" initialModules args);
+      modules = filterModules modulesPath (collectStructuredModules args unknownModule "" initialModules);
       # Intentionally not shared with `modules` above: this allows
       # the return value of `collectStructuredModules`
       # to be garbage collected after `filterModules` returns.
-      graph = toGraph modulesPath (collectStructuredModules unknownModule "" initialModules args);
+      graph = toGraph modulesPath (collectStructuredModules args unknownModule "" initialModules);
     };
 
   /**
@@ -703,7 +706,11 @@ let
           disabledModules = m.disabledModules or [ ];
           imports = m.imports or [ ];
           options = m.options or { };
-          config = addFreeformType (addMeta (m.config or { }));
+          config =
+            if m ? meta || m ? freeformType then
+              addFreeformType (addMeta (m.config or { }))
+            else
+              m.config or { };
         }
     else
     # shorthand syntax
@@ -717,7 +724,11 @@ let
         disabledModules = m.disabledModules or [ ];
         imports = m.require or [ ] ++ m.imports or [ ];
         options = { };
-        config = addFreeformType (removeAttrs m shorthandAttrsToRemove);
+        config =
+          if m ? freeformType then
+            addFreeformType (removeAttrs m shorthandAttrsToRemove)
+          else
+            removeAttrs m shorthandAttrsToRemove;
       };
 
   applyModuleArgsIfFunction =
