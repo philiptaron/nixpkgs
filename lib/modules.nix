@@ -858,10 +858,19 @@ let
         name:
         concatMap (
           def:
-          map (config: {
-            file = def.file;
-            inherit config;
-          }) (pushDownProperties def.value)
+          # The common case of pushDownProperties is that there is no property to push down.
+          if def.value ? _type then
+            map (config: {
+              file = def.file;
+              inherit config;
+            }) (pushDownProperties def.value)
+          else
+            [
+              {
+                file = def.file;
+                config = def.value;
+              }
+            ]
         ) (rawDefinitionsByName.${name} or [ ]);
 
       # Convert an option tree decl to a submodule option decl
