@@ -825,49 +825,44 @@ let
         ) modules
       );
 
-      # The root of any module definition must be an attrset.
-      checkedConfigs =
-        assert all (
-          c:
-          # TODO: I have my doubts that this error would occur when option definitions are not matched.
-          #       The implementation of this check used to be tied to a superficially similar check for
-          #       options, so maybe that's why this is here.
-          isAttrs c.config
-          || throw ''
-            In module `${c.file}', you're trying to define a value of type `${typeOf c.config}'
-            rather than an attribute set for the option
-            `${concatStringsSep "." prefix}'!
-
-            This usually happens if `${concatStringsSep "." prefix}' has option
-            definitions inside that are not matched. Please check how to properly define
-            this option by e.g. referring to `man 5 configuration.nix'!
-          ''
-        ) configs;
-        configs;
-
-      # an attrset 'name' => list of submodules that define ‘name’.
-      pushedDownDefinitionsByName = zipAttrsWith (n: concatLists) (
-        map (
-          module:
-          mapAttrs (
-            n: value:
-            map (config: {
-              inherit (module) file;
-              inherit config;
-            }) (pushDownProperties value)
-          ) module.config
-        ) checkedConfigs
-      );
       # extract the definitions for each loc
       rawDefinitionsByName = zipAttrs (
         map (
-          module:
-          mapAttrs (n: value: {
-            inherit (module) file;
-            inherit value;
-          }) module.config
-        ) checkedConfigs
+          c:
+          # The root of any module definition must be an attrset.
+          # TODO: I have my doubts that this error would occur when option definitions are not matched.
+          #       The implementation of this check used to be tied to a superficially similar check for
+          #       options, so maybe that's why this is here.
+          if !isAttrs c.config then
+            throw ''
+              In module `${c.file}', you're trying to define a value of type `${typeOf c.config}'
+              rather than an attribute set for the option
+              `${concatStringsSep "." prefix}'!
+
+              This usually happens if `${concatStringsSep "." prefix}' has option
+              definitions inside that are not matched. Please check how to properly define
+              this option by e.g. referring to `man 5 configuration.nix'!
+            ''
+          else
+            mapAttrs (n: value: {
+              inherit (c) file;
+              inherit value;
+            }) c.config
+        ) configs
       );
+
+      # The definitions of ‘name’, with properties pushed down one level.
+      # Only needed when ‘name’ is not an option, so derive it lazily from
+      # rawDefinitionsByName instead of zipping all configs a second time.
+      pushedDownDefinitions =
+        name:
+        concatMap (
+          def:
+          map (config: {
+            inherit (def) file;
+            inherit config;
+          }) (pushDownProperties def.value)
+        ) (rawDefinitionsByName.${name} or [ ]);
 
       # Convert an option tree decl to a submodule option decl
       optionTreeToOption =
@@ -970,7 +965,7 @@ let
             }' does not support nested options.\n${showRawDecls loc nonOptions}"
         else
           let
-            nested = mergeModules' loc decls (pushedDownDefinitionsByName.${name} or [ ]);
+            nested = mergeModules' loc decls (pushedDownDefinitions name);
           in
           {
             inherit (nested) matchedOptions;
