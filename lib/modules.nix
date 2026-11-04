@@ -834,7 +834,7 @@ let
           c:
           if isAttrs c.config then
             mapAttrs (n: value: {
-              inherit (c) file;
+              file = c.file;
               inherit value;
             }) c.config
           else
