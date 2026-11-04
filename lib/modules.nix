@@ -1051,6 +1051,37 @@ let
     : 2\. Function argument
   */
   mergeOptionDecls =
+    loc: decls:
+    # Fast path: almost every option has exactly one declaration. This is
+    # equivalent to the fold below applied to a singleton list.
+    if length decls == 1 then
+      let
+        opt = head decls;
+        getSubModules = opt.options.type.getSubModules or null;
+      in
+      opt.options
+      // {
+        inherit loc;
+        declarations = [ opt._file ];
+        declarationPositions = [
+          (
+            if opt.pos != null then
+              opt.pos
+            else
+              {
+                file = opt._file;
+                line = null;
+                column = null;
+              }
+          )
+        ];
+        options =
+          if getSubModules != null then map (setDefaultModuleLocation opt._file) getSubModules else [ ];
+      }
+    else
+      mergeOptionDecls' loc decls;
+
+  mergeOptionDecls' =
     loc:
     foldl'
       (
