@@ -2,7 +2,7 @@
   lib,
   stdenv,
   jdk,
-  jre-generate-cacerts,
+  pem-to-java-pkcs12,
   maven,
   writers,
 }:
@@ -59,6 +59,7 @@ let
 
           nativeBuildInputs = [
             maven
+            pem-to-java-pkcs12
           ]
           ++ args.nativeBuildInputs or [ ];
 
@@ -80,12 +81,11 @@ let
               MAVEN_EXTRA_ARGS="$MAVEN_EXTRA_ARGS -s=$mvnSettingsFile"
             fi
 
-            # handle cacert by populating a trust store on the fly
-            if [[ -n "''${NIX_SSL_CERT_FILE-}" ]] && [[ "''${NIX_SSL_CERT_FILE-}" != "/no-cert-file.crt" ]];then
-              echo "using ''${NIX_SSL_CERT_FILE-} as trust store"
-              ${jre-generate-cacerts} ${lib.getBin mvnJdk}/bin/keytool $NIX_SSL_CERT_FILE
-
-              MAVEN_EXTRA_ARGS="$MAVEN_EXTRA_ARGS -Djavax.net.ssl.trustStore=cacerts -Djavax.net.ssl.trustStorePassword=changeit"
+            # trust an impure NIX_SSL_CERT_FILE, e.g. one with a proxy's CA
+            if [[ -r "''${NIX_SSL_CERT_FILE-}" ]]; then
+              echo "using $NIX_SSL_CERT_FILE as trust store"
+              pem-to-java-pkcs12 "$NIX_SSL_CERT_FILE" "$NIX_BUILD_TOP/cacerts"
+              MAVEN_EXTRA_ARGS="$MAVEN_EXTRA_ARGS -Djavax.net.ssl.trustStore=$NIX_BUILD_TOP/cacerts"
             fi
           ''
           + lib.optionalString buildOffline ''
