@@ -8,6 +8,9 @@
   extraCertificateFiles ? [ ],
   extraCertificateStrings ? [ ],
 
+  # Used for passthru.java-pkcs12
+  callPackage,
+
   # Used for tests only
   runCommand,
   cacert,
@@ -36,7 +39,7 @@ let
     };
   };
 in
-stdenv.mkDerivation {
+stdenv.mkDerivation (finalAttrs: {
   pname = "nss-cacert";
   inherit version;
 
@@ -109,6 +112,10 @@ stdenv.mkDerivation {
 
   passthru = {
     updateScript = ./update.sh;
+
+    # This bundle as a Java trust store, for JDKs and JREs to ship as
+    # lib/security/cacerts.
+    java-pkcs12 = callPackage ./java-pkcs12.nix { cacert = finalAttrs.finalPackage; };
     tests =
       let
         isTrusted = ''
@@ -252,4 +259,4 @@ stdenv.mkDerivation {
   __structuredAttrs = true;
 
   inherit meta;
-}
+})
